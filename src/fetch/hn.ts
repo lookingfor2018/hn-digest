@@ -7,6 +7,7 @@ import type { CommentNode, HnItemRecord, StoryRecord } from "../shared/types.js"
 
 const HN_BASE = "https://news.ycombinator.com";
 const DEFAULT_TIMEOUT_MS = 15_000;
+const MAX_BEST_LIST_PAGES = 10;
 
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: ["p", "a", "code", "pre", "ul", "ol", "li", "blockquote", "em", "strong", "i", "b", "br"],
@@ -69,13 +70,57 @@ export function parseBestStoryIds(html: string, limit: number): number[] {
   return result;
 }
 
-export async function fetchBestStoryIds(listUrl: string, limit: number): Promise<number[]> {
-  const response = await fetchWithTimeout(listUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch best list: ${response.status}`);
+export function parseMoreLink(html: string, currentUrl: string): string | null {
+  try {
+    const dom = new JSDOM(html, { url: currentUrl });
+    const moreLink = dom.window.document.querySelector("a.morelink, a[rel='next']");
+    if (moreLink instanceof dom.window.HTMLAnchorElement && moreLink.href) {
+      return moreLink.href;
+    }
+  } catch {
+    return null;
   }
-  const html = await response.text();
-  return parseBestStoryIds(html, limit);
+
+  return null;
+}
+
+export async function fetchBestStoryIds(listUrl: string, limit: number): Promise<number[]> {
+  const storyIds: number[] = [];
+  const seenIds = new Set<number>();
+  const visitedPages = new Set<string>();
+
+  let nextPageUrl: string | null = listUrl;
+  let pageCount = 0;
+
+  while (nextPageUrl && storyIds.length < limit && pageCount < MAX_BEST_LIST_PAGES) {
+    const currentPageUrl: string = nextPageUrl;
+    if (visitedPages.has(currentPageUrl)) {
+      break;
+    }
+    visitedPages.add(currentPageUrl);
+    pageCount += 1;
+
+    const response = await fetchWithTimeout(currentPageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch best list: ${response.status}`);
+    }
+
+    const html = await response.text();
+    const pageIds = parseBestStoryIds(html, limit);
+    for (const id of pageIds) {
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        storyIds.push(id);
+        if (storyIds.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    nextPageUrl = storyIds.length >= limit ? null : parseMoreLink(html, currentPageUrl);
+  }
+
+  return storyIds.slice(0, limit);
 }
 
 export async function fetchItemById(id: number): Promise<HnItemRecord | null> {
