@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import sanitizeHtml from "sanitize-html";
 
 import { HN_ITEM_ENDPOINT } from "../shared/constants.js";
@@ -114,7 +114,15 @@ export async function extractExternalSummary(url: string, maxParagraphs: number)
     }
 
     const html = await response.text();
-    const dom = new JSDOM(html, { url });
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on("jsdomError", () => {
+      // Third-party pages often include CSS features jsdom cannot parse.
+      // These should not break summary extraction or spam CI logs.
+    });
+    const dom = new JSDOM(html, {
+      url,
+      virtualConsole
+    });
     const readabilityModule = await import("@mozilla/readability");
     const reader = new readabilityModule.Readability(dom.window.document);
     const article = reader.parse();

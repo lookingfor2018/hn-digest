@@ -31,6 +31,28 @@ function parseList(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function ensureValidAbsoluteUrl(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const candidates = /^https?:\/\//i.test(trimmed)
+    ? [trimmed]
+    : [`https://${trimmed.replace(/^\/+/, "")}`];
+
+  for (const candidate of candidates) {
+    try {
+      const url = new URL(candidate);
+      return url.toString().endsWith("/") ? url.toString() : `${url.toString()}/`;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 function parseCliArgs(argv: string[]): CliOptions {
   const options: CliOptions = {};
 
@@ -76,7 +98,10 @@ function parseCliArgs(argv: string[]): CliOptions {
 function deriveSiteBaseUrl(): string {
   const envValue = process.env.SITE_BASE_URL?.trim();
   if (envValue) {
-    return envValue.endsWith("/") ? envValue : `${envValue}/`;
+    const normalized = ensureValidAbsoluteUrl(envValue);
+    if (normalized) {
+      return normalized;
+    }
   }
 
   const repo = process.env.GITHUB_REPOSITORY?.trim();
@@ -85,7 +110,8 @@ function deriveSiteBaseUrl(): string {
   }
 
   const [owner, repository] = repo.split("/");
-  return `https://${owner}.github.io/${repository}/`;
+  return ensureValidAbsoluteUrl(`https://${owner}.github.io/${repository}/`)
+    ?? "https://example.github.io/hacker-news-digest/";
 }
 
 export function getProjectPaths(rootDir: string = process.cwd()): ProjectPaths {
