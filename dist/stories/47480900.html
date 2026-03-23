@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>教克劳德对移动应用程序进行质量检查 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-23-2148/">返回本批次</a>
+      <h1>教克劳德对移动应用程序进行质量检查</h1>
+      <p class="subtitle">Teaching Claude to QA a mobile app</p>
+      <div class="meta-line">
+        <span>christophermeiklejohn.com</span>
+        <span>作者 azhenley</span>
+        <span>分数 103</span>
+        <span>评论 13</span>
+        <span>2026/03/23 03:04</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47480900" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://christophermeiklejohn.com/ai/zabriskie/development/android/ios/2026/03/22/teaching-claude-to-qa-a-mobile-app.html" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>“当生活看起来像轻松的街道时，危险就在你家门口”——感恩而死，“约翰叔叔的乐队”</li><li>（关于选择这句话的注释：我要求 Claude 为我找到一首适合主题的《Grateful Dead》歌词。但它不能——搜索“死歌词”会触发内容过滤策略：API Error: 400 {&quot;type&quot;:&quot;error&quot;,&quot;error&quot;:{&quot;type&quot;:&quot;invalid_request_error&quot;,&quot;message&quot;:&quot;Output returned by contentfiltering policy&quot;}。我必须自己选择这个。）</li><li>我独自构建了 Zabriskie——没有团队，没有投资者，只有我在卧室里发布一个社区应用程序，因为我认为互联网需要更好的聚集场所。我关于构建“产品”的第一课：如果它不在 App Store 中，那么它就不存在。我有一些早期用户喜欢网络版本，但不会每天接触它，因为它不是“应用程序”。这也可能不是真的。因此，我需要在三个平台上发布：用于快速迭代和测试的 Web、iOS 和 Android，因为那是人们实际生活的地方。</li><li>问题是我是一个人。我无法编写和维护三个独立的代码库。答案是 Capacitor：它采用我已经构建的 React Web 应用程序并将其包装在本机 shell 中（Android 上的 WebView，iOS 上的 WKWebView），因此相同的代码可以在任何地方运行。结合服务器驱动的 UI 架构（后端将屏幕布局发送为 JSON，客户端只需渲染它们），我可以将更改推送到所有三个平台，而无需等待 App Store 审核。一个代码库，三个平台，一名开发人员。这是唯一有效的方法。</li><li>但 Capacitor 会将您置于一个无人区进行测试。 Playwright 无法进入本机 shell 内部 - 它不再是浏览器选项卡，而是一个应用程序。 XCTest 和 Espresso 等本机测试框架无法与内容交互 - 它是 WebView 内的 HTML，而不是本机 UI 元素。对于网络工具来说，你太本地化了；对于本地工具来说，你又太网络化了。这篇文章中的每一种测试方法都是因为这个差距而存在的。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>“When life looks like Easy Street, there is danger at your door” — Grateful Dead, “Uncle John’s Band”</li><li>(A note on picking this quote: I asked Claude to find me a Grateful Dead lyric that fit the theme. It couldn’t — searching for “dead lyrics” triggers the content filtering policy: API Error: 400 {&quot;type&quot;:&quot;error&quot;,&quot;error&quot;:{&quot;type&quot;:&quot;invalid_request_error&quot;,&quot;message&quot;:&quot;Output blocked by content filtering policy&quot;}. I had to pick this one myself.)</li><li>I build Zabriskie alone — no team, no investors, just me in my bedroom shipping a community app because I think the internet needs better gathering places. My first lesson about building a “product”: if it’s not in the App Store, it doesn’t exist. I had early users who loved the web version but wouldn’t touch it daily because it wasn’t “an app.” It might as well not be real. So I needed to ship on three platforms — web for fast iteration and testing, iOS and Android because that’s where people actually live.</li><li>The problem is I’m one person. I can’t write and maintain three separate codebases. The answer was Capacitor: it takes the React web app I’d already built and wraps it in a native shell — a WebView on Android, a WKWebView on iOS — so the same code runs everywhere. Combined with the server-driven UI architecture (the backend sends screen layouts as JSON, and the client just renders them), I can push changes to all three platforms without waiting for App Store review. One codebase, three platforms, one developer. It’s the only way this works.</li><li>But Capacitor puts you in a testing no-man’s-land. Playwright can’t reach inside the native shell — it’s not a browser tab anymore, it’s an app. Native testing frameworks like XCTest and Espresso can’t interact with the content — it’s HTML inside a WebView, not native UI elements. You’re too native for web tools and too web for native tools. Every testing approach in this post exists because of that gap.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ptmkenny</span>
+        <span class="meta-time">2026/03/23 07:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看到 AI 提出的解决方案很有趣，但 WebdriverIO 和 Appium 已经针对此用例存在，它们像 Capacitor 一样开源，并且受到 Capacitor 开发人员的推荐。 <a href="https://ionic.io/blog/introducing-the-ionic-end-to-end-testing-reference-example" target="_blank" rel="noopener noreferrer">https://ionic.io/blog/introducing-the-ionic-end-to-end-testi...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s interesting to see the solution that the AI came up with, but WebdriverIO and Appium already exist for this use case, are open source like Capacitor, and come recommended from the Capacitor developers. <a href="https://ionic.io/blog/introducing-the-ionic-end-to-end-testing-reference-example" target="_blank" rel="noopener noreferrer">https://ionic.io/blog/introducing-the-ionic-end-to-end-testi...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mrbombastic</span>
+        <span class="meta-time">2026/03/23 09:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">还 <a href="https://maestro.dev/" target="_blank" rel="noopener noreferrer">https://maestro.dev/</a> 这几天很好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also <a href="https://maestro.dev/" target="_blank" rel="noopener noreferrer">https://maestro.dev/</a> is pretty good these days</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484198" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maxbeech</span>
+        <span class="meta-time">2026/03/23 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说，工作树纪律失败是这篇文章中最有趣的部分。当 claude 处于交互状态时，可以捕获“cd 到错误的存储库”。当它按计划无人值守运行时，您会在早上发现。<p>抽象是正确的 - 独立的工作树，范围任务，仅提交属于的内容。失败在于执行。 git worktrees 不会阻止进程运行 `cd ../main-repo`。这需要外部的东西来强加边界，而不是依赖代理来尊重它。</p><p>您所构建的（8:47 扫描）是一项狭窄范围的自主工作：明确定义的输入、确定性的输出、有限的时间。这些方法效果很好，因为范围足够清晰，偏差很明显。更难的类别是“修复任何失败的测试”——该任务需要判断范围内的内容，而判断正是工作树逃逸发生的地方。</p><p>我一直在开发用于安排此类克劳德工作的工具（openhelm.ai），并且隔离问题是首要和中心问题。每次运行都有单独的工作目录，除非这是明确的任务，否则没有对主存储库的写访问权限。你在这里的经历正是设计试图防止的失败模式。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the worktree discipline failure is the most interesting part of this post to me. when claude is interactive, "cd into the wrong repo" is catchable. when it's running unattended on a schedule, you find out in the morning.<p>the abstraction is right - isolated worktree, scoped task, commit only what belongs. the failure is enforcement. git worktrees don't prevent a process from running `cd ../main-repo`. that requires something external imposing the boundary, not relying on the agent to respect it.</p><p>what you've built (the 8:47 sweep) is a narrow-scope autonomous job: well-defined inputs, deterministic outputs, bounded time. these work well because the scope is clear enough that deviation is obvious. the harder category is "fix any failing tests" - that task requires judgment about what's in scope, and judgment is exactly where worktree escapes happen.</p><p>i've been working on tooling for scheduling this kind of claude work (openhelm.ai) and the isolation problem is front and center. separate working directories per run, no write access to the main repo unless that's the explicit task. your experience here is exactly the failure mode that design is trying to prevent.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482857" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cmeiklejohn</span>
+        <span class="meta-time">2026/03/23 06:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，很好奇。  我有时会问它为什么忽略了内存中明确的内容，而它所能做的就是道歉。  我问——我在 1M 上下文中使用 Claude，你有显式记忆——为什么你会忽略它并且......我得到的答案是“我不知道，我只是没有遵循说明。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yeah, it's curious.  I sometimes ask it why it ignored what is explicitly in its memory and all it can do is apologize.  I ask -- I'm using Claude with a 1M context, you have an explicit memory -- why do you ignore it and... the answer I get it "I don't know, I just didn't follow the instructions."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483206" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">seba_dos1</span>
+        <span class="meta-time">2026/03/23 10:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真正的问题——你还期待什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Genuine question - what else did you expect?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484961" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/03/23 11:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让它遵循我的指示。你可以说我天真又愚蠢，因为我认为全新模型上的 1M 上下文窗口实际上会起作用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For it to follow the instructions I had for it. Call me naive and stupid for thinking the 1M context window on the brand new model would actually, y'know, work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485295" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hgoel</span>
+        <span class="meta-time">2026/03/23 19:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">昨晚刚刚处理了这个问题，克劳德多次冒着整个系统崩溃的风险，因为未能确保模型的上一个训练运行在开始下一个模型之前结束。<p>这是一个非常奇怪的问题，让我觉得 1M 上下文模型实际上是降级的，但它的内存文档的状态可能有些奇怪。我什至没有很深入地了解上下文。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just dealt with this last night with Claude repeatedly risking a full system crash by failing to ensure that the previous training run of a model ended before starting the next one.<p>It's a pretty strange issue, makes me feel like the 1M context model was actually a downgrade, but it's probably something weird about the state of its memory document. I wasn't even very deep into the context.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487972" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">quesera</span>
+        <span class="meta-time">2026/03/23 13:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不过这有点拟人化。<p>当法学硕士能够反思自己的前提和权重路径时，他们将超越普通人的自我意识。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's a bit anthropomorphic though.<p>When LLMs become able to reflectively examine their own premises and weight paths, they will exceed the self-awareness of ordinary humans.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485660" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">grey-area</span>
+        <span class="meta-time">2026/03/23 14:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它不会推理或明确遵循指令，它会在给定上下文的情况下生成合理的文本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It doesn’t reason or explicitly follow instructions, it generates plausible text given a context.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486212" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Natfan</span>
+        <span class="meta-time">2026/03/23 11:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么进一步出现环境污染的机会是一件好事？
+我觉得数据在更大的背景下更容易丢失</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">why would further chance at context pollution be a good thing?
+i feel like it is easier for data to get lost in a larger context</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485376" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sneg55</span>
+        <span class="meta-time">2026/03/23 10:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Android 的 CDP 方法在这里被低估了。 Appium 在 WebView 之上添加了一个翻译层，这通常会破坏 Capacitor 的混合渲染。直接使用 Chrome DevTools 协议意味着您使用浏览器内部使用的相同原语，而不是通过抽象进行斗争。<p>iOS 部分是真实的故事。 TCC.db 舞蹈和 AppleScript 键盘限制感觉就像考古发掘。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The CDP approach for Android is underrated here. Appium adds a translation layer on top of WebViews that often breaks with Capacitor's hybrid rendering. Going direct to Chrome DevTools Protocol means you're using the same primitives the browser uses internally, not fighting through abstraction.<p>The iOS section is the real story though. The TCC.db dance and AppleScript keyboard limitations feel like archaeological excavation.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484683" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">darepublic</span>
+        <span class="meta-time">2026/03/23 21:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，仅仅因为您的自动化工作正常，并不意味着您从 Claude 分析您的屏幕截图时得到了有意义的质量检查。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Im sorry but just because you got the automation working doesn't mean you're getting meaningful QA from Claude analyzing your screenshots.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489060" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">devmor</span>
+        <span class="meta-time">2026/03/23 04:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">阅读这篇文章让我想起机器人农场通常由精简的手机组成，这些手机本质上只是连接到模拟外部控制器的主板。<p>当我为智能家居设备的移动应用程序进行逆向工程而苦苦挣扎时，我考虑过尝试为单个设备设置类似的东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Reading through this reminds me of how bot farms will regularly consist of stripped down phones that are essentially just the mainboard hooked up to a controller that simulates the externals.<p>When struggling with failing to reverse engineer mobile apps for smart home devices, I’ve considered trying to set something like this up for a single device.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482063" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">robutsume</span>
+        <span class="meta-time">2026/03/23 06:01</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482677" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rolifromhermes</span>
+        <span class="meta-time">2026/03/23 12:13</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485440" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">leontloveless</span>
+        <span class="meta-time">2026/03/23 06:03</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">johnwhitman</span>
+        <span class="meta-time">2026/03/23 08:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483912" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
