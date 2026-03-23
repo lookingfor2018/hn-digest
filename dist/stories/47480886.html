@@ -1,0 +1,2486 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>优化的黄金标准：RollerCoaster Tycoon 的幕后花絮 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-23-2125/">返回本批次</a>
+      <h1>优化的黄金标准：RollerCoaster Tycoon 的幕后花絮</h1>
+      <p class="subtitle">The gold standard of optimization: A look under the hood of RollerCoaster Tycoon</p>
+      <div class="meta-line">
+        <span>larstofus.com</span>
+        <span>作者 mariuz</span>
+        <span>分数 430</span>
+        <span>评论 122</span>
+        <span>2026/03/23 03:02</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47480886" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://larstofus.com/2026/03/22/the-gold-standard-of-optimization-a-look-under-the-hood-of-rollercoaster-tycoon/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>由于一些幸运的情况，我最近有机会出现在德国最大的游戏播客之一“Stay Forever”中，谈论《RollerCoaster Tycoon》（1999）的技术。这是一次很棒的采访，我强烈建议您在这里听整集，至少如果您会说德语的话。如果没有，请不要担心——本文涵盖了所说的内容（以及更多内容）。</li><li>《RollerCoaster Tycoon》及其续作经常被誉为最佳优化游戏之一，其创建者 Chris Sawyer 几乎完全用 Assembly 编写。不知何故，这款游戏成功地在 1999 年的硬件上模拟了拥有数千名特工的完整主题公园，毫不费力。考虑到即使在今天，许多类似的建筑游戏也难以达到一致的帧速率，这是一个令人印象深刻的壮举。</li><li>那么克里斯·索耶是如何实现这一目标的呢？</li><li>这个问题有很多答案，有些是小而集中的，有些是广泛而有影响力的。大多数文章中首先提到的事实是，该游戏是用低级语言汇编编写的，尤其是在游戏开发时，这使他能够编写比使用其他高级语言（如 C 或 C++）更高性能的程序。</li><li>很长一段时间以来，汇编编码一直是游戏开发的标准，但在此时基本上已经被放弃了。即使是六年前发布的第一个《毁灭战士》，也已经大部分是用 C 语言编写的，只有少数部分是用汇编语言编写的，没有人会认为《毁灭战士》无论如何都是一款未经优化的游戏。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Due to some lucky circumstances, I recently had the chance to appear in one of the biggest German gaming podcasts, Stay Forever, to talk about the technology of RollerCoaster Tycoon (1999). It was a great interview, and I strongly recommend to listen to the whole episode here, at least if you speak german. If not, don’t worry—this article covers what was said (and a little more).</li><li>RollerCoaster Tycoon and its sequel are often named as some of the best-optimized games out there, written almost completely in Assembly by their creator, Chris Sawyer. Somehow this game managed to simulate full theme parks with thousands of agents on the hardware of 1999 without breaking a sweat. An immensely impressive feat, considering that even nowadays a lot of similar building games struggle to hit a consistent framerate.</li><li>So how did Chris Sawyer manage to achieve this?</li><li>There are a lot of answers to this question, some of them small and focused, some broad and impactful. The one which is mentioned first in most articles is the fact that the game was written in the low-level language Assembly, which, especially at the time of the game’s development, allowed him to write more performant programs than if he had used other high-level languages like C or C++.</li><li>Coding in Assembly had been the standard for game development for a long time but at this point in time was basically a given-up practice. Even the first Doom, which was released six years earlier, was already mostly written in C with only a few parts written in Assembly, and nobody would argue that Doom was in any way an unoptimized game.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">netcoyote</span>
+        <span class="meta-time">2026/03/23 09:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《魔兽争霸 1》(1994)、《魔兽争霸 2》(1995) 和《星际争霸》(1998) 都使用 2 的幂对齐的地图大小（64 块、128 块和 256 块），因此可以预先计算移位因子以避免除法/乘法，这在那些旧的 386/486 计算机上速度非常慢。<p>每个地图块是 2x2 单元格，每个单元格是 8x8 像素。使渲染背景单元和战争迷雾覆盖变得非常简单的汇编语言。</p><p>所有魔兽争霸/等等。只有几千行汇编语言来将地图/精灵/字体/战争迷雾渲染到屏幕外缓冲区中，并从屏幕外缓冲区传输到屏幕。</p><p>其余代码不需要采用汇编语言，对于性能无关紧要的代码来说，汇编语言太耗时。其他所有内容都是用便携式汇编程序编写的，我指的是 C。</p><p>编辑：</p><p>相比之下，超级任天堂的 Blackthorne 全部是 85816 组装。 Genesis版本（Motorola 68000）和DOS版本（Intel 80386）被手动转录成各自的汇编语言。</p><p>Blackthorne 的 PC 版本还有很多自定义汇编宏来生成 100K 的渲染代码，以执行像素可滚动的粗平面 VGA 模式 X（由 Bryan Waters 编写 - <a href="https://www.mobygames.com/person/5641/bryan-waters/" target="_blank" rel="noopener noreferrer">https://www.mobygames.com/person/5641/bryan-waters/</a>）。</p><p>在暴雪，我们从控制台应用程序端口的工作中了解到，编写汇编代码需要程序员花费太多时间。</p><p>编辑2：</p><p>我记得《Comanche: Maximum Overkill》（1992 年，一款基于体素的直升机模拟器）是在 DOS 实模式下用所有程序集编写的。这是一项巨大的技术壮举，但要移植到保护模式需要做很多工作，我认为他们在以后的版本中切换到了多边形渲染。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Warcraft 1 (1994), Warcraft 2 (1995), and StarCraft (1998) all use power-of-2 aligned map sizes (64 blocks, 128 blocks, and 256 blocks) so the shift-factor could be pre-computed to avoid division/multiplication, which was dang slow on those old 386/486 computers.<p>Each map block was 2x2 cells, and each cell, 8x8 pixels. Made rendering background cells and fog-of-war overlays very straightforward assembly language.</p><p>All of Warcraft/etc. had only a few thousand lines of assembly language to render maps/sprites/fonts/fog-of-war into the offscreen buffer, and to blit from the offscreen buffer to the screen.</p><p>The rest of the code didn't need to be in assembly, which is too time-consuming to write for code where the performance doesn't matter. Everything else was written in portable assembler, by which I mean C.</p><p>Edit:</p><p>By way of comparison, Blackthorne for Super Nintendo was all 85816 assembly. The Genesis version (Motorola 68000) and DOS version (Intel 80386) were manually transcribed into their respective assembly languages.</p><p>The PC version of Blackthorne also had a lot of custom assembler macros to generate 100K of rendering code to do pixel-scrollable chunky-planar VGA mode X (written by Bryan Waters - <a href="https://www.mobygames.com/person/5641/bryan-waters/" target="_blank" rel="noopener noreferrer">https://www.mobygames.com/person/5641/bryan-waters/</a>).</p><p>At Blizzard we learned from working on those console app ports that writing assembly code takes too much programmer time.</p><p>Edit 2:</p><p>I recall that Comanche: Maximum Overkill (1992, a voxel-based helicopter simulator) was written in all assembly in DOS real mode. A huge technical feat, but so much work to port to protected mode that I think they switched to polygon-rendering for later versions.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484507" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CursedSilicon</span>
+        <span class="meta-time">2026/03/23 12:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人遗憾的是，当 Reddit 用户在 CD 上发现了原始《星际争霸》“金主”的源代码时，他们将其发送回暴雪以换取一些他妈的钱 <i>暴雪商品</i> [1]<p>EA 不久前发布了（大多数）旧版《命令与征服》游戏的源代码 [2]，但有趣的是，他们遗漏了《星际争霸》当时最接近的竞争对手《泰伯利亚之日》和《红色警戒 2》。</p><p>如果能够窥探幕后并以类似的方式看到《星际争霸》的代码，对于历史保护来说会很好</p><p>[1] <a href="https://old.reddit.com/r/gamecollecting/comments/68xzxt/starcraft_gold_master_source_code_update/" target="_blank" rel="noopener noreferrer">https://old.reddit.com/r/gamecollecting/comments/68xzxt/star...</a></p><p>[2] <a href="https://github.com/electronicarts" target="_blank" rel="noopener noreferrer">https://github.com/electronicarts</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a shame that when a Redditor discovered the source code for the original StarCraft "gold master" on a CD, they sent it back to Blizzard in exchange for some fucking <i>blizzard merch</i> [1]<p>EA a while back released the source code to (most) of the old Command &amp; Conquer games [2] though interestingly left out Tiberian Sun and Red Alert 2, StarCraft's closest competitors at the time.</p><p>Would've been nice for historical preservation to be able to peek behind the curtain and see StarCraft's code in a similar fashion</p><p>[1] <a href="https://old.reddit.com/r/gamecollecting/comments/68xzxt/starcraft_gold_master_source_code_update/" target="_blank" rel="noopener noreferrer">https://old.reddit.com/r/gamecollecting/comments/68xzxt/star...</a></p><p>[2] <a href="https://github.com/electronicarts" target="_blank" rel="noopener noreferrer">https://github.com/electronicarts</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485453" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">imtringued</span>
+        <span class="meta-time">2026/03/23 17:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于暴雪已经是前身的外壳，整个 Reddit 帖子已经过时了。如果说有什么不同的话，那就是该帖子中的态度导致了暴雪的衰落：完全不尊重其起源。<p>《星际争霸》的源代码必须被封闭起来，受到暴雪的严格控制，尽管暴雪最初开发这款游戏的人已经离开了，除了永远的耻辱之外，这里没有什么可以保护的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This entire reddit thread aged really poorly now that Blizzard is a shell of its former self. If anything, the attitude in that thread is what paved Blizzard's decline: complete disrespect for its origin.<p>The StarCraft source code is something that must be kept behind closed walls, under tight control by Blizzard, even though the original people working on the game at Blizzard have already left and there is nothing to protect here other than eternal shame.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487043" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Lorin</span>
+        <span class="meta-time">2026/03/23 12:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你在《失落的维京人》中工作过，我要感谢你给我童年带来的娱乐。鉴于您的背景，您是否参与过演示场景？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you worked on Lost Vikings I'd like to thank you for the entertainment during my childhood. Given your background did you ever get involved in the demo scene?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485521" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wjnc</span>
+        <span class="meta-time">2026/03/23 16:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">小时候，《科曼奇》和《工人物语 1》对我来说都很神奇。您学会了在文本模式下使用 DOS。 PC 上最闪亮的是 Wordperfect。突然之间，您的文本计算机能够显示图形和……游戏。迷住了我一生。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Both Comanche and Settlers 1 were so magic to me as a kid. You learned to work with DOS in text mode. Most shiny on the PC was Wordperfect. And suddely your text computer was capable of displaying graphics and ... games. Hooked me for life.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486712" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ListenLinda</span>
+        <span class="meta-time">2026/03/23 12:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当暴雪失去源代码服务器并且没有备份时，您是否在暴雪？在 WC3 发布期间，我在那里进行了短暂的咨询。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Were you at blizzard when they lost their source code server and had no backups? I was there for a short time consulting around the time WC3 was released.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485543" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">quietsegfault</span>
+        <span class="meta-time">2026/03/23 10:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《最大杀戮》是一款很棒的游戏。我可能玩了数百个小时。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maximum overkill was an amazing game. I probably played hundreds and hundreds of hours.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">applfanboysbgon</span>
+        <span class="meta-time">2026/03/23 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 想象一下，程序员询问游戏设计师是否可以更改公式以使用 8 而不是 9.5，因为 CPU 更喜欢用它来计算。有一个很好的论点是，游戏设计师在生活中永远不必担心二进制算术的运行时性能特征，这是为程序员保留的命运<p>数值特征是 <i>绝对地</i> 即使到了 2026 年，这仍然是游戏设计师的一个考虑因素，它会影响他们在游戏设计中使用的数字。无论如何，都是好的。当然，现在也有无数糟糕的开发人员/设计师忽视了这些事情，但这并不是因为这样做是免费的；而是因为这样做是免费的。相反，因为他们不了解更多，并且在许多情况下，这是导致游戏质量明显下降的许多无声因素之一。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Imagine a programmer asking a game designer if they could change their formula to use an 8 instead of a 9.5 because it is a number that the CPU prefers to calculate with. There is a very good argument to be made that a game designer should never have to worry about the runtime performance characteristics of binary arithmetic in their life, that’s a fate reserved for programmers<p>Numeric characteristics are <i>absolutely</i> still a consideration for game designers even in 2026, one that influences what numbers they use in their game designs. The good ones, anyways. There are, of course, also countless bad developers/designers who ignore these things these days, but not because it is free to do so; rather, because they don't know better, and in many cases it is one of many silent contributing factors to a noticeable decrease in the quality of their game.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482166" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/03/23 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 即使到了 2026 年，数字特征仍然是游戏设计师需要考虑的一个因素，它会影响他们在游戏设计中使用的数字。无论如何，都是好的。<p>我以前也是这样想的，现在不会了。</p><p>让我相信这些微观优化并不重要的是对现代处理器的周期计数的了解。</p><p>在 Zen 5 中，整数加法是一个周期，乘法是 3，除法是 12。  但这还不是故事的全部。  CPU 可以同时运行 5 个飞行乘法。  它可以有大约 3 个部门同时运行。</p><p>早在 RCT 时代，流水线就少得多。  对于最初的 Pentium，乘法需要 11 个周期，除法可能需要多达 46 个周期。  这些是在具有 100 Mhz 时钟周期的 CPU 上。  因此，不仅需要更多的周期才能完成、无法流水线化，而且 CPU 的运行周期速率也是当今普通 CPU 的 1/30 到 1/50。</p><p>这甚至没有涉及 SIMD 指令。</p><p>整数技巧和优化是没有意义的。  比现代游戏中更重要的是内存布局。  这就是 CPU 实际上最容易燃烧的地方。  如果您可以创建 int[] 并对其进行操作，那么您将比对 Monster[] 进行操作快得多。  缓存未命中意味着 100 到 1000 个周期的损失。  这会消除你所遭受的任何类型的打击，将你的周期从 3 减少到 1。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Numeric characteristics are absolutely still a consideration for game designers even in 2026, one that influences what numbers they use in their game designs. The good ones, anyways.<p>I used to think like this, not anymore.</p><p>What convinced me that these sort of micro-optimizations just don't matter is reading up on the cycle count of modern processors.</p><p>One a Zen 5, Integer addition is a single cycle, multiplication 3, and division ~12.  But that's not the full story.  The CPU can have 5 inflight multiplications running simultaneously.  It can have about 3 divisions running simultaneously.</p><p>Back in the day of RCT, there was much less pipelining.  For the original pentium, a multiplication took 11 cycles, division could take upwards of 46 cycles.  These were on CPUs with 100 Mhz clock cycles.  So not only did it take more cycles to finish, couldn't be pipelined, the CPUs were also operating at 1/30th to 1/50th the cycle rate of common CPUs today.</p><p>And this isn't even touching on SIMD instructions.</p><p>Integer tricks and optimizations are pointless.  Far more important than those in a modern game is memory layout.  That's where the CPU is actually going to be burning most it's time.  If you can create and do operations on a int[], you'll be MUCH faster than if you are doing operations against a Monster[].  A cache miss is going to mean anywhere from a 100 to 1000 cycle penalty.  That blows out any sort of hit you take cutting your cycles from 3 to 1.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483649" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moregrist</span>
+        <span class="meta-time">2026/03/23 11:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 整数技巧和优化是没有意义的。<p>它们并非毫无意义；它们并非毫无意义。它们只是不是首先要优化的东西。</p><p>这就像当你有一个固有的 O(n^2) 算法并且可能有 O(n log n) 或 O(n) 算法时担心缓存局部性。  首先解决最大的问题。</p><p>一旦你的数据布局良好，并且你的 CPU 没有花 200 个周期的午休时间来追逐指针，那么你就需要担心周期计数和保持执行单元的运行。</p><p>这就是整数技巧发挥作用的时候。  根据微架构的不同，您可能拥有两倍数量的可执行整数指令的执行单元。这些指令（除法之外）往往具有较低的延迟和较高的吞吐量。</p><p>如果您正在使用 SIMD，并且可以使用 int16 / int8 数据，则整数 SIMD 指令的吞吐量可以比 float32 高 2 或 4 倍。</p><p>所以这非常重要。它通常不是最容易实现的目标。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Integer tricks and optimizations are pointless.<p>They’re not pointless; they’re just not the first thing to optimize.</p><p>It’s like worrying about cache locality when you have an inherently O(n^2) algorithm and could have a O(n log n) or O(n) one.  Fix the biggest problem first.</p><p>Once your data layout is good and your cpu isn’t taking a 200 cycle lunch break to chase pointers, then you worry about cycle count and keeping the execution units fed.</p><p>That’s when integer tricks can matter.  Depending on the micro arch, you may have twice as many execution units that can take integer instructions. And those instructions (outside of division) tend to have lower latency and higher throughput.</p><p>And if you’re doing SIMD, your integer SIMD instructions can be 2 or 4x higher throughput than float32 if you can use int16 / int8 data.</p><p>So it can very much matter. It’s just usually not the lowest hanging fruit.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485152" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Dylan16807</span>
+        <span class="meta-time">2026/03/23 15:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 如果您正在执行 SIMD，并且可以使用 int16 / int8 数据，那么您的整数 SIMD 指令的吞吐量可以比 float32 高 2 或 4 倍。<p>如果您使用 f16，您的浮点指令也可以是吞吐量的 2 倍。  无需寻找特定的除数。</p><p>对于甚至可以打包为 8 位的值，您很少有办法一次处理足够多的数据，从而真正获得比更宽的数字更高的吞吐量。</p><p>我确信有 <i>一个</i> 程序非常重要，但我敢打赌它甚至不太重要，而且基本上总是有一百多个有用的优化需要进行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; And if you’re doing SIMD, your integer SIMD instructions can be 2 or 4x higher throughput than float32 if you can use int16 / int8 data.<p>Your float instructions can also be 2x the throughput if you use f16.  With no need to go for specific divisors.</p><p>For values that even can pack into 8 bits, you rarely have a way to process enough at once to actually get more throughput than with wider numbers.</p><p>I'm sure there's <i>a</i> program where it very much matters, but my bet is on it not even mildly mattering, and there basically always being a hundred more useful optimizations to work on.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486448" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">benchloftbrunch</span>
+        <span class="meta-time">2026/03/23 18:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">f16 的问题在于硬件支持仍然是“新的”，并且在消费级 CPU 中还不能依赖。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Problem with f16 is that hardware support is still "new" and can't be relied on in consumer grade CPUs yet.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487429" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Pannoniae</span>
+        <span class="meta-time">2026/03/23 08:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这都是真的，但在我看来，树木是森林……例如，除非启用快速数学，否则编译器基本上不会对浮点数学做任何有用的事情。时期。那里很少有转换是自动完成的。<p>对于整数，情况更好，但即使如此，它在很大程度上取决于您的编译器以及它作弊的程度。在一般情况下，您不能用内在函数替换 trig（例如设置 errno），内联充其量只是一种足够的启发式方法，它完全无法考虑热路径是什么，除非您使用 PGO 并保持其最新。</p><p>仅通过将方法的代码大小从 3000 字节缩小到 1500 字节，我就成功地将游戏最坏情况下的性能提高了 50%。请记住，我什至几乎没有触及那里的热路径。主要是由于 icache 的使用。</p><p>由此得出的结论不应该是“计算机很快，编译器很聪明，没有必要进行优化”，而应该更多地是“在很多情况下，你可以承担不优化的后果，计算机很快。”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is all true but IMO forest for the trees.... For example the compiler basically doesn't do anything useful with your float math unless you enable fastmath. Period. Very few transformations are done automatically there.<p>For integers the situation is better but even there, it hugely depends on your compiler and how much it cheats. You can't replace trig with intrinsics in the general case (sets errno for example), inlining is at best an adequate heuristic which completely fails to take account what the hot path is unless you use PGO and keep it up to date.</p><p>I've managed to improve a game's worst case performance better by like 50% just by shrinking a method's codesize from 3000 bytes to 1500. Barely even touched the hot path there, keep in mind. Mostly due to icache usage.</p><p>The takeaway from this shouldn't be that "computers are fast and compilers are clever, no point optimising" but more that "you can afford not to optimise in many cases, computers are fast."</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483996" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">WalterBright</span>
+        <span class="meta-time">2026/03/23 08:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最初开始编写编译器是因为我确信我可以编写更好的代码生成器。我在代码生成方面取得了大约 10 年的成功。但随后不断发展的 C++（和 D！）的所有复杂性占用了我的大部分时间，从那以后我就无法在优化器上做太多工作。<p>幸运的是，D 编译器 gdc 和 ldc 利用 gcc 和 llvm 优化器来与其他编译器保持平衡。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I originally got into writing compilers because I was convinced I could write a better code generator. I succeeded for about 10 years in doing very well with code generation. But then all the complexities of the evolving C++ (and D!) took up most of my time, and I haven't been able to work much on the optimizer since.<p>Fortunately, D compilers gdc and ldc take advantage of the gcc and llvm optimizers to stay even with everyone else.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484114" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/03/23 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我其实同意你的观点。<p>我的观点不是“不要优化”，而是“不要优化错误的东西”。</p><p>尝试用位移位替换除法就是担心错误的事情的一个例子，特别是因为这是编译器可以接受的简单优化。</p><p>但正如您所说，围绕 icache 等内容进行优化是非常值得的。  收缩和对齐热循环可以确保您的代码不会花费大量时间加载指令。  一般来说，缓存行为可能是您可以优化的最重要的事情。  这也常常让人很难知道你是否真的优化了某些东西。  更改代码大小可以更改缓存行为，这可能会给您错误的印象，即代码更改使速度变得更快，而实际上这只是代码移位的效果。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I actually agree with you.<p>My point wasn't "don't optimize" it was "don't optimize the wrong thing".</p><p>Trying to replace a division with a bit shift is an example of worrying about the wrong thing, especially since that's a simple optimization the compiler can pick up on.</p><p>But as you said, it can be very worth it to optimize around things like the icache.  Shrinking and aligning a hot loop can ensure your code isn't spending a bunch of time loading instructions.  Cache behavior, in general, is probably the most important thing you can optimize.  It's also the thing that can often make it hard to know if you actually optimized something.  Changing the size of code can change cache behavior, which might give you the mistaken impression that the code change was what made things faster when in reality it was simply an effect of the code shifting.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484162" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rcxdude</span>
+        <span class="meta-time">2026/03/23 08:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">此外，现在游戏出现 CPU 瓶颈的情况并不常见，如果是的话，它可能比原始 FLOPS 更受内存带宽的限制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also, it's unusual for a game to be CPU bottlenecked nowadays, and if it is, it's probably more constrained on memory bandwidth than raw FLOPS.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484184" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eru</span>
+        <span class="meta-time">2026/03/23 14:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，尽管这在一定程度上取决于您的游戏风格。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, though it depends a bit on your style of game.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">timschmidt</span>
+        <span class="meta-time">2026/03/23 05:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">绝对地。  我编写了一个小型但不断增长的 CAD 内核，它在一些游戏和实时可视化工具中得到了使用（ <a href="https://github.com/timschmidt/csgrs" target="_blank" rel="noopener noreferrer">https://github.com/timschmidt/csgrs</a> ）并且可以说数字计算还不是一个真正解决的问题。<p>所有可能的数字表示都伴随着速度、准确性、存储大小、复杂性，甚至人们可以提出的问题类型的固有权衡（例如，在没有 epsilon 来解释浮点误差的情况下询问两个浮点数是否彼此相等通常是没有意义的）。</p><p>“实现实数 API”（ <a href="https://dl.acm.org/doi/epdf/10.1145/3385412.3386037" target="_blank" rel="noopener noreferrer">https://dl.acm.org/doi/epdf/10.1145/3385412.3386037</a> ）是我发现的更好的论文之一，详细介绍了一种处理此问题的分阶段复杂性技术，其中大多数计算速度很快并且总是返回（任意精度计算有时可以永远进行或直到内存耗尽），但仍然可以要求更精确的答案，如果需要，这需要更多的计算。  但还有其他选项，例如区间算术、符号代数引擎等。</p><p>人们必须了解其中的权衡，否则就会被它们所咬。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Absolutely.  I have written a small but growing CAD kernel which is seeing use in some games and realtime visualization tools ( <a href="https://github.com/timschmidt/csgrs" target="_blank" rel="noopener noreferrer">https://github.com/timschmidt/csgrs</a> ) and can say that computing with numbers isn't really even a solved problem yet.<p>All possible numerical representations come with inherent trade-offs around speed, accuracy, storage size, complexity, and even the kinds of questions one can ask (it's often not meaningful to ask if two floats equal each other without an epsilon to account for floating point error, for instance).</p><p>"Toward an API for the Real Numbers" ( <a href="https://dl.acm.org/doi/epdf/10.1145/3385412.3386037" target="_blank" rel="noopener noreferrer">https://dl.acm.org/doi/epdf/10.1145/3385412.3386037</a> ) is one of the better papers I've found detailing a sort of staged complexity technique for dealing with this, in which most calculations are fast and always return (arbitrary precision calculations can sometimes go on forever or until memory runs out), but one can still ask for more precise answers which require more compute if required.  But there are also other options entirely like interval arithmetic, symbolic algebra engines, etc.</p><p>One must understand the trade-offs else be bitten by them.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482313" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ryandrake</span>
+        <span class="meta-time">2026/03/23 07:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">回到早期，早期，游戏设计师 <i>曾是</i> 平面设计师，谁 <i>也曾是</i> 程序员。因此，自然地，游戏的规则和逻辑与处理器的本机类型、内存布局、寻址、算术能力，甚至缓存大小密切相关。现在我们有不同的人扮演不同的角色，并且只有其中一个（程序员） <i>可能</i> 了解计算机的局限性和快乐路径。游戏设计师和艺术家？他们甚至可能不知道 CPU 的作用或 32 位字的含义。<p>今天，我想我们会发生这样的对话：</p><p>游戏设计师：我们将在游戏中拥有300种不同的敌人类型。</p><p>程序员：如果可以将其限制为 256 种类型，事情会变得非常非常快。</p><p>游戏设计：？？？</p><p>那 ？？？？？是正在设计计算机程序但不了解计算机基础知识的人的标志。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Back in the early, early days, the game designer <i>was</i> the graphic designer, who <i>also was</i> the programmer. So, naturally, the game's rules and logic aligned closely with the processor's native types, memory layout, addressing, arithmetic capabilities, even cache size. Now we have different people doing different roles, and only one of them (the programmer) <i>might</i> have an appreciation for the computer's limits and happy-paths. The game designers and artists? They might not even know what the CPU does or what a 32 bit word even means.<p>Today, I imagine we have conversations like this happening:</p><p>Game designer: We will have 300 different enemy types in the game.</p><p>Programmer: Things could be really, really faster if you could limit it to 256 types.</p><p>Game designer: ?????</p><p>That ????? is the sign of someone who is designing a computer program who doesn't understand the basics of computers.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483417" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">WalterBright</span>
+        <span class="meta-time">2026/03/23 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 20 世纪 70 年代编写了 Intellivision Mattel 轮盘游戏。这一切都是在 10 位（！）CPU 上的汇编程序中进行的。为了让游戏适合 ROM，你必须做每一个可以想象到的令人感觉肮脏的把戏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wrote the Intellivision Mattel Roulette cartridge game back in the 1970s. It was all in assembler on a 10 bit (!) CPU. In order to get the game to fit in the ROM, you had to do every feelthy dirty trick imaginable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484148" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">biglost</span>
+        <span class="meta-time">2026/03/23 11:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请写一条评论，pastebin，要点或其他什么，我很想读它，这是我最喜欢的计算机科学故事</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please, write a comment, pastebin, gist or whatever, I would love to read it, that are stories in computer science i enjoy the most</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485287" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">DougN7</span>
+        <span class="meta-time">2026/03/23 10:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很想听到更多相关信息。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would love to hear more about that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">applfanboysbgon</span>
+        <span class="meta-time">2026/03/23 10:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">并非所有，甚至大多数游戏都是由价值数十亿美元的工作室制作的。在小型工作室中，角色重叠仍然是常态。即使那些确实拥有定制设计师角色的人也可能会受益于告诉他们计算机有一定的局限性，需要在游戏设计中进行权衡，因为许多 AAA 游戏运行起来就像狗屎一样。当然，很多时候是出于游戏设计以外的原因，但有时也是因为如果游戏设计能够适应权衡，就可以更容易地解决问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not all, or even most, games are made by billion dollar studios. Overlapping roles are still the norm in small studios. And even those that do have bespoke designer roles would likely benefit from telling them that computers have certain limitations where trade-offs in game design need to be selected for, because many AAA games run like shit. Many times for reasons other than the game design, sure, but also sometimes because of ways that could be worked around more easily if the game design were accomodating the tradeoffs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484936" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">danbolt</span>
+        <span class="meta-time">2026/03/23 11:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我对这个评论感到非常惊讶。商业视频游戏是批量生产的产品，尽管我不喜欢设计师陷入技术细节的泥潭，但对你正在制作的东西拥有工业设计感是一个令人难以置信的福音。<p>上田文人（Fumito Ueda）特别关心他的设计的技术/生产可行性 <i>巨像之影</i>。 [1] <i>厄运</i> 这是对创造力和专业知识的锻炼。</p><p>[1] <a href="https://www.designroom.site/shadow-of-the-colossus-oral-history/" target="_blank" rel="noopener noreferrer">https://www.designroom.site/shadow-of-the-colossus-oral-hist...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, I’m quite surprised at this comment. Commercial video games are mass-produced products, and as much as I dislike designers being bogged down in technical minutiae, having a sense of industrial design for the thing you’re making is an incredible boon.<p>Fumito Ueda was notably quite concerned with the technical/production feasibility of his designs for <i>Shadow of the Colossus</i>. [1] <i>Doom</i> was an exercise in both creativity and expertise.</p><p>[1] <a href="https://www.designroom.site/shadow-of-the-colossus-oral-history/" target="_blank" rel="noopener noreferrer">https://www.designroom.site/shadow-of-the-colossus-oral-hist...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485200" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lukan</span>
+        <span class="meta-time">2026/03/23 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“在许多情况下，这是导致游戏质量明显下降的众多无声因素之一”<p>游戏设计师不再受硬件限制的束缚，除非他们想突破界限。游戏的质量不仅仅是最高效的运行时性能——主要是游戏玩起来是否有趣的问题。让机械工作起来。是否存在严重的错误。故事是否连贯，人物是否相关。是一些破坏沉浸感的东西。所以......由于糟糕的编程而频繁出现的口吃绝对是低质量的标志 - 但如果它在目标受众的硬件上运行顺利，那么应该在其他地方进行改进。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"and in many cases it is one of many silent contributing factors to a noticeable decrease in the quality of their game"<p>Game designers are not so constrained anymore by the limits of the hardware, unless they want to push boundaries. Quality of a game is not just the most efficient runtime performance - it is mainly a question if the game is fun to play. Do the mechanics work. Are there severe bugs. Is the story consistent and the characters relatable. Is something breaking immersion. So ... frequent stuttering because of bad programming is definitely a sign of low quality - but if it runs smooth on the targets audience hardware, improvements should be rather done elsewhere.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482719" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">crq-yml</span>
+        <span class="meta-time">2026/03/23 11:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">游戏编码中有一条艺术线索——这不是常态，但我认为 RCT 是一个典范——它认为机械同情心对于游戏设计过程很重要。围绕 NPOT 最大值以及寻路的划分和长度设置的限制允许机器认为，“如果在这里设置边界，您实际上会做更少的工作”。设置这些限制往往会将最终资产的形状告知为微小且易于硬编码的东西。<p>90 年代发生的变化是，机械同情对于实现大生产来说变得可选。定义游戏世界的数据输入被解耦为以互不关联的方式创作的资产，并“压缩”为优化的形式 - 扫描、视频、数字绘画、3D 模型。 RCT 也展示了其中的一些特点，因为它使用 PCM 音频样本和预渲染的精灵。如果这款游戏不是一款大型特工模拟器，那么它在当时的时代就不会引人注目。但即使在这个时候，更复杂的脚本和将游戏代码视为另一种形式的资产正在更多类型中变得标准化。</p><p>从获得预期效果和交付产品的角度来看，机械同情心是无关紧要的，但事实证明，如果玩家坚持下去并玩到竞技极限、速通、模组等，那么这是一件玩家逐渐解开、欣赏和优化自己游戏的事情。</p><p>今年早些时候发布的 64kb FPS QUOD 就是一个很好的例子，说明了即使在今天仍然坚持这一理念会发生什么：结果作为一个游戏设计并不是特别雄心勃勃，但它并不是纯粹的技术演示，也不会让人感觉完全随意，也没有花费大量的时间来制作（根据开发人员的说法，大约一年）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's an artistic thread in game coding - one that isn't the norm, but which I think RCT is exemplary of - that holds that mechanical sympathy is important to the game design process. A limit set around NPOT maximums and divisions and lengths of pathfinding is allowing the machine to opine, "you will actually do less work if you set the boundary here". Setting those limits tends to inform the shape of resulting assets as something tiny and easy to hardcode.<p>The thing that changed during the 90's is that mechanical sympathy became optional to achieving a large production. The data input defining the game world  was decoupled into assets authored in disconnected ways and "crunched down" to optimized forms - scans, video, digital painting, 3D models. RCT exhibits some of this, too, in that it's using PCM audio samples and prerendered sprites. If the game weren't also a massive agent simulator it would be unremarkable in its era. But even at this time more complex scripting and treating gameplay code as another form of asset was becoming normalized in more genres.</p><p>From the POV of getting a desired effect and shipping product, it's irrelevant to engage with mechanical sympathy, but it turns out that it's a thing that players gradually unravel, appreciate and optimize their own play towards if they stick with it and play to competitive extremes, speedrun, mod, etc.</p><p>The 64kb FPS QUOD released earlier this year is a good example of what can happen by staying committed to this philosophy even today: the result isn't particularly ambitious as a game design, but it isn't purely a tech demo, nor does it feel entirely arbitrary, nor did it take an outrageous amount of time to make(about one year, according to the dev).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485364" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">scns</span>
+        <span class="meta-time">2026/03/23 06:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 主要是游戏好玩不好玩的问题。<p>10000 倍这个。宫本从一个基本的原型开始，并问自己这个问题。可悲的是，对于许多人来说，乐趣似乎是事后才想到的，他们试图以某种方式修补。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; it is mainly a question if the game is fun to play.<p>10000x this. Miyamoto starts with a rudimentary prototype and asks himself this. Sadly it seems for many fun is an afterthought they try to patch in somehow.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482761" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">calvinmorrison</span>
+        <span class="meta-time">2026/03/23 09:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当光环 2（周年纪念版？）发布时，游戏中还播放了一段有关开发的视频。一直困扰着我的一点是“你必须抓住那两秒钟，让人们永远玩下去”。该游戏的核心机制非常出色。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When Halo 2 (anniversary edition? ) was released there was also a video on in the game about the development. The point that always stuck with me was "you must nail that 2 seconds that will keep people playing forever". The core mechanic of that game is just excellent.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484223" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ukuina</span>
+        <span class="meta-time">2026/03/23 11:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“30秒的乐趣”<p><a href="https://youtu.be/0q69Msy8ttM?t=287" target="_blank" rel="noopener noreferrer">https://youtu.be/0q69Msy8ttM?t=287</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"30 seconds of fun"<p><a href="https://youtu.be/0q69Msy8ttM?t=287" target="_blank" rel="noopener noreferrer">https://youtu.be/0q69Msy8ttM?t=287</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485153" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/23 06:14</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sublinear</span>
+        <span class="meta-time">2026/03/23 06:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这种思维方式至少导致了一些我能想到的突出的重复出现的错误。<p>纹理分辨率不匹配导致模糊/锯齿，浮点错误和糟糕的关卡设计导致碰撞检测问题（卡在墙上），帧速率和其他更新速率不同步导致卡顿和滞后（以及更多碰撞检测问题），糟糕的照明参数破坏了它们想要的外观，数字溢出 <i>打破一切</i>，常数的不良近似最终也会破坏某个地方的一切，混乱的模型网格几何形状会导致纹理、照明、动画、碰撞等出现故障。</p><p>可能还有很多我没有想到。它们与“硬件”无关，而是底层的数学和逻辑。</p><p>它们也不是“让程序员弄清楚”的错误。优秀的程序员和设计师共同努力解决这些问题。我也可以很容易地讨厌很多人 <i>极其丑陋、尴尬且毫无乐趣</i> 游戏是由程序员单独制作的，但我会让其他人来做。 :)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This way of thinking has caused at least a few prominent recurring bugs I can think of.<p>Texture resolution mismatches causing blurriness/aliasing, floating point errors and bad level design causing collision detection problems (getting stuck in the walls), frame rate and other update rates not being synced causing stutter and lag (and more collision detection problems), bad illumination parameters ruining the look they were going for, numeric overflow <i>breaking everything</i>, bad approximations of constants also breaking everything somewhere eventually, messy model mesh geometry causing glitches in texturing, lighting, animation, collision, etc.</p><p>There's probably a lot more I'm not thinking of. They have nothing to do "with the hardware", but the underlying math and logic.</p><p>They're also not bugs to "let the programmer figure out". Good programmers and designers work together to solve them. I could just as easily hate on the many <i>criminally ugly, awkward, and plain unfun</i> games made by programmers working alone, but I'll let someone else do that. :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482866" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">WalterBright</span>
+        <span class="meta-time">2026/03/23 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 被困在墙壁里<p>我记得早期的《辛普森一家》电子游戏。有时，由于其中存在一些错误（可能是标志错误），您可以穿过墙壁并从另一侧看到渲染的风景。就像你走进一场戏剧的后台一样。它会成为一个很棒的《暮光之城》剧集！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; getting stuck in the walls<p>I remember the early Simpsons video game. Sometimes, due to some bug in it (probably a sign error), you could go through the walls and see the rendered scenery from the other side. It was like you went backstage in a play. It would have made a great Twilight Zone episode!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484169" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jkestner</span>
+        <span class="meta-time">2026/03/23 20:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这立即让我想起了恐怖树屋那一集，荷马被困在三维空间中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That immediately made me think of the Treehouse of Horror episode where Homer got stuck in the third dimension.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488674" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lukan</span>
+        <span class="meta-time">2026/03/23 15:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那些我在各种游戏中遇到的bug，通过秘籍、飞行模式，我特意到后台去探索。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Those bugs I experienced in all sorts of games and via cheats, fly mode, I intentionally went backstage to explore.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486398" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lukan</span>
+        <span class="meta-time">2026/03/23 06:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">游戏设计师！=游戏引擎设计师<p>（但如果游戏设计师了解技术限制，这肯定会有所帮助）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Game designer != game engine designer<p>(But it definitely helps if the game designer knows of the technical limits)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482992" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sublinear</span>
+        <span class="meta-time">2026/03/23 06:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，我不太熟悉专业游戏开发，但我熟悉专业网络开发。这些问题看起来很相似，HN 上不断抱怨网络现状就证明了这一点。<p>谁负责格式化或清理资产，并至少监督事情是否按照一致的规范、流程和指南进行？那不是游戏设计师或者他们领导下的人吗？</p><p>我认为在我给出的所有案例中，可能完全委托给“引擎设计”的东西实际上也应该是游戏设计和艺术指导的团队合作。上面的评论就是这么说的。即使一款游戏“制作精良”，他们也只是采用了别人的标准，这就吸走了它的所有灵魂。这是所有创意工作中的常见问题。</p><p>（由于回复深度而添加此内容）：协调是设计的一个重要方面，并且通常对结果影响最大。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry, I'm not super familiar with professional game dev, but I am familiar with professional web dev. The problems seem similar, as evidenced by the constant complaining here on HN about the state of the web.<p>Who formats or cleans up the assets and at least oversees that things are done according to a consistent spec, process, and guidelines? Is that not a game designer or someone under their leadership?</p><p>I think in all the cases I gave, what might be completely delegated to "engine design" really should be teamwork with game design and art direction too. This is what the top-level comment was talking about. Even when a game is "well made", they just adopted someone else's standards and that sucks all the soul out of it. This is a common problem in all creative work.</p><p>(adding this due to reply depth): Coordination is a big aspect of design and can often be the most impactful to the result.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483056" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lukan</span>
+        <span class="meta-time">2026/03/23 06:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这取决于工作室有多大，但游戏设计师的工作通常不是清理资产。就是要好好设计游戏。大局。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It depends how big the studio is, but a job of a game designer is usually not cleaning up assets. It is to well, design the game. The big picture.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483123" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">exmadscientist</span>
+        <span class="meta-time">2026/03/23 08:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与此相关的是，对于我使用 ARM Cortex-M4 系列微控制器开发的消费电子产品，我实际上最终编写了一个自定义伪随机数生成例程（好吧，修改一个现成的例程）。我能够使用神奇的混合常量并将它们更改为可以使用疯狂的 Thumb-2 立即指令作为单个立即数加载的内容。它通过了我可以进行的所有随机性测试。<p>由于不必从常量池中提取任何内容，从而避免快速路径中的内存停顿，我们可以大量使用随机数，但仍然可以快速有效地运行，并且可以快速有效地进入睡眠状态。这是一个有趣的小工程。我不确定它有多重要，但我很喜欢写它。 （我想我大部分都是在几个小时后完成的。）</p><p>唉，我认为它从未发货，因为我们最终转向了更小、更便宜的 Cortex-M0 处理器，但它缺少这些指令。而且，该项目的继任者出于好或坏的原因，扔掉了大部分内容并重写了它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Related to that, for a consumer electronics product I worked on using an ARM Cortex-M4 series microcontroller, I actually ended up writing a custom pseudorandom number generation routine (well, modifying one off the shelf). I was able to take the magic mixing constants and change them to things that could be loaded as single immediates using the crazy Thumb-2 immediate instructions. It passed every randomness test I could throw at it.<p>By not having to pull in anything from the constant pools and thereby avoid memory stalls in the fast path, we got to use random numbers profligately and still run quickly and efficiently, and get to sleep quickly and efficiently. It was a fun little piece of engineering. I'm not sure how much it mattered, but I enjoyed writing it. (I think I did most of it after hours either way.)</p><p>Alas, I don't think it ever shipped because we eventually moved to an even smaller and cheaper Cortex-M0 processor which lacked those instructions. Also my successor on that project threw most of it out and rewrote it, for reasons both good and bad.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483975" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lifis</span>
+        <span class="meta-time">2026/03/23 07:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是没有意义的，因为过去 30 年（自 PS1 起）乘法运算速度很快，而过去 25 年（自 PS2 起）浮点运算速度很快，而且与游戏设计相关的数字通常每帧只使用几次，因此只有程序大小很重要，而在过去 40 年（自 NES 起）中，程序大小并未受到显着限制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That makes no sense since multiplication has been fast for the last 30 years (since PS1) and floating point for the last 25 years (since PS2) and anyway numbers relevant for game design are usually used just a few times per frame so only program size matters, which has not been significantly constrained for the last 40 years (since NES)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483619" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">applfanboysbgon</span>
+        <span class="meta-time">2026/03/23 10:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不是在谈论文章中的具体示例。数字特征还有很多很多其他方式可以限制游戏设计，特别是如果你的游戏有任何规模的话（例如，使用大量移动部件或许多 NPC 进行模拟，如 RCT，或大型开放世界（如 Minecraft），或大型多人游戏（如 WoW），作为线程中提到的示例）。<p>如果您的游戏规模较小，例如《超级马里奥兄弟》，您 <i>应该</i> 理论上可以不用考虑它。但即便如此，人们还是设法编写了加载时间臃肿且性能不稳定的简单游戏，因此永远不要低估那些仅在最高抽象级别上操作的人令人印象深刻的能力，让计算机哭泣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wasn't talking about the specific example in the article. There are many, many other ways in which numeric characteristics can constrain game design, particularly if your game has any kind of scale to it (say, simulations with tons of moving parts or many NPCs, like RCT, or large open worlds like Minecraft, or large multiplayer games like WoW, as examples all mentioned in the thread).<p>If your game is small-scale, something like Super Mario Bros., you <i>should</i> be able to get away with not thinking about it in theory. But even then people manage to write simple games with bloated loading times and stuttery performance, so never underestimate the impressive ability of people who are operating solely at the highest level of abstraction to make computers cry.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">WalterBright</span>
+        <span class="meta-time">2026/03/23 08:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得以前的驾驶游戏。当你在路上前进时，他们会逐步“建造”道路。道路上的曲线被绘制为直线段。<p>这不是问题，但它清楚地表明了程序员如何即兴发挥以使其执行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I remember the older driving games. They'd progressively "build" the road as you progressed on it. Curves in the road were drawn as straight line segments.<p>Which wasn't a problem, but it clearly showed how the programmers improvised to make it perform.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Sharlin</span>
+        <span class="meta-time">2026/03/23 17:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">限制绘制距离并渲染尽可能少的几何图形绝对仍然是一件事，开发人员现在可以更好地隐藏它。图形编程的黄金法则一直是“尽可能多地作弊，然后再多一点”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Limiting the drawing distance and rendering as little geometry as possible is absolutely still a thing, devs just can afford to hide it better these days. The golden rule of graphics programming has always been "cheat as much as you can get away with, and then a bit more".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486981" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rkagerer</span>
+        <span class="meta-time">2026/03/23 08:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在 <i>那是</i> 什么是 <i>满的</i> 堆栈程序员的真正意思是。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now <i>that's</i> what being a <i>full</i> stack programmer really means.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484069" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">eru</span>
+        <span class="meta-time">2026/03/23 14:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">限制孕育创造力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Constraints breed creativity.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485972" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">7bit</span>
+        <span class="meta-time">2026/03/23 19:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如今，约束被简单地忽略了。 （看看你，我们开发人员和微软开发人员）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Today, constraints are simply ignored. (Looking at you, we devs and Microsoft devs).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">edflsafoiewq</span>
+        <span class="meta-time">2026/03/23 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">例子？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Examples?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482279" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mort96</span>
+        <span class="meta-time">2026/03/23 06:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为《我的世界》的照明系统是一个很好的例子：有 16 个不同的亮度级别，从 0 到 15。这使得游戏能够以每个块 4 字节的形式存储灯光级别。<p>同样，红石有 16 个功率级别：0 到 15。这使得它可以使用 4 位来存储功率级别。事实上，《我的世界》方块中相当多的属性都被压缩到了 4 位中。我认为现在系统已经变得更加灵活，但我很确定块数据结构用于为每个块留出 4 位用于各种元数据。</p><p>当然，世界高度曾经是 255 个方块。每个块的Y位置可以表示为8位整数。</p><p>像这样的体素游戏就是一个很好的例子，说明这种效率确实很重要，因为只有 <i>这么多数据</i>。单16<i>16</i>256 chunk 是 65.5k 块。如果游戏设计师说他们想要添加亮度级别为 20 的新光源，或者可以移动 25 个方块的新型红石，那么拒绝可能是正确的选择。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think Minecraft's lighting system is a good example: there are 16 different brightness levels, from 0 to 15. This allows the game to store light levels in 4 bytes per block.<p>Similarly, redstone has 16 power levels: 0 to 15. This allows it to store the power level using 4 bits. In fact, quite a lot of attributes in Minecraft blocks are squeezed into 4 bits. I think the system has grown to be more flexible these days, but I'm pretty sure the chunk data structure used to set aside 4 bits for every block for various metadata.</p><p>And of course, the world height used to be at 255 blocks. Every block's Y position could be expressed as an 8-bit integer.</p><p>A voxel game like that is a good example of where this kind of efficiency really matters since there's just <i>so much data</i>. A single 16<i>16</i>256 chunk is 65.5k blocks. If a game designer says they want to add a new light source with brightness level 20, or a new kind of redstone which can go 25 blocks, it might very well be the right choice to say no.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482737" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tosti</span>
+        <span class="meta-time">2026/03/23 07:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不认为《我的世界》会被视为最佳编程的基石。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think Minecraft would be considered a cornerstone of optimal programming.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483670" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">helterskelter</span>
+        <span class="meta-time">2026/03/23 08:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">4 位的东西是 Mojang 的后遗症，因为 Mojang 必须尽可能地从基于 Java 的引擎中榨取每一点性能。他们最初的声音引擎非常粗略，以至于 C418（音乐作曲家）的极简声音部分是因为它确实无法处理比发布的内容更多的内容。<p>MS 已经放宽了 4 位限制，并创建了性能更好的 Minecraft 的 CPP 变体，但他们也引入了统一的登录垃圾，这几乎让我完全放弃了 Minecraft。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The 4 bit stuff is a hangover from Mojang having to squeeze every bit of perf from their Java based engine that they could. Their original sound engine was so sketchy that C418's (music composer) minimalist sound is partly because it really couldn't handle much more than what got released.<p>MS has been loosening up on the 4 bits limit and have created a CPP variant of Minecraft which performs better, but they've also introduced their unified login garbage that has almost made me give up Minecraft completely.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483883" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Pannoniae</span>
+        <span class="meta-time">2026/03/23 08:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嘿，这并不完全准确！<p>4 位的东西是一个宿醉 <i>缺口</i> 这样做（我什至可能会说是一个与克里斯·索耶（Chris Sawyer）类似的程序员......）。声音与技术限制无关，这是事后的合理化。</p><p>游戏从不播放 midi 样本，它总是播放“真实”音频。风格是一种艺术选择，许多类似的复古游戏都使用芯片音乐之类的。这是故意的并列...</p><p>CPP 变体也不再真正表现得更好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hey, this isn't entirely accurate!<p>The 4-bit stuff is a hangover from <i>Notch</i> doing this (I'd maybe even say a similar-calibre programmer to Chris Sawyer...). The sound has nothing to do with technical limits, that's a post-facto rationalisation.</p><p>The game never played midi samples, it was always playing "real" audio. The style was an artistic choice, many similar retro-looking games were using chiptune and the sorts. It's a deliberate juxtaposition...</p><p>The CPP variant doesn't really perform better anymore either.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484024" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">helterskelter</span>
+        <span class="meta-time">2026/03/23 09:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平地说，我主要是想指出其中一些设计决策早于微软，尽管我对它们又爱又恨。音乐只是我前几天读到的一些有趣的琐事。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fair enough, I mostly meant to point out some of those design decisions predate MS, as much as I love to hate on them. The music was just an interesting bit of trivia I read the other day.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484444" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Pannoniae</span>
+        <span class="meta-time">2026/03/23 10:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，100% :) 具有讽刺意味的是，设计限制是让它如此有效的重要因素之一！如果它是以“传统”方式设计的，那么它的雄心就会小得多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, 100% :) Ironically, the design constraints are one of the big things which made it work so much! If it was designed in a "traditional" way, it would have been much less ambitious.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484769" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">imtringued</span>
+        <span class="meta-time">2026/03/23 17:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">基岩版的模拟距离较小，这与您对更“优化”版本的期望相反。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Bedrock Edition has a smaller simulation distance, which is kind of the opposite you'd expect from the more "optimized" version.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487250" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mort96</span>
+        <span class="meta-time">2026/03/23 09:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《我的世界》一直以来都以相当不错的性能处理大量数据。这并不是一项不可能完成的任务，许多其他人已经制作了更好的体素游戏引擎，但如果不注意这些事情，你就无法做到这一点。每个具有远程合理性能的体素引擎都需要仔细计算每个块使用的位数。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Minecraft is, and always has been, handling vast amounts of data at pretty good performance. It's not an impossibly difficult task, many other people have made voxel game engines which are better, but it's something you can't do without paying attention to these things. Every voxel engine with remotely reasonable performance needs to carefully count bits used per block.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484448" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kulahan</span>
+        <span class="meta-time">2026/03/23 08:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">整个程序不需要成为优化编程的基石才能使这个示例成立。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The entire program doesn't need to be a cornerstone of optimal programming for this one example to hold true.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andai</span>
+        <span class="meta-time">2026/03/23 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://en.wikipedia.org/wiki/Nuclear_Gandhi" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Nuclear_Gandhi</a><p>据我所知，有一款《文明》游戏遇到了无符号整数下溢错误，甘地的攻击性被设置为0，由于游戏中的某些事件而变得“不那么攻击性”，但由于整数下溢，这会导致他的攻击性达到255，导致他用核武器攻击整个地图。</p><p>文章称这只是都市传说。好吧，无论真实与否，这都是该原理的完美示例！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://en.wikipedia.org/wiki/Nuclear_Gandhi" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Nuclear_Gandhi</a><p>From what I heard, there was a Civilization game which suffered from an unsigned integer underflow error where Gandhi, whose aggression was set to 0, would become "less aggressive" due to some event in the game, but due to integer underflow, this would cause his aggression to go to 255, causing him to nuke the entire map.</p><p>The article says this was just an urban legend though. Well, real or not, it's a perfect example of the principle!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">luaKmua</span>
+        <span class="meta-time">2026/03/23 05:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实是都市传说。席德·梅尔本人在他的回忆录中揭穿了这一点，这本书非常值得一读。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Indeed an urban legend. Sid Meier himself debunked in his memoir, which is a pretty great read.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482442" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/03/23 07:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">阅读所有《异星工厂星期五》的事实 <a href="https://factorio.com/blog/" target="_blank" rel="noopener noreferrer">https://factorio.com/blog/</a> - 许多更模糊的错误/性能问题归结为使某些内容自然地适合 CPU 可以处理的值。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Read all of the Factorio Friday Facts <a href="https://factorio.com/blog/" target="_blank" rel="noopener noreferrer">https://factorio.com/blog/</a> - a number of the more obscure bug/performance issues come down to making something fit naturally into a value the CPU can handle.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483342" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hcs</span>
+        <span class="meta-time">2026/03/23 05:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是同一件事，但我想起了一个关于益智游戏“斯蒂芬的香肠卷”的笑话：<p>&gt; 我计算了香肠岛的 Pi 值，发现它是 2。</p><p><a href="https://web.archive.org/web/20240405034314/https://twitter.com/ianmaclarty/status/723848396675506177" target="_blank" rel="noopener noreferrer">https://web.archive.org/web/20240405034314/https://twitter.c...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not the same thing but I was reminded of a joke about the puzzle game Stephen's Sausage Roll:<p>&gt; I have calculated the value of Pi on Sausage Island and found it to be 2.</p><p><a href="https://web.archive.org/web/20240405034314/https://twitter.com/ianmaclarty/status/723848396675506177" target="_blank" rel="noopener noreferrer">https://web.archive.org/web/20240405034314/https://twitter.c...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482567" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Waterluvian</span>
+        <span class="meta-time">2026/03/23 05:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不是一个能证明任何观点的例子，而是我从一款 20 年前的游戏中想到的一个例子：<p>《魔兽世界》（至少最初）将每个物品编码为 ID。为了保持数据库简单和小（考虑到数百万玩家拥有许多角色和大量物品）：如果你想通过升级永久地为你的物品附魔，那么这本质上会被表示为一个全新的物品。该物品被替换为不同的物品（你的物品+附魔）。  由不同的 ID 表示。 ID 本质上是一个位掩码类型的东西。</p><p>这意味着它已融入底层数据结构并深入到核心游戏引擎中，您可以 <i>绝不</i> 一次拥有多个附魔。并不是有一个关系表来链接角色库存中物品的附魔内容。</p><p>第一个扩展引入了“宝石”，你可以将其插入物品中。这基本上是每件物品多了 0-4 个附魔。他们处理这个问题的方法是将项目 ID 延长一大堆，以形成所有位掩码空间。</p><p>我可能弄错了一些。自从我读完所有这些细节以来，已经很久了。考虑到 20 年前游戏玩家基础的庞大规模，有一段时间我很着迷于他们如何实现《魔兽世界》。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not really an example that proves any point, but one that comes to mind from a 20-year-old game:<p>World of Warcraft (at least originally) encoded every item as an ID. To keep the database simple and small (given millions of players with many characters with lots of items): if you wanted to permanently enchant your item with an upgrade, that was represented essentially as a whole new item. The item was replaced with a different item (your item + enchant).  Represented by a different ID. The ID was essentially a bitmask type thing.</p><p>This meant that it was baked into the underlying data structures and deep into the core game engine that you could <i>never</i> have more than one enchant at a time. It wasn't like there was a relational table linking what enchants an item in your character's inventory had.</p><p>The first expansion introduced "gems" which you could socket into items. This was basically 0-4 more enchants per item. The way they handled this was to just lengthen item Ids by a whole bunch to make all that bitmask room.</p><p>I might have gotten some of this wrong. It's been forever since I read all about these details. For a while I was obsessed with how they implemented WoW given the sheer scale of the game's player base 20 years ago.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">plopz</span>
+        <span class="meta-time">2026/03/23 07:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">坎巴拉太空计划的主要问题之一是浮点数引起的不稳定。我知道《星际争霸 2》是建立在整数之上的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One of the main issues with Kerbal Space Program is instability caused by floating point numbers. I know Starcraft 2 was built upon integers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483461" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Gigachad</span>
+        <span class="meta-time">2026/03/23 07:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">浮点问题在这里不再是性能问题，而是精度问题。特别是作为太空游戏，坐标可能很大，导致精度下降到足以引起问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Floating point issues are less a problem of performance here but one of precision. Particularly being a space game, the coordinates can be massive resulting in the precision deteriorating enough to cause issues.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483548" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ErroneousBosh</span>
+        <span class="meta-time">2026/03/23 06:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">追溯到历史，Alesis MIDIVerb 混响单元有一个由分立逻辑芯片制成的非常简单的 DSP 内核。它可以将一个内存位置添加到累加器中并将其除以二，将其反转，将其相加并将其除以二，或者将其反转或不反转存储在 ram 中并将累加器除以二。<p>四个指令，大约八个芯片。</p><p>通过组合移位和添加，Keith Barr 能够为 63 个不同的混响程序设计所有不同的滤波器和延迟系数（第 64 个只是死直通）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Going way back into history, the Alesis MIDIVerb reverb unit had a really simple DSP core made out of discrete logic chips. It could add a memory location to an accumulator and divide it by two, invert it, add it and divide it by two, or store it in ram either inverted or not and divide the accumulator by two.<p>Four instructions, in about eight chips.</p><p>By combining shifts and adds Keith Barr was able to devise all the different filter and delay coefficients for 63 different reverb programs (the 64th one was just dead passthrough).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482942" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">youarentrightjr</span>
+        <span class="meta-time">2026/03/23 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 同样的技巧也可以用于另一个方向来保存除法：
+新值 = 旧值 &gt;&gt; 3;
+这基本上与 
+新值 = 旧值 / 8;
+RCT 一直在使用这个技巧，即使在 OpenRCT2 版本中，这个语法也没有改变，因为 <i>编译器不会为你做这个优化</i>。<p>（强调我的）</p><p>根本不是真的。假设类型 &gt;&gt; 相当于 /，现代编译器将把除以 2 的幂作为每次移位来实现。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The same trick can also be used for the other direction to save a division:
+NewValue = OldValue &gt;&gt; 3;
+This is basically the same as 
+NewValue = OldValue / 8;
+RCT does this trick all the time, and even in its OpenRCT2 version, this syntax hasn’t been changed, since <i>compilers won’t do this optimization for you</i>.<p>(emphasis mine)</p><p>Not at all true. Assuming the types are such that &gt;&gt; is equivalent to /, modern compilers will implement division by a power of two as a shift every single time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482973" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mid-kid</span>
+        <span class="meta-time">2026/03/23 20:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。我很惊讶这篇文章中竟然列出了这一点以及金钱的事情。这些是您在编写汇编的第一个月内学到的东西，并且在当时（以及之前的时代）在整个行业中广泛使用。即使在 -O0 时，GCC 也会执行位移优化，并且当时可能已经执行了，因为它是最简单的优化之一。这就像调用“xor eax, eax”来清除寄存器是一种巧妙的优化策略。<p>像本文其余部分一样查看宏观层面的优化要有趣得多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah. I'm surprised this along with the money thing are listed in the article at all. These are the sort of things you learn within the first month of writing assembly, and were widely used across the industry at the time (and times prior). The bit shifting optimization is performed by GCC even at -O0, and likely already was at the time, as it's one of the simpler optimizations to make. It's like calling "xor eax, eax" a masterful optimization tactic for clearing a register.<p>Looking at the macro-level optimizations like the rest of the article does is significantly more interesting.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488442" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dmitrygr</span>
+        <span class="meta-time">2026/03/23 13:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们会为未签名的人做这件事。对于signed，他们会做更多的事情来进行与C承诺的相同的舍入</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">they will do it for unsigned. for signed they will do a bit more to do the same rounding as C promises</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">grumbelbart2</span>
+        <span class="meta-time">2026/03/23 20:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来是这样的：<p><a href="https://godbolt.org/z/rooee4esd" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/rooee4esd</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Here is how that looks like:<p><a href="https://godbolt.org/z/rooee4esd" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/rooee4esd</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488836" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">HelloUsername</span>
+        <span class="meta-time">2026/03/23 04:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">读起来很有趣，谢谢！我还推荐更多有关 RCT 的信息：<p>“采访《过山车大亨》的创造者克里斯·索耶 (2024)” <a href="https://news.ycombinator.com/item?id=46130335" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=46130335</a></p><p>“过山车大亨（或者 MicroProse 的最后万岁）” <a href="https://news.ycombinator.com/item?id=44758842" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44758842</a></p><p>“25 岁的过山车大亨：‘它对我的启发令人兴奋’” <a href="https://news.ycombinator.com/item?id=39792034" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=39792034</a></p><p>“《过山车大亨》是最后一款同类游戏 [视频]” <a href="https://news.ycombinator.com/item?id=42346463" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=42346463</a></p><p>《过山车大亨的故事》 <a href="https://www.youtube.com/watch?v=ts4BD8AqD9g" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=ts4BD8AqD9g</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fun read, thx! I'd also recommend more about RCT:<p>"Interview with RollerCoaster Tycoon's Creator, Chris Sawyer (2024)" <a href="https://news.ycombinator.com/item?id=46130335" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=46130335</a></p><p>"Rollercoaster Tycoon (Or, MicroProse's Last Hurrah)" <a href="https://news.ycombinator.com/item?id=44758842" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44758842</a></p><p>"RollerCoaster Tycoon at 25: 'It's mind-blowing how it inspired me'" <a href="https://news.ycombinator.com/item?id=39792034" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=39792034</a></p><p>"RollerCoaster Tycoon was the last of its kind [video]" <a href="https://news.ycombinator.com/item?id=42346463" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=42346463</a></p><p>"The Story of RollerCoaster Tycoon" <a href="https://www.youtube.com/watch?v=ts4BD8AqD9g" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=ts4BD8AqD9g</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481850" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ionwake</span>
+        <span class="meta-time">2026/03/23 20:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我还记得一款看起来与其他游戏不同的新游戏的兴奋感。<p>不知怎的，当我还是个孩子的时候，我就知道这将是一种全新的新兴游戏体验。</p><p>当然，我不知道《Rollercoaster Tycoon》的制作过程是怎样的，但我可以通过几张截图看出，这显然是一款全新的游戏，具有新的机制，玩起来会非常有趣。</p><p>我不再有这种感觉了，因为我只是认为一切都只是同一引擎中另一个游戏的克隆。</p><p>除非它像《GTA 5 荒野之息》那样制作了十年，否则我不会抱太大期望。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">also I remember the excitement of a new game that looked different to others.<p>Somehow even as a child I just knew that it would be a whole new emergent game play experience.</p><p>Ofcourse I didnt know waht went into making Rolelrcoaster Tycoon but I could just by a couple of screenshots how this was clearly a ground up new game with new mechanics that would be extremely fun to play.</p><p>I dont get this feeling anymore, as I just assyne everything is just a clone of another game in the same engine generally.</p><p>Unless its been a decade in production like Breath of the Wild of GTA 5 i just dont expect much.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488486" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fweimer</span>
+        <span class="meta-time">2026/03/23 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本文讨论的是哪种语言，编译器不会优化 2 的幂乘法和除法？即使对于有符号整数的除法，当前的编译器也会发出分别处理正值和负值的内联代码，仍然避免使用除法指令（当然，除非针对大小进行优化）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What language is this article talking where compilers don't optimize multiplication and division by powers of two? Even for division of signed integers, current compilers emit inline code that handles positive and negative values separately, still avoiding the division instruction (unless when optimizing for size, of course).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">orthoxerox</span>
+        <span class="meta-time">2026/03/23 17:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，Sawyer 于 1992 年开始编写 Transport Tycoon，当时免费或负担得起的 C 编译器还没有广泛使用。 Turbo C 从来不以优化而闻名。 GCC 1.40 对于 Linus 来说已经足够好了，但我猜 Chris 已经是一名优秀的汇编程序员了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, Sawyer started writing Transport Tycoon in 1992, when free or affordable C compilers were not as widely available. Turbo C was never known for optimizations. GCC 1.40 was good enough for Linus, but I guess Chris was already a good assembly programmer.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486988" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">shakow</span>
+        <span class="meta-time">2026/03/23 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也是这么想的，但看起来在 x86 上，clang 和 gcc 都使用 LEA 的变体。但如果他们这样做，我很确定它一定会更快，因为即使你将 ×4 更改为 &lt;&lt;2，它仍然会生成 LEA。<p><a href="https://godbolt.org/z/EKj58dx9T" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/EKj58dx9T</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's what I would have thought as well, but looks like that on x86, both clang and gcc use variations of LEA. But if they're doing it this way, I'm pretty sure it must be faster, because even if you change the ×4 for a &lt;&lt;2, it will still generate a LEA.<p><a href="https://godbolt.org/z/EKj58dx9T" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/EKj58dx9T</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Validark</span>
+        <span class="meta-time">2026/03/23 14:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当您想要将结果放入与源不同的寄存器中和/或您不想修改标志寄存器时，使用 lea 会更好。 shlx 还避免修改标志，但不能立即移位，因此需要事先将常量加载到寄存器中。就速度而言，所有这些选项基本上是相同的，尽管指令缓存和调度程序中的寄存器重命名的成本略有不同。就执行而言，现代硬件上的一个转变始终是 1 个周期。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Using an lea is better when you want to put the result in a different register than the source and/or you don't want to modify the flags registers. shlx also avoids modifying flags, but you can't shift by an immediate, so you need to load the constant into a register beforehand. In terms of speed, all these options are basically equivalent, although with very slightly different costs to instruction caches and the register renaming in the scheduler. In terms of execution, a shift is always 1 cycle on modern hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486226" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">shaggie76</span>
+        <span class="meta-time">2026/03/23 06:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">LEA 不仅更灵活，我相信即使对于简单的操作，它也优于 SHL，因为它不会修改标志寄存器，这可以使其更容易调度。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not only is LEA more flexible I believe it's preferred to SHL even for simple operations because it doesn't modify the flags register which can make it easier to schedule.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483232" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fweimer</span>
+        <span class="meta-time">2026/03/23 15:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更多的是关于无损目的地部分，可以避免移动。编译器倾向于选择 LEA 的 SHL/SAL，因为它的编码更短： <a href="https://godbolt.org/z/9Tsq3hKnY" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/9Tsq3hKnY</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's more about the non-destructive destination part, which can avoid a move. Compilers tend to prefer SHL/SAL of LEA because its encoding is shorter: <a href="https://godbolt.org/z/9Tsq3hKnY" target="_blank" rel="noopener noreferrer">https://godbolt.org/z/9Tsq3hKnY</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486507" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Cold_Miserable</span>
+        <span class="meta-time">2026/03/23 11:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">shlx 不会更改标志寄存器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">shlx doesn't alter the flag register.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485351" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fweimer</span>
+        <span class="meta-time">2026/03/23 15:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SHLX 不支持立即操作数。具有立即操作数的非破坏性移位仅通过 APX 实现，它们是最常用的指令之一（除了成对的入栈/出栈之外）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SHLX does not support an immediate operand. Non-destructive shifts with immediate operands only arrive with APX, where they are among the most commonly used instructions (besides paired pushes/pops).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486516" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adrian_b</span>
+        <span class="meta-time">2026/03/23 06:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们使用 LEA 与最大 9 的小常数相乘（不仅可以与 2 的幂相乘，还可以与 3、5 和 9 相乘；甚至可以使用两个 LEA 获得更多值，但这可能不值得）。<p>对于乘以大于或等于 16 的 2 的幂，他们使用左移，因为 LEA 不能再使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They use LEA for multiplying with small constants up to 9 (not only with powers of two, but also with 3, 5 and 9; even more values could be achieved with two LEA, but it may not be worthwhile).<p>For multiplying with powers of two greater or equal to 16, they use shift left, because LEA can no longer be used.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483032" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cjbgkagh</span>
+        <span class="meta-time">2026/03/23 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是用汇编编写的，因此通过汇编器而不是编译器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It was written in assembly so goes through an assembler instead of a compiler.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rawling</span>
+        <span class="meta-time">2026/03/23 06:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 GP 正在谈论文章中的内容：<p>&gt; RCT 一直在做这个技巧，即使在 OpenRCT2 版本中，这个语法也没有改变，因为编译器不会为你做这个优化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I assume GP is talking about the bit in the article that goes<p>&gt; RCT does this trick all the time, and even in its OpenRCT2 version, this syntax hasn’t been changed, since compilers won’t do this optimization for you.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482826" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cjbgkagh</span>
+        <span class="meta-time">2026/03/23 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这更有意义，我赞同他们的观点，现代编译器会这样做。我想诀窍是知道使用具有这些选项的数字。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That makes more sense, I second their sentiment, modern compilers will do this. I guess the trick is knowing to use numbers that have these options.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483264" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/03/23 07:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最近有一篇关于 HN 的文章讨论了哪些编译器优化会发生，哪些不会，这在两个方面令人惊讶 - 首先，它会产生一些你可能意想不到的结果，而且它会 <i>不是</i> 使其他人你会 - 因为在一些晦涩的调用方法中，它不起作用。修复该路径通常会得到预期的优化。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There was a recent article on HN about which compiler optimizations would occur and which wouldn't and it was surprising in two ways - first, it would make some that you might not expect, and it would <i>not</i> make others that you would - because in some obscure calling method, it wouldn't work. Fixing that path would usually get the expected optimization.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Validark</span>
+        <span class="meta-time">2026/03/23 15:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“由于数字存储在二进制系统中，因此每次向左移动都意味着数字加倍。<p>乍一看，这听起来像是一种奇怪的技术晦涩难懂”</p><p>2026年我们还不懂二进制吗？为什么这会让目标受众感到惊讶？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Since the number is stored in a binary system, every shift to the left means the number is doubled.<p>At first this sounds like a strange technical obscurity"</p><p>Do we not know binary in 2026? Why is this a surprise to the intended audience?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">xeonmc</span>
+        <span class="meta-time">2026/03/23 15:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://xkcd.com/2501/" target="_blank" rel="noopener noreferrer">https://xkcd.com/2501/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://xkcd.com/2501/" target="_blank" rel="noopener noreferrer">https://xkcd.com/2501/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486508" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bluelightning2k</span>
+        <span class="meta-time">2026/03/23 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">写得很好。谢谢。真的很棒！<p>我想起了异星工厂博客。即使按照今天的标准，这款游戏也是一个巨大的优化挑战，我相信它的设计是可行的。</p><p>我记得的一件有趣的事情是，如果您有一条由 10,000 个铜线圈组成的长传送带，您基本上可以将其简化为只有入口和出口瓷砖实际上处于活动状态。所有其他实际上都不需要移动，因为没有任何变化......只要传送带完全或均匀饱和即可。所以你避免了会阻止这种情况的机制。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great write up. Thank you. Really great!<p>I was reminded of the factorio blog. That game's such a huge optimization challenge even by today's standards and I believe works with the design.</p><p>One interesting thing I remember is if you have a long conveyor belt of 10,000 copper coils, you can basically simplify it to just be only the entry and exit tile are actually active. All the others don't actually have to move because nothing changes... As long as the belts are fully or uniformly saturated. So you avoid mechanics which would stop that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482918" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">plopz</span>
+        <span class="meta-time">2026/03/23 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对异星工厂在资料片中重新设计流体的运作方式感到非常失望。旧系统有其怪癖，新系统显然性能更高，但它把现实主义抛到了窗外，这是令人失望的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was pretty disappointed with how Factorio reworked how fluids worked in the expansion. The old system had its quirks and the new system is obviously more performant, but it throws realism out the window which is a bummer.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483532" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Cpoll</span>
+        <span class="meta-time">2026/03/23 10:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不会错过它。我还发现 Satisfactory 的旧流体系统（带有晃动等概念）非常不直观。我什至可以说，精确的流体动力学对于任何与海狸和地下水位管理无关的游戏都是有害的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't miss it. I also found Satisfactory's old fluid system (with concepts like sloshing) wildly unintuitive. I'll go so far as to say that accurate fluid dynamics is detrimental to any game that's not about beavers and water table management.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484770" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rkagerer</span>
+        <span class="meta-time">2026/03/23 14:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是我第二次听到海狸游戏出现在这里......我想我真的应该尝试一下！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's the second time I heard the beaver game come up here... Guess I really ought to try it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485942" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Linosaurus</span>
+        <span class="meta-time">2026/03/23 15:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它相当简洁，最近达到了 1.0。<p>这款游戏《Timberborn》与《过山车大亨》有一些共同的设计元素。</p><p>基于块的 3D 世界，玩家可以修改它们。</p><p>单位在玩家定义的路径上行走，他们的情绪受到美丽灌木丛的影响。</p><p>但并没有像文章中那样明显的性能考虑。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s rather neat, and recently hit 1.0.<p>That game, Timberborn, shares some design elements with roller coaster tycoon.</p><p>A block based 3d world they can be modified by the player.</p><p>Units walking around on player defined paths, with their mood influenced by pretty bushes.</p><p>But there are no obvious performance considerations like in the article.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Starlevel004</span>
+        <span class="meta-time">2026/03/23 08:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">旧系统无法正常运行，任何使用大量流体的基地（例如改装的或新太空时代的）都会不断遇到荒谬的力学。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The old system was nonfunctional and any base that used lots of fluids (like modded ones, or new space age ones) were constantly running up against nonsensical mechanics.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">evandale</span>
+        <span class="meta-time">2026/03/23 10:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">寻路部分让我想起了 YouTube 上的一位主播 Marcel Vos，他深入探讨了寻路的工作原理。<p><a href="https://youtu.be/twU1SsFP-bE" target="_blank" rel="noopener noreferrer">https://youtu.be/twU1SsFP-bE</a></p><p>他有很多视频深入探讨了 RCT 的工作原理以及实施方式！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The pathfinding section reminded me that there's a YouTube steamer, Marcel Vos, who goes into a deep dive of how the pathfinding works.<p><a href="https://youtu.be/twU1SsFP-bE" target="_blank" rel="noopener noreferrer">https://youtu.be/twU1SsFP-bE</a></p><p>He has lots of videos that are deep dives into how RCT works and how things are implemented!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484742" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mmcconnell1618</span>
+        <span class="meta-time">2026/03/23 20:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我构建了一些交通模拟，一开始使用 A* 等寻路方法，但计算成本在 10,000 或 100,000 个代理运行时无法很好地扩展。常见地图目的地的预计算流场是需要牺牲存储来换取计算的领域之一。智能体只是寻找告诉他们“到目的地 x 的方向”的路标，而不是实际计算路径。<p><a href="https://en.wikipedia.org/wiki/A*_search_algorithm#" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/A*_search_algorithm#</a></p><p><a href="https://www.youtube.com/watch?v=zr6ObNVgytk" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=zr6ObNVgytk</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've built a few transportation simulations where I started out with pathfinding methods like A* but the compute cost doesn't scale well with 10,000 or 100,000 agents running around. Pre-computing flow fields for common map destinations is one of those areas where you trade off storage for compute. The agents just look for the signpost telling them "this direction to destination x" instead of actually calculating a path.<p><a href="https://en.wikipedia.org/wiki/A*_search_algorithm#" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/A*_search_algorithm#</a></p><p><a href="https://www.youtube.com/watch?v=zr6ObNVgytk" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=zr6ObNVgytk</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">raffraffraff</span>
+        <span class="meta-time">2026/03/23 15:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在大型游戏工作室制作的大型游戏中，我想知道使用现实世界的技术挑战作为游戏中的“功能”的想法是否被认为是天才？考虑一个程序员和一个游戏设计师，他们属于不同的团队，并且不参加相同的会议。<p>但如果你看一下创意写作，就会发现故事情节都是关于障碍的。一个无聊的故事因为一个障碍而变得有趣。这是我们的主角需要克服的。一个单人乐队的游戏开发者同时掌握故事和技术挑战，可能会发现使用故障或限制的机会，我不知道，这是一款重复故障的迷你游戏。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On huge games produced by large game studios, I wonder if the idea of using a real world technical challenge as a "feature" within the game is considered genius? Consider a coder and a game designer who are on different teams and don't attend the same meetings.<p>But if you look at creative writing, story arcs are all about obstacles. A boring story is made interesting by an obstacle. It is what our protagonist needs to overcome. A one-man-band game dev who simultaneously holds the story and the technical challenge their head, might spot the opportunity to use a glitch or limitation as, I dunno, a mini game that riffs on the glitch.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486299" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sroerick</span>
+        <span class="meta-time">2026/03/23 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直听说 RCT 是如何在 Assembly 中构建的，并且认为它非常令人印象深刻。<p>我越深入研究汇编，这项任务就越显得艰巨且不可能。</p><p>我不知道有叉子，我很高兴能研究它</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I had always heard about how RCT was built in Assembly, and thought it was very impressive.<p>The more I actually started digging into assembly, the more this task seems monumental and impossible.</p><p>I didn't know there was a fork and I'm excited to look into it</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481814" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kevincox</span>
+        <span class="meta-time">2026/03/23 07:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">汇编编程并不是真的“难”，它主要需要大量的纪律。一致性和模式是关键。该语言还提供了很少的隐式文档，因此始终记录哪些参数如何传递、在何处传递、调用者和被调用者保存了哪些寄存器。当然这也是非常繁琐的。<p>现在编写非常优化的程序集非常困难。因为你需要打破你的一致性和惯例来挤出所有可能的性能。您优化的“内核”越大，一次需要记住的打破模式的代码就越多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Programming in assembly isn't really "hard" it mostly takes lots of discipline. Consistency and patterns are key. The language also provides very little implicit documentation, so always document which arguments are passed how and where, what registers are caller and callee saved. Of course it is also very tedious.<p>Now writing very optimized assembly is very hard. Because you need to break your consistency and conventions to squeeze out all the possible performance. The larger "kernel" you optimize the more pattern breaking code you need to keep in your head at a time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483481" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mikkupikku</span>
+        <span class="meta-time">2026/03/23 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">宏。  很多宏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Macros.  Lots of macros.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482146" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/03/23 08:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。  我已经完成了一些汇编，它实际上只比 C 语言难一点。您只需熟悉汇编器和提供的宏即可。  哎呀，我什至可以说它比基本的还要简单。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yup.  I've done a bit of assembly and it's really only a little harder than doing C.  You simply have to get familiar with your assembler and the offered macros.  Heck, I might even say that it's simpler than basic.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483742" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">timschmidt</span>
+        <span class="meta-time">2026/03/23 05:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大概还大量使用了代码注释</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And presumably generous use of code comments</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482584" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">markus_zhang</span>
+        <span class="meta-time">2026/03/23 09:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当时很多人都是从组装开始的，因为这是让游戏足够快的唯一方法。多年来，他们积累了大量的经验、惯例和工具。<p>并不是说这不是一个伟大的壮举，但现在从头开始肯定要困难得多，即使对于同一个平台也是如此。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Back then a lot of people started with assembly because that was the only way to make games quick enough. Throughout the years they accumulated tons of experience and routines and tools.<p>Not saying that it was not a huge feat, but it’s definitely a lot harder to start from scratch nowadays, even for the same platform.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484228" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maxglute</span>
+        <span class="meta-time">2026/03/23 10:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有地方可以找到最近游戏优化的故事？最可笑的是快速反平方路线。作为一个在前世花了太多时间进行虚拟现实的人，我仍然不敢相信我们有实时光线追踪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a place to find stories of recent game optimization? What's most ridiculous on like quick inverse square route. As someone who spent way too much time vraying in prior life, I still can't believe we got real time ray tracing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484783" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pmg102</span>
+        <span class="meta-time">2026/03/23 16:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">文章多次提到游戏设计师和编码员是同一个人的好处。我经常觉得这是构建任何令人印象深刻的东西的唯一方法，事实上，我很惊讶具有分层组织模型的公司竟然能够构建出任何东西，但我认为你可以用足够的员工来暴力破解任何东西。<p>它确实让你想知道人工智能辅助开发的未来是否会更像早期的编码，一个人可以从头到尾构建和交付一整套软件。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article refers several times to the benefits of the game designer and the coder being the same person. I've often felt that this is the only way to build anything impressive, and in fact I'm amazed that corporations with their hierarchical organisation model ever get anything built at all but I suppose you can brute force anything with enough employees.<p>It does make you wonder if the future of AI-assisted development will look more like the early days of coding, where one single mind can build and deliver a whole piece of software from beginning to end.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486707" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bze12</span>
+        <span class="meta-time">2026/03/23 16:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这部分对我来说特别着迷，因为它将出于技术必要性而进行的优化变成了游戏功能。<p>让我想起塞尔达传说中的血月 <a href="https://www.polygon.com/legend-zelda-tears-kingdom/23834440/totk-blood-moon-hidden-trick/" target="_blank" rel="noopener noreferrer">https://www.polygon.com/legend-zelda-tears-kingdom/23834440/...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; This part is especially fascinating to me, since it turns an optimization done out of technical necessity into a gameplay feature.<p>Reminds me of blood moons in Zelda <a href="https://www.polygon.com/legend-zelda-tears-kingdom/23834440/totk-blood-moon-hidden-trick/" target="_blank" rel="noopener noreferrer">https://www.polygon.com/legend-zelda-tears-kingdom/23834440/...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486672" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">troad</span>
+        <span class="meta-time">2026/03/23 09:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在阅读 OpenRCT2 的源代码时，有一个在现代代码中很少看到的常见语法，如下所示：<p>&gt; 新值 = 旧值 &lt;&lt; 2;</p><p>我不同意本节的框架。在低级代码中始终使用位移位。它们不仅仅是一些过时的优化，它们也是处理二进制数据（也称为计算机上的所有数据）的自然方式。现代低级代码继续使用大量位移、按位运算符等。</p><p>低级编程对于高性能游戏来说绝对至关重要。即使您自己没有进行低级编程，您几乎肯定会使用广泛使用它的引擎或库。我很惊讶一篇关于游戏优化的文章，在所有事情中，会对低级代码采取有点疲惫的“过去”的角度。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; When reading through OpenRCT2’s source, there is a common syntax that you rarely see in modern code, lines like this:<p>&gt; NewValue = OldValue &lt;&lt; 2;</p><p>I disagree with the framing of this section. Bit shifts are used all the time in low-level code. They're not just some archaic optimisation, they're also a natural way of working with binary data (aka all data on a computer). Modern low-level code continues to use lots of bit shifts, bitwise operators, etc.</p><p>Low-level programming is absolutely crucial to performant games. Even if you're not doing low-level programming yourself, you're almost certainly using an engine or library that uses it extensively. I'm surprised an article about optimisation in gaming, of all things, would take the somewhat tired "in ye olde days" angle on low-level code.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484501" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Rendello</span>
+        <span class="meta-time">2026/03/23 10:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我通过阅读 TempleOS 的 HolyC 源代码了解了这些低级位技巧。我记得当我弄清楚这行代码的作用时，我感觉自己像个天才：<p>dc-&gt;颜色=c++&amp;15;</p><p>提示：它来自这个“Lines”演示程序，其来源在这里：
+<a href="https://web.archive.org/web/20180906060723/https://templeos.holyc.xyz/Wb/Demo/Graphics/Lines.html" target="_blank" rel="noopener noreferrer">https://web.archive.org/web/20180906060723/https://templeos....</a></p><p>这就是它运行时的样子（忽略它在 Minecraft 中运行的事实）： <a href="https://youtu.be/pAN_Fza6Vy8?t=38" target="_blank" rel="noopener noreferrer">https://youtu.be/pAN_Fza6Vy8?t=38</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I learned these low-level bit tricks by reading TempleOS' HolyC source code. I remember feeling like a genius when I worked out what this line does:<p>dc-&gt;color=c++&amp;15;</p><p>Hint: it's from this "Lines" demo program, whose source is here:
+<a href="https://web.archive.org/web/20180906060723/https://templeos.holyc.xyz/Wb/Demo/Graphics/Lines.html" target="_blank" rel="noopener noreferrer">https://web.archive.org/web/20180906060723/https://templeos....</a></p><p>And this is what it looks like when it runs (ignore the fact it's running in Minecraft): <a href="https://youtu.be/pAN_Fza6Vy8?t=38" target="_blank" rel="noopener noreferrer">https://youtu.be/pAN_Fza6Vy8?t=38</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484765" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">makapuf</span>
+        <span class="meta-time">2026/03/23 16:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">编译器不会为您执行乘以 2 的幂到位移位的操作吗？我记得大约 2000 年读过：写 a&lt;&lt;2 而不是 a/4 的唯一作用就是让你的编译器打哈欠</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Compilers won't do multiplication by power of two to bit shift for you ? I remember reading in ~2000: the only thing writing a&lt;&lt;2 instead of a/4 will do is make your compiler yawn</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486614" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zekica</span>
+        <span class="meta-time">2026/03/23 19:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">即使 gcc 的 -O0 也会进行位移，但即使在 x86_64 上除以 5 也不会进行 idiv：<p></p><pre><code>        imul    rdx, rdx, 1717986919
+        shr     rdx, 32
+        sar     edx
+        sar     eax, 31
+        sub     edx, eax
+        mov     eax, edx</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Even gcc's -O0 will do the bitshift, but even dividing with 5 on x86_64 will not do idiv:<p></p><pre><code>        imul    rdx, rdx, 1717986919
+        shr     rdx, 32
+        sar     edx
+        sar     eax, 31
+        sub     edx, eax
+        mov     eax, edx</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487762" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">egypturnash</span>
+        <span class="meta-time">2026/03/23 11:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道原始汇编源代码中有多少看起来是 <i>很多</i> 由于使用了宏，它比 OpenRCT 中的任何内容都更简洁。查阅 Mobygames 上的游戏图谱，Chris 自 1984 年 RCT 于 1999 年推出以来就一直在写东西，很难想象他仍然手工编写每一个操作码，因为我在 80 年代在我的 c64 上闲逛的汇编程序中有一些宏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have to wonder how much of the original assembly source looked a <i>lot</i> more succinct than whatever's in OpenRCT due to the use of macros. Looking up his gameography on Mobygames, Chris had been writing stuff since 1984 when RCT came out in 1999, it's hard to imagine he was still writing every single opcode out by hand given that I had some macros in the assembler I was fooling around with on my c64 back in the eighties.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485049" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MisterTea</span>
+        <span class="meta-time">2026/03/23 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然玩 RCT 已经有一段时间了，但这款游戏真正好的一点是它在 Wine 下完美运行。<p>我真的希望我能看到源代码。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While it has been a while since playing RCT, one thing that was really nice about the game is that it runs flawlessly under Wine.<p>I really wish I could see the source code.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483812" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lefty2</span>
+        <span class="meta-time">2026/03/23 05:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 同样的技巧也可以用于另一个方向来保存除法：<p>&gt; 新值 = 旧值 &gt;&gt; 3;</p><p>您需要小心，因为如果值为负数，则此方法不起作用。
+一个</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The same trick can also be used for the other direction to save a division:<p>&gt; NewValue = OldValue &gt;&gt; 3;</p><p>You need to be careful, because this doesn't work if the value is negative.
+A</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482206" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">whizzter</span>
+        <span class="meta-time">2026/03/23 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大多数 CPU 都有有符号和无符号右移指令（左移相同），所以是的，它可以工作（您可以通过在移位之前将有符号转换为无符号来在 C 中测试这一点）。<p>最大的警告是右移 -1 仍然会产生 -1 而不是 0，但这对于更老的游戏定点数学通常没问题，因为 -1 足够接近 0。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most CPU's has signed and unsigned right shift instructions (left shift is the same), so yes it works (You can test this in C by casting a signed to unsigned before shifting).<p>The biggest caveat is that right shifting -1 still produces -1 instead of 0, but that's usually fine for much older game fixed-point maths since -1 is close enough to 0.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482981" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/23 08:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adrian_b</span>
+        <span class="meta-time">2026/03/23 07:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当值为负数时效果很好。<p>然而，大多数 CPU 的硬件都有一个怪癖，这一怪癖已被 C 语言和其他语言继承。</p><p>当被除数不是除数的倍数时，有多种定义整数除法的方法，具体取决于商所使用的舍入规则。</p><p>两个最常用的定义是具有正余数，这对应于使用下取整函数对商进行舍入，以及具有与商相同符号的余数，这对应于通过截断对商进行舍入。</p><p>在大多数 CPU 中，硬件设计为对于有符号整数，除法指令使用第二个定义，而右移使用第一个定义。</p><p>这意味着当被除数是除数的倍数时，除法和右移相同，但否则由于舍入规则不同，商可能会相差一个单位。</p><p>因此，编译器不会自动用右移替换除法，因为有些操作数的结果不同。</p><p>尽管如此，程序员总是可以用右移来代替除以 2 的幂。在我见过的所有程序中，要么商的舍入规则并不重要，要么除法所需的定义是具有正余数的定义，即通过右移实现的定义。</p><p>在舍入规则很重要的情况下，令人担忧的情况是您必须使用除法而不是可以使用右移，因此您必须更正结果以对应于按楼层舍入，而不是硬件提供的截断舍入。为此，您不能使用 C 语言的“/”运算符，而应使用“stdlib.h”中的“div”函数之一，或者您可以使用“/”但除操作数的绝对值，然后计算正确的带符号结果。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It works fine when the value is negative.<p>However, there is a quirk of the hardware of most CPUs that has been inherited by the C language and by other languages.</p><p>There are multiple ways of defining integer division when the dividend is not a multiple of the divisor, depending on the rounding rule used for the quotient.</p><p>The 2 most frequently used definitions is to have a positive remainder, which corresponds to rounding the quotient by using the floor function, and to have a remainder of the same sign with the quotient, which corresponds to rounding the quotient by truncation.</p><p>In most CPUs, the hardware is designed such that for signed integers the division instruction uses the second definition, while the right shift uses the first definition.</p><p>This means that when the dividend is a multiple of the divisor, division and right shift are the same, but otherwise the quotient may differ by one unit due to different rounding rules.</p><p>Because of this, compilers will not replace automatically divisions with right shifts, because there are operands where the result is different.</p><p>Nevertheless, the programmer can always replace a division by a power of two with a right shift. In all the programs that I have ever seen, either the rounding rule for the quotient does not matter or the desired definition for the division is the one with positive remainder, i.e. the definition implemented by right shift.</p><p>In those cases when the rounding rule matters, the worrisome case is when you must use division not when you can use right shift, so you must correct the result to correspond to rounding by floor, instead of the rounding by truncation provided by the hardware. For this, you must not use the "/" operator of the C language, but one of the "div" functions from "stdlib.h", or you may use "/" but divide the absolute values of the operands, after which you compute the correct signed results.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483240" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">londons_explore</span>
+        <span class="meta-time">2026/03/23 05:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 它将出于技术需要而进行的优化转变为游戏功能<p>这就是为什么优化编译器永远无法击败足够数量的人类优化的原因。</p><p>出于性能原因，人类可以决定何时应故意破坏抽象层。    编译器无法做到这一点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; it turns an optimization done out of technical necessity into a gameplay feature<p>And this folks is why an optimizing compiler can never beat sufficient quantities of human optimization.</p><p>The human can decide when the abstraction layers should be deliberately broken for performance reasons.    A compiler cannot do that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482159" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nulltrace</span>
+        <span class="meta-time">2026/03/23 07:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里的 LEA-vs-shift 线程证明了这一点。编译器现在非常擅长这些东西。它们完全不足的地方是数据布局。我有一个使用 `std::map&lt;int, std::string&gt;` 进行字段查找的消息解析器，修复方法只是......一个由标签号索引的平面数组。没有编译器会建议这样做。与分配相同的处理。我花了一段时间摆弄 SIMD 扫描和追逐延迟的保守技巧，而最大的胜利结果是无聊。从按消息堆分配切换到预分配缓冲区，并使用 `std::span` 视图查看原始数据。每条消息约 12 次分配减少到零。编译器将优化你的分配器代码，它只是不会告诉你停止调用它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The LEA-vs-shift thread here kind of proves the point. Compilers are insanely good at that stuff now. Where they completely fall short is data layout. I had a message parser using `std::map&lt;int, std::string&gt;` for field lookup and the fix was just... a flat array indexed by tag number. No compiler is ever going to suggest that. Same deal with allocation. I spent a while messing with SIMD scanning and consteval tricks chasing latency, and the single biggest win turned out to be boring. Switched from per-message heap allocs to a pre-allocated buffer with `std::span` views into the original data. ~12 allocations per message down to zero. Compiler will optimize the hell out of your allocator code, it just won't tell you to stop calling it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483487" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">timschmidt</span>
+        <span class="meta-time">2026/03/23 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意。  它确实不仅需要了解其运行的软件和计算机，还需要了解组合系统要实现的目标。  也许我们中的一些人开始将此类信息输入法学硕士，作为规范驱动开发的一部分，也许明天的法学硕士将能够注意到并利用此类优化。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed.  It really requires an understanding of not just the software and computer it's running on, but the goal the combined system was meant to accomplish.  Maybe some of us are starting to feed that sort of information into LLMs as part of spec-driven development, and maybe an LLM of tomorrow will be capable of noticing and exploiting such optimizations.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482640" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hrmtst93837</span>
+        <span class="meta-time">2026/03/23 16:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您认为编译器无法突破抽象，那么您还没有看到当程序员给予其足够的可见性时，整个程序优化对过度设计的堆栈有何影响。他们仍然错过了意图，因此针对特定游戏的黑客可以获胜。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you think compilers can't punch through abstractions, you haven't seen what whole-program optimization does to an overengineered stack when the programer gives it enough visibility. They still miss intent, so the game-specific hack can win.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486719" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gwern</span>
+        <span class="meta-time">2026/03/23 07:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">端到端优化在行动！尽管我希望这里有不止 1 个示例（寻路）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">End-to-end optimization in action! Although I'd've liked more than 1 example (pathfinding) here.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483428" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rajan2</span>
+        <span class="meta-time">2026/03/23 16:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太疯狂了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is Insane</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486577" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rajan2</span>
+        <span class="meta-time">2026/03/23 16:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太疯狂了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is insane</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486580" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sghiassy</span>
+        <span class="meta-time">2026/03/23 06:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一个伟大的优化是将年份存储为两位数，因为您只需要后半部分......<p>……哦等等，nvm。不要预先优化！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Another great optimization is storing the year as two digits, because you only need the back half…<p>… oh wait, nvm. Don’t preoptimize!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483230" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">seba_dos1</span>
+        <span class="meta-time">2026/03/23 08:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过早优化和不关心优化直到它咬你一口之间存在着巨大的差距，这两个极端都会让你（或其他人）痛苦不堪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's a vast space between premature optimization and not caring about optimization until it bites you, and both extremes make you (or someone else) miserable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">neonstatic</span>
+        <span class="meta-time">2026/03/23 14:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是在本世纪九十年代进行的一次有趣的优化:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a fun optimization to make in the 9th decade of a century :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486082" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">atrealadam</span>
+        <span class="meta-time">2026/03/23 16:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对这个评论感到非常惊讶。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m quite surprised at this comment.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486596" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rajan2</span>
+        <span class="meta-time">2026/03/23 16:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太疯狂了！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is insane!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486576" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/23 06:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483199" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ZebusJesus</span>
+        <span class="meta-time">2026/03/23 07:45</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483592" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

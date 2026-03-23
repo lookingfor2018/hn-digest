@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>使用现代 RTL 工具构建 FPGA 3dfx Voodoo | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-23-2125/">返回本批次</a>
+      <h1>使用现代 RTL 工具构建 FPGA 3dfx Voodoo</h1>
+      <p class="subtitle">Building an FPGA 3dfx Voodoo with Modern RTL Tools</p>
+      <div class="meta-line">
+        <span>noquiche.fyi</span>
+        <span>作者 fayalalebrun</span>
+        <span>分数 209</span>
+        <span>评论 46</span>
+        <span>2026/03/22 21:24</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47477284" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://noquiche.fyi/voodoo" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>目录</li><li>比看起来更难的固定功能芯片 为什么寄存器写入的行为不能全部相同 Voodoo 的四种寄存器行为 在 SpinalHDL 查询执行中编码寄存器语义而不是滚动波形 现代 RTL 工具实际改变了什么</li><li>Screamer 2 的这一帧不是由原始 3dfx 卡渲染的，也不是由模拟器渲染的，而是由我在 SpinalHDL 中编写的 Voodoo 1 的 FPGA 重新实现渲染的。可在 GitHub 上获取。</li><li>让我惊讶的不仅仅是它有效。现在，这样的设计可以由一个人来描述、模拟和调试，前提是这些工具可以让您直接表达架构并在正确的抽象级别检查执行情况。</li><li>Voodoo 1 虽然很老，但并不简单。它没有变换和照明硬件，也没有可编程着色器，因此它的所有图形行为都固定在芯片中：Gouraud 着色的渐变、纹理采样、mipmapping、双线性和三线性过滤、alpha 裁剪、裁剪、深度测试、雾等。现代 GPU 将其大部分复杂性集中在灵活的可编程单元中。 Voodoo 将其集中在大量的硬连线渲染行为上。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Table of Contents</li><li>A Fixed-Function Chip That Is Harder Than It Looks Why Register Writes Cannot All Behave the Same Way The Voodoo&#39;s Four Register Behaviors Encoding Register Semantics in SpinalHDL Querying Execution Instead of Scrolling Waveforms What Modern RTL Tools Actually Changed</li><li>This frame of Screamer 2 was rendered not by an original 3dfx card and not by an emulator, but by an FPGA reimplementation of the Voodoo 1 that I wrote in SpinalHDL. Available on GitHub.</li><li>What surprised me was not just that it worked. It was that a design like this can now be described, simulated, and debugged by one person, provided the tools let you express the architecture directly and inspect execution at the right level of abstraction.</li><li>The Voodoo 1 is old, but it is not simple. It has no transform-and-lighting hardware and no programmable shaders, so all of its graphics behavior is fixed in silicon: gradients for Gouraud shading, texture sampling, mipmapping, bilinear and trilinear filtering, alpha clipping, clipping, depth testing, fog, and more. A modern GPU concentrates much of its complexity in flexible programmable units. The Voodoo concentrates it in a large number of hardwired rendering behaviors.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ColonelPhantom</span>
+        <span class="meta-time">2026/03/23 20:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷！我想知道一件事：它有多快？ Voodoo 的大部分“秘密武器”在于其高速度：第一代 Verite 或（上帝禁止）任何 ViRGE 需要更多的周期来执行常见操作，例如 Z 缓冲像素。<p>我猜这不是完全循环准确的，但它至少在某种程度上是“IPC 准确的”吗？我猜是的？但据我所知，其中大部分也源自 Voodoo（当时）疯狂的高内存带宽。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool! I am wondering one thing: how fast is it? Much of the "secret sauce" of the Voodoo is its high speed: a first-gen Verite or (God forbid) any ViRGE takes many more cycles for common operations like, say, Z-buffered pixels.<p>I'm guessing this isn't fully cycle-accurate, but is it at least somewhat "IPC-accurate"? I'm guessing yes? But much of that was also derived from Voodoo's (for the time) crazy high memory bandwidth AFAIK.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488764" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ashwinnair99</span>
+        <span class="meta-time">2026/03/22 23:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">巫毒牌没有权利看起来像他们那个时代那样好。从头开始重建的人正是 HN 所适合的项目。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Voodoo cards had no right to look as good as they did for their time. Someone rebuilding one from scratch is exactly the kind of project HN was made for.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rl3</span>
+        <span class="meta-time">2026/03/23 15:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;<i>巫毒牌没有权利看起来像他们那个时代那样好。 </i><p>他们的营销也没有：</p><p><a href="https://news.ycombinator.com/item?id=35027437" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=35027437</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;<i>The Voodoo cards had no right to look as good as they did for their time. </i><p>Nor did their marketing:</p><p><a href="https://news.ycombinator.com/item?id=35027437" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=35027437</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486414" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fayalalebrun</span>
+        <span class="meta-time">2026/03/23 00:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！这些东西确实包含了大量的功能。这可能是它们看起来如此出色的原因，也是为什么硬件重新实现花了 30 年的时间。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you! These things do pack in a ridiculous amount of functionality for what they do. Probably why they look so good but also why it took 30 years for a hardware re-implementation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478920" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sprash</span>
+        <span class="meta-time">2026/03/23 01:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，但 Vooodoo 之前的 Nvidia NV-1 更令人印象深刻。使用 NURBS 您可以显示完美的圆形物体。此外，它还具有前向纹理映射功能，可以显着提高缓存利用率，即使在今天也是有益的。<p>只是编程要困难得多。毕竟三角形比贝塞尔曲线更容易理解。在微软宣布 DirectX 仅支持三角形之后，NV-1 立即消亡。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes but the Nvidia NV-1 preceding the Vooodoo was much more impressive. Using NURBS you could display perfectly round objects. Also it had forward texture mapping which significantly improves cache utilization and would be beneficial even today.<p>It was just way harder to program for. Triangles are much simpler to understand than bezier curves after all. And after Microsoft declared that DirectX only supports triangles the NV-1 was immediately dead.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47480038" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pezezin</span>
+        <span class="meta-time">2026/03/23 08:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 此外，它还具有前向纹理映射，可显着提高缓存利用率，即使在今天也是有益的。<p>并不真地。正向纹理映射通过使帧缓冲区访问非线性来简化纹理访问，反向纹理映射则具有相反的权衡。但这是假设矩形纹理没有 UV 映射，就像 Sega Saturn 所做的那样；无论如何，当您使用 UV 贴图纹理访问时，纹理访问都将是非线性的。除此之外，当纹理和屏幕采样率不匹配时，前向纹理映射会遇到严重的困难，这几乎总是如此。</p><p>之所以只有土星和NV-1使用了前向纹理映射，后来该技术就被放弃了，这是有原因的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Also it had forward texture mapping which significantly improves cache utilization and would be beneficial even today.<p>Not really. Forward texture mapping simplifies texture access by making framebuffer access non-linear, reverse texture mapping has the opposite tradeoff. But that is assuming rectangular textures without UV mapping, like the Sega Saturn did; the moment you use UV mapping texture access will be non-linear no matter what. Besides that, forward texture mapping has serious difficulties the moment texture and screen sampling ratios don't match, which is pretty much always.</p><p>There is a reason why only the Saturn and the NV-1 used forward texture mapping, and the technology was abandoned afterwards.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483789" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bojan</span>
+        <span class="meta-time">2026/03/23 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直保留着 Voodoo3 2000 的想法，但我仍然没有找到一个好的方法来实现它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I keep my Voodoo3 2000 with the idea to frame it, but I still haven't found a good way to do it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47479709" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloha</span>
+        <span class="meta-time">2026/03/23 02:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你应该给它找一个好的阴影盒，它会看起来不错</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You should just find a good shadow box for it, it'll look good</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47480826" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">covercash</span>
+        <span class="meta-time">2026/03/23 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢 Glide，Tribes 1 看起来非常好……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Tribes 1 looked so good thanks to Glide…</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482147" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">PostOnce</span>
+        <span class="meta-time">2026/03/23 07:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不过我非常喜欢这个软件的外观！我从来不喜欢纹理的模糊:)<p>它们都以自己的方式美丽，硬件版本中的黑暗和发光，软件版本中的某些像素化魅力和粗糙度</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love the software look so much though! I never did like the blurring of textures :)<p>They're both beautiful in their own way, the darkness and glow in the hardware versions, some certain pixellated charm and roughness in the software version</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sejje</span>
+        <span class="meta-time">2026/03/22 23:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的第一张视频卡。<p>在 1999 年左右让它在 Linux 上运行确实不容易，特别是对于一个没有 Linux 经验的青少年来说。</p><p>我的网卡也无法使用，因此我不得不跑到朋友家拨号上网，在 Altavista 上寻求帮助。</p><p>非常酷的项目。仍然在我头顶上方！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My first video card.<p>Getting it working in linux in ~1999 was really not easy, especially for a teenager with no linux experience.</p><p>My networking card wasn't working either, so I had to run to a friend's house for dial-up internet access, searching for help on Altavista.</p><p>Very cool project. Way above my head, still!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478332" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">freetime2</span>
+        <span class="meta-time">2026/03/23 18:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">3dfx Voodoo Banshee 是我买的第一张显卡。我买它是为了玩《无尽的任务》测试版，那也是在 1999 年左右。我记得第一次登录该游戏时，感觉就像是一次改变生活的体验。确实如此。<p>我记得出于某种原因我非常喜欢 3dfx 启动画面 [1]。也许是因为它是该卡上唯一真正运行顺利的东西。但尽管如此，我仍然是一名忠实的 3dfx 用户 - 可能是因为其他人在评论中提到的他们的营销 - 几年后当它停业时我感到很伤心。</p><p>[1] <a href="https://www.youtube.com/watch?v=LanTZ_AnAso" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=LanTZ_AnAso</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A 3dfx Voodoo Banshee was the first graphics card I ever bought. I bought it to play the EverQuest beta, which also would have been around 1999. I remember logging into that game for the first time and it felt like a life-changing experience. And it kind of was.<p>I remember really liking the 3dfx splash screen[1] for some reason. Maybe because it was the only thing that actually ran smoothly on that card. But still, I was a loyal 3dfx user - probably because of their marketing which someone else mentioned in the comments - and was sad when it went out of business a couple years later.</p><p>[1] <a href="https://www.youtube.com/watch?v=LanTZ_AnAso" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=LanTZ_AnAso</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47487396" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Venn1</span>
+        <span class="meta-time">2026/03/22 23:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于 Linux 支持，我用尽了十几岁的积蓄购买了 Voodoo 1。当然，我当时运行的是 Red Hat，所以安装包括安装什么，两个 RPM？在这张卡上玩了很多 Q3 和 Unreal。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I exhausted my teenage savings to buy the Voodoo 1 due to the Linux support. Granted, I was running Red Hat at the time so the installation consisted of installing what, two RPMs? Played a lot of Q3 and Unreal on that card.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478711" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sejje</span>
+        <span class="meta-time">2026/03/23 04:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最终让它在 Mandrake Linux 上开箱即用。我在当地的 Office Max 购买了一份。<p>我相信我尝试过 redhat，但也遇到了问题。我再也没有回到过去——转向 Debian，再也没有回头。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wound up getting it working out-of-the-box with Mandrake Linux. I bought a copy at the local Office Max.<p>I believe I tried redhat, but had issues with that as well. I never went back to it--moved to debian and never looked back.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481785" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/22 23:54</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478806" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">severino</span>
+        <span class="meta-time">2026/03/23 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同样在这里。我记得一些名为 tdfx 的内核模块或视频驱动程序，然后努力让 X11 在 DRI（直接渲染基础设施或类似的东西）设置下工作。经过几天编译了一半的系统并试图找出问题所在，特别是当对互联网的访问受到限制，然后能够启动带有硬件加速的 GLtron 时，看到它在 glxinfo 的输出上启用是非常值得的。还记得当时玩《雷神之锤 3》和《美国陆军》游戏。<p>有趣的时光，现在在 Linux 上一切都很简单，但我不知何故怀念那个你实际上必须自己做所有事情的时代。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Same here. I remember some kernel module or video driver named tdfx, and then, struggling to make X11 work with this DRI (Direct rendering infrastructure or something like that) setting on. It was very rewarding to see it enabled on glxinfo's output after days compiling half of your system and trying to figure out what was wrong, specially when the access to the internet was limited, and then being able to launch GLtron with hardware acceleration. Also remember playing Quake 3 and America's Army games around that time.<p>Fun times, now everything is straightforward on Linux but I somehow miss that era when you actually had to do everything by yourself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482954" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ismail</span>
+        <span class="meta-time">2026/03/23 03:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的第一个任务也是让驱动程序在 *nix I 上工作。90 年代中期..始终是一个有趣的挑战。<p>调制解调器也有问题，翻阅手册找出了初始化字符串</p><p>AT&amp;FX1</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My first as well, getting drivers working on *nix I. The mid 90’s.. was always a fun challenge.<p>Also had the issue with modem, paging through the manual figured out the initialisation string</p><p>AT&amp;FX1</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ekelsen</span>
+        <span class="meta-time">2026/03/22 23:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个项目很酷，但是法学硕士生成的博客困扰着我的大脑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The project is cool, but the LLM generated blog bothers my brain.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478428" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">PinkMilkshake</span>
+        <span class="meta-time">2026/03/23 13:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你确定这是AI？通常，当我阅读人工智能写的东西时，我会走神，因为它可以不说任何内容就读完整个段落。这里的句子看起来简短而切题。<p>他们之前在 ChatGPT 之前发表的帖子看起来很相似。虽然，他们有更多的破折号，而这个没有，几乎就像他们是故意删除的......哈哈</p><p>我不知道什么是真实的了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you sure this is AI? Normally when I read AI written stuff I zone out because it can go entire paragraphs without saying anything. The sentences here seem short and to the point.<p>Their previous posts published before ChatGPT seem similar enough. Although, they have way more em dashes and this one has none, almost like they were removed on purpose... lol</p><p>I don't know what is real anymore.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485877" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">girvo</span>
+        <span class="meta-time">2026/03/23 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现你（和我！）对法学硕士生成的文本的反应很有趣。它有一种独特的气味，老实说我无法用言语来形容 <i>为什么</i> 我觉得它令人厌恶，我只知道我确实如此。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find your (and my!) reaction to LLM generated text fascinating. It has a distinct smell, and I honestly can't really put words to <i>why</i> I find it repellent, I just know that I do.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">userbinator</span>
+        <span class="meta-time">2026/03/23 06:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它过于冗长，措辞和句子结构对于这个主题来说非常不寻常，而且它有经典的法学硕士的斜喻。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's overly verbose, the phrasing and sentence structure are very unusual for the topic, and it has the classic LLM slop tropes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">AshamedCaptain</span>
+        <span class="meta-time">2026/03/23 00:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我什至无法弄清楚“现代”部分是什么。就像“网表感知跟踪”一样……听起来充其量只是 80 年代的最先进技术。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I cannot even figure out what the "modern" part is. Like, "netlist aware tracing" ... sounds like state of the art from the 80s at best.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47479372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CamperBob2</span>
+        <span class="meta-time">2026/03/23 01:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也倾向于有同样的感觉，尽管我正在积极尝试克服它。  我的写作能力还可以，但由于教育背景和天赋的结合，我在高等数学方面几乎是文盲。  尽管我在硬件和软件工作上都相当成功，但作为一名工程师，我还是落后于 8 球。  我往往会错过对我的同龄人来说显而易见的技巧，但是当我 <i>做</i> 设法想出一些有用的东西，我能够与同事沟通并与客户联系。  虽然我不需要也不想要法学硕士在写作方面的帮助，但我不能否认最近的模型是天赐之物，让我摆脱了数学系的麻烦。<p>现在，这个人在工程的定量方面显然很强大，但可能不擅长用英语传达结果。  我认为这两种技能是同等重要的，所以当我自己依靠人工智能来弥补自己数学能力的不足时，我有什么权利指责他们使用人工智能在英语上“作弊”呢？  难道只是我可以隐瞒自己使用尖端工具进行研究和推理，而他们却无法隐瞒自己的语言障碍吗？</p><p>这听起来不公平。  我想对这类事情采取更进步的观点，并鼓励其他人也这样做。  这篇文章并不是无意识的废话，也不应该被拒绝。</p><p>除此之外，用不了多久，无论如何都无法调用人工智能进行书写。  我们可以现在或以后克服它。  不管怎样，我们都必须克服它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tend to feel the same way, although I'm actively trying to move past it.  I'm OK at writing, but thanks to a combination of educational background and natural aptitude, I'm darned near illiterate at higher math.  That puts me behind the 8-ball as an engineer, even though I've been reasonably successful at both hardware and software work.  I tend to miss tricks that are obvious to my peers, but when I <i>do</i> manage to come up with something useful, I'm able to communicate with my peers and connect with my customers.  While I don't need or want LLM assistance with writing, I can't deny that recent models have been a godsend for getting me out of trouble in the math department.<p>Now, here's somebody who's clearly strong on the quantitative side of engineering, but presumably bad at communicating the results in English.  I consider both skill sets to be of equal importance, so what right do I have to call them out for using AI to "cheat" at English when I rely on it myself to cover my own lack of math-fu?  Is it just that I can conceal my use of leading-edge tools for research and reasoning, while they can't hide their own verbal handicap?</p><p>That doesn't sound fair.  I would like to adopt a more progressive outlook with regard to this sort of thing, and would encourage others to do the same.  This particular article isn't mindless slop and it shouldn't be rejected as such.</p><p>Besides all that, before long it won't be possible to call AI writing out anyway.  We can get over it now or later.  Either way, we'll have to get over it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47480071" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">girvo</span>
+        <span class="meta-time">2026/03/23 06:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 不久之后无论如何都无法调用 AI 进行书写<p>一旦我们到达那里，我们就在那里。树倒在周围没有人的森林里，等等。一旦发生这种情况，我就会停止对此做出不良反应，但它还没有（无论如何，没有仔细提示）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; before long it won't be possible to call AI writing out anyway<p>Once we're there, we're there. Tree falling in a forest with no one around, etc. Once that happens then I'll stop reacting badly to it, but it hasn't yet (not without careful prompting anyway).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483102" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cpldcpu</span>
+        <span class="meta-time">2026/03/22 23:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">+1</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">+1</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478486" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">VonTum</span>
+        <span class="meta-time">2026/03/22 23:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得奇怪的是，作者将所有这些额外的语义添加到他们的输入寄存器中，而不是将 FIFO、“漏极 + FIFO”、“浮点到定点转换寄存器”等保留为单独的组件，与内存映射寄存器的任务分开。他们遇到的核心问题是让外部控制器在使用它的计算单元中间异步更改状态。<p>不过，我正在为未来记下这个 conetrace，它似乎是一个有用的工具，而且他们似乎正在进行某种封闭测试。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find it odd the author adds all these extra semantics to their input registers, rather than keeping the FIFOs, "drain + FIFOs", "float to fixed point converting register", etc as separate components, separate from the task of being memory mapped registers. The central problem they were running into was one where they let the external controller asynchronously change state in the middle of the compute unit using it.<p>I'm noting down this conetrace for the future though, seems like a useful tool, and they seem to be doing a closed beta of sorts.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478777" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fayalalebrun</span>
+        <span class="meta-time">2026/03/23 00:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许我误解了，但该功能是在另一个组件中实现的。寄存器组仅记录每个寄存器的类别并实现内存映射寄存器功能。<p>然后，将寄存器列表及其类别导入到位于传入写入和寄存器组之间的单独组件中。优点是描述寄存器属性的所有内容都在单个文件中。您不必查看三个不同的地方即可了解寄存器的行为方式。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe I'm misunderstanding, but that functionality is implemented in another component. The register bank only records the category of each register and implements the memory-mapped register functionality.<p>This list of registers and their categories are then imported in separate components which sit between incoming writes and the register bank. The advantage is that everything which describes the properties of the registers is in a single file. You don't have to look in three different places to find out how a register behaves.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478895" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">VonTum</span>
+        <span class="meta-time">2026/03/23 00:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么，为什么要将这种处理与寄存器本身联系起来呢？当然，我可以看到有一个速记来实例化写入队列，但是浮点到固定的转换没有位置作为内存映射寄存器组的一部分。<p>使用一个模块将 AXI-Lite（我猜是？）内存映射接口转换为处理器的特定输入格式，然后让处理器在需要时从该适配器中提取数据，不是更明智吗？ 
+这样，所有输入处理仍然在同一个地方完成。</p><p>编辑：也许，归结为：寄存器组应该负责存储计算单元正在处理的状态，还是计算单元应该存储该状态本身？在我看来，这个责任在于计算单元。计算单元不应依赖寄存器组在工作时不发生变化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well still, why tie this kind of processing to the registers themselves? Sure having a shorthand to instantiate a queue of writes I could see, but float to fixed conversion has no place being part of a memory mapped register bank.<p>Wouldn't it be more sensible to have one module for converting the AXI-Lite (I presume?) memory map interface to the specific input format of your processor, and then have the processor pull data from this adaptor when it needs it? 
+That way still all handling of inputs is done in the same place.</p><p>Edit: maybe, what it comes down to is: Should the register bank be responsible for storing the state the compute unit is working on, or should the compute unit store that state itself? In my opinion, that responsibility lies with the compute unit. The compute unit shouldn't have to rely on the register bank not changing while its working.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47479014" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fayalalebrun</span>
+        <span class="meta-time">2026/03/23 00:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你在这里确实有一个很好的观点。然后计算单元可以简单地停止来自寄存器组的命令。如果没有这个，我需要停止写入 FIFO，这感觉不太优雅，并且在组合循环方面给我带来了一些痛苦。但缺点是您必须在计算单元中复制大量寄存器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You do have a nice point here. Then the compute unit can simply stall the commands coming out of the register bank. Without this I need to stall the write FIFO, which feels less elegant and has given me some pain in terms of combinational loops. The drawback though is that you have to duplicate a significant amount of registers in the compute unit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47479258" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bob1029</span>
+        <span class="meta-time">2026/03/23 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">比起实际的 GPU，我更想念盒子的艺术。<p><a href="https://lockbooks.net/pages/overclocked-launch" target="_blank" rel="noopener noreferrer">https://lockbooks.net/pages/overclocked-launch</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I miss the box art more than the actual GPUs.<p><a href="https://lockbooks.net/pages/overclocked-launch" target="_blank" rel="noopener noreferrer">https://lockbooks.net/pages/overclocked-launch</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47479117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Tsiklon</span>
+        <span class="meta-time">2026/03/23 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与此相关的是，《Screamer 2》的截图完全让我措手不及，我非常喜欢这款游戏，而且我觉得我是我的朋友中唯一玩过它的人。巨大的操控模型和美妙的音乐。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Tangentially related, that screenshot of Screamer 2 caught me off guard completely, I loved that game to death, and I feel I was the only one of my friends to have played it. Tremendous handling model and superb music.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481248" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fer</span>
+        <span class="meta-time">2026/03/23 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很喜欢它，尽管从那个时代开始我最喜欢《致命赛车》。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I loved it, though from that era I liked Fatal Racing the most.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47482977" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Tsiklon</span>
+        <span class="meta-time">2026/03/23 12:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人惊讶的是，原开发商 Milestone 正在对本周推出的系列进行重启/重新构想。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Surprisingly the original developers Milestone are doing a reboot/reimagining of the series which is out this week.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485457" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Gracana</span>
+        <span class="meta-time">2026/03/23 21:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，我在看到这篇文章之前就看到了有关新游戏的新闻。我根本不知道这是重启，我从未听说过原版。看起来很酷。<p><a href="https://store.steampowered.com/app/2814990/Screamer/" target="_blank" rel="noopener noreferrer">https://store.steampowered.com/app/2814990/Screamer/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Funny, I saw the news about the new game just before I saw this article. I didn't know it was a reboot at all, I'd never heard of the originals. It looks cool.<p><a href="https://store.steampowered.com/app/2814990/Screamer/" target="_blank" rel="noopener noreferrer">https://store.steampowered.com/app/2814990/Screamer/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">qrios</span>
+        <span class="meta-time">2026/03/23 09:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经有一段时间没有使用 Xilinx 工具了，但我无法想象现在没有任何硬件限制。它是否在 Spartan 6 上运行，或者您是否需要最新的 UltraScale？<p>或者这只能在模拟中运行？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s been a while since I’ve struggled with Xilinx tools, but I can’t imagine there aren’t any hardware limitations these days. Does this run on a Spartan 6, or do you need the latest UltraScale for it?<p>Or does this only run in simulation anyway?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47484432" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fayalalebrun</span>
+        <span class="meta-time">2026/03/23 13:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它适合并运行在 DE-10 Nano 上，没有太多困难，使用了大约 70% 的织物。我一直致力于时序收敛，刚刚达到 50 MHz。<p>请注意，我还实现了原始 Voodoo 中不存在的缓存组件，以便在可使用的内存方面更加灵活。所以如果你把它去掉的话，它可能会小一点，也许是布料的 50%。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This fits and runs in a DE-10 Nano without too much difficulty, uses around 70% of the fabric. I've been working on timing closure and just got it to 50 MHz.<p>Note that I also implemented cache components not present in the original Voodoo in order to be more flexible in terms of the memory that can be used. So it could be quite a bit smaller, maybe 50% of the fabric if you got rid of that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pezezin</span>
+        <span class="meta-time">2026/03/23 20:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这真是令人印象深刻。 70% 对于 MiSTer 内核来说显然太大了，但我想知道是否有一天我们会拥有一块经济实惠的 FPGA 板，能够模拟 90 年代末的 PC...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's quite impressive. 70% is obviously way too big for a MiSTer core, but I wonder if one day we will have an affordable FPGA board able to simulate a late '90s PC...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488571" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Joel_Mckay</span>
+        <span class="meta-time">2026/03/23 11:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FPGA 仿真是通过在一定的仿真时间后找到“稳态”延迟来猜测亚稳定性问题的一种天真的尝试。时钟域交叉缓解措施只能让人们到目前为止，并且状态传播问题通常会随着更大更快的芯片而变得更糟。<p>请注意，有一些超大的爱好 Voodoo 卡可以最大化原始 ASIC 数量和内存限制。还有像 86box 这样的模拟器可以模拟旧游戏的硬件。</p><p><a href="https://www.youtube.com/watch?v=C4295RCp0GQ" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=C4295RCp0GQ</a></p><p>&gt;或者这只能在模拟中运行吗？</p><p>如果他们是 LLM 用户，那么这 100% 就是愚人节玩笑。 =3</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FPGA simulations are a naive attempt to guess at Metastability problems by finding a "steady state" latency after a certain amount of simulation time. Clock domain crossing mitigation only gets folks so far, and state propagation issues often get worse with larger and faster chips.<p>Note, there are oversized hobby Voodoo cards that max out the original ASIC count and memory limits. There are also emulators like 86box that simulate the hardware just fine for old games.</p><p><a href="https://www.youtube.com/watch?v=C4295RCp0GQ" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=C4295RCp0GQ</a></p><p>&gt;Or does this only run in simulation anyway?</p><p>If they are a LLM user, than it is 100% an April fools joke. =3</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485186" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">12_throw_away</span>
+        <span class="meta-time">2026/03/23 01:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对我的旧巫毒卡有着美好的回忆。令人惊讶的是这些图片唤起了多少怀旧之情 - 它的渲染确实具有独特的外观，（LLM 生成的？）FPGA 很好地捕捉到了这一点。<p>IIRC，它是一个巨大的（当时）野兽，几乎不适合我的底盘 - 但它对 ppc32/macos9 （已经即将淘汰）有很好的驱动程序支持，并且实际上让我的机器运行的时间比它应得的要长。</p><p>然后，就像我买了一个月后，NVidia 购买了 3dfx 并立即停止支持驱动程序，当我最终升级我的机器时，给我留下了一个性能极其出色的镇纸。谢谢詹森。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have such fond memories of my old Voodoo card. Surprised how much nostalgia those pictures evoked - its rendering really had a unique look this that (LLM-generated?) FPGA captured quite well.<p>IIRC, it was a gigantic (for the time) beast that barely fit in my chassis - BUT it had great driver support for ppc32/macos9 (which was already on its way out), and actually kept my machine going for longer than it had any right to.</p><p>And then, like a month after I bought it, NVidia bought 3dfx and immediately stopped supporting the drivers, leaving me with an extremely performant paperweight when I finally upgraded my machine. Thanks Jensen.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47480226" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SilverElfin</span>
+        <span class="meta-time">2026/03/22 23:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢那个时代的名字和品牌。如今的技术要先进得多，但消费者却没有那么兴奋。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love the names and branding of that era. Technology today is far more advanced but it doesn’t have that same excitement for consumers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">temp0826</span>
+        <span class="meta-time">2026/03/22 23:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">门槛要低得多——我想，如果你当时意识到的话，这实际上意味着你已经是一名爱好者了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The bar is a lot lower- it was practically implied that you were already an enthusiast if it was in your awareness at that time I think.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47478760" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">12_throw_away</span>
+        <span class="meta-time">2026/03/23 02:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意，但不知道这是不是怀旧之情。就像，我只是去尝试弄清楚我的 Voodoo 卡插入的是哪种型号的 PowerMac，然后对“PowerPC 8600”这样的型号名称产生了一种危险的怀旧之情——客观上这是一个非常无聊的名字，但我认为它在我生命中的某个时刻对我来说意义深远。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree, but can't tell if it's the nostalgia speaking. Like, I just went and tried to figure exactly what model of PowerMac my Voodoo card was plugged into, and just got a dangerous rush of nostalgia for model names like "PowerPC 8600" - which is an objectively very boring name but I think it meant something profound to me at one point in my life.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47480298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">userbinator</span>
+        <span class="meta-time">2026/03/23 06:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能会发现这篇相关文章很有趣： <a href="https://news.ycombinator.com/item?id=32960140" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=32960140</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You may find this related article interesting: <a href="https://news.ycombinator.com/item?id=32960140" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=32960140</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47483172" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">burnt-resistor</span>
+        <span class="meta-time">2026/03/23 12:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想这很酷，因为它可能会产生一个单板设计，能够通过闪存更新来模拟许多设计，包括需要 2 张 Voodoo 卡和一个主机 2D 卡的 SLI，这些卡都可以放置在所述一张卡上。不过，我不知道如何设计模拟 DAC 带宽，以便从 FPGA 帧缓冲区以 1600x1200 @ 60 Hz 忠实呈现 SVGA。<p>顺便说一句，大多数 8 MiB 老式 Voodoo 2 卡只需焊接更多 RAM 即可升级到 12 MiB。我设法找到了一堆合法的 125 MHz 芯片，它们可以与生产的每张卡配合使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I guess it's cool because it could possibly produce a single board design able to emulate many designs with a flash update including SLI requiring 2 Voodoo cards plus a host 2D card that could all be placed onto said one card. I don't know how one engineers the analog DAC bandwidth to render SVGA faithfully at 1600x1200 @ 60 Hz from a FPGA frame buffer though.<p>Btw, most 8 MiB vintage Voodoo 2 cards can be upgraded to 12 MiB by simply soldering on more RAM. I managed to snag a bunch of legit 125 MHz chips that work with every card produced.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485536" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">TapamN</span>
+        <span class="meta-time">2026/03/23 04:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">钱币。该屏幕截图上的伽玛值。<p>如果你想看看它应该是什么样子，请将屏幕截图复制到 GIMP 中，进入“颜色，级别”，在“输入级别”部分中，应该有一个带有“1.00”的文本框+旋转器。将其设置为 0.45。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oof. The gamma on that screenshot.<p>If you want to see what it's supposed to look like, copy the screenshot into GIMP, go into "Color, Levels" and in the "Input Levels" section, there should be a textbox+spinner with a "1.00". Set that to 0.45.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47481538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fayalalebrun</span>
+        <span class="meta-time">2026/03/23 13:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然 Voodoo 卡默认为 1.3 gamma，而不是标准的 2.2。我想知道为什么会这样，因为从理论上讲，使用非标准伽玛只会减少您的颜色范围，而没有任何实际好处。<p>通过查看 DAC 伽玛寄存器，这在设计中绝对是可以修复的。一旦我了解了 DE-10 Nano 上的扫描输出实现，我就会这样做。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Apparently Voodoo cards defaulted to 1.3 gamma instead of the standard 2.2. I wonder why that is, since it theory using a non-standard gamma would just reduce your color range with no real benefit.<p>This is definitely fixable in the design though by looking at the DAC gamma register. I'll do so once I get to the scan-out implementation on the DE-10 Nano.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47485758" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">flomo</span>
+        <span class="meta-time">2026/03/23 15:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得《雷神之锤》最初非常黑暗，就像你应该在某个地下室坟墓里玩这个一样。但我们是在一间光线明亮、有窗户的办公室“测试”Pentium Pro 工作站，因此我们必须调整游戏的亮度。所以我想知道这是否是“让《雷神之锤》看起来适合演示”的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I recall Quake orignally being super dark, Like you were supposed to be playing this in some basement tomb. But we were 'testing' Pentium Pro workstations in a brightly lit windowed office, so we had to adjust the game's brightness. So I wonder if this was a "make Quake look good for demos" thing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47486426" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
