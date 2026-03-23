@@ -1,0 +1,100 @@
+name: hn-digest
+
+on:
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "Run slot"
+        required: false
+        default: "manual"
+        type: choice
+        options:
+          - manual
+          - "08:00"
+          - "12:00"
+          - "15:00"
+  schedule:
+    - cron: "0 0,4,7 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: hn-digest-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_BASE_URL: ${{ vars.OPENAI_BASE_URL || 'https://gmn.chuangzuoli.com' }}
+      OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.3' }}
+      SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+      BARK_SERVER: ${{ vars.BARK_SERVER || 'https://api.day.app' }}
+      BARK_RECIPIENT_NAMES: liyu
+      BARK_NAMED_KEYS: ${{ secrets.BARK_NAMED_KEYS }}
+      BARK_ICON_URL: ${{ vars.BARK_ICON_URL || 'https://news.ycombinator.com/y18.svg' }}
+      LIST_URL: https://news.ycombinator.com/best?h=24
+      HISTORY_DAYS: "7"
+      ARTICLE_SUMMARY_MAX_PARAGRAPHS: "5"
+      COMMENT_TRANSLATION_CHAR_BUDGET: "220000"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync pipeline
+        shell: bash
+        run: |
+          SLOT_INPUT="${{ github.event.inputs.slot }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            npm run sync -- --mode manual --slot "${SLOT_INPUT:-manual}"
+          else
+            npm run sync -- --mode scheduled
+          fi
+
+      - name: Commit generated dist and state
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "dist" "state"
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "chore(hn): refresh digest artifacts"
+            git push
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
