@@ -74,6 +74,67 @@ describe("translate fallback", () => {
     expect(result.text).toContain("https://example.com");
   });
 
+  it("splits google fallback payload when long query returns 400", async () => {
+    const source = "a".repeat(420);
+    const googleQueryLengths: number[] = [];
+    const fakeFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/chat/completions")) {
+        return new Response("upstream failed", { status: 500 });
+      }
+      if (url.includes("translate.googleapis.com")) {
+        const u = new URL(url);
+        const q = u.searchParams.get("q") || "";
+        googleQueryLengths.push(q.length);
+        if (q.length > 100) {
+          return new Response("too long", { status: 400 });
+        }
+        return new Response(JSON.stringify([[[q, q, null, null]]]), { status: 200 });
+      }
+      return new Response("not found", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fakeFetch);
+
+    const result = await translateTextWithFallback(source, {
+      apiKey: env.openAiApiKey,
+      baseUrl: env.openAiBaseUrl,
+      model: env.openAiModel
+    });
+
+    expect(result.provider).toBe("google");
+    expect(result.text).toBe(source);
+    expect(googleQueryLengths.some((len) => len > 100)).toBe(true);
+    expect(googleQueryLengths.some((len) => len <= 100)).toBe(true);
+  });
+
+  it("returns source text when both translators fail", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const fakeFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/chat/completions")) {
+        return new Response("upstream failed", { status: 500 });
+      }
+      if (url.includes("translate.googleapis.com")) {
+        return new Response("still failed", { status: 400 });
+      }
+      return new Response("not found", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fakeFetch);
+
+    const source = "visit https://example.com";
+    const result = await translateTextWithFallback(source, {
+      apiKey: env.openAiApiKey,
+      baseUrl: env.openAiBaseUrl,
+      model: env.openAiModel
+    });
+
+    expect(result.provider).toBe("google");
+    expect(result.text).toBe(source);
+    expect(warnSpy).toHaveBeenCalledOnce();
+  });
+
   it("translates story html and applies comment budget in BFS order", async () => {
     const fakeFetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
