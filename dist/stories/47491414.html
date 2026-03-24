@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：Threadprocs – 共享一个地址空间的可执行文件（0 复制指针） | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-24-1030/">返回本批次</a>
+      <h1>显示 HN：Threadprocs – 共享一个地址空间的可执行文件（0 复制指针）</h1>
+      <p class="subtitle">Show HN: Threadprocs – executables sharing one address space (0-copy pointers)</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 jer-irl</span>
+        <span>分数 63</span>
+        <span>评论 40</span>
+        <span>2026/03/24 00:08</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47491414" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/jer-irl/threadprocs" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>该存储库包含类线程进程或在共享地址空间中运行的多个程序的实验代码。每个 threadproc 的行为就像一个具有自己的可执行文件、全局变量、libc 实例等的进程，但指针在 threadproc 之间有效。这将 Posix 进程模型与 Posix 多线程编程模型混合在一起，并实现了对基于指针的数据结构的零复制访问等功能。所有 Markdown 文件都是手工编写的。有关构建在 threadproc 之上的一种可能的应用程序框架，请参阅 tproc-actors。演示 演示程序的代码位于 example/sharedstr/allocstr.cpp 和 example/sharedstr/printstr.cpp 中，既不包含任何魔法（/proc/[pid]/mem 等），也不包含服务器和启动器的意识。</li><li>allocstr 读取输入，并将其复制到新的 std::string 中，并将 &amp;newstring 打印到控制台。 printstr 将指针读取为十六进制文本，并打印它在那里找到的任何 std::string 。</li><li>演示.mp4</li><li>电梯间距 服务器实用程序“托管”虚拟地址空间，并通过使用启动器启动程序，这些启动的程序共存于托管地址空间中。应用程序可以通过某种带外机制共享虚拟地址空间中的指针（演示使用复制/粘贴，dummy_server/client 使用套接字，libtproc 提供服务器全局暂存空间），然后直接取消引用这些指针，因为它们在共享地址空间中有效。 libtproc libtproc 提供对 threadproc 执行的基本检测，并允许托管 threadproc 访问“服务器全局”暂存空间。应用程序可以使用此空间构建工具来实现服务发现和引导共享内存支持的 IPC。这是通过向 threadproc auxv 添加另一个条目来实现的。 tproc-actors 使用此空间来通告每个线程进程的参与者注册表。地位</li><li>示例/和测试/ aarch64+x86_64 Linux 生产质量中的概念证明 用于对等/服务发现的安全（ish）文档工具（基本）</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>This repository contains experimental code for thread-like processes, or multiple programs running in a shared address space. Each threadproc behaves like a process with its own executable, globals, libc instance, etc, but pointers are valid across threadprocs. This blends the Posix process model with the Posix multi-threading programming model, and enables things like zero-copy access to pointer-based data structures. All Markdown files were written by hand. See tproc-actors for one possible application framework building on top of threadprocs. Demo The code for the demoed programs is at example/sharedstr/allocstr.cpp and example/sharedstr/printstr.cpp, and neither contains any magic (/proc/[pid]/mem, etc), nor awareness of the server and launcher.</li><li>allocstr reads input, and copies it into a new std::string, and prints &amp;newstring to console. printstr reads a pointer as hex text, and prints whatever std::string it finds there.</li><li>demo.mp4</li><li>Elevator pitch The server utility &quot;hosts&quot; a virtual address space, and by using launcher to start programs, those launched programs coexist in the hosted address space. Applications can share pointers in the virtual address space through some out-of-band mechanism (Demo uses copy/paste, dummy_server/client uses sockets, libtproc provides server-global scratch space), and then directly dereference those pointers, as they&#39;re valid in the shared address space. libtproc libtproc provides basic detection of execution as a threadproc, and allows hosted threadprocs to access a &quot;server-global&quot; scratch space. Applications can build tooling using this space to implement service discovery and bootstrap shared memory-backed IPC. This is implemented by adding another entry to the threadproc auxv. tproc-actors uses this space to advertise per-threadproc actor registries. Status</li><li>Proof of concept in examples/ and test/ aarch64+x86_64 Linux Production quality Secure(ish) Documentation Tooling for peer/service discovery (basic)</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/03/24 00:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的。<p>我必须承认，我的嗅觉测试告诉我，这是一种倒退。至少天真地（我还没有彻底查看代码），这感觉就像我们回到了像 AmigaOS 这样的预保护内存操作系统；我们有进程边界和与之相关的开销是有原因的。</p><p>如果线程进程之间共享零副本，那么如何阻止 Threadproc B 搞砸 Threadproc A 的内存？如果答案是“什么也没有”，那么与普通 pthread 相比，这能买什么呢？</p><p>我并不是想表现得消极，我实际上很好奇这个问题的答案。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting.<p>I gotta admit that my smell test tells me that this is a step backwards; at least naively (I haven't looked through the code thoroughly yet), this just kind of feels like we're going back to pre-protected-memory operating systems like AmigaOS; there are reasons that we have the process boundary and the overhead associated with it.</p><p>If there are zero copies being shared across threadprocs, what's to stop Threadproc B from screwing up Threadproc A's memory? And if the answer to this is "nothing", then what does this buy over a vanilla pthread?</p><p>I'm not trying to come off as negative, I'm actually curious about the answer to this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491835" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一点也不消极，谢谢您的评论。  你是对的，答案是“什么都没有”，这是该模型固有的主要权衡。  从安全角度来看，您需要非常有信心所有线程过程都表现良好，尽管内存安全语言会对某些线程有所帮助。  好处是，您可以获得类似进程的组合，作为在不同时间启动的单独二进制文件，并具有类似线程的单地址空间 IPC。<p>在构建之后，我认为这不一定是一个理想的权衡，数十年的操作系统开发无疑表明进程隔离内存是可取的。  我认为这更多地是一个实验，旨在了解如何在现代环境中改变这些界限，而不是一个实际的前进方向。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not negative at all, thanks for commenting.  You're right that the answer is "nothing," and that this is a major trade-off inherent in the model.  From a safety perspective, you'd need to be extremely confident that all threadprocs are well-behaved, though a memory-safe language would help some.  The benefit is that you get process-like composition as separate binaries launched at separate times, with thread-like single-address space IPC.<p>After building this, I don't think this is necessarily a desirable trade-off, and decades of OS development certainly suggest process-isolated memory is desirable.  I see this more as an experiment to see how bending those boundaries works in modern environments, rather than a practical way forward.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Chaosvex</span>
+        <span class="meta-time">2026/03/24 04:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以理解这里的动机。<p>我的爱好开源项目之一包括多个服务，我不想为了测试任何东西而单独启动和停止它们。它们被设计为独立运行，因为它是一个分布式系统，但必须启动和停止每个单独的进程会增加摩擦，降低我对其工作的兴趣。</p><p>我最近重新设计了每个服务，以便它们可以作为一个进程运行，或者在一个共享进程中运行，该进程只使用 LoadLibrary/dlopen（当不是静态链接时），以便能够快速地立即启动和关闭所有内容，或者在二进制文件发生更改时重新启动特定服务。</p><p>当然，一切都会崩溃，而不仅仅是一项服务，但它是轻量级的（不需要复杂的部署设置），并使项目的工作变得更加愉快。对于开发工作来说已经足够了。</p><p>另一个优点是在进行了必要的整理以使其正常工作后，架构变得更加干净。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can understand the motivation here.<p>One of my hobby open source projects includes multiple services and I don't want to have to start and stop them individually just to test anything. They're designed to run standalone since it's a distributed system but having having to launch and stop each individual process was adding friction that lowered my enjoyment of working on it.</p><p>I recently ended up redesigning each service so they can run as a process or within a shared process that just uses LoadLibrary/dlopen (when not statically linked) to be able to quickly bring everything up and down at once, or restart a specific service if the binary changes.</p><p>Sure, everything will crash rather than just one service but it's lightweight (no need for complex deployment setups) and made the project far more enjoyable to work on. It's adequate for development work.</p><p>Another plus has been a much cleaner architecture after doing the necessary untangling required to get it working.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495005" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/03/24 01:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这当然是一个有趣的想法，我并不完全反对它，尽管我当然不会将它用作操作系统的默认进程调度程序（不是您建议的）。我会非常关心安全问题。  如果没有进程边界表明 threadproc A 无法获取 threadproc B 的内存，则很容易出现潜在敏感数据的意外泄漏。<p>不过，我实际上确实认为，如果您知道可以信任可执行文件，并且可执行文件不共享任何内存，那么这样做可能会有一个优势；如果您知道您没有共享内存，而只是使用 malloc 等来获取内存，那么就可以认为不需要额外的进程开销。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's certainly an interesting idea and I'm not wholly opposed to it, though I certainly wouldn't use it as a default process scheduler for an OS (not that you were suggesting that). I would be very concerned about security stuff.  If there's no process boundary saying that threadproc A can't grab threadproc B's memory, there could pretty easily be unintended leakages of potentially sensitive data.<p>Still, I actually do think there could be an advantage to this if you know you can trust the executables, and if the executables don't share any memory; if you know that you're not sharing memory, and you're only grabbing memory with malloc and the like, then there is an argument to be made that there's no need for the extra process overhead.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492155" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">furyofantares</span>
+        <span class="meta-time">2026/03/24 00:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为当你共享一个指针时，B 有可能搞砸 A，但其他情况下不太可能。 B 用 B 的记忆做事不太可能搞砸 A。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it is possible for B to screw up A when you share a pointer but otherwise unlikely. B doing stuff with B's memory is unlikely to screw up A.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491934" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/03/24 00:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然可以，但线程也是如此。  拥有这些线程过程的优点是可以零拷贝共享，这不一定是坏事，但如果它们不被复制，那么 B 可能会搞砸 A 的东西。<p>如果您同意线程保留自己的内存而不共享，那么 pthreads 已经可以胜任这一点，而无需任何额外的库。  线程的问题在于，存在共享地址空间，因此线程 B 可能会搞砸线程 A 的内存，并且处理并发性很困难，因此需要互斥体。  进程提供隔离，但代价是一些开销，并且 IPC 通常需要复制。</p><p>我只是不确定这实际上比普通的 pthreads 提供了什么。如果我负责确保线程过程不会相互干扰，那么我不确定这能给我带来什么。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure but that's true of threads as well.  The advantage of having these threadprocs is that there can be zero-copy sharing, which isn't necessarily bad but if they aren't copied then B could screw up A's stuff.<p>If you're ok with threads keeping their own memory and not sharing then pthreads already do that competently without any additional library.  The problem with threads is that there's a shared address space and so thread B can screw up thread A's memory and juggling concurrency is hard and you need mutexes.  Processes give isolation but at the cost of some overhead and IPC generally requiring copying.</p><p>I'm just not sure what this actually provides over vanilla pthreads. If I'm in charge of ensuring that the threadprocs don't screw with each other then I'm not sure this buys me anything.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492045" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">saidnooneever</span>
+        <span class="meta-time">2026/03/24 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们中的一些人是零副本共享，本质上他们都可以访问相同的数据，并且他们可以互相搞砸。你需要围绕这个设计程序......这也可能让你只使用共享内存。<p>如果没有锁定，如果多个这些东西会读或写到同一个地方，CPU 将不会欣赏它......你可能会读或写部分或垃圾等？</p><p>仍然是一个有趣的小项目，但我个人没有看到任何用例。 （也许作者有好的，也不是不可能）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">of they are zero copy sharing essentially they have both access to same data and this they can screw eachother up. you'd need to design the programs around this... which might aswell make u just use shared memory.<p>without locking if multiple of these things would read or write to the same place the CPU will not appreciate it... u might read or write partials or garbage etc.?</p><p>still a fun little project but i dont see any use case personally. (perhaps the author has a good one, its not impossible)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493433" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/03/24 02:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在同级线程中提到，优点是它们可以是单独的可执行文件，这无疑有点简洁。  如果进程不需要共享任何内容，那么让它们位于同一地址空间下可能会带来性能优势，而无需整个其他进程的开销。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The author mentioned in a sibling thread that the advantage is that they could be separate executables, which is admittedly a little neat.  If processes don't need to share anything then there could be a performance advantage to having them live under the same address space without the overhead of a whole other process.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493609" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lstodd</span>
+        <span class="meta-time">2026/03/24 00:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从描述来看，它与 AmigaOS、Windows 3.x 或早期的 Apple 完全相同。或者 MS-DOS 之类的东西，比如 DESQview。<p>我不明白这一点 - 如果您控制代码并且非常需要性能以至于偶尔会被副本咬住，那么您也可以将其全部链接到一个地址空间中而无需那些跳跃。如果它被修改为依赖于传递指针，它就不会作为单独的进程运行。</p><p>如果你不这样做，祝你好运，解决内存损坏问题。</p><p>另外，共享内存有什么问题呢？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Judging by the description, it's exactly like AmigaOS, Windows 3.x or early Apple. Or MS-DOS things like DESQview.<p>I fail to see the point - if you control the code and need performance so much that an occassional copy bites, you can as well just link it all into a single address space without those hoopjumps. It won't function as separate processes if it's modified to rely on passing pointers around anyway.</p><p>And if you don't, good luck chasing memory corruption issues.</p><p>Besides, what's wrong with shared memory?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/03/24 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 另外，共享内存有什么问题吗？<p>我通常认为，为任何具有并发性的事物共享内存都是不好的，因为它会使代码很难推理。  互斥体很难适用于任何不完全微不足道的事情，而且我发现，如果可能的话，找出一种不直接共享内存的工作方法几乎总是更好（或者做某种借用/所有权的事情，比如 Rust，以明确谁真正拥有它）。根据我的经验，互斥锁还可能使性能测试变得困难，因为可能存在奇怪的瓶颈，这些瓶颈不会出现在本地测试中，而只会出现在生产中。</p><p>我如此喜爱 Erlang 的部分原因是因为它确实不容易让你共享内存。一切都是分段的，一切都需要消息传递，所以你不会用互斥体搞乱，而且内存的所有者是谁从来都不会含糊不清。 Erlang 不是最快的语言，但由于我并没有真正处理锁，所以性能对我来说通常更具确定性。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Besides, what's wrong with shared memory?<p>I generally think that it's bad to share memory for anything with concurrency, simply because it can make it very hard to reason about the code.  Mutexes are hard to get right for anything that's not completely trivial, and I find that it's almost always better to figure out a way to do work without directly sharing memory if possible (or do some kind of borrow/ownership thing like Rust to make it unambiguous who actually owns it). Mutexes can also make it difficult to performance test in my experience, since there can be weird choke points that don't show up in local testing and only ever show up in production.</p><p>Part of the reason I love Erlang so much is specifically because it really doesn't easily allow you to share memory. Everything is segmented and everything needs to be message-passed, so you aren't mucking around with mutexes and it's never ambiguous where memory is who who owns it. Erlang isn't the fastest language but since I'm not really dealing with locks the performance is generally much more deterministic for me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493695" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PaulDavisThe1st</span>
+        <span class="meta-time">2026/03/24 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您熟悉 90 年代 UW CS&amp;E 的 Opal 操作系统吗？所有任务都位于单个系统范围的地址空间中，并对内存区域进行硬件访问控制。<p>&gt; Opal 项目正在探索一种新的操作系统结构，以适应复杂应用程序的需求，例如 CAD/CAM，其中许多协作程序操纵大型共享的持久对象数据库。在 Opal 中，所有代码和数据都存在于单个巨大的共享地址空间中。单一地址空间增强了共享和合作，因为地址具有唯一的（始终）解释。因此，基于指针的数据结构可以随时在程序之间直接通信和共享，并且可以直接存储在辅助存储器上而不需要翻译。这种结构通过大地址空间的可用性得到简化，例如由 DEC Alpha、MIPS、HP/PA-RISC、IBM RS6000 和未来的 Intel 处理器提供的地址空间。</p><p>&gt; Opal 中的保护独立于单一地址空间；每个 Opal 线程都在一个保护域内执行，该保护域定义了它有权访问哪些虚拟页面。访问页面的权限可以轻松地从一个进程转移到另一个进程。结果是一个更加灵活的保护结构，允许根据合作方之间的信任关系提供不同的（并且动态变化的）保护选项。我们相信这个组织可以改善复杂的协作应用程序的结构和性能。</p><p>&gt; Opal 原型已在 Mach 操作系统之上为 DEC Alpha 平台构建。</p><p><a href="https://homes.cs.washington.edu/~levy/opal/opal.html" target="_blank" rel="noopener noreferrer">https://homes.cs.washington.edu/~levy/opal/opal.html</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you familiar with the Opal OS from UW CS&amp;E during the 90s ? All tasks in a single system-wide address space, with h/w access control for memory regions.<p>&gt; The Opal project is exploring a new operating system structure, tuned to the needs of complex applications, such as CAD/CAM, where a number of cooperating programs manipulate a large shared persistent database of objects. In Opal, all code and data exists with in a single, huge, shared address space. The single address space enhances sharing and cooperation, because addresses have a unique (for all time) interpretation. Thus, pointer-based data structures can be directly communicated and shared between programs at any time, and can be stored directly on secondary storage without the need for translation. This structure is simplified by the availability of a large address space, such as those provided by the DEC Alpha, MIPS, HP/PA-RISC, IBM RS6000, and future Intel processors.</p><p>&gt; Protection in Opal is independent of the single address space; each Opal thread executes within a protection domain that defines which virtual pages it has the right to access. The rights to access a page can be easily transmitted from one process to another. The result is a much more flexible protection structure, permitting different (and dynamically changing) protection options depending on the trust relationship between cooperating parties. We believe that this organization can improve both the structure and performance of complex, cooperating applications.</p><p>&gt; An Opal prototype has been built for the DEC Alpha platform on top of the Mach operating system.</p><p><a href="https://homes.cs.washington.edu/~levy/opal/opal.html" target="_blank" rel="noopener noreferrer">https://homes.cs.washington.edu/~levy/opal/opal.html</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 01:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不是，但我必须读更多！  这里也有一些很好的相关讨论 <a href="https://news.ycombinator.com/item?id=7554921" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=7554921</a> 。我想将这个项目保留在用户空间中，但是操作系统方面也有很多有趣的地方。  类似忒修斯的东西&lt;<a href="https://github.com/theseus-os/Theseus" target="_blank" rel="noopener noreferrer">https://github.com/theseus-os/Theseus</a>&gt; 也很有趣，通过强制编译器不变量而不是硬件功能提供类似的保护（理论上）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wasn't but I'll have to read more!  Some good relevant discussion here too <a href="https://news.ycombinator.com/item?id=7554921" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=7554921</a> . I wanted to keep this project in user-space, but there's a lot of interesting ground on the OS side of things too.  Something like Theseus &lt;<a href="https://github.com/theseus-os/Theseus" target="_blank" rel="noopener noreferrer">https://github.com/theseus-os/Theseus</a>&gt; is also interesting, providing similar protections (in theory) by enforced compiler invariants rather than hardware features.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492556" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dimatura</span>
+        <span class="meta-time">2026/03/24 09:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎与 Iceoryx 项目有一些重叠 <a href="https://iceoryx.io/" target="_blank" rel="noopener noreferrer">https://iceoryx.io/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems like there's some overlap with the iceoryx project <a href="https://iceoryx.io/" target="_blank" rel="noopener noreferrer">https://iceoryx.io/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kgeist</span>
+        <span class="meta-time">2026/03/24 01:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">据我所知，在Linux内核中，进程和线程之间几乎没有任何区别，线程只是与另一个进程共享虚拟内存的进程，您在调用clone()时指定是否应该共享内存<p>那么我们已经有了完全可以完成您想要做的事情的线程？将多个程序编译成一个二进制文件不是更容易且风险更小吗？如果您无法控制您尝试“融合”的程序（无源），那么您可能不想融合它们，因为它非常不安全。</p><p>也许我有些不明白。我认为如果您想要具有不同库版本甚至不同语言的进程，它可以工作，但是像这样传递数据听起来有些风险（可能的数据损坏）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From what I remember, in the Linux kernel, there's already barely any distinction between processes and threads, a thread is just a process that shares virtual memory with another process, you specify if memory should be shared or not when calling clone()<p>So we already have threads that do exactly what you're trying to do? Isn't it somewhat easier and less risky to just compile several programs into one binary? If you have no control over the programs you're trying to "fuse" (no source), then you probably don't want to fuse them, because it's very unsafe.</p><p>Maybe I don't understand something. I think it can work if you want processes with different lib versions or even different languages, but it sounds somewhat risky to pass data just like that (possible data corruption)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492650" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">otterley</span>
+        <span class="meta-time">2026/03/24 01:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该代码在底层使用了 Linux 的 clone3() 系统调用：请参阅 <a href="https://github.com/jer-irl/threadprocs/blob/main/docs/02-implementation.md?plain=1#L118" target="_blank" rel="noopener noreferrer">https://github.com/jer-irl/threadprocs/blob/main/docs/02-imp...</a><p>有趣的是它正在加载 <i>现存的</i> 二进制文件并以与平常不同的方式执行它们。我认为这是非常聪明的（即使不安全，正如你提到的）。</p><p>这是一个“黑客”的绝妙例子，我希望 HN 有更多这样的例子！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The code uses Linux's clone3() syscall under the hood: see <a href="https://github.com/jer-irl/threadprocs/blob/main/docs/02-implementation.md?plain=1#L118" target="_blank" rel="noopener noreferrer">https://github.com/jer-irl/threadprocs/blob/main/docs/02-imp...</a><p>The interesting thing is that it's loading <i>existing</i> binaries and executing them in a different way than usual. I think it's pretty clever (even if unsafe, as you mentioned).</p><p>This is a splendid example of a "hack" and I wish HN had more of these!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492704" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/24 02:09</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493075" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 01:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我认为如果您想要具有不同库版本甚至不同语言的进程，它可以工作<p>这是完全正确的，不相关的二进制文件可以共存，或者同一二进制文件的不同版本等。</p><p>&gt; 像这样传递数据听起来有点冒险</p><p>这也是对的！  我开始构建一个可以利用这一点并为内存使用提供一些保护的应用程序框架： <a href="https://github.com/jer-irl/tproc-actors" target="_blank" rel="noopener noreferrer">https://github.com/jer-irl/tproc-actors</a> ，但该模型本质上很棘手，尤其是对于复杂的数据结构，其中 ABI 兼容性可能非常脆弱</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I think it can work if you want processes with different lib versions or even different languages<p>This is exactly right, unrelated binaries can coexist, or different versions of the same binary, etc.</p><p>&gt; it sounds somewhat risky to pass data just like that</p><p>This is also right!  I started building an application framework that could leverage this and provide some protections on memory use: <a href="https://github.com/jer-irl/tproc-actors" target="_blank" rel="noopener noreferrer">https://github.com/jer-irl/tproc-actors</a> , but the model is inherently tricky, especially with elaborate data structures where ABI compatibility can be so brittle</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492782" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ghthor</span>
+        <span class="meta-time">2026/03/24 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Store all data in one of those nocopy encodings, capnproto/msgpack?然后每种语言都可以读取相同的内存，但具有特定于语言的 SDK</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Store all data in one of those nocopy encodings, capnproto/msgpack? Then each language can read the same memory but with the language specific SDK</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495608" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">wswin</span>
+        <span class="meta-time">2026/03/24 01:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很酷的项目。我认为大多数现实生活中的问题都可以通过共享内存对象来解决，参见shm_open [1]。<p>Python 在标准库 [2] 中有一个包装器，不确定其他语言是否如此</p><p>1. <a href="https://www.man7.org/linux/man-pages/man3/shm_open.3.html" target="_blank" rel="noopener noreferrer">https://www.man7.org/linux/man-pages/man3/shm_open.3.html</a></p><p>2. <a href="https://docs.python.org/3/library/multiprocessing.shared_memory.html" target="_blank" rel="noopener noreferrer">https://docs.python.org/3/library/multiprocessing.shared_mem...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool project. I think most real life problems would be solved with shared memory objects, c.f. shm_open [1].<p>Python has a wrapper on in the standard library [2], not sure about other languages</p><p>1. <a href="https://www.man7.org/linux/man-pages/man3/shm_open.3.html" target="_blank" rel="noopener noreferrer">https://www.man7.org/linux/man-pages/man3/shm_open.3.html</a></p><p>2. <a href="https://docs.python.org/3/library/multiprocessing.shared_memory.html" target="_blank" rel="noopener noreferrer">https://docs.python.org/3/library/multiprocessing.shared_mem...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492693" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">junon</span>
+        <span class="meta-time">2026/03/24 02:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在我的操作系统中考虑了这一点，最终认为这确实是错误的方法。尽管如此，看到有人尝试这些想法真的很酷。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I considered this with my OS, and ultimately decided it was indeed the wrong approach. Really cool to see someone experimenting with these ideas nonetheless.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493155" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/03/24 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 与基于 dlopen 的插件系统不同，threadprocs 使用 `main()` 函数运行传统的可执行文件。<p>为什么不在 dlopen 中使用在自己的线程中调用 plugin_main() （等）的东西？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Unlike dlopen-based plugin systems, threadprocs run traditional executables with a `main()` function.<p>Why not dlopen with something that calls plugin_main() (etc.) in its own thread?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fc417fc802</span>
+        <span class="meta-time">2026/03/24 09:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您尝试运行使用全局状态的多个实例怎么办？或者使用了不兼容的库版本？ （我想这些在技术上是相同的。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What if you're trying to run multiple instances of something that uses global state? Or that uses an incompatible library version? (I guess those are technically the same thing.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/03/24 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好点！ (another reason not to use global state heh)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good point! (another reason not to use global state heh)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很好的标注，我认为这对于大多数系统来说是更实用的方法。<p>对于这个项目，我的目标之一是对加载的可执行文件施加尽可能少的依赖，并给人一种错觉，即它们在完全独立的进程中运行，具有自己的 stdin/out/err 和全局运行时资源。</p><p></p><pre><code>  "./my_prog abc" -&gt; "launcher s.sock ./my_prog abc"
+</code></pre>
+如果您强加“使用众所周知的入口点编译为 .so”，就会有丰富的设计空间，当然这就是我为需要这种模型的生产应用程序所探索的内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good call-out, and I think that's a more practical approach for most systems.<p>For this project, one of my goals was to impose the fewest dependencies possible on the loaded executables, and give the illusion that they're running in a fully independent process, with their own stdin/out/err and global runtime resources.</p><p></p><pre><code>  "./my_prog abc" -&gt; "launcher s.sock ./my_prog abc"
+</code></pre>
+There's a rich design space if you impose "compile as .so with well-known entry point," and certainly that's what I'd explore for production apps that need this sort of a model.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494277" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nesarkvechnep</span>
+        <span class="meta-time">2026/03/24 04:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的直觉告诉我这与 Solaris/Illumos Doors 类似。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My intuition tells me this is similar to Solaris/Illumos Doors.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494894" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lifis</span>
+        <span class="meta-time">2026/03/24 01:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“你们的科学家们全神贯注于他们是否可以，他们没有停下来思考是否应该”<p>它非常酷，但只在某些边缘情况下有用，特别是如果您不想显着修改程序，并且可靠性降低值得避免 mm 开关的有限性能优势或能够执行更简单的共享内存。</p><p>一般来说，这个问题可以通过以下两种方式更好地解决： 
+1. 将模块重新编译为共享库（或将它们静态链接在一起）并使用自定义主机程序运行它们。这会减少内存浪费并加快启动速度。
+2. 拥有通过显式共享内存机制共享内存的进程。这个比较靠谱。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Your scientists were so preoccupied with whether or not they could, they didn't stop to think if they should"<p>It's very cool, but would only be useful in some marginal cases, specifically if you don't want to modify the programs significantly and the reliability reduction is worth either the limited performance upside of avoiding mm switches or the ability to do somewhat easier shared memory.</p><p>Generally this problem would be better solved in either of these ways: 
+1. Recompile the modules as shared libraries (or statically link them together) and run them with a custom host program. This has less memory waste and faster startup.
+2. Have processes that share memory via explicit shared memory mechanisms. This is more reliable.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492445" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！从 shell 中几乎“本地”启动附加组件的想法很早就吸引了我，但我同意具有更固执己见的“主机程序”的共享库可能是一种更实用的方法。<p>如果您需要隔离的地址空间，显式共享内存区域绝对是此类问题的标准。  我想进一步探索的一个领域是使用了解显式共享内存区域的分配/分配器，并可能确保这些区域映射到所有参与者中的相同虚拟地址。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! The idea of launching additional components nearly "natively" from the shell was compelling to me early on, but I agree that shared libraries with a more opinionated "host program" is probably a more practical approach.<p>Explicit shared memory regions is definitely the standard for this sort of a problem if you desire isolated address spaces.  One area I want to explore further is using allocation/allocators that are aware of explicit shared memory regions, and perhaps ensuring that the regions get mmap'd to the same virtual address in all participants.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492634" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">L8D</span>
+        <span class="meta-time">2026/03/24 00:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴看到这样的实验正在进行。我认为这对于像 Haskell 的绿色线程模型这样的东西来说有很大的潜力，基本上将其提升了一个档次并跨 pthread 进行线程而不是仅限于 VM 线程。当然，如果这可以得到很好的充实，它可以在编译器级别或库级别实现，这样现有的多线程 Haskell 软件就可以切换到类似的东西，以挤出更多的性能。不过，我不是这方面的专家，所以 ́\_(ツ)_/̅ 对我的话持保留态度。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is lovely to see experimentation like this going on. I think this has a lot of potential with something like Haskell's green threading model, basically taking it up a notch and doing threading across pthreads instead of being restricted to the VM threads. Surely, if this can be well fleshed-out, it could be implemented at the compiler-level or library-level so existing multi-threaded Haskell software can switch over to something like this to squeeze out even more performance. I'm not an expert here, though, so ¯\_(ツ)_/¯ take my words with a grain of salt.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fwsgonzo</span>
+        <span class="meta-time">2026/03/24 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际上，我刚刚发表了一篇关于类似内容的论文，我在 libriscv 和 TinyKVM 中实现了该论文，名为“进程间远程执行 (IPRE)：
+使用合并地址空间的低延迟 IPC/RPC”。<p>这是摘要：
+本文介绍了进程间远程执行 (IPRE)，其主要功能是为每个请求隔离架构启用门控持久性，并以微秒延迟访问持久性服务。 IPRE 允许虚拟机直接安全地调用、执行远程虚拟机地址空间中的函数，从而消除了对取消调度进程的调度程序依赖性。与之前需要修改硬件的方法不同
+(dIPC) 或内核更改 (XPC)，IPRE 可与标准虚拟化原语配合使用，使其可立即部署在商用系统上。
+我们提出了两种实现：libriscv（12-14ns 开销，模拟执行）和 TinyKVM（2-4us 开销，本机执行）。两者都通过地址空间合并消除数据序列化。在来自 schbench 工作负载的实际调度程序争用下（50-100% CPU 利用率），
+IPRE 保持稳定的尾部延迟 (p99&lt;5us)，而当所有 CPU 核心饱和时，最先进的无锁 IPC 框架显示 1,463× p99 退化（4.1us 至 6ms）。因此，IPRE 支持架构模式（每个请求隔离、细粒度微服务），这些模式在繁忙时会产生毫秒级的尾部延迟
+使用传统IPC的多租户系统。</p><p>底线：如果您要对远程方进行同步调用，IPRE 不需要任何调度程序中介。这同样适用于您的存储库。
+将无分配器的结构传递到远程可能是一个等待发生的地雷。如果您构建双方使用自定义分配器，至少对于远程调用，您可以跟踪甚至窃取分配（使用共享内存区域）。使用 IPRE 时，存在指针过时的额外风险，因为远程部分在完成后会从调用者内存中删除。本文将解释所有细节，但例如，由于我们控制 VMM，因此如果发生任何问题，我们可以关闭远程会话。
+（这篇文章还没出来，不过应该很快了）</p><p>您立即提到的这种架构最好的部分是能够完全避免序列化。通过引用传递复杂的结构并能够按原样使用数据是一个很大的好处。不幸的是，当你尝试使用像 Deno 这样的东西来做到这一点时，它就会崩溃。但例如，您可以使用 Deno &lt;-&gt; C++。</p><p>对于 libriscv 来说，实现更简单：只需暂时借出远程页面，以便读/写/执行工作，然后让异常处理处理异常断开连接。使用 libriscv，主机还可以接管来宾全局堆分配器，这使得释放远程分配的东西成为可能。您可以将地址空间划分为可能的调用者数量以及一个或多个遥控器，然后如果您为遥控器提供大于 SSO 的 std::string，则该地址将显示源并且源跟踪其自己的分配，因此我们知道是否出现问题。
+请注意，这只是我的兴趣，因为即使（例如）libriscv 在大型代码库中使用，远程 RPC 功能根本没有使用，也没有尝试过。这是一个很酷的想法，有点可行，但还没有准备好应对高风险的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I actually just published a paper about something like this, which I implemented in both libriscv and TinyKVM called "Inter-Process Remote Execution (IPRE):
+Low-latency IPC/RPC using merged address spaces".<p>Here is the abstract:
+This paper introduces Inter-Process Remote Execution (IPRE), whose primary function is enabling gated persistence for per-request isolation architectures with microsecond-latency access to persistent services. IPRE eliminates scheduler dependency for descheduled processes by allowing a virtual machine to directly and safely call, execute functions in a remote virtual machines address space. Unlike prior approaches requiring hardware modifications
+(dIPC) or kernel changes (XPC), IPRE works with standard virtualization primitives, making it immediately deployable on commodity systems.
+We present two implementations: libriscv (12-14ns overhead, emulated execution) and TinyKVM (2-4us overhead, native execution). Both eliminate data serialization through address-space merging. Under realistic scheduler contention from schbench workloads (50-100% CPU utilization),
+IPRE maintains stable tail latency (p99&lt;5us), while a state-of-the-art lock-free IPC framework shows 1,463× p99 degradation (4.1us to 6ms) when all CPU cores are saturated. IPRE thus enables architectural patterns (per-request isolation, fine-grained microservices) that incur millisecond-scale tail latency in busy
+multi-tenant systems using traditional IPC.</p><p>Bottom line: If you're doing synchronous calls to a remote party, IPRE wouldn't require any scheduler mediation. The same applies to your repo.
+Passing allocator-less structures to the remote is probably a landmine waiting to happen. If you structure both parties to use custom allocators, at least for the remote calls, you can track and even steal allocations (using a shared memory area). With IPRE there is extra risk of stale pointers because the remote part is removed from the callers memory after it completes. The paper will explain all the details, but for example since we control the VMM we can close the remote session if anything bad happens.
+(This paper is not out yet, but it should be very soon)</p><p>The best part about this kind of architecture, which you immediately mention, is the ability to completely avoid serialization. Passing a complex struct by reference and being able to use the data as-is is a big benefit. It breaks down when you try to do this with something like Deno, unfortunately. But you could do Deno &lt;-&gt; C++, for example.</p><p>For libriscv the implementation is simpler: Just loan remote-looking pages temporarily so that read/write/execute works, and then let exception-handling handle abnormal disconnection. With libriscv it's also possible for the host to take over the guests global heap allocator, which makes it possible to free something that was remotely allocated. You can divide the address space into the number of possible callers, and one or more remotes, then if you give the remote a std::string larger than SSO, the address will reveal the source and the source tracks its own allocations, so we know if something didn't go right.
+Note that this is only an interest for me, as even though (for example) libriscv is used in large codebases, the remote RPC feature is not used at all, and hasn't been attemped. It's a Cool Idea that kinda works out, but not ready for something high stakes.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeffbee</span>
+        <span class="meta-time">2026/03/24 00:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您似乎忘记了 URL。感兴趣的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks like you forgot the URL. Interested.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492023" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fwsgonzo</span>
+        <span class="meta-time">2026/03/24 01:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果有人索要这篇论文，我能做的就是回复电子邮件，因为它还没有出版。 The e-mail ends with hotmail.</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Best I can do is reply to an e-mail if someone asks for the paper, since it's not out yet. The e-mail ends with hotmail.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492142" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kjok</span>
+        <span class="meta-time">2026/03/24 01:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我实际上刚刚发表了一篇论文...<p>这给我的印象是这篇论文已经发表并且可以公开供我们阅读。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I actually just published a paper...<p>This gives me an impression that the paper has already been published and is available publicly for us to read.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492568" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fwsgonzo</span>
+        <span class="meta-time">2026/03/24 01:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，会议于 2 月 2 日举行，现在应该可以在任何一天/每周举行。我没有约会。<p>这里有一篇博客风格的文章： <a href="https://fwsgonzo.medium.com/an-update-on-tinykvm-7a38518e57e9" target="_blank" rel="noopener noreferrer">https://fwsgonzo.medium.com/an-update-on-tinykvm-7a38518e57e...</a></p><p>不像论文那么严谨，但要点就在那里。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry about that, the conference was on Feb 2, and it's supposed to be out any day/week now. I don't have a date.<p>There is a blog-style writeup here: <a href="https://fwsgonzo.medium.com/an-update-on-tinykvm-7a38518e57e9" target="_blank" rel="noopener noreferrer">https://fwsgonzo.medium.com/an-update-on-tinykvm-7a38518e57e...</a></p><p>Not as rigorous as the paper, but the gist is there.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492683" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jeffbee</span>
+        <span class="meta-time">2026/03/24 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！我会留意报纸的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! I'll keep an eye out for the paper.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493942" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">whalesalad</span>
+        <span class="meta-time">2026/03/24 00:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得这可以让 Python 获得巨大的性能提升。如果你想真正“击败 GIL”，你必须使用进程而不是线程。这可能是一个中间立场。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like this could unlock some huge performance gains with Python. If you want to truly "defeat the GIL" you must use processes instead of threads. This could be a middle ground.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491892" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hun3</span>
+        <span class="meta-time">2026/03/24 01:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这正是子解释器的用途！基本上在同一进程中隔离了 Python 的副本。<p><a href="https://docs.python.org/3/library/concurrent.interpreters.html" target="_blank" rel="noopener noreferrer">https://docs.python.org/3/library/concurrent.interpreters.ht...</a></p><p>如果你想要更高级别的接口，还有 InterpreterPoolExecutor：</p><p><a href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.InterpreterPoolExecutor" target="_blank" rel="noopener noreferrer">https://docs.python.org/3/library/concurrent.futures.html#co...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is exactly what subinterpreters are for! Basically isolated copies of Python in the same process.<p><a href="https://docs.python.org/3/library/concurrent.interpreters.html" target="_blank" rel="noopener noreferrer">https://docs.python.org/3/library/concurrent.interpreters.ht...</a></p><p>If you want a higher-level interface, there is InterpreterPoolExecutor:</p><p><a href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.InterpreterPoolExecutor" target="_blank" rel="noopener noreferrer">https://docs.python.org/3/library/concurrent.futures.html#co...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492226" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">short_sells_poo</span>
+        <span class="meta-time">2026/03/24 00:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但这对 python 有什么真正的帮助呢？这并没有解决一个难题，即Python对象不支持多线程/进程的并行访问，不是吗？并发线程，是的，但一次只能有一个线程对 python 对象进行操作（为了简洁起见，我在这里进行了简化）。<p>Python 中已经有一些方法可以传递具有零复制特征的批量数据，但是存在很多官僚主义。真正的解决方案必须与 GIL 一起使用（或者完全删除它），不是吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How would this really help python though? This doesn't solve the difficult problem, which is that python objects don't support parallel access by multiple threads/processes, no? Concurrent threads, yes, but only one thread can be operating on a python object at a time (I'm simplifying here for brevity).<p>There are already means of passing around bulk data with zero copy characteristics in python, but there's a lot of bureaucracy around it. A true solution must work with the GIL (or remove it altogether), no?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492021" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 00:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不熟悉 CPython GC 内部结构，但我有机制可以将 Python 对象安全地传递给 C、C++ 库并在那里并行使用？  也许人们可以实现一种使用这些相同机制的切换机制？  有趣的想法！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not familiar with CPython GC internals, but I there there are mechanisms for Python objects to be safely handed to C,C++ libraries and used there in parallel?  Perhaps one could implement a handoff mechanism that uses those same mechanisms?  Interesting idea!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492092" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">self_awareness</span>
+        <span class="meta-time">2026/03/24 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">等待。地址空间分隔不是 <i>改进</i>？<p>这又回到了 DOS 时代。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wait. Wasn't address space separation an <i>improvement</i>?<p>This is going back to DOS age.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494091" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">philipwhiuk</span>
+        <span class="meta-time">2026/03/24 01:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这基本上就是“De-ASLR”，不是吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is basically 'De-ASLR' is it not?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492346" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jer-irl</span>
+        <span class="meta-time">2026/03/24 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能澄清一下您的意思吗？  这在很大程度上依赖于加载的代码与位置无关，因为使用的内存将进入 `mmap(..., ~MAP_FIXED)` 返回的任何区域。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could you clarify what you mean by that?  This does heavily rely on loaded code being position-independent, because the memory used will go into whatever regions `mmap(..., ~MAP_FIXED)` returns.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492407" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

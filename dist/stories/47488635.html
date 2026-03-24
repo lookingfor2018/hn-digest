@@ -1,0 +1,1640 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fyn：具有新功能、错误修复、剥离遥测的 uv 分支 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-24-1030/">返回本批次</a>
+      <h1>Fyn：具有新功能、错误修复、剥离遥测的 uv 分支</h1>
+      <p class="subtitle">Fyn: An uv fork with new features, bug fixes, stripped telemetry</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 BiteCode_dev</span>
+        <span>分数 84</span>
+        <span>评论 77</span>
+        <span>2026/03/23 20:37</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47488635" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/duriantaco/fyn" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>一个非常快的 Python 包和项目管理器，用 Rust 编写。 fyn 是一个独立的 Python 包管理器，建立在 uv 的基础上，删除了遥测，添加了新功能，并修复了长期存在的错误。请参阅 MANIFESTO.md 了解完整故事。亮点</li><li>一个替代 pip、pip-tools、pipx、poetry、pyenv、twine、virtualenv 等的工具。比点快 10-100 倍。提供全面的项目管理和通用锁定文件。内置任务运行程序 — 在 pyproject.toml 中定义和运行项目任务。使用 fyn shell 激活虚拟环境。使用 fyn Upgrade 在一个命令中升级依赖项。运行脚本，支持内联依赖元数据。安装和管理 Python 版本。运行并安装作为 Python 包发布的工具。包括一个与 pip 兼容的接口，可通过熟悉的 CLI 提高性能。支持可扩展项目的 Cargo 风格工作区。磁盘空间效率高，具有用于重复数据删除的全局缓存。无需遥测——您的安装是您的事。支持 macOS、Linux 和 Windows。</li><li>从 PyPI 安装： # 使用 pip。 pip install fyn # 或 pipx. pipx install fyn 或从源代码构建：cargo install --path crates/fyn 请参阅命令行参考文档和 fyn 帮助。功能 项目 fyn 管理项目依赖项和环境，支持锁定文件、工作区等，类似于黑麦或诗歌： $ fyn init example 初始化项目 `example` at `/home/user/example`</li><li>$ cd 示例</li><li>$ fyn add ruff 在以下位置创建虚拟环境：.venv 在 170 毫秒内解析了 2 个软件包 在 1 毫秒内安装了 2 个软件包 + ruff==0.5.0</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>An extremely fast Python package and project manager, written in Rust. fyn is an independent Python package manager built on uv&#39;s foundation, with telemetry removed, new features added, and long-standing bugs fixed. See MANIFESTO.md for the full story. Highlights</li><li>A single tool to replace pip, pip-tools, pipx, poetry, pyenv, twine, virtualenv, and more. 10-100x faster than pip. Provides comprehensive project management, with a universal lockfile. Built-in task runner — define and run project tasks in pyproject.toml. Activates virtual environments with fyn shell. Upgrades dependencies in one command with fyn upgrade. Runs scripts, with support for inline dependency metadata. Installs and manages Python versions. Runs and installs tools published as Python packages. Includes a pip-compatible interface for a performance boost with a familiar CLI. Supports Cargo-style workspaces for scalable projects. Disk-space efficient, with a global cache for dependency deduplication. No telemetry — your installs are your business. Supports macOS, Linux, and Windows.</li><li>Installation From PyPI: # With pip. pip install fyn # Or pipx. pipx install fyn Or build from source: cargo install --path crates/fyn See the command line reference documentation with fyn help. Features Projects fyn manages project dependencies and environments, with support for lockfiles, workspaces, and more, similar to rye or poetry: $ fyn init example Initialized project `example` at `/home/user/example`</li><li>$ cd example</li><li>$ fyn add ruff Creating virtual environment at: .venv Resolved 2 packages in 170ms Installed 2 packages in 1ms + ruff==0.5.0</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jcattle</span>
+        <span class="meta-time">2026/03/23 21:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，到目前为止，该分叉中的 9 条提交消息中有 4 条是“清理”消息。<p>前两个提交是“new fork”和“fork”，其中“new fork”是一个很好的（+28204 -39206）提交，“fork”是一个厚颜无耻的（+23971 -23921）提交。</p><p>我想我很好。我会质疑任何跳上这个叉子的人的判断力。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nah sorry, so far 4 of the 9 commit messages in that fork are "cleanup".<p>And the first two commits are "new fork" and "fork", where "new fork" is a nice (+28204 -39206) commit and "fork" is a cheeky (+23971 -23921) commit.</p><p>I think I'm good. And I would question the judgement of anyone jumping on this fork.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489370" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">albinn</span>
+        <span class="meta-time">2026/03/23 21:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意，我喜欢叉子的某些方向，但不喜欢某些方向。明显的分叉、在 HN 上发布，然后进行更改（并且该更改显示出没有太多理解）让我彻底质疑它的合法性和长期稳定性。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree, I like some of the directions the fork would go and dislike some. The apparent, fork, publish on HN, then change (and the change showing not a lot of understanding) makes me throughly question the legitimacy and long term stability of it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489626" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/03/23 22:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然，但我喜欢它背后的精神。希望我们能得到更多，其中之一能够领先。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">absolutely, but i like the spirit behind it. Hopefully we get a few more and one of them pulls ahead.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ricardobeat</span>
+        <span class="meta-time">2026/03/24 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">基于此，项目描述完全是一个谎言——这里没有错误修复、新功能，甚至删除了遥测技术？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">based on that, the project description is entirely a lie - there are no bugfixes, new features, or even the removed telemetry here ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495584" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/23 21:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489567" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bjornarv</span>
+        <span class="meta-time">2026/03/23 21:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">创作者肯定只是为了获得一些影响力而加入进来</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">creator is definitely just jumping on this for some clout</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489474" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">emil-lp</span>
+        <span class="meta-time">2026/03/23 21:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">提交消息可以透露很多关于人的信息。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Commit messages say a lot about people.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489454" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jcattle</span>
+        <span class="meta-time">2026/03/23 21:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们确实这么做了。让我引用回购协议中的另一条：<p>“修复：更新了自述文件。抱歉太累了，我不小心用 fyn 批量替换了 uv”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They really do. Let me cite another one from the repo:<p>"fix: updated readme. sorry was so tired i accidentally mass replaced uv with fyn for all"</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489637" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nikolay</span>
+        <span class="meta-time">2026/03/24 01:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">分支名称也如此！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Branch names do, too!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492664" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lr1970</span>
+        <span class="meta-time">2026/03/23 21:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从 fyn 的路线图来看：<p>&gt; 2. 集中式 venv 存储 — 将 .venvs 保留在项目目录之外</p><p>我不喜欢这样。虚拟环境始终与项目相关联并与其共置。将 .venv 转移到集中存储重新创建了 conda 理念，这与 pip/uv 方法非常不同。</p><p>无论如何，我现在正在使用 pixi，并且非常喜欢它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From fyn's roadmap:<p>&gt; 2. Centralized venv storage — keep .venvs out of your project dirs</p><p>I do not like this. virtual environments have been always associated with projects and colocated with them. Moving .venv to centralized storage recreates conda philosophy which is very different from pip/uv approach.</p><p>In any case, I am using pixi now and like it a lot.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489188" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">skeledrew</span>
+        <span class="meta-time">2026/03/24 00:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢它。很高兴与 Conda 一起拥有它，当它因 uv 丢失时感到遗憾。搜索我的项目很痛苦，并且有不相关的结果，然后我必须过滤这些结果。或者首先要记住进行过滤。 venv 可能与项目相关，但它们只是无关紧要的杂乱，除非实际上有东西可以直接在它们上完成，这是非常罕见的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like it. Enjoyed having it with Conda, was sorry when it was lost with uv. Been a pain to search my projects and have irrelevant results that I then have to filter. Or to remember to filter in the first place. The venvs may be associated with the projects, but they're just extraneous clutter unless there's actually something to be done directly on them, which is very rare.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491342" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">0cf8612b2e1e</span>
+        <span class="meta-time">2026/03/24 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的工作机器上遇到的一个问题是它会对项目目录进行盲备份。包含数千个文件的无用 .venv 结构完全破坏了备份过程。至少能够灵活地将 .venv 推送到缓存位置是有用的。对于这个类似的用例（例如，有一个 Dropbox/Onedrive 受监控文件夹），存在（是？）一个 uv 问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One problem I have on my work machine is that it will do a blind backup of project directories. Useless .venv structure with thousands of files completely trashes the backup process. Having at least the flexibility to push the .venv to a cache location is useful. There was (is?) a uv issue about this similar use case (eg having a Dropbox/Onedrive monitored folder).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493563" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 21:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是 uv 存储库中讨论（并且仍在讨论）该功能的地方： <a href="https://github.com/astral-sh/uv/issues/1495" target="_blank" rel="noopener noreferrer">https://github.com/astral-sh/uv/issues/1495</a><p>它已经开放两年了，但看起来现在有一个正在积极开发的 PR： <a href="https://github.com/astral-sh/uv/pull/18214" target="_blank" rel="noopener noreferrer">https://github.com/astral-sh/uv/pull/18214</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Here's where that feature was (and is still being) discussed in the uv repo: <a href="https://github.com/astral-sh/uv/issues/1495" target="_blank" rel="noopener noreferrer">https://github.com/astral-sh/uv/issues/1495</a><p>It's been open for two years but it looks like there's a PR in active development for it right now: <a href="https://github.com/astral-sh/uv/pull/18214" target="_blank" rel="noopener noreferrer">https://github.com/astral-sh/uv/pull/18214</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489299" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/03/23 21:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是我对紫外线最大的问题，我喜欢 Pipenv 做得更好的方式。我希望能够使用 find 和递归 grep ，而不必担心库位于我的项目目录中。<p>紫外线太快了，我可以处理它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">thats my biggest problem with uv,  i liked the way pipenv did it much better. I want to be able to use find and recursive grep without worrying that libraries are in my project directory.<p>uv is just so fast that i deal with it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489402" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">valicord</span>
+        <span class="meta-time">2026/03/23 21:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">rg/fd 自动尊重 gitignore 这解决了这个问题</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">rg/fd respect gitignore automatically which solves this problem</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489654" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/03/23 22:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我会检查一下，谢谢！<p>…但我的 git 存储库中并没有所有内容。我的一些“项目”只是尝试一些东西的当地碎片。</p><p>并且它没有考虑默认情况下可能不尊重 gitignore 的任何其他工具。</p><p>这也是我使用 npm 的最大问题。我已经解决这个问题很长时间了，这很烦人。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ill check them out, thanks!<p>…but I don’t have everything in a git repo. Some of my “projects” are just local scraps for trying things out.</p><p>And it doesn’t account for any other tooling that may not respect gitignore by default.</p><p>it’s my biggest problem with npm too. Ive worked around it long enough, it’s just annoying.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490460" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nvme0n1p1</span>
+        <span class="meta-time">2026/03/23 23:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">rg 默认情况下还会忽略“隐藏”文件（以句点开头的文件/目录），因此无论 .venv 是否位于存储库中，它都会忽略它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">rg also ignores "hidden" files by default (files/dirs starting with a period), so it will ignore .venv regardless if it's in a repo.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">WhyNotHugo</span>
+        <span class="meta-time">2026/03/24 01:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">皮普在这里没有任何哲学。它根本不管理您的 virtualenv，并且绝对不建议将依赖项安装到工作目录中。<p>把venv放到项目仓库就乱了；它将一堆第三方代码和工件混合到当前工作区中。这也使得清理磁盘空间变得很痛苦，因为 virtualenvs 最终会散落在各处。每次“git clean”时，您都必须重新启动。</p><p>也许控制这个的标志可能是一个不错的选择，但老实说，我总是发现 uv 的工作流程非常烦人。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Pip doesn’t have any philosophy here. It doesn’t manage your virtualenv at all, and definitely doesn’t suggest installing dependencies into a working directory.<p>Putting the venv in the project repository is a mess; it mixes a bunch of third party code and artifacts into the current workspace. It also makes cleaning disk space a pain, since virtualenvs end up littered all over the place. And every time you “git clean” you have to bootstrap all over again.</p><p>Perhaps a flag to control this might be a good fit, but honestly, I always found uv’s workflow here super annoying.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492766" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mixmastamyk</span>
+        <span class="meta-time">2026/03/24 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不同意——最好在每个项目中分配空间，以便可以轻松地立即删除它们。  而不是半隐藏在您的主文件夹中，并以随机名称命名并被遗忘。<p>如果出于某种罕见的原因您想删除所有 venv，那么 find 命令很容易编写。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Disagree—better to have space allocated in each project where they can be easily deleted at once.  Rather than half hidden in your home folder somewhere with random names and forgotten about.<p>If for some rare reason you wanted to delete all venvs, a find command is easy enough to write.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493573" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">santiagobasulto</span>
+        <span class="meta-time">2026/03/23 21:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有时我希望 venv 位于集中位置，只需执行以下操作：<p>UV_PROJECT_ENVIRONMENT=$HOME/.virtualenvs/{env-name} uv {命令}</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sometimes I want the venvs to be in a centralized location, and just do:<p>UV_PROJECT_ENVIRONMENT=$HOME/.virtualenvs/{env-name} uv {command}</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489645" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">imcritic</span>
+        <span class="meta-time">2026/03/23 21:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">pixi 比 uv 好在哪里？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How is pixi better than uv?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489235" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lr1970</span>
+        <span class="meta-time">2026/03/23 21:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; pixi 比 uv 好在哪里？<p>pixi 是一个通用的多语言、多平台包管理器。我现在在我的新 MacBook Neo 上使用它作为自制程序_替代品_。是的，它超越了 python，允许您安装 git、jj、fzf、cmake、编译器、pandoc 等等。</p><p>对于 python，pixi 使用 conda-forge 和 PyPI 作为包存储库，并依赖 uv 的 Rattler 依赖解析器。 pixi 与 uv 一样快（它使用 uv 的快速代码路径），但比 python 轮子更进一步。 
+有关详细信息，请参阅 [0] 或谷歌搜索:-)</p><p>[0] <a href="https://pixi.prefix.dev/latest/" target="_blank" rel="noopener noreferrer">https://pixi.prefix.dev/latest/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; How is pixi better than uv?<p>pixi is a general multi-languge, multi-platform package manager. I am using it now on my new macbook neo as a homebrew _replacement_. Yes, it goes beyond python and allows you to install git, jj, fzf, cmake, compilers, pandoc, and many more.</p><p>For python, pixi uses conda-forge and PyPI as package repos and relies on uv's rattler dependency resolver. pixi is as fast as uv (it uses fast code path from uv) but goes further beyond python wheels. 
+For detail see [0] or google it :-)</p><p>[0] <a href="https://pixi.prefix.dev/latest/" target="_blank" rel="noopener noreferrer">https://pixi.prefix.dev/latest/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489374" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">thinkadd</span>
+        <span class="meta-time">2026/03/23 22:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">和米斯有什么不同？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How is it different than mise?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">syhol</span>
+        <span class="meta-time">2026/03/24 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有很大一部分重叠，但 mise 主要从 github 发布工件/资产中获取，而 pixi 使用 conda 包。虽然 mise 可以使用 conda 包，但 mise-conda 后端仍处于实验阶段。我不认为 github 版本或 conda 包比另一个更好，它们都有权衡。<p>Pixi 非常专注于 Python，它既是一个工具管理器，又是一个库依赖管理器（请参阅 uv/pip）。米斯长期以来认为库依赖是一个反目标，而我在网站上再也看不到这一点了，我还没有看到任何进入该领域的动向。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is a good chunk of overlap but mise predominately pulls from github releases artifacts/assets and pixi uses conda packages. While mise can use conda packages, the mise-conda backend is still experimental. I don't think github releases or conda packages are better than the other, they both have tradeoffs.<p>Pixi is very python focused, it's both a tool manager and a library dependency manager (see uv/pip). Mise considered library dependency an anti-goal for a long time, while I don't see that on the website anymore I haven't seen any movement to go into that space.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492586" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nilslindemann</span>
+        <span class="meta-time">2026/03/23 21:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它们都是不合时宜的，因为它们没有 GUI，只是要在 REPL 中输入命令。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They are all anachronisms, as they have no GUIs, just commands to be typed into a REPL.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Levitating</span>
+        <span class="meta-time">2026/03/23 21:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它对于像货物这样的构建系统一直运行良好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It has been working fine for build systems like cargo.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489285" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/24 01:35</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492596" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">short_sells_poo</span>
+        <span class="meta-time">2026/03/23 21:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我非常喜欢它：D。<p>我猜虚拟环境总是与您的用例中的项目相关联。</p><p>在我的用例中，它们几乎从来都不是。我所在行业的大多数人都有 1-2 个 venv，他们在所有项目中使用它们，而 uv 强制将其放入单个项目目录中，这使得同一组库的重复非常不方便且不必要。</p><p>我不喜欢 conda 不是因为中心化的 venv，而是因为它臃肿、设计差、速度慢且使用不方便。</p><p>归根结底，这给了我们选择。人们可以使用 uv，也可以使用 fyn，并且涵盖了这两种用例。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like it a lot :D.<p>Virtual environments have been always associated with projects in your use case I guess.</p><p>In my use case, they almost never are. Most people in my industry have 1-2 venvs that they use across all their projects, and uv forcing it into a single project directory made it quite inconvenient and unnecessary duplication of the same sets of libraries.</p><p>I dislike conda not because of the centralized venvs, but because it's bloated, poorly engineered, slow and inconvenient to use.</p><p>At the end of the day, this gives us choice. People can use uv or they can use fyn and have both use cases covered.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lr1970</span>
+        <span class="meta-time">2026/03/23 21:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 和 uv 强制将其放入单个项目目录中，这使得它非常不方便并且不必要地重复相同的库集。<p>实际上，uv 智能地使用硬链接或引用链接 
+以避免文件重复。从表面上看，不同项目中的venv是重复的，但实际上它们引用了uv缓存中的相同文件。</p><p>顺便说一句，pixi 也做了同样的事情。如果您喜欢此工作流程，`pixi global` 允许您在中心位置创建全局环境。</p><p>编辑：我忘了提到房间里的大象。通过代理 AI 编码，您确实希望所有依赖项都位于项目根目录下。人工智能代理在沙箱中运行，我不想给他们额外的权限在我的整个存储中闲逛。我在项目根目录中启动一个代理，我的所有代码和 .venv 都在那里。这为代理提供了局部感。他们只需要在项目根目录下闲逛，而不是在其他地方。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; and uv forcing it into a single project directory made it quite inconvenient and unnecessary duplication of the same sets of libraries.<p>Actually, uv intelligently uses hardlinks or reflinks 
+to avoid file duplication. On the surface, venvs in different projects are duplicate, but in reality they reference the same files in the uv's cache.</p><p>BTW, pixi does the same. And `pixi global` allows you to create global environments in central location if you prefer this workflow.</p><p>EDIT: I forgot to mention an elephant in the room. With agentic AI coding you do want all your dependencies to be under your project root. AI agents run in sandboxes and I do not want to give them extra permissions pocking around in my entire storage. I start an agent in the project root and all my code and .venv are there. This provides sense of locality to the agent. They only need to pock around under the project root and nowhere else.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489442" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mr_mitm</span>
+        <span class="meta-time">2026/03/23 21:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这实际上是最初吸引我使用 uv 的功能。我永远不必担心 venvs 住在哪里，而遭受的负面影响几乎为零。它速度极快，使用最少的存储空间，并且几乎不可能出现版本冲突。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is actually the feature that initially drew me towards uv. I never have to worry about where venvs live while suffering literally zero downsides. It's blazing fast, uses minimal storage, and version conflicts are virtually impossible.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489624" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">clickety_clack</span>
+        <span class="meta-time">2026/03/24 00:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您只单独从事项目吗？如果没有特定于项目的环境，我不知道如何与其他人共享代码而不频繁损坏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you only work on projects individually? Without project-specific environments I don’t know how you could share code with someone else without frequent breakages.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491436" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">smohare</span>
+        <span class="meta-time">2026/03/23 21:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489337" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tfrancisl</span>
+        <span class="meta-time">2026/03/24 02:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">声称发送到包索引的信息构成“遥测”是非常站不住脚的。很明显，这是一个影响力追逐者。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Super tenuous to claim that the info being sent to package indices constitutes "telemetry". Very clear this is a clout chaser.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493413" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Bender</span>
+        <span class="meta-time">2026/03/23 21:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到遥测技术，uv 是如何开始被开源社区批准/采用的，或者它是如何悄悄渗透进来的？  为什么现在没有在火中燃烧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Given the telemetry, how did uv ever get approved/adopted by the open source community to begin with, or did it creep in?  Why isn't it currently burning in a fire?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 21:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们在这里删除的遥测数据并不是紫外线所独有的，而且它也没有被发送回星界。这是 pip 本身的等效代码： <a href="https://github.com/pypa/pip/blob/59555f49a0916c6459755d7686afdfad6bd36d87/src/pip/_internal/network/session.py#L109" target="_blank" rel="noopener noreferrer">https://github.com/pypa/pip/blob/59555f49a0916c6459755d7686a...</a><p>它向 PyPI 提供平台信息，以帮助跟踪不同软件包正在使用哪些操作系统和平台。</p><p>结果是有用的图表，如下所示： <a href="https://pypistats.org/packages/sqlite-utils" target="_blank" rel="noopener noreferrer">https://pypistats.org/packages/sqlite-utils</a> 和 <a href="https://pepy.tech/projects/sqlite-utils?timeRange=threeMonths&amp;category=version&amp;includeCIDownloads=true&amp;granularity=daily&amp;viewType=line&amp;versions=3.39%2C3.38%2C3.37" target="_blank" rel="noopener noreferrer">https://pepy.tech/projects/sqlite-utils?timeRange=threeMonth...</a></p><p>猜测某些东西是否在 CI 环境中运行的字段特别有用，因为它可以帮助软件包作者判断他们的软件包是否真正流行，或者是否只是由一个不缓存其需求的重度用户每天在 CI 中安装数千次。</p><p>老实说，剥离这些数据，然后暗示它是由 Astral/OpenAI 以令人毛骨悚然的方式收集的，对于这个新分叉来说是很糟糕的。他们至少应该在文档中澄清“遥测”的作用，以免人们认为 Astral 的行为是消极的。</p><p>就我个人而言，我认为剥离遥测会损害 Python 社区了解软件包消费人口统计数据的能力，同时对最终用户隐私根本没有任何有意义的影响。</p><p>这是针对 uv 的原始问题，该功能是由 PyPI 志愿者请求的： <a href="https://github.com/astral-sh/uv/issues/1958" target="_blank" rel="noopener noreferrer">https://github.com/astral-sh/uv/issues/1958</a></p><p>更新：我针对 fyn 提出了一个问题，建议他们改进这方面的文档： <a href="https://github.com/duriantaco/fyn/issues/1" target="_blank" rel="noopener noreferrer">https://github.com/duriantaco/fyn/issues/1</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The telemetry they removed here isn't unique to uv, and it's not being sent back to Astral. Here's the equivalent code in pip itself: <a href="https://github.com/pypa/pip/blob/59555f49a0916c6459755d7686afdfad6bd36d87/src/pip/_internal/network/session.py#L109" target="_blank" rel="noopener noreferrer">https://github.com/pypa/pip/blob/59555f49a0916c6459755d7686a...</a><p>It's providing platform information to PyPI to help track which operating systems and platforms are being used by different packages.</p><p>The result is useful graphs like these: <a href="https://pypistats.org/packages/sqlite-utils" target="_blank" rel="noopener noreferrer">https://pypistats.org/packages/sqlite-utils</a> and <a href="https://pepy.tech/projects/sqlite-utils?timeRange=threeMonths&amp;category=version&amp;includeCIDownloads=true&amp;granularity=daily&amp;viewType=line&amp;versions=3.39%2C3.38%2C3.37" target="_blank" rel="noopener noreferrer">https://pepy.tech/projects/sqlite-utils?timeRange=threeMonth...</a></p><p>The field that guesses if something is running in a CI environment is particularly useful, because it helps package authors tell if their package is genuinely popular or if it's just being installed in CI thousands of times a day by one heavy user who doesn't cache their requirements.</p><p>Honestly, stripping this data and then implying that it was collected by Astral/OpenAI in a creepy way is a bad look for this new fork. They should at least clarify in their documentation what the "telemetry" does so as not to make people think Astral were acting in a negative way.</p><p>Personally I think stripping the telemetry damages the Python community's ability to understand the demographics of package consumption while not having any meaningful impact on end-user privacy at all.</p><p>Here's the original issue against uv, where the feature was requested by a PyPI volunteer: <a href="https://github.com/astral-sh/uv/issues/1958" target="_blank" rel="noopener noreferrer">https://github.com/astral-sh/uv/issues/1958</a></p><p>Update: I filed an issue against fyn suggesting they improve their documentation of this: <a href="https://github.com/duriantaco/fyn/issues/1" target="_blank" rel="noopener noreferrer">https://github.com/duriantaco/fyn/issues/1</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489092" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stackedinserter</span>
+        <span class="meta-time">2026/03/23 21:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在 HN 上的人们捍卫遥测技术。我们是如何走到这一步的？<p>当您被要求饮用控制瓶以继续生活时，请不要感到惊讶。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now people on HN defend telemetry. How did we come to this point?<p>Don't be surprised when you're asked to drink control bottle in order to continue living.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 22:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">向我解释一下当这组特定的平台信息发送到 PyPI 时会对 pip 用户造成的危害。<p>（如果您要说它将硬件平台详细信息与 IP 地址相关联 - 这就是我的答案 - 请注意 PyPI 不记录 IP： <a href="https://www.theregister.com/2023/05/27/pypi_ip_data_government/" target="_blank" rel="noopener noreferrer">https://www.theregister.com/2023/05/27/pypi_ip_data_governme...</a> ）</p><p>然后请告诉我为什么 Python 打包社区（这些数据的接收者，它不会发送到 Astral）想要收集针对这些平台详细信息的汇总数据是不合理的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Explain to me the harm that is caused to users of pip when this particular set of platform information is sent to PyPI.<p>(In case you were going to say that it associates hardware platform details with IP addresses - which would have been my answer - know that PyPI doesn't record IPs: <a href="https://www.theregister.com/2023/05/27/pypi_ip_data_government/" target="_blank" rel="noopener noreferrer">https://www.theregister.com/2023/05/27/pypi_ip_data_governme...</a> )</p><p>Then give me your version of why it's not reasonable for the Python packaging community (who are the recipients of this data, it doesn't go to Astral) to want to collect aggregate numbers against those platform details.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">albinn</span>
+        <span class="meta-time">2026/03/23 21:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这还不错，它发送的遥测数据非常初级。然而，从 astral-sh 中公开和明确地了解它并允许将其关闭是一个很好的举措。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think it is too bad, the telemetry it sends is quite rudimentary. However, would have been a good move from astral-sh to be open and explicit about it, and allow turning it off.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488963" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arjie</span>
+        <span class="meta-time">2026/03/23 21:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>这些东西包括你的操作系统、py 版本、CPU 架构、Linux 发行版，无论你是否使用 CI。所有这些都通过所谓的“linehaul”融入到 User-Agent 标头中。我们把它撕掉了。现在它只发送 fyn/0.10.13。就是这样。</i><p>我想这只是用户代理是我们已经习惯于传递信息的东西。我相当有偏见，因为我总是选择加入 popcon。我认为拥有此类使用信息很有用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>These things include your OS, py version, CPU architecture, Linux distro, whether you're in CI. All baked into the User-Agent header via something called "linehaul". We ripped that out. Now it just sends fyn/0.10.13. That's it.</i><p>I imagine it's just that the User-Agent is something that we've grown accustomed to passing information in. I am fairly biased since I'd always opt-in even to popcon. I think it's useful to have such usage information.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489229" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">PurpleRamen</span>
+        <span class="meta-time">2026/03/23 22:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太有用了，我很震惊他们竟然用它做了一件大事。现在我怀疑这是否是他们的真实意图，或者只是一种消遣？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is so useful, I'm shocked they even make a big thing out of it. And now I'm questioning whether this is even their real intention, or just a diversion?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489821" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tfrancisl</span>
+        <span class="meta-time">2026/03/24 02:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们说“我们删除了遥测技术”，希望得到关注隐私的人的情感反应，从而快速获得明星/关注。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Theyre saying "we removed telemetry" with the hopes of getting an emotional response from people who are privacy-focused, to get quick stars/attention.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493438" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">blitzar</span>
+        <span class="meta-time">2026/03/23 21:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真的非常非常好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It was really really good.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489244" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Ygg2</span>
+        <span class="meta-time">2026/03/23 21:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">遥测技术本身在 OSS 中并不坏。没有它，很难说一个应用程序如何使用以及未来如何开发它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Telemetry isn't bad in OSS per se. Without it, it's hard to say how an app is used and how to develop it in the future.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488978" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/03/24 00:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相反，OSS 恰恰是这种对用户的监视最没有用处的地方，因为已经存在一种用户告诉您他们需要什么的文化，有时是用代码。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On the contrary, OSS is precisely where this kind of spying on your users is least useful, since there's already a culture of them telling you, sometimes with code, what they need.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/24 00:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这根本不是我的经历。对开源代码的默认反应是冷漠的沉默——获得任何反馈都需要付出真正的努力。<p>这些 PyPI 下载数字是关于我的东西是否被任何人使用的最有用的提示之一。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's not been my experience at all. The default response to open source code is stone cold silence - getting any feedback at all takes real effort.<p>Those PyPI download numbers are one of the most useful hints as to whether my stuff is being used by anyone.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47492065" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Ygg2</span>
+        <span class="meta-time">2026/03/24 04:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果这就是问题，那就有问题了。他们是 <i>讲述</i> 你 X. 人们，即使告诉你，也不会给出诚实的反馈。或者他们可能是吵闹的少数派。<p>如果你问人们想要什么咖啡，他们都会告诉你低糖、很苦的黑咖啡。然后你看看他们买了什么，他们不断购买几乎不含咖啡因的含糖和奶油咖啡。</p><p>遥测不是间谍活动。至少在正确完成的情况下。在没有遥测数据的情况下，如何找出罕见的 OOM 崩溃？如果记者不知道如何确定他们的操作系统和安装的调试所需的软件怎么办？</p><p>我并不是说遥测应该捕获一切并将这些数据出售给信息经纪人。我是说，如果做得正确，它会给你宝贵的反馈。你应该对此保持透明。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If that's the issue, that's a problem. They are <i>telling</i> you X. People, if they tell you, don't give their honest feedback. Or they might be a loud minority.<p>If you ask people what coffee they want, they will all tell you low-sugar, very bitter black coffee. Then you see what they buy, and they keep buying sugary and creamy coffee that contains almost no caffeine.</p><p>Telemetry isn't spying. At least when done properly. How do you figure out rare OOM crashes without some telemetry data? What if the reporter doesn't know how to figure out their OS and installed software that's required for debugging?</p><p>I'm NOT saying telemetry should capture everything and sell that data to info brokers. I'm saying, done properly it give you valuable feedback. And you should be transparent about it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/03/24 04:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 遥测不是间谍活动。至少在正确完成的情况下。在没有遥测数据的情况下，如何找出罕见的 OOM 崩溃？如果记者不知道如何确定他们的操作系统和安装的调试所需的软件怎么办？<p>记录有关某人计算机的信息，然后在开发人员不知情或未同意的情况下将其发送给开发人员，这就是间谍行为。如果你想在软件中包含一个功能来报告错误或收集崩溃信息或任何告诉用户它将发送什么内容并获得他们的肯定同意，那么是的，这完全没问题，而不是间谍活动，但这似乎不是我们在这里讨论的内容。用你的比喻来说，</p><p>&gt; 如果你问人们想要什么咖啡，他们都会告诉你低糖、很苦的黑咖啡。然后你看看他们买了什么，他们不断购买几乎不含咖啡因的含糖和奶油咖啡。</p><p>那 <i>可能</i> 确实如此，但这并不能证明在他们的食品储藏室里放相机来找出答案是合理的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Telemetry isn't spying. At least when done properly. How do you figure out rare OOM crashes without some telemetry data? What if the reporter doesn't know how to figure out their OS and installed software that's required for debugging?<p>Recording information about someone's computer and then sending it to the developer without their knowledge or consent is spying. If you want to include a feature in the software to report a bug or collect crash info or whatever that tells the user what it's going to send and gets their affirmative consent, then yeah that's totally fine and not spying, but that's not what we appear to be talking about here. To use your analogy,</p><p>&gt; If you ask people what coffee they want, they will all tell you low-sugar, very bitter black coffee. Then you see what they buy, and they keep buying sugary and creamy coffee that contains almost no caffeine.</p><p>That <i>might</i> be true, but it doesn't justify sticking a camera in their pantry to find out.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Ygg2</span>
+        <span class="meta-time">2026/03/24 04:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 记录有关某人计算机的信息，然后在开发人员不知情或未同意的情况下将其发送给开发人员，这属于间谍行为。<p>这就是为什么我说做得正确。您需要完全透明。记录的内容、原因以及如何处理这些信息。</p><p>实际上大多数人并不关心。如果他们这样做，他们将禁用所有成就，因为即使是成就也是遥测的一种形式。</p><p>例如，您可以查看完成游戏的人数百分比。玩迷你游戏等的百分比是多少？</p><p>任何揭示远程指标的东西都是遥测。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Recording information about someone's computer and then sending it to the developer without their knowledge or consent is spying.<p>That's why I said done properly. You need full transparency. What is recorded and why, and how is the information dealt with.</p><p>In practice most people don't care. If they did they would disable all achievements, because even achievements are a form of telemetry.</p><p>You can see what percent of people finished the game for example. What percent played mini game, etc.</p><p>Anything that reveals remote metrics, is telemetry.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494970" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">add-sub-mul-div</span>
+        <span class="meta-time">2026/03/23 21:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为当某个词除了典型的 FUD 含义之外还可以表示良性的含义时，并不是每个人都会对这个词产生下意识的情绪反应。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because not everyone has a knee-jerk emotional reaction to a word when that word can mean something benign aside from its typical FUD connotation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489009" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Bender</span>
+        <span class="meta-time">2026/03/23 21:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于选择退出或强制遥测或我未要求自动启动的任何其他出站连接，我总是会做出“下意识”的反应。  在企业界，我必须阻止这一点，并且根据遥测所连接的内容，这可能会影响其他出站连接，从而导致没有组织的争用。<p>实现此目的的最佳方法之一是通过设置环境变量来选择启用额外调试、遥测、统计等的任意组合......甚至可能使用环境变量的不同端点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I will always have a "knee-jerk" response to opt-out or mandatory telemetry or any other  outbound connections I did not ask for being initiated automatically.  In a corporate world I would have to block this and depending on what the telemetry is connecting to that could impact other outbound connections leading to contention without the org.<p>One of the optimal ways to do this would be to opt-in by setting an environment variable to enabled any combination of extra debugging, telemetry, stats, etc...  Perhaps even different end-points using environment variables.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489168" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">plorkyeran</span>
+        <span class="meta-time">2026/03/24 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你是说当你告诉 uv 安装一个软件包时你 <i>不是</i> 要求它建立出站连接以从 PyPI 下载包？所讨论的遥测只是设置一个适当的 User-Agent 标头，其中的数据仅比浏览器传统上放置的数据稍多一些。它不会纯粹为了报告信息而发出额外的网络请求。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you saying that when you tell uv to install a package you <i>aren't</i> asking it to make outbound connections to download the package from PyPI? The telemetry in question is just setting an appropriate User-Agent header with only slightly more data than what browsers traditionally put there. It does not make extra network requests purely for the sake of reporting information.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491585" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">maverwa</span>
+        <span class="meta-time">2026/03/23 21:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我正确理解 fyns “MANIFESTO.md” 中此“遥测”的描述，它不会建立您未要求的出站连接。它将用户代理 http 标头设置为标识您的操作系统、CPU、python 版本以及与包注册表通信时是否在 Ci 中运行的内容。它不会将任何内容发送到星体层，也不会发送任何高度个人化的内容。<p>当然，默认情况下它不应该存在，尤其是操作系统和 CPU 恕我直言。但这并不是我所说的“侵入式遥测”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If I understand the description of this „telemetry“ in fyns „MANIFESTO.md“ correctly, it does not make outbound connections you did not asked for. It sets the user agent http header to something that identifies your OS, CPU, python version and if you are running in Ci when communicating to the package registry. It does not send any of that to astral, not ist any of that highly personal.<p>Sure, it should not be there by default, especially OS &amp; CPU imho. But it’s not really what I’d call „invasive telemetry“.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489526" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dirkc</span>
+        <span class="meta-time">2026/03/23 21:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我怀疑我的正常工作流程可能只是为了解决 python（或任何其他生态系统）中的包管理带来的痛苦而发展起来的。<p>紫外线在什么情况下最有用？是不是一旦你安装了机器学习包，它就会引入更多原生的东西——也就是说，它在某些圈子里更受欢迎？我是否缺少一个杀手级功能？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I suspect that my normal workflows might just have evolved to route around the pain that package management can be in python (or any other ecosystem really).<p>In what situations are uv most useful? Is it once you install machine learning packages and it pulls in more native stuff - ie is it more popular in some circles? Is there a killer feature that I'm missing?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489072" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 21:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你的机器上有数百个不同的 Python 项目（就像我一样），uv 的速度和开发人员体验的改进会产生很大的不同。<p>我喜欢能够 cd 到任何文件夹并运行“uv run pytest”，甚至无需考虑虚拟环境或软件包版本。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you have hundreds of different Python projects on your machine (as I do) the speed and developer experience improvements of uv make a big difference.<p>I love being able to cd into any folder and run "uv run pytest" without even having to think about virtual environments or package versions.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dirkc</span>
+        <span class="meta-time">2026/03/23 22:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否以普通用户身份在主机系统上运行这些项目而不进行任何隔离？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you run those projects on the host system as your normal user without any isolation?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 22:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这使我非常容易受到供应链攻击。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, which makes me very vulnerable to supply chain attacks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490183" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dirkc</span>
+        <span class="meta-time">2026/03/23 22:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哎呀！我有一次被吓到了，从那以后我只运行沙盒代码或我用最少的第三方编写的脚本。<p>我想你们还有其他缓解措施吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yikes! I had a scare once, and since then I only run sandboxed code or scripts I've written with minimal 3rd party deps.<p>I assume you have other mitigations in place?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490234" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 23:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">并不真地。我有良好的备份，并且尝试坚持我信任的依赖项。<p>我使用 Claude Code for Web 进行很多开发工作，这意味着东西在 Anthropic 服务器上的容器中运行，但我大多数时候也在我的笔记本电脑上运行东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not really. I have good backups and I try to stick with dependencies I trust.<p>I do a lot of my development work using Claude Code for web which means stuff runs in containers on Anthropic's servers, but I run things on my laptop most days as well.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490523" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">politelemon</span>
+        <span class="meta-time">2026/03/23 21:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Imo，uv 脚本在标头中具有依赖项。<p><a href="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies" target="_blank" rel="noopener noreferrer">https://docs.astral.sh/uv/guides/scripts/#declaring-script-d...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Imo, uv scripts with the dependencies in the header.<p><a href="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies" target="_blank" rel="noopener noreferrer">https://docs.astral.sh/uv/guides/scripts/#declaring-script-d...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489139" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dirkc</span>
+        <span class="meta-time">2026/03/23 22:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想这可能会有用。我没有很多独立的 python 脚本，而且我拥有的脚本都非常基本。如果该标头可以包含沙箱，那就太好了！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I guess that could be useful. I don't have many standalone python scripts, and those that I do have are very basic. It would be really nice if that header could include sandboxing!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/23 22:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就这么多了！一段时间以来，我一直在骚扰 Astral 解决沙盒挑战的问题，我想知道现在他们处于 OpenAI ，这是否会更加优先？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So much this! I've been bugging Astral about addressing the sandboxing challenge for a while, I wonder if that might take more priority now they're at OpenAI?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490193" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/03/23 21:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">紫外线是最有用的，因为它比其他任何东西都快得多。  所有其他功能我都可以不需要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">UV is most useful because it is so much faster than everything else.  All the other features I could do without.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489135" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dirkc</span>
+        <span class="meta-time">2026/03/23 22:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，速度很好，我无法否认！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep, the speed is nice, I can't argue with that!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47490034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">derodero24</span>
+        <span class="meta-time">2026/03/23 21:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为发布本机 Node 插件的人，注册表遥测（操作系统、架构、平台）是我知道哪些构建目标实际优先考虑的少数方法之一。如果没有它，我会猜测是否有人在使用 linux-arm64-musl。我本能地想剥离它，但对于软件包维护者来说，它是真正有用的数据。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As someone shipping native Node addons, registry telemetry (OS, arch, platform) is one of the few ways I know which build targets to actually prioritize. Without it I'd be guessing whether anyone's even using linux-arm64-musl. I get the instinct to strip it, but for package maintainers it's genuinely useful data.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489425" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">albinn</span>
+        <span class="meta-time">2026/03/23 21:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">shell 和升级命令很有帮助，特别是在帮助以前没有使用过 uv 的人时。<p>疯狂的是 uv 没有办法限制缓存大小。不过，我喜欢使用紫外线，它是一股新鲜空气。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The shell and upgrade commands are helpful, especially when onboarding someone who has not used uv before.<p>Crazy that there is not way in uv to limit the cache size. I have loved using uv though, it is a breath of fresh air.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">e10v_me</span>
+        <span class="meta-time">2026/03/24 00:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很惊讶有多少人因此而堕落。我还想知道其中有多少是作者的朋友或机器人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm surprised by how many people has fallen for that. I also wonder how many of them are the author's friends or bots.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491649" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bovermyer</span>
+        <span class="meta-time">2026/03/23 20:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个分叉的发展方向。不过，我会等到它在采用中达到更临界的质量后再使用它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like the direction this fork is going in. I will wait to use it until it achieves a little more critical mass in adoption, though.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488845" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tcbrah</span>
+        <span class="meta-time">2026/03/23 20:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">喜欢“我们删除了遥测”现在是一个值得放弃整个项目的标题功能。说了很多关于开发工具的发展方向</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">love that "we removed the telemetry" is now a headline feature worth forking an entire project over. says a lot about where dev tooling is headed tbh</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488839" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tfrancisl</span>
+        <span class="meta-time">2026/03/24 03:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">紫外线一开始就没有“遥测”。他们只是为了获得情感反应。阅读有关他们删除的“遥测”的内容，您会发现它很有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There was no "telemetry" in uv to begin with. They're just aiming for an emotional response. Read about the "telemetry" they removed and you'll find it funny.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494011" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/03/24 05:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 紫外线一开始就没有“遥测”。他们只是为了获得情感反应。阅读有关他们删除的“遥测”的内容，您会发现它很有趣。<p>我个人希望它能被更好地拼写，但我认为我们正在考虑这个：</p><p><a href="https://github.com/duriantaco/fyn/blob/main/MANIFESTO.md#no-telemetry--your-installs-are-your-business" target="_blank" rel="noopener noreferrer">https://github.com/duriantaco/fyn/blob/main/MANIFESTO.md#no-...</a></p><p>&gt; 每次安装某些东西时，uv 都会向包索引发送大量信息。这些东西包括你的操作系统、py 版本、CPU 架构、Linux 发行版，无论你是否使用 CI。所有这些都通过所谓的“linehaul”融入到 User-Agent 标头中。我们把它撕掉了。现在它只发送 fyn/0.10.13。就是这样。</p><p>除非你对事实角度有争议（我承认我试图查看提交，看到存储库中的前几个提交更改了一千多个文件，然后放弃了）...是吗？我会将发送操作系统、python 版本、CPU arch 和 CI 是/否描述为遥测。我 <i>猜测</i> 我们可以争论是否有一个更精确的术语来描述这种无需询问就将有关您的计算机的信息发送到远程目标的特定形式，但描述似乎很公平。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; There was no "telemetry" in uv to begin with. They're just aiming for an emotional response. Read about the "telemetry" they removed and you'll find it funny.<p>I would personally prefer it be spelled out better, but I assume we're looking at this:</p><p><a href="https://github.com/duriantaco/fyn/blob/main/MANIFESTO.md#no-telemetry--your-installs-are-your-business" target="_blank" rel="noopener noreferrer">https://github.com/duriantaco/fyn/blob/main/MANIFESTO.md#no-...</a></p><p>&gt; uv was sending a surprising amount of info to package indexes every time you installed something. These things include your OS, py version, CPU architecture, Linux distro, whether you're in CI. All baked into the User-Agent header via something called "linehaul". We ripped that out. Now it just sends fyn/0.10.13. That's it.</p><p>Unless you're disputing the factual angle (I confess I tried to look at the commits, saw that the first couple commits in the repo changed over a thousand files, and gave up)... yes? I would describe sending OS, python version, CPU arch, and CI yes/no as telemetry. I <i>guess</i> we can quibble about whether there's a more precise term for this particular form of sending information about your machine to a remote target without asking, but the description seems fair enough.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495548" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">trollbridge</span>
+        <span class="meta-time">2026/03/23 20:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来很棒，特别是 uv 的缓存永远增长，而且缺少 uv shell 命令都令人抓狂。<p>我认为主流 uv 开发现在将进入维护模式，所以很高兴看到这样的优质血统。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks great, and in particular, uv’s cache growing forever and lack of the uv shell command were both maddening.<p>I assume mainstream uv development will go into maintenance mode now, so it’s great to see a quality lineage like this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488776" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aguyonhn</span>
+        <span class="meta-time">2026/03/24 03:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非问题的非解决方案</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">non-solution to a non-problem</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494291" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">worksonmine</span>
+        <span class="meta-time">2026/03/23 21:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果设置 `UV_CACHE_MAX_SIZE` 和 `UV_LOCKFILE` 是新功能，为什么要在 `UV_` 前面加上前缀 `UV_` ？毫无意义。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why prefix the settings `UV_CACHE_MAX_SIZE` and `UV_LOCKFILE` with `UV_` if they're new features? Makes no sense.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488903" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">_flux</span>
+        <span class="meta-time">2026/03/23 21:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它们是环境变量。我喜欢从大量环境变量中查看它们属于哪些应用程序。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They are environment variables. I enjoy seeing from my large number of environment variables to which applications they belong to.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47488982" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">worksonmine</span>
+        <span class="meta-time">2026/03/23 21:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我知道什么是环境变量，我的问题是为什么将它们命名为 `UV_` 而不是 `FYN_`？我认为这将是显而易见的，原因与您提到的完全相同，它应该根据它们所属的应用程序来命名。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I know what an environment variable is, my question is why name them `UV_` instead of `FYN_`? I thought that would've been obvious for exactly the same reason you mention, it should be named for the application they belong to.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">_flux</span>
+        <span class="meta-time">2026/03/23 21:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊，我完全没有抓住你问题的重点:)。<p>是的，我认为这是一个很好的观点。可能它们是在项目名称更改之前制作的，之后就没有再考虑过。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ah, I completely missed the point of your question :).<p>Yes, I think that's a good point. Possibly they were made before the project name was changed and no further thought was given to them after.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489169" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lr1970</span>
+        <span class="meta-time">2026/03/23 21:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用 FYN_ 前缀会更合乎逻辑</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would be more logical to use FYN_ prefix</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489237" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">unethical_ban</span>
+        <span class="meta-time">2026/03/23 21:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有助于从 uv 直接迁移到新工具。因此，如果 uv 采用该功能，它就“就在那里”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Facilitates drop-in migration from uv to the new tool. So if uv adopts the feature it's "just there".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489036" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">skeledrew</span>
+        <span class="meta-time">2026/03/24 00:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一旦我看到良好的稳定性，就会切换到这个或另一个分叉。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Will be switching to this, or another fork, soon as I see decent stability.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47491358" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fmajid</span>
+        <span class="meta-time">2026/03/23 21:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我担心 OpenAI 现在他们已经收购了 Astral，所以有选择是件好事。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm worried about OpenAI enshittifying uv and ruff now they've acquired Astral, so it's good to have options.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47489171" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>不连贯的 Rust | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-24-1030/">返回本批次</a>
+      <h1>不连贯的 Rust</h1>
+      <p class="subtitle">An incoherent Rust</p>
+      <div class="meta-line">
+        <span>www.boxyuwu.blog</span>
+        <span>作者 emschwartz</span>
+        <span>分数 129</span>
+        <span>评论 56</span>
+        <span>2026/03/23 23:13</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47490648" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.boxyuwu.blog/posts/an-incoherent-rust/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>撰写这篇博文的过程中没有法学硕士参与。生态系统开发发育不良 Rust 生态系统在发展方面存在一个根本问题。像 serde 这样的基础 crate 定义了 Serialize 等基本特征，然后生态系统中的每个 crate 都需要为自己的类型实现 Serialize 特征。如果一个 crate 没有为其类型实现 serde 的特征，那么这些类型就不能与 serde 一起使用，因为下游 crate 无法为另一个 crate 的类型实现 serde 的特征。更糟糕的是，如果有人发布了 serde 的替代方案（例如 nextserde），那么所有添加了对 serde 的支持的 crate 也需要添加对 nextserde 的支持。为现有的每个新的序列化库添加支持是不现实的，并且对于板条箱作者来说需要大量工作。作为这些板条箱的用户，如果您想使用新的序列化库，您将被迫分叉所有这些板条箱并通过对 nextserde 的支持来修补它们。这使得像 serde 这样的基础 crate 的替代品的制作和在整个生态系统中传播变得更加困难。无论是否存在更好的替代品，“首先到达那里”的旧 crate 都有强烈的动机留在生态系统中，因为它很难被人为地取代。这不是任何图书馆或编写 Rust 代码的人的错。相反，这个问题是语言本身通过连贯性和孤儿规则强加给生态系统的。另请参阅 Niko 在 Coherence 和板条箱级 where 子句 - nikomatsakis 中对连贯性如何损害 Rust 生态系统的解释。连贯性和孤儿规则Coherence 检查一个 Trait 是否对于某个类型和特征的任何给定的通用参数集最多只实现一次：trait Trait {}</li><li>特质事物 {} 特质其他Thingies {}</li><li>impl&lt;T: Thingies&gt; Trait for T {} impl&lt;T: OtherThingies&gt; Trait for T {} 错误[E0119]：特征 `Trait` 的实现冲突 --&gt; src/lib.rs:7:1 | 6 | impl&lt;T: Thingies&gt; T {} | 的特征----------------------------------------- 这里是第一个实现 7 | impl&lt;T: OtherThingies&gt; T {} | 的特征^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 冲突的实现</li><li>有关此错误的更多信息，请尝试 `rustc --explain E0119`。错误：由于先前的 1 个错误，无法编译 `playground` (lib) 孤儿规则是一种帮助我们实现一致性的检查。它们强制要求您只能在当前 crate 中定义了 Trait 或 self 类型的情况下才可以编写 Trait 实现（实际上比这更复杂，但对于本博文来说并不太重要）。// crate a pub Trait Trait {} pub struct Foo;</li><li>// 板条箱 b use a::*; impl Trait for Foo {} 错误[E0117]：只有当前板条箱中定义的特征才能为板条箱外部定义的类型实现 --&gt; src/lib.rs:8:1 | 8 |为 Foo {} | 实现 Trait ^^^^^^^^^^^^^^^^---| | | `a::Foo` 未在当前包中定义 | = 注意：impl 在任何未覆盖的类型参数之前没有任何本地类型 = 注意：有关更多信息，请参阅 https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules = 注意：定义并实现一个特征或新类型 尽管没有重叠的 impl，但由于孤儿规则，该代码仍然被拒绝。另请参阅 Trait 实现一致性 - Rust 参考。为什么 CoherenceThe HashMap Problem // crate a #[derive(PartialEq, Eq)] pub struct MyData(u8);</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>No LLMs were involved in the process of writing this blog post.Stunted Ecosystem DevelopmentThe Rust ecosystem has a fundamental problem with how it’s developing.Foundational crates such as serde define foundational traits such as Serialize, and then every crate in the ecosystem needs to implement the Serialize traits for their own types. If a crate doesn’t implement serde’s traits for its types then those types can’t be used with serde as downstream crates cannot implement serde’s traits for another crate’s types.Worse yet, if someone publishes an alternative to serde (say, nextserde) then all crates which have added support for serde also need to add support for nextserde. Adding support for every new serialization library in existence is unrealistic and a lot of work for crate authors.As a user of these crates if you want to use a new serialization library you’re forced to fork all of these crates and patch them with support for nextserde. This makes it significantly harder for alternatives to foundational crates such as serde to be made and propagate throughout the ecosystem.There are strong incentives for old crates that “got there first” to stick around in the ecosystem regardless of whether better alternatives exist or not just because its artifically difficult to replace them.This is not the fault of any library or people writing Rust code. Instead, this problem is forced onto the ecosystem by the language itself through coherence and the orphan rules.See also Niko’s explanation of how coherence harms the rust ecosystem in Coherence and crate-level where clauses - nikomatsakis.Coherence and the Orphan RulesCoherence checks that a Trait is only ever implemented at most once for a type and any given set of generic arguments to the trait:trait Trait {}</li><li>trait Thingies {} trait OtherThingies {}</li><li>impl&lt;T: Thingies&gt; Trait for T {} impl&lt;T: OtherThingies&gt; Trait for T {} error[E0119]: conflicting implementations of trait `Trait` --&gt; src/lib.rs:7:1 | 6 | impl&lt;T: Thingies&gt; Trait for T {} | ----------------------------- first implementation here 7 | impl&lt;T: OtherThingies&gt; Trait for T {} | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation</li><li>For more information about this error, try `rustc --explain E0119`. error: could not compile `playground` (lib) due to 1 previous error The orphan rules are a check that helps us implement coherence. They enforce that you can only write a trait implementation if either the trait or the self type is defined in the current crate (it’s actually a little more complicated than this but its not too important for this blog post).// crate a pub trait Trait {} pub struct Foo;</li><li>// crate b use a::*; impl Trait for Foo {} error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate --&gt; src/lib.rs:8:1 | 8 | impl Trait for Foo {} | ^^^^^^^^^^^^^^^--- | | | `a::Foo` is not defined in the current crate | = note: impl doesn&#39;t have any local type before any uncovered type parameters = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules = note: define and implement a trait or new type instead Even though there are no overlapping impls this code is still rejected due to the orphan rules.See also Trait implementation coherence - Rust Reference.Why CoherenceThe HashMap Problem// crate a #[derive(PartialEq, Eq)] pub struct MyData(u8);</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/03/24 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是让我长期担心 Rust 的（几件？）事情之一。  我喜欢这门语言，即使有时不是最合适的，我也会去尝试它。  但是阅读“消除连贯性”部分中的一些虚构语法让我很头疼。<p>当我以前编写 Scala 时，我接受了这样一个事实：我没有类型/集合/等方面的背景。理论，并且该语言的某些方面我可能永远无法理解，而其他人编写的一些代码我可能永远无法理解。</p><p>有了像 Rust 这样的语言，我觉得我们已经成功了。  当我遇到某些 GAT 语法时，有时我需要一些时间才能理解它们。  Rust 感觉它不应该是一种需要有一些严格的证书才能理解其所有功能和语法的语言。</p><p>另一方面，我们有 Go，它被明确设计为易于学习（而且，与此无关的是，我出于多种原因不喜欢它）。  但我希望我们能有一个中间立场，Rust 可以成为一种完全可理解的系统级语言。</p><p>再说一次，为了进行更多比较，自从 C++ 添加 lambda 之前我就没有使用过。  我想知道 C++ 是否有一些与 Rust 更困难的部分相媲美的复杂概念和语法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is one of the (several?) things that make me very worried about Rust long-term.  I love the language, and reach for it even when it sometimes isn't the most appropriate thing.  But reading some of the made-up syntax in the "Removing Coherence" section makes my head hurt.<p>When I used to write Scala, I accepted the fact that I don't have a background in type/set/etc. theory, and that there were some facets of the language that I'd probably never understand, and some code that others had written that I'd probably never understand.</p><p>With a language like Rust, I feel like we're getting there.  Certain GAT syntxes sometimes take some time for me to wrap my head around when I encounter them.  Rust feels like it shouldn't be a language where you need to have some serious credentials to be able to understand all its features and syntax.</p><p>On the other end we have Go, which was explicitly designed to be easy to learn (and, unrelatedly, I don't like for quite a few reasons).  But I was hoping that we could have a middle ground here, and that Rust could be a fully-graspable systems-level language.</p><p>Then again, for more comparison, I haven't used C++ since before they added lambdas.  I wonder if C++ has some hairy concepts and syntax today on par with Rust's more difficult parts.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496005" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jandrewrogers</span>
+        <span class="meta-time">2026/03/24 08:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我想知道现在 C++ 是否有一些毛茸茸的概念和语法<p>既好又坏。</p><p>当前版本的惯用 C++ 比您熟悉的 C++ 版本更干净、更简洁、更强大。您不再需要 C 风格的宏。疯狂的模板元编程黑客已经消失了。一些用 C++（公平地说还有其他系统语言）表达有问题的重要事物现在已完全定义，例如std::洗。 C++ 现在具有广泛的编译时编程功能，这对于高性能系统代码来说是杀手锏，并且在重要方面比 Rust 更具表现力。</p><p>坏消息是，这一切都堆在著名的遗留 C++ 混乱之上，以实现向后兼容性。如果您将古代 C++ 与现代 C++ 混合搭配，您的日子将会很糟糕。这是世界上最糟糕的事情。</p><p>但如果你足够幸运能够与例如合作一个惯用的 C++20 代码库，它是一种比传统 C++ 更简单、更好的语言。多年来我对代码库进行了一些主要的 C++ 版本升级；重构后的代码库总是比旧版本更小、更干净、更安全、更容易维护。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I wonder if C++ has some hairy concepts and syntax today<p>Both better and worse.</p><p>The current version of idiomatic C++ is much cleaner, more concise, and more powerful than the version of C++ you are familiar with. You don't need C-style macros anymore. The insane template metaprogramming hacks are gone. Some important things that were problematic to express in C++ (and other systems languages to be fair) are now fully defined e.g. std::launder. C++ now has expansive compile-time programming features, which is killer for high-performance systems code, and is more expressive than Rust in important ways.</p><p>The bad news is that this was all piled on top of and in addition to the famous legacy C++ mess for backward compatibility. If you are mixing and matching ancient C++ with modern C++, you are going to have a bad time. That's the worst of all worlds.</p><p>But if you are lucky enough to work with e.g. an idiomatic C++20 code base, it is a much simpler and better language than legacy C++. I've done a few major C++ version upgrades to code bases over the years; the refactored code base was always smaller, cleaner, safer, and easier to maintain than the old version.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497295" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Aurornis</span>
+        <span class="meta-time">2026/03/24 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但是阅读“消除连贯性”部分中的一些虚构语法让我很头疼。<p>讨论新功能的文章总是有困难的语法。从一开始就有类似的提议。</p><p>幸运的是，语言团队认识到提案的语法和可用性问题。有很多提案一开始都是非常笨拙的语法，但经过多年的迭代，直到变得更加符合人体工程学。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; But reading some of the made-up syntax in the "Removing Coherence" section makes my head hurt.<p>Articles discussions new features always have difficult syntax. There have been proposals like this going on from the start.</p><p>Fortunately the language team is cognizant of the syntax and usability issues with proposals. There have been a lot of proposals that started off as very unwieldy syntax but were iterated for years until becoming more ergonomic.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497091" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jcranmer</span>
+        <span class="meta-time">2026/03/24 07:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我想知道现在 C++ 是否有一些与 Rust 更困难的部分相媲美的复杂概念和语法。<p>… … … …甚至在 C++11 之前，非限定名称查找在 C++ 中就一直是一个挑战。重载解决规则是如此痛苦，以至于我花了几周的时间来审查补丁，只是因为我不得不放弃尝试理解标准中的规则。初始化有几个略有不同的定义。如果你 <i>真的</i> 想要深入了解，开始使用 std::launder 和 std::byte 以及严格的别名规则和生命周期规则，并且您会渴望 Rust 的简单性。</p><p>C++ 绝对是我读过的规范中最复杂的语言，而且这是在我们进入标准刚刚放弃的事物类别之前。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I wonder if C++ has some hairy concepts and syntax today on par with Rust's more difficult parts.<p>… … … … Unqualified name lookup has been challenging in C++ since even before C++11. Overload resolution rules are so painful that it took me weeks to review a patch simply because I had to back out of trying to make sense of the rules in the standard. There's several slightly different definitions of initialization. If you <i>really</i> want to get in the weeds, starting playing around with std::launder and std::byte and strict aliasing rules and lifetime rules, and you'll yearn for the simplicity of Rust.</p><p>C++ is the absolute most complex of any of the languages whose specifications I have read, and that's before we get into the categories of things that the standard just gives up on.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496460" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jandrewrogers</span>
+        <span class="meta-time">2026/03/24 09:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 开始尝试 std::launder 和 std::byte 以及严格的别名规则和生命周期规则，你会渴望 Rust 的简单性<p>像 std::launder、生命周期操作等注释解决了每种系统语言中都存在的一类问题。它们向编译器通知无法通过分析代码获知的属性。 Rust 在这方面并不特殊，它也有同样的问题。</p><p>如果没有这些功能，我们要么依赖非官方的编译器特定行为，要么使用安全但速度较慢的不必要的保守代码。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; starting playing around with std::launder and std::byte and strict aliasing rules and lifetime rules, and you'll yearn for the simplicity of Rust<p>Annotations like std::launder, lifetime manipulation, etc solve a class of problems that exist in every systems language. They inform the compiler of properties that cannot be known by analyzing the code. Rust isn't special in this regard, it has the same issues.</p><p>Without these features, we either relied on unofficial compiler-specific behavior or used unnecessarily conservative code that was safe but slower.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497472" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pocksuppet</span>
+        <span class="meta-time">2026/03/24 09:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除非您正在编写编译器，否则您应该要求补丁的作者解释其工作原理。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unless you're writing a compiler, you should require the author of the patch to explain why it works.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jcranmer</span>
+        <span class="meta-time">2026/03/24 10:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这 <i>曾是</i> 用于编译器执行标准更改的补丁。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This <i>was</i> a patch for the compiler implementation of the changes to the standard.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497815" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">staticassertion</span>
+        <span class="meta-time">2026/03/24 08:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的不会太担心。在 rust 的过去十年中，很少有探索新语法的文章在合并时变成有争议的内容（除了参数等中的 `impl T` 之外，我什至无法想到大的 rust 语法变化）。唯一的例子确实是 async/await，当时非常担心/反对它，实际上根本没有什么值得担心的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really wouldn't worry much. Over the last decade of rust, very few of the articles exploring new syntax have turned into anything controversial by the time they were merged (I can't even think of big rust syntax changes other than `impl T` in arguments etc). The singular example really is async/await and, having been quite worried about it / against it at the time, it was really nothing to be concerned with at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">maccard</span>
+        <span class="meta-time">2026/03/24 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我想知道现在 C++ 是否有一些毛茸茸的概念和语法<p><a href="https://tartanllama.xyz/posts/cpp-initialization-is-bonkers/" target="_blank" rel="noopener noreferrer">https://tartanllama.xyz/posts/cpp-initialization-is-bonkers/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I wonder if C++ has some hairy concepts and syntax today<p><a href="https://tartanllama.xyz/posts/cpp-initialization-is-bonkers/" target="_blank" rel="noopener noreferrer">https://tartanllama.xyz/posts/cpp-initialization-is-bonkers/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496083" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">PaulDavisThe1st</span>
+        <span class="meta-time">2026/03/24 07:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">反射语法（我认为是 C++26）已经让我 30 多年的 C++ 大脑融化了。<p>这并不疯狂，只是……让人融化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Reflection syntax (C++26 I think) has made my 30+ years-of-C++ brain melt.<p>It's not insane, it's just ... melt-inducing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496673" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jandrewrogers</span>
+        <span class="meta-time">2026/03/24 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，对我来说，反射和协程是 C++ 的第一个变化，通过阅读一些参考资料，其实现和使用机制并不是立即显而易见的。需要进行一些适当的研究才能理解它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, for me reflection and coroutines were the first changes to C++ where the implementation and use mechanics weren't immediately obvious by reading a few references. It requires a bit of proper study to wrap your head around it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497336" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">egorelik</span>
+        <span class="meta-time">2026/03/24 07:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Rust 打开了低级语言领域的创新之门，但只要它已经是那里理论上最先进的实用语言，它总是会吸引真正想要进一步推动它的受众。不知道有没有办法让双方观众都满意。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Rust opened the door to innovation in the low-level languages space, but as long as it is already the most theoretically advanced practical language there, it will always attract the audience that actually wants to push it further. I don't know if there is a way to satisfy both audiences.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496391" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">layer8</span>
+        <span class="meta-time">2026/03/24 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C++ 也发生了类似的情况：事实上，它具有相对较高的交互功能复杂性（早在 30 多年前就已存在），可以用来做聪明的事情，这确实吸引了对复杂性具有高度容忍度的聪明人。对于这样的受众，复杂性往往会扩展到容忍的极限（甚至有点超出）。<p>Rust 有一个更好的开始，尤其是因为它不是像 C++ 这样的现有语言之上设计的，但谁知道 30 年后它会是什么样子。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A similar thing happened with C++: The fact that it had a relatively high complexity of interacting features (already 30+ years ago) that you could use to do smart things, did attract smart people with a high tolerance for complexity. And with such an audience, complexity tends to expand up to the limits of tolerance (or even a little beyond).<p>Rust had a better start, not the least because it wasn’t designed on top of an existing language like C++ was, but who knows what it will look like in 30 years.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">estebank</span>
+        <span class="meta-time">2026/03/24 08:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为存在：分裂。另一种语言，受启发、易于理解且可与 Rust 互操作，但还有其他目标，可能是易用性或表面简单性。在我看来，它与 Rust 几乎相同，但每当编译错误给你一个建议时，rustc 就会编译（并且 <i>最多</i> 是用这种假设语言发出的警告）。从 Rust 迁移到这种语言将更改 Cargo.toml 中的单个设置。另一种方法是修复一堆编译错误。您可以以原生方式使用整个板条箱生态系统。这种语言还可以作为可能适合或不适合 Rust 的功能的测试平台。它还可以有一个更积极的进化计划，这意味着它不会是 perma-1.x，因此它可以在尝试方面更加大胆。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think there is: a schism. Another language, inspired, intelligible and interoperable with Rust, but with other goals, likely ease of use or surface simplicity. In my mind it would be pretty much the same as Rust, but whenever a compile error gives you a suggestion in rustc would instead compile (and <i>at most</i> be a warning in this hypothetical language). Migrating from Rust to this language would be changing a single setting in Cargo.toml. The other way around would be fixing a bunch of compile errors. You could use the entire crate ecosystem in a native way. This language could also serve as a test bed for features that might or might not be suitable for Rust. It can also have a more aggressive evolution schedule, meaning that it wouldn't be perma-1.x, so it can be bolder on what is attempted.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonask</span>
+        <span class="meta-time">2026/03/24 09:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是……当然，如果我们只是编造一些东西，一个编译器可以神奇地理解你想要做的任何事情，然后这样做而不是你写的，我想这是一个很好的幻想？<p>但在这个悲惨的旧地球上，我碰巧认为 Rust 的错误相当大。他们通常会发现我实际上并不打算做的事情，而不是阻止我做这些事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean… Sure, if we’re just making stuff up, a compiler that can magically understand whatever you were trying to do and then do that instead of what you wrote, I guess that’s a nice fantasy?<p>But out here on this miserable old Earth I happen to think that Rust’s errors are pretty great. They’re usually catching things I didn’t actually intend to do, rather than preventing me from doing those things.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497446" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fridder</span>
+        <span class="meta-time">2026/03/24 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道 Zig 与这里相比如何</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder how Zig compares here</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496229" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">amluto</span>
+        <span class="meta-time">2026/03/24 07:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不相信这个问题实际上是一个问题。假设有人编写了一个带有几个字段的 PairOfNumbers 类型。  作者没有定义序列化。您在另一种类型中使用它并希望它将其序列化为：<p></p><pre><code>    { "a": 1, "b": 2 }
+</code></pre>
+我使用它并希望将其序列化为：<p></p><pre><code>    [ 1, 2 ]
+</code></pre>
+我们正在做的事情很好。你应该得到你的连载，我也应该得到我的。但是，如果我们中的任何一个人在整个过程中声明我们中的一个人已经确定了 PairOfInts 的一个真正的序列化，我认为我们是 <i>错误的</i>。<p>当然，也许当前的 Rust 和当前的 serde 使得声明非全局序列化器变得很尴尬，但这并不意味着一致性是一个错误。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m not convinced that the problem is actually a problem. Suppose someone writes a type PairOfNumbers with a couple fields.  The author did not define a serialization. You use it in another type and want it to serialize it as:<p></p><pre><code>    { "a": 1, "b": 2 }
+</code></pre>
+I use it and want to serialize it as:<p></p><pre><code>    [ 1, 2 ]
+</code></pre>
+What we’re doing is fine. You should get your serialization and I should get mine. But if either of us declares, process-wide, that one of us has determined the One True Serialization of PairOfInts, I think we are <i>wrong</i>.<p>Sure, maybe current Rust and current serde make it awkward to declare non-global serializers, but that doesn’t mean that coherence is a mistake.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496528" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lmm</span>
+        <span class="meta-time">2026/03/24 08:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我们正在做的事情很好。你应该得到你的连载，我也应该得到我的。但是，如果我们中的任何一个人在整个进程范围内声明我们中的一个人已经确定了 PairOfInts 的一个真正的序列化，那么我认为我们是错误的。<p>好吧，但是你需要实际实现一个模块系统或其他东西。目前，特征实现是程序范围内的，如果您说不允许您对特征进行全局实现，那么就相当于说您根本不允许实现特征。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; What we’re doing is fine. You should get your serialization and I should get mine. But if either of us declares, process-wide, that one of us has determined the One True Serialization of PairOfInts, I think we are wrong.<p>Well, fine, but then you need to actually implement a module system or something. Currently trait impls are program-wide, and if you say that you're not allowed to make global impls of a trait then that's the same as saying you're not allowed to implement traits at all.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497257" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ekidd</span>
+        <span class="meta-time">2026/03/24 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于孤儿规则，有一个众所周知的（并且经常受到鼓励的）解决方法：创建包装类型。<p>假设您有一个图书馆：</p><p></p><pre><code>    pub struct TypeWithSomeSerialization { /* public fields here */ }
+</code></pre>
+并且您想要定义自定义序列化。在这种情况下，你可以这样写：<p></p><pre><code>    pub struct TypeWithDifferentSerialization(TypeWithSomeSerialization)
+</code></pre>
+然后，您只需为 TypeWithDifferentSerialization 实现序列化和反序列化即可。<p>这涵盖了您需要解决孤儿规则的大多数偶然情况。从语义上讲，这是非常合理的：如果一个类型 <i>表现</i> 不同的话，那就真的不是同一类型了。</p><p>另一种情况是，你让库 A 定义数据类型，库 B 定义接口，库 C 为 A 的类型实现 B 的接口。实际上很少有语言允许这样做，因为你会遇到这样的问题：库 D 尝试做与库 C 所做的相同的事情，但做得不同。有一些解决方法，但它们增加了复杂性和混乱，这可能不值得。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's a well-known (and frequently encouraged) workaround for the orphan rule: Create a wrapper type.<p>Let's say you have one library with:</p><p></p><pre><code>    pub struct TypeWithSomeSerialization { /* public fields here */ }
+</code></pre>
+And you want to define a custom serialization. In this case, you can write:<p></p><pre><code>    pub struct TypeWithDifferentSerialization(TypeWithSomeSerialization)
+</code></pre>
+Then you just implement Serialize and Deserialize for  TypeWithDifferentSerialization.<p>This cover most occasional cases where you need to work around the orphan rule. And semantically, it's pretty reasonable: If a type <i>behaves</i> differently, then it really isn't the same type.</p><p>The alternative is to have a situation where you have library A define a data type, library B define an interface, and library C implement the interface from B for the type from A. Very few languages actually allow this, because you run into the problem where library D tries to do the same thing library C did, but does it differently. There are workarounds, but they add complexity and confusion, which may not be worth it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495042" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dhosek</span>
+        <span class="meta-time">2026/03/24 05:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当 TypeWithSomeSerialization 不是您直接使用的东西而是包含在您直接使用的 SomeOtherTypeWithSomeSerialization 中时，会发生问题。然后事情就变得混乱了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The gotcha is what happens when TypeWithSomeSerialization is not something you’re using directly but is contained within SomeOtherTypeWithSomeSerialization which you are using directly. Then things get messy.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495194" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">deathanatos</span>
+        <span class="meta-time">2026/03/24 09:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们无法确定未来未指定的库如何工作，因此我将使用 serde 作为替代。<p>您可以为包装类型实现 `Serialize` <i>和</i> 仍然以不同的方式序列化 `SomeOtherTypeWithSomeSerialization` （可能由包装器类型直接或间接使用）。当然，它可能是不可推导的，但“我不想要默认值”有点让它成为一个给定的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We can't say with certainty how an unspecified in-the-future library might work, so I'm going to use serde as a stand-in.<p>You can implement `Serialize` for a wrapper type <i>and</i> still serialize `SomeOtherTypeWithSomeSerialization` (which might be used by the type being wrapper directly or indirectly) differently. It might not be derivable, of course, but "I don't want the default" sort of makes that a given.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497667" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bigfishrunning</span>
+        <span class="meta-time">2026/03/24 08:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在这种情况下，可以包装一个参考吗？<p></p><pre><code>    pub struct TypeWithDifferentSerialization(&amp;TypeWithSomeSerialization)</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In that case, wrap a reference maybe?<p></p><pre><code>    pub struct TypeWithDifferentSerialization(&amp;TypeWithSomeSerialization)</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ozgrakkurt</span>
+        <span class="meta-time">2026/03/24 10:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">拥有一个“生态系统”从根本上来说是困难的。<p>更愿意看到一堆为给定用例实现所有功能的库，例如网络开发、嵌入式等。</p><p>不幸的是，这在 Rust 中很难做到，因为很难实现低级原语。</p><p>在我看来，语言的目标应该是让构建变得更容易。构建 serde 或 tokio 应该很简单。</p><p>从我在 Rust 中看到的情况来看，人们倾向于将单个库过度设计到绝对极限，而不是仅仅构建一堆库并继续前进。</p><p>举个例子，如果构建 btreemap 很容易，那么您就不必在其上预先实现来自一堆不同库的一堆特征。您可以复制它，稍微调整一下然后继续。</p><p>然后你就可以拥有一个完整的东西，为你提供编写 Web 服务器所需的一切，并且它可以正常工作</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is fundamentally difficult to have an “ecosystem”.<p>Would much rather see a bunch of libraries that implement everything for a given use case like web-dev, embedded etc.</p><p>Unfortunately this is hard to do in rust because it is hard to implement the low level primitives.</p><p>Language’s goal should be to make building things easier imo. It should be simple to build a serde or a tokio.</p><p>From what I have seen in rust, people tend to over-engineer a single library to the absolute limit instead just building a bunch of libraries and moving on.</p><p>As an example, if it is easy to build a btreemap then you don’t have to have a bunch of traits from a bunch of different libraries pre-implemented on it. You can just copy it, adapt it a bit and move on.</p><p>Then you can have a complete thing that gives you everything you need to write a web server and it just works</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497809" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ozgrakkurt</span>
+        <span class="meta-time">2026/03/24 10:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以我的意思是，拥有一个能够解决整个问题的大库会更好。因为该库的每个部分都很简单。然后我可以复制粘贴一些部分并更改其他一些部分以创建替代库。而且对于该东西的用户来说更好，因为它很简单。<p>让一切与其他一切兼容并让一切实现每个案例意味着每个单独的部分都过于复杂。所以无论怎么组合起来都是不好的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So what I mean is, having a big library that implements the whole problem is better. Because then each part of that library is simple. Then I can copy paste some parts and change some others to create an alternative library. And it is better for the user of the thing because it is simple.<p>Having everything compatible with everything else and having everything implement every case means every individual part is over-complicated. So it is bad no matter how you combine it together.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497936" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mastax</span>
+        <span class="meta-time">2026/03/24 08:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">语言的改变肯定会有所帮助。不过，我们现在可以使用一个库实现： <a href="https://facet.rs/" target="_blank" rel="noopener noreferrer">https://facet.rs/</a> 基本上是用于反射的派生宏。是的，这是从所有类型派生的一个（更多）特征，但用户可以使用它来进行反射或漂亮的打印或比较或任何他们想要的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Language changes could help for sure. There’s a library implementation we can use right now though: <a href="https://facet.rs/" target="_blank" rel="noopener noreferrer">https://facet.rs/</a> Basically a derive macro for reflection. Yeah it’s one (more) trait to derive on all your types but then users can use that to do reflection or pretty printing or diffing or whatever they want.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497105" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nixpulvis</span>
+        <span class="meta-time">2026/03/24 05:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为显式命名 impls 并不明智。它们通常是 TraitImpl 或类似的，并且不会增加任何实际价值。如果您想区分特征，也许可以强制它们位于单独的模块中并使用 mod_a::mod_b::&lt;Trait for Type&gt; 语法。<p>&gt; 消除一致性和具有特征绑定参数的一个有趣的结果是，在 impl 或结构上具有特征绑定之间存在有意义的差异：</p><p>这对我来说似乎很不幸。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think explicit naming of impls is wise. They will regularly be TraitImpl or similar and add no real value. If you want to distinguish traits, perhaps force them to be within separate modules and use mod_a::mod_b::&lt;Trait for Type&gt; syntax.<p>&gt; An interesting outcome of removing coherence and having trait bound parameters is that there becomes a meaningful difference between having a trait bound on an impl or on a struct:</p><p>This seems unfortunate to me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495113" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wtemple</span>
+        <span class="meta-time">2026/03/24 06:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为完全合格的路径本身还不够。您还需要某种方法来指定 impl 在符号上是唯一的并且必须通过路径引用。否则，您仍然会遇到一个问题，即编译器不知道要使用哪个实现，除非您精确命名它。<p>您依赖于板条箱 A 和 B。A 为 Bar 实现 Foo。您将 Bar 的实例传递给接受 `impl Foo` 的函数。你很高兴。后来板条箱 B 为 Bar 添加了 Foo 的实现。显然，至少其中之一必须是孤儿实现，但两者都可能是。突然之间，你所谈论的 Foo 的实现变得模糊了，所以你中断了，因为 B 添加了一个 impl。</p><p>如果让任何 `impl Trait for Type` 成为孤儿 impl，然后通过路径引用，这种风格会存在许多潜在问题。例如，如果 A 的一个版本中的孤立 impl 成为 A 的更高版本中的一致 impl，会发生什么情况？</p><p>我认为命名/路径引用/符号 impl 必须有特殊的语法，即使 impl 没有标识符名称，以便编译器可以知道“只有当你告诉我_具体这个 impl_ 时，这个 impl 才会解析”，并且 impl 提供者有办法创建一个关于如何使用该 impl 的可靠消费者契约。</p><p>另外，没有标识符名称意味着您不能在同一模块中为 Bar 提供不同的 Foo 实现。这可能不是任何人都会关心的限制，但它确实存在。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think fully-qualified paths are enough on their own. You also need some way to designate that an impl is symbolically unique and has to be referred to by path. Otherwise, you still end up with a problem where the compiler doesn't know which implementation to use unless you precisely name it.<p>You depend on crates A and B. A impls Foo for Bar. You pass an instance of Bar to a function that accepts `impl Foo`. You are happy. Later crate B adds an impl of Foo for Bar. Clearly _at least_ one of these must be an orphan impl, but both could be. Suddenly it's ambiguous which implementation of Foo you're talking about, so you break because B added an impl.</p><p>There are many potential problems of this flavor with letting any `impl Trait for Type` be an orphan impl and then referenced by path. What happens, for example, if an impl that was an orphan impl in one version of A becomes a coherent impl in a later version of A?</p><p>I think there has to be special syntax for named/path-referenced/symbolic impls, even if the impl does not have an identifier name, so that the compiler can know "this impl only resolves if you tell me _specifically this impl_" and the impl provider has a way to create a solid consumer contract about how to use that impl in particular.</p><p>Also, not having an identifier name would mean you can't have different impls of Foo for Bar in the same module. That's probably not a limitation anyone would care about, but it's there.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496120" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lmm</span>
+        <span class="meta-time">2026/03/24 09:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 你依赖于板条箱 A 和 B。A 为 Bar 实现了 Foo。您将 Bar 的实例传递给接受 `impl Foo` 的函数。你很高兴。后来板条箱 B 为 Bar 添加了 Foo 的实现。显然，至少其中之一必须是孤儿实现，但两者都可能是。突然之间，你所谈论的 Foo 的实现变得模糊了，所以你中断了，因为 B 添加了一个 impl。<p>我认为那很好。与 B 添加一个与 A 中您使用的非限定函数同名的新函数时发生的情况相同。</p><p>&gt; 例如，如果 A 的一个版本中的孤立 impl 成为 A 的更高版本中的连贯 impl，会发生什么情况？</p><p>没什么？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; You depend on crates A and B. A impls Foo for Bar. You pass an instance of Bar to a function that accepts `impl Foo`. You are happy. Later crate B adds an impl of Foo for Bar. Clearly _at least_ one of these must be an orphan impl, but both could be. Suddenly it's ambiguous which implementation of Foo you're talking about, so you break because B added an impl.<p>I think that's fine. Same as what happens if B adds a new function with the same name as a function in A that you were using unqualified.</p><p>&gt; What happens, for example, if an impl that was an orphan impl in one version of A becomes a coherent impl in a later version of A?</p><p>Nothing much?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497374" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nixpulvis</span>
+        <span class="meta-time">2026/03/24 07:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用 mod 名称会给它一个唯一的名称，只是隐式地通过模块，所以我没有看到问题，除非您想允许单个模块允许同一项目的多个实现。<p>我也不认为拥有相同特征的多个 impl 存在问题，只要它们不在模块内提供重复的项目即可。我经常做多个 impl 块来分解更大的逻辑并组织文档，尽管这通常不适用于特征 impl，但我不明白为什么不能。</p><p>不过，让我澄清一下，我并不是说这必然是解决一致性/孤儿情况的最佳途径，只是对博客帖子立场的一个小小的批评。这是一个众所周知的棘手问题，我怀疑这里没有灵丹妙药。尽管我一直想要某种方式来增加孤儿规则的灵活性。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Using the mod name would give it a unique name, just implicitly through the module, so I don't see the issue, unless you wanted to allow a single module to allow multiple impls of the same item.<p>I also don't see an issue with having multiple impls of the same trait, as long as they don't provide duplicate items inside a module. I often do multiple impl blocks to break up larger logic and organize docs, though this is generally not for trait impls, but I don't see why it couldn't be.</p><p>Let me be clear though, I'm not saying this is the best path forward on the coherence/orphan situation necessarily, just a minor critique of the blog posts position. This is a famously tricky issue, and I suspect there is no silver bullet here. Though I have always wanted some way to add flexibility to the orphan rule.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496519" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">egorelik</span>
+        <span class="meta-time">2026/03/24 08:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与命名的 impl 类似但不完全相同，我真的很希望看到一种语言通过将实现特征与使特定的现有实现作为隐式默认值分开来处理这个问题。孤立规则可以应用于后者，但可以通过任何实现选择在本地范围内覆盖。<p>这主要基于我很久以前读过的一篇论文，内容是如何在 ML 风格的模块系统之上构建类型类/特征系统。但是，我怀疑即使没有完整的模块系统，这样的设置也是有益的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Similar but not exactly the same as named impls, I'd really like to see a language handle this by separating implementing a trait from making a particular existing implementation the implicit default. Orphan rules can apply to the latter, but can be overriden in a local scope by any choice of implementation.<p>This is largely based on a paper I read a long time ago on how one might build a typeclass/trait system on top of an ML-style module system. But, I suspect such a setup can be beneficial even without the full module system.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">faresahmed</span>
+        <span class="meta-time">2026/03/24 08:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看看 <a href="https://contextgeneric.dev" target="_blank" rel="noopener noreferrer">https://contextgeneric.dev</a>，这是在不修改 rustc 的情况下最接近解决此问题的方法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Take a look at <a href="https://contextgeneric.dev" target="_blank" rel="noopener noreferrer">https://contextgeneric.dev</a>, it's as close as one can get to solving this issue without modifying rustc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496962" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dathinab</span>
+        <span class="meta-time">2026/03/24 04:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不是一个新的讨论，在早期的 rust 时代也曾出现过。<p>恕我直言，一致性和孤儿规则对生态系统的质量做出了重大贡献。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This isn't a new discussion it was there around the early rust days too.<p>And IMHO coherence and orphan rules have majorly contributed to the quality of the eco system.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494820" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MeetingsBrowser</span>
+        <span class="meta-time">2026/03/24 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能否详细说明它们如何对生态系统的质量做出贡献？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">can you elaborate on how have they contributed to the quality of the ecosystem?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495041" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dathinab</span>
+        <span class="meta-time">2026/03/24 06:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有好的方法来处理冲突的实现。既来自平行板条箱，也由于随着时间的推移而变化。<p>没有它，您可能会出现许多其他形式的破损。更糟糕的是，您可能会在两个第 3 方 crate 之间出现“新”损坏，而没有任何一个因共同祖先更改（例如 std）中的某些隐含而发生更改，并且这会影响每个第 3 方 crate 中的两个通配符实现，现在导致重叠。</p><p>当您有重叠时，有两种选择：</p><p>- 编译失败，但正如前面提到的，这可能是由于两个理论上不相关的第三方依赖项中 std 的非重大更改引起的</p><p>- 尝试选择其中一种实现。但现在在多个方面变得非常混乱：a) 哪个 impl。选择何时。 b) 用户知道选择哪一个。 c) 与双重调度、线程局部变量和一般副作用等交互重叠。这里的问题与专业化类似（也是为什么陷入困境的部分原因），但更为复杂，因为专业化只是（意味着）优化，而这可能是截然不同的行为。就像 `foo.bar()` 具有相同的 `use Bar as _;` 可能在一个上下文中返回 `u32` 而在另一个上下文中返回 `String`</p><p>在许多其他生态系统中，遇到某些库根本无法一起使用的问题并不罕见。在 Rust 中，这几乎不存在（no_mange 冲突和 C 依赖项是我能想到的唯一例外）。</p><p>类似地，根据我的经验，Rust 生态系统中遇到意外破坏性变化的可能性要低于例如python 或 js，部分原因是一致性规则迫使设计更加简洁。</p><p>此外，人们被迫在板条箱之间建立一个稍微干净的依赖关系树，但并非所有语言都需要这种方式。这可以帮助增量构建和编译时间，一个区域 Rust 需要任何它能得到的帮助。 （顺便说一句，模块中干净的依赖结构（有时）也可以帮助更好地并行化代码生成。）</p><p>所以总体来说我觉得还是不错的。</p><p>通过它可能会很烦人。而且在很多方面都有改进的潜力。</p><p>---</p><p>编辑：抱歉，一些键盘笨手笨脚的人以某种方式提交了一半的书面回复，而我没有按 Enter 键......</p><p>编辑 2：修复拼写和句子结构。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">there is no good way to handle colliding implementations. Both from parallel crates and due to changes over time.<p>Without it you can have many many additional forms of breakage. Worse you can have "new" breakage between two 3rd party crates without either of them changing due to some impl in a common ancestor changing (e.g. std) and this affecting two wild card implementations in each, now leading to an overlap.</p><p>When you have an overlap there are two options:</p><p>- fail compilation, but as mentioned this could be caused by a non breaking change in std in two in theory unrelated 3rd party dependencies</p><p>- try to choose one of the implementations. But that now gets very messy in multiple points: a) Which impl. to choose when. b) The user knowing which is chosen. c) Overlap with interactions with stuff like double dispatch, thread local variables, and in general side effects. The issues here are similar to specialization (and part why that is stuck in limbo), but a magnitude more complex as specialization is only (meant) for optimizations, while this can be deeply different behavior. Like `foo.bar()` with the same `use Bar as _;` might in one context return an `u32` and in another a `String`</p><p>In many other ecosystems it's not uncommon to run into having issues where certain libraries can't be used together at all. In rust that is close to not a thing (no_mange collisions and C dependencies are the only exception I can think of).</p><p>Similar, in my experience the likely hood of running into unintended breaking changes is lower in the rust ecosystem then e.g. python or js, that is partially due to coherence rules forcing a more clean design.</p><p>Also people are forced to have a somewhat clean dependency tree between crates in ways not all  languages requires. This can help with incremental builds and compiler time, a area rust needs any help it can get. (As a side note, clean dependency structures in your modules can (sometimes) help will rust better parallelizing code gen, too.)</p><p>So overall it I think it's good.</p><p>Through it can be very annoying. And there is some potential for improvement in many ways.</p><p>---</p><p>EDIT: sorry some keyboard fat-fingering somehow submitted a half written response without me pressing enter...</p><p>EDIT 2: Fix spelling and sentence structure.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495724" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">MeetingsBrowser</span>
+        <span class="meta-time">2026/03/24 08:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在许多其他生态系统中，遇到某些库根本无法一起使用的问题并不罕见。<p>Rust 中也存在同样的问题，但是是从另一个角度来看的。</p><p>如果我使用 serde 进行序列化，我实际上就只能使用实现 serde 特征的板条箱（或者通过 newtype hacks 自己定义它们）。</p><p>如果我想使用比 serde 更利基的东西，我基本上就失去了对所有流行板条箱的访问权限，因为它们只实现了 serde 特征。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; In many other ecosystems it's not uncommon to run into having issues where certain libraries can't be used together at all.<p>The same problem exists in Rust, but from the other side.</p><p>If I use serde for serialization I am effectively locked in to using crates that  implement serde traits (or do newtype hacks to define them myself).</p><p>If I want to use something more niche than serde, I essentially lose access to all the popular crates as they only implement serde traits.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497223" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dathinab</span>
+        <span class="meta-time">2026/03/24 09:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说这是一个完全不同的问题<p>您在最初编写代码时解决的一个问题（这样您就可以正确地解释并控制它）</p><p>而不是当您更新软件包以进行非常紧迫的安全修复时可能会爆发的问题</p><p>最后一个问题是，稳定性和将功能猴子补丁到依赖项而不更改它们的选项更重要</p><p>考虑到你总是可以使用非猴子补丁箱（生锈使得供应商相对容易，以防上游无法解决问题）我更喜欢稳定性方面（如果你做补丁箱，你会在不同的地方重新引入许多问题，主要区别是有机会上游更改）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">for me that is a completely different problem,<p>one you solve when initially writing code (so you can properly account for it and control it)</p><p>instead of a problem which can blow up when you update a package for a very pressing security fix</p><p>in the end it a question what is more important, stability or the option to monkey patch functionality into your dependencies without changing them</p><p>and given that you can always non-monkey patch crates (rust makes vendoring dep. relatively easy in case upstream doesn't fix things) I prefer the stability aspect (through if you do patch crates you re-introduce many of the issues in a different place, with the main difference of there being a chance to upstream you changes)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497792" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonask</span>
+        <span class="meta-time">2026/03/24 09:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">新类型不是黑客，在我看来它们是完全可以接受的。特别是如果您也愿意使用像 `derive_more` 这样的箱子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Newtypes aren’t hacks, they’re perfectly acceptable in my opinion. Especially if you’re willing to also use a crate like `derive_more`.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497562" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Animats</span>
+        <span class="meta-time">2026/03/24 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请注意用例 - 有人希望能够替换基本级别的板条箱，例如 serde。<p>当接近底层的东西需要工作时，是否应该有一个解决它的过程，这是一个人的问题？或者是否应该有一种绕过它的机制，这是解决人员问题的技术解决方案？这是开源的诅咒之一。
+第一种方法意味着将会出现必须解决的对抗。第二个意味着非常相似的软件包的激增。</p><p>这是开源语言生命周期的一部分。早期，您没有足够的包来完成任何事情，并且很感激有人花时间编写一些东西。
+然后很明显早期的软件包缺少一些东西，并且出现了额外的软件包。随着时间的推移，你会被垃圾淹没。在上一篇文章中，我提到了十年来采用单一标准 ISO 8601 日期解析器，而不是六个具有不同错误的软件包。
+其他人也用 Javascript 进行了同样的练习。</p><p>Go 倾向于采用第一种方法，而 Python 则采用第二种。 Go 的优势之一是大部分核心包都是由 Google 内部维护和使用的。所以你知道他们得到了很好的锻炼。</p><p>在 Github 和 AI 之间，创建软件包的小变体太容易了。另外，我们现在还遭受包裹供应链攻击。因此，策展变得更加重要。在历史的这个时刻，推动第一种方法可能是好的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Note the use case - someone wants to have the ability to replace a base-level crate such as serde.<p>When something near the bottom needs work, should there be a process for fixing it, which is a people problem? Or should there be a mechanism for bypassing it, which is a technical solution to a people problem? This is one of the curses of open source.
+The first approach means that there will be confrontations which must be resolved. The second means a proliferation of very similar packages.</p><p>This is part of the life cycle of an open source language. Early on, you don't have enough packages to get anything done, and are grateful that someone took the time to code something.
+Then it becomes clear that the early packages lacked something, and additional packages appear. Over time, you're drowning in cruft. In a previous posting, I mentioned ten years of getting a single standard ISO 8601 date parser adopted, instead of six packages with different bugs.
+Someone else went through the same exercise with Javascript.</p><p>Go tends to take the first approach, while Python takes the second. One of Go's strengths is that most of the core packages are maintained and used internally by Google. So you know they've been well-exercised.</p><p>Between Github and AI, it's all too easy to create minor variants of packages. Plus we now have package supply chain attacks. Curation has thus become more important. At this point in history, it's probably good to push towards the first approach.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495281" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">JoshTriplett</span>
+        <span class="meta-time">2026/03/24 07:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个社会问题 <i>已创建</i> 由于技术问题。<p>在许多语言中，如果您想将包 A 与包 B 集成，您可以制作并共享包 AB，人们可以重用该包。这样可以扩展并促进重用，并避免任何一个包必须支持所有内容。</p><p>在 Rust 中，如果集成涉及特征，则包 A 和包 B 之间的集成 <i>必须</i> 发生在 A 或 B 中。这会产生扩展问题和社会问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a social problem that's <i>created</i> by a technical problem.<p>In many languages, if you want to integrate package A with package B, you can make and share a package AB, which people can reuse. That scales, and facilitates reuse, and avoids either package having to support everything.</p><p>In Rust, if the integration involves traits, integration between package A and package B <i>must</i> happen either in A or in B. That creates a scaling problem, and a social problem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496792" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonask</span>
+        <span class="meta-time">2026/03/24 09:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除了鸭子类型语言（我认为 Go 基本上就是这样）之外，哪些语言实际上提供了此功能？<p>AFAIK，能够使用新接口扩展外部类型并不是很常见，尤其是如果您两者都没有的话。</p><p>从技术上讲，C++ 可以使用部分特化来做到这一点，但它并不完全好，并且当出错时会通过 ODR 违规导致 UB（假设您有 `std::hash` 特化的两个实现，等等）。它仅适用于专门设计为以这种方式专门化的接口 - 不适用于普通的动态调度。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Other than duck-typed languages (and I count Go as basically that), which languages actually provide this feature?<p>AFAIK, it’s not really very common to be able to extend foreign types with new interfaces, especially not if you own neither.</p><p>C++ can technically do it using partial specialization, but it’s not exactly nice, and results in UB via ODR violation when it goes wrong (say you have two implementations of a `std::hash` specialization, etc.). And it only works for interfaces that are specifically designed to be specialized this way - not for vanilla dynamic dispatch, say.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497519" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ThunderSizzle</span>
+        <span class="meta-time">2026/03/24 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C# 不是鸭子类型语言（好吧，您可以通过动态关键字来做到这一点，但我不知道通常谁会这样做）。<p>Nuget 中的大多数集成库（又名 c# 的货物）都是 AB 类型库。</p><p>例如。
+DI 容器：Autofac
+消息传递库：MediatR
+集成：MediatR.Extensions.Autofac.DependencyInjection</p><p>在那个世界上有很多像这样的流行图书馆的例子。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">C# isnt a duck type language (well, you can do that via dynamic keyword, but I don't know who would do that typically).<p>Most integration libraries in Nuget (aka c#'s cargo) are AB type libraries.</p><p>E.g.
+DI Container: Autofac
+Messaging Library: MediatR
+Integration: MediatR.Extensions.Autofac.DependencyInjection</p><p>There are many examples of popular libraries like this in that world.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497693" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tekacs</span>
+        <span class="meta-time">2026/03/24 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣，但我想知道你是否会接受这也有以人类速度移动的缺点。<p>在你正在构建的情况下，我发现孤儿规则令人沮丧，因为你可能会陷入这样一种情况：如果不分叉生态系统中一半的板条箱，你就无法帮助自己。</p><p>寻求上游的改进，即使有选项 1 的绝对最佳解决方案，也有一个根本的缺点，那就是你无法摆脱困境。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is interesting but I wonder if you would accept that this also has the downside of moving at the speed of humans.<p>In a situation where you're building, I find the orphan rule frustrating because you can be stuck in a situation where you are unable to help yourself without forking half of the crates in the ecosystem.</p><p>Looking for improvements upstream, even with the absolute best solutions for option 1, has the fundamental downside that you can't unstick yourself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495502" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tekacs</span>
+        <span class="meta-time">2026/03/24 05:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这也是我感到惊讶的地方，这篇文章根本没有提到 Scala。 Scala 中的隐式和见证系统存在许多 UX/DX 挑战，所以我永远不会直接建议它，但我从来没有感觉到更有能力用一种语言解决我自己的问题（是的，绝对最复杂的，Haskell-in-Scala 库绝对可以成为这一点的障碍）。<p>有了人工智能，这种速度差异就更加明显。</p><p>我确实认为 Scala 历史上通过使用导入来解决这个问题的方式非常有趣。我认为这些提案中都没有讨论使用 use 语句将特征定义纳入范围？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is also where I find it surprising that this article doesn't mention Scala at all. There are MANY UX/DX challenges with the implicit and witness system in Scala, so I would never guess suggest it directly, but never have I felt more enabled to solve my own problems in a language (and yes the absolute most complex, Haskell-in-Scala libraries can absolutely an impediment to this).<p>With AI this pace difference is even more noticeable.</p><p>I do think that the way that Scala approaches this by using imports historically was quite interesting. Using a use statement to bring a trait definition into scope isn't discussed in any of these proposals I think?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495545" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tadfisher</span>
+        <span class="meta-time">2026/03/24 06:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">问题在于存在主义，或者更确切地说，存在主义的存在而无法明确地覆盖它们。即使在 Haskell 中，覆盖类型类实例也需要关闭孤立检查，这是一个相当大的锤子。<p>因此，一旦您确定了这一点，您现在就可以考虑该问题的所有可能解决方案。这些解决方案之一可能是从你的语言中删除存在主义；考虑一下如果隐式被删除，Scala 将如何工作（我没有使用过 Scala 3，也许这发生了？）。另一个解决方案可能是将“类型化扩展点的存在实现”的整个概念与库（或板条箱，或者编译和分发代码的方式）分离，并需要通过导入或类似方式将实例引入范围。</p><p>不过，有两件事是肯定的：库已经依赖于当前的行为，无论这是否有意义；强迫用户理解连贯性（哪个实例由哪个代码使用）几乎总是让用户喜欢你的语言的巨大障碍。因此，“孤儿规则”，以及为什么每个人都讨厌 Scala 2 隐含的原因。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The problem is existentials, or rather the existence of existentials without the ability to explicitly override them. Even in Haskell, overriding typeclass instances requires turning off orphan checks, which is a rather large hammer.<p>So once you've identified this, now you might consider the universe of possible solutions to the problem. One of those solutions might be removing existentials from your language; think about how Scala would work if implicits were removed (I haven't used Scala 3, maybe this happened?). Another solution might be to decouple the whole concept of "existential implementations of typed extension points" from libraries (or crates, or however you compile and distribute code), and require bringing instances into scope via imports or similar.</p><p>Two things are true for sure, though: libraries already depend on the current behavior, whether that makes sense or not; and forcing users to understand coherence (which instance is used by which code) is almost always a giant impediment to getting users to like your language. Hence, "orphan rules", and why everyone hates Scala 2 implicits.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496242" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tekacs</span>
+        <span class="meta-time">2026/03/24 09:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，熟悉这一切。<p>也就是说，我希望看到我最喜欢的解决方案类别中的解决方案：库作者可以使用它并从中受益，但普通用户不必注意到。</p><p>我倾向于认为不存在的 Scala 系统是_如此接近_，如果你_稍微_调整它周围的范围规则，你可能会得到一些很棒的东西。</p><p>例如，如果 - 作为用户 - 我可以使用某个库中的 `.serialize(...)` ，并且默认情况下它使用 _their_ 范围特征，但如果我_明确_（命名）在我这边导入了一些特征，我可以替换我自己的特征，那会很好。</p><p>您可能希望将其与某种方式配对，例如允许每个板条箱显式导入的前奏，您可以 ::* 在板条箱内导入以一次覆盖许多东西，但是...我认为，通过正确的调整，您可以说“这个库默认使用 serde，但我可以提供我自己的 Serializer 特征...也许，如果我关闭 serde Cargo 功能，甚至它们的默认作用域特征也会消失”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep, familiar with all of this.<p>That said, I would love to see a solution in my favorite class of solution: where library authors can use and benefit from this, but the average user doesn't have to notice.</p><p>I tend to think that the non-existential Scala system was _so close_, and that if you _slightly_ tweaked the scoping rules around it, you could have something great.</p><p>For example, if - as a user - I could use `.serialize(...)` from some library and it used _their_ scoped traits by default, but if I _explicitly_ (named) imported some trait(s) on my side, I could substitute my own, that'd work great.</p><p>You'd likely want to pair it with some way of e.g. allowing a per-crate prelude of explicit imports that you can ::* import within the crate to override many things at once, but... I think that with the right tweaks, you could say 'this library uses serde by default, but I can provide my own Serializer trait instead... and perhaps, if I turn off the serde Cargo feature, even their default scoped trait disappears'.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497483" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/03/24 06:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是我的第一个想法！  我在使用 Scala 时从未遇到过这个问题（对我来说是 2.x，但我猜 3 中也有类似的语法/概念）。<p>文章作者确实讨论了命名特征实现以及如何在调用站点使用它们，但似乎从未考虑过您可以 <i>进口</i> 一个特质 impl 并在该范围内的任何地方使用它，而不需要额外繁琐的语法。</p><p>这仍然解决了“HashMap”问题吗？  我想这取决于命名的 impl“绑定”的时间。  例如。命名的 Hash impl 必须在创建时绑定到 HashMap 本身，而不是在调用 `insert()` 或 `get()` 时。  哪一个……看起来很合理？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That was my first thought!  I never had this problem with Scala (2.x for me, but I guess there's similar syntax/concepts in 3).<p>The article author does talk about naming trait impls and how to use them at call sites, but never seems to consider the idea that you could <i>import</i> a trait impl and use it everywhere within that scope, without extra onerous syntax.</p><p>Does this still solve the "HashMap" problem though?  I guess it depends on when the named impl "binds".  E.g. the named Hash impl would have to bind to the HashMap itself at creation, not at calls to `insert()` or `get()`.  Which... seems like a reasonable thing?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496146" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/03/24 06:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>当接近底层的东西需要工作时，是否应该有一个解决它的过程，这是一个人的问题？或者是否应该有一种绕过它的机制，这是解决人员问题的技术解决方案？</i><p>我不认为这是一个人的问题，就像我们通常谈论为人的问题创建技术解决方案的愚蠢一样。</p><p>如果像 serde 这样的东西是基础性的，那么你根本无法从根本上改变它而不会给很多人带来问题。  这是一个技术问题，而不是人的问题，即使 serde <i>需要</i> 彻底的变革，以便以所需的方式发展。</p><p>但当然，好吧，让我们想象一下事实并非如此。  假设一些新的人认为 serde 在某些方面存在严重缺陷，并且他们想要实施他们的更改。  他们甚至可以在不破坏与板条箱现有用户的兼容性的情况下这样做。  但 serde 维护者并没有看到同样的问题；事实上，他们相信这个新团体想要做的事情会积极引发更多问题。</p><p>这两类人甚至不需要是对还是错。  也许这两种方式都有优点和缺点，选择只取决于你更看重哪种权衡。  任何一个群体想要保持现状或做出改变都没有错。</p><p>这 <i>是</i> 实际上是一个技术问题：我们需要找到一种方法让两种方法共存，而不会给其他人带来大量的工作。</p><p>即使我们 <i>做</i> 遇到事情需要解决，事情没有得到解决的情况 <i>是</i> 一个人的问题，我认为对于这种特殊的事情，我们拥有绕过人的问题的技术解决方案不仅是适当的，而且是必要的。  我的意思是，来吧。  人就是人。  人们会很固执，不愿意改变。  僵化是真实存在的，我认为这是一个很少有的项目/组织能够避免它。  当然，当我们需要改变人员时，我们可以拒绝使用技术解决方法，但在很多情况下，这只是一次又一次地碰壁。  为什么要这样对我们自己？  生命太短暂了。</p><p>话虽如此，我完全同意，在某些情况下，解决人们问题的技术解决方案可能会产生令人难以置信的适得其反的效果，并且造成的问题比解决的问题还要多（例如，“不要期望人们真正养育自己的孩子，而是强迫每个人放弃他们的隐私以进行强制年龄验证；想想孩子们！”）。  但我认为这不是其中之一。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>When something near the bottom needs work, should there be a process for fixing it, which is a people problem? Or should there be a mechanism for bypassing it, which is a technical solution to a people problem?</i><p>I don't think it's a people problem in the way we usually talk about the folly of creating technical solutions to people problems.</p><p>If something like serde is foundational, you simply can't radically change it without causing problems for lots and lots of people.  That's a technical problem, not a people problem, even if serde <i>needs</i> radical change in order to evolve in the ways it needs to.</p><p>But sure, ok, let's imagine that wasn't the case.  Let's say some new group of people decide that serde is lacking in some serious way, and they want to implement their changes.  They can even do so without breaking compatibility with existing users of the crate.  But the serde maintainers don't see the same problems; in fact, they believe that what this new group wants to do will actively cause more problems.</p><p>Neither group of people even needs to be right or wrong.  Maybe both ways have pluses and minuses, and choosing just depends on what trade offs you value more.  Neither group is wrong about wanting to either keep the status quo or make changes.</p><p>This <i>is</i> actually a technical problem: we need to find a way to allow both approaches coexist, without causing a ton of work for everyone else.</p><p>And even if we <i>do</i> run into situations where things need fixing, and things not getting fixed <i>is</i> a people problem, I'd argue for this particular sort of thing it's not only appropriate but essential that we have technical solutions to bypass the people problems.  I mean, c'mon.  People are people.  People are going to be stubborn and not want change.  Ossification is a real thing, and I think it's a rare project/organization that's able to avoid it.  Sure, we could refuse to use technical workarounds when it's people we need to change, but in so many cases, that's just running up against a brick wall, over and over.  Why do that to ourselves?  Life is too short.</p><p>Having said that, I totally agree that there are situations where technical workarounds to people problems can be incredibly counter-productive, and cause more problems than they solve (like, "instead of expecting people to actually parent their kids, force everyone to give up their privacy for mandatory age verification; think of the children!").  But I don't think this is one of them.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496093" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mbo</span>
+        <span class="meta-time">2026/03/24 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直不明白为什么 Rust 无法解决这个问题。斯卡拉做到了。<p>&gt; 如果一个 crate 没有为其类型实现 serde 的特征，那么这些类型就不能与 serde 一起使用，因为下游 crate 无法为另一个 crate 的类型实现 serde 的特征。</p><p>您可以在 Scala 中执行此操作。</p><p>&gt; 更糟糕的是，如果有人发布了 serde 的替代方案（例如 nextserde），那么所有添加了对 serde 的支持的 crate 也需要添加对 nextserde 的支持。为现有的每个新序列化库添加支持是不现实的，并且对于 crate 作者来说需要大量工作。</p><p>您可以轻松地自动派生一个新的类型类实例。对于 Scala 3，这将是：</p><p></p><pre><code>  trait Hash[A]:
+    extension (a: A) def hash: Int
+
+  trait PrettyPrint[A]:
+    extension (a: A) def pretty: String
+
+  // If you have Hash for A, you automatically get PrettyPrint for A
+  given autoDerive[A](using h: Hash[A]): PrettyPrint[A] with
+    extension (a: A) def pretty: String = s"&lt;#${a.hash.toHexString}&gt;"
+</code></pre>
+&gt; 这里我们有两个重叠的特征实现，它们为关联类型 Assoc 指定不同的值。<p></p><pre><code>  trait Trait[A]:
+    type Assoc
+
+  object A:
+    given instance: Trait[Unit] with
+      type Assoc = Long
+
+    def makeAssoc: instance.Assoc = 0L
+
+  object B:
+    given instance: Trait[Unit] with
+      type Assoc = String
+
+    def dropAssoc(a: instance.Assoc): Unit =
+      val s: String = a
+      println(s.length)
+
+  @main def entry(): Unit =
+    B.dropAssoc(A.makeAssoc) // Found: Playground.A.instance.Assoc Required: Playground.B.instance².Assoc²
+
+</code></pre>
+Scala 也抓住了这一点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I never understood why Rust couldn't figure this shit out. Scala did.<p>&gt; If a crate doesn’t implement serde’s traits for its types then those types can’t be used with serde as downstream crates cannot implement serde’s traits for another crate’s types.</p><p>You are allowed to do this in Scala.</p><p>&gt; Worse yet, if someone publishes an alternative to serde (say, nextserde) then all crates which have added support for serde also need to add support for nextserde. Adding support for every new serialization library in existence is unrealistic and a lot of work for crate authors.</p><p>You can easily autoderive a new typeclass instance. With Scala 3, that would be:</p><p></p><pre><code>  trait Hash[A]:
+    extension (a: A) def hash: Int
+
+  trait PrettyPrint[A]:
+    extension (a: A) def pretty: String
+
+  // If you have Hash for A, you automatically get PrettyPrint for A
+  given autoDerive[A](using h: Hash[A]): PrettyPrint[A] with
+    extension (a: A) def pretty: String = s"&lt;#${a.hash.toHexString}&gt;"
+</code></pre>
+&gt; Here we have two overlapping trait impls which specify different values for the associated type Assoc.<p></p><pre><code>  trait Trait[A]:
+    type Assoc
+
+  object A:
+    given instance: Trait[Unit] with
+      type Assoc = Long
+
+    def makeAssoc: instance.Assoc = 0L
+
+  object B:
+    given instance: Trait[Unit] with
+      type Assoc = String
+
+    def dropAssoc(a: instance.Assoc): Unit =
+      val s: String = a
+      println(s.length)
+
+  @main def entry(): Unit =
+    B.dropAssoc(A.makeAssoc) // Found: Playground.A.instance.Assoc Required: Playground.B.instance².Assoc²
+
+</code></pre>
+Scala catches this too.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">switchbak</span>
+        <span class="meta-time">2026/03/24 08:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许我咖啡因含量不足，但作者不是描述了表达问题吗？这基本上确定了类的类型（在 Scala 和其他地方），不是吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Perhaps I'm insufficiently caffeinated, but isn't the author describing the expression problem? That basically nails what type classes are for (in Scala and elsewhere), no?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496931" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">devnotes77</span>
+        <span class="meta-time">2026/03/24 08:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497192" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">davej32</span>
+        <span class="meta-time">2026/03/24 06:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nmilo</span>
+        <span class="meta-time">2026/03/24 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我永远不会停止对孤儿规则的憎恨，它完美地总结了许多 Rust 决策背后的原因。纯粹主义和完美主义是以创造一种有用的语言为代价的，没有更好的方法来破坏你的生态系统并让添加依赖项无缘无故地变得烦人。甚至不像“危险地禁用孤儿规则”，只是在这里没有让步。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I will never stop hating on the orphan rule, a perfect summary of what’s behind a lot of rust decisions. Purism and perfectionism at the cost of making a useful language, no better way to torpedo your ecosystem and make adding dependencies really annoying for no reason. Like not even a —dangerously-disable-the-orphan-rule, just no concessions here.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495043" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simonask</span>
+        <span class="meta-time">2026/03/24 06:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为对 Rust 有合理的批评属于这一类，但孤儿规则不是这样的。<p>在大多数其他语言中，根本不可能将接口“添加”到您不拥有的类中。如果您拥有类型或接口，Rust 就可以让您做到这一点。这比竞争对手更加宽松。</p><p>这些其他语言不允许您将接口添加到外部类型或使用新成员扩展它们的原因与 Rust 具有孤儿规则的原因完全相同。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think there are legitimate criticisms of Rust that fall in this category, but the orphan rule ain’t it.<p>In most other languages, it is simply not possible to “add” an interface to a class you don’t own. Rust let’s you do that if you own either the type or or the interface. That’s strictly more permissive than the competition.</p><p>The reasons those other languages have for not letting you add your interface to foreign types, or extend them with new members, are exactly the same reasons that Rust has the orphan rule.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kryptiskt</span>
+        <span class="meta-time">2026/03/24 06:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不是出于纯粹性而产生的限制，特别是毫不妥协的 Haskell 允许孤儿实例。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not a restriction born out of purity, notably uncompromising Haskell allows orphan instances.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496290" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">voxl</span>
+        <span class="meta-time">2026/03/24 06:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为更好，为我们更好。 Rust 充满了艰难的妥协和反动的亚文化。只是回忆？独自的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good for better, better for us. Rust is choke full of hard compromises and reactionary subcultures. Just recalling ? alone.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47496039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">irishcoffee</span>
+        <span class="meta-time">2026/03/24 06:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Go：错误处理很糟糕。泛型会很糟糕。<p>Rust：如果你花了 3 周的时间来理解语法和借用检查器，这里是所有其他问题，而且这个列表还在不断增长。</p><p>伙计，这让我很高兴。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Go: error handling stinks. Generics would be dope.<p>Rust: if you spent 3 weeks understanding the syntax and borrow-checker, here are all of the other problems, and the list keeps growing.</p><p>Man this cracks me up.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">grougnax</span>
+        <span class="meta-time">2026/03/24 05:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你认为 Rust 有问题，那是你还没有很好地理解 Rust。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you think Rust has problems, it is that you've have not understood well Rust.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495066" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nmilo</span>
+        <span class="meta-time">2026/03/24 05:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">杰出的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Brilliant</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495112" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

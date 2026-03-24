@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digs：iOS 应用程序，可同步您的 Discogs 收藏并让您离线浏览 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-24-1030/">返回本批次</a>
+      <h1>Digs：iOS 应用程序，可同步您的 Discogs 收藏并让您离线浏览</h1>
+      <p class="subtitle">Digs: iOS app that syncs your Discogs collection and lets you browse it offline</p>
+      <div class="meta-line">
+        <span>lustin.fr</span>
+        <span>作者 rlustin</span>
+        <span>分数 49</span>
+        <span>评论 19</span>
+        <span>2026/03/23 17:02</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47486916" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://lustin.fr/blog/building-digs/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026-03-22 我多年来一直在收集黑胶唱片，Discogs 是我对所有内容进行分类的地方。但在旅途中浏览我的收藏对我来说从来没有真正起作用。官方应用程序功能相当齐全，但对我来说缺少一些基础功能：文件夹导航、离线模式。我想要一种更简单、快速、离线的方式来挖掘我的记录，按照我已经在书架上整理它们的方式进行整理。所以我建造了 Digs。它的作用它将您的整个收藏同步到您的手机，并让您离线浏览。您仍然可以管理 Discogs 上的一切。 Digs 只是为您提供了一个快速的移动副本供您挖掘。初始同步后，您的整个收藏集均可离线使用。您可以按文件夹浏览，搜索艺术家、专辑和唱片公司，或者点击随机选择器重新发现您忘记拥有的东西。后续同步是增量的 - 仅获取更改的内容。我是为特定用例构建的。如果您将记录整理到文件夹中并希望在没有信号的情况下快速浏览它们，它可能会很有用。如果您想要需求列表管理、市场功能以及挖掘某个版本的多个版本，那么这不是您想要的。技术 这是一个使用 Expo 和 TypeScript 构建的 React Native 应用程序。数据存在于 SQLite 中，顶部有 Drizzle ORM。身份验证使用 OAuth 通过官方 Discogs API，令牌存储在 iOS 钥匙串中。同步管道的构建更有趣。它首先获取您的文件夹结构，然后对您收藏中的每个版本进行分页下载 - 艺术家、标题、年份、格式、缩略图。完成后，您就可以浏览所有内容了。从那里，它逐步获取每个版本的完整详细信息（曲目列表、高分辨率图像、评级、视频）并将图像缓存到磁盘。每个阶段都可以暂停或取消，整个过程可以作为后台任务运行。速率限制 速率限制器给我带来了最大的麻烦。 Discogs 每分钟允许 60 个请求。当您有多个请求正在处理时，计算请求数并在 60 处停止的简单方法是行不通的。当请求 58 返回并告诉您已达到限制时，请求 59 到 65 已经在路上。我找到的解决方案是一个令牌桶限制器，用于处理正在进行的请求。它会监视每个响应的 X-Discogs-Ratelimit-Remaining 标头，跟踪当前待处理的请求数量并进行调整。当令牌用完时，它会通过单个请求进行探测，以刷新响应标头中的计数。如果它确实达到 429，它会使用 Retry-After 标头呈指数级回退。本地优先架构所有读取都来自 SQLite。我为 React Query 配置了无限陈旧时间，因为本地数据库是事实来源，而不是缓存。实际上，一切都是即时的：搜索、文件夹浏览、随机选择器都只是 SQLite 查询。使用 Claude Code 构建 我使用 Claude Code 构建了整个东西。花费的时间比我预期的要长，但不是我预期的那样。代码部分很快。 Claude Code 擅长将清晰的想法转化为可行的代码。需要时间的是弄清楚我真正想要构建什么。同步应该可以取消吗？随机选择器应该按文件夹过滤吗？需求清单，是还是否？编辑，是还是不是？这些产品决策是我花费最多时间的地方。然后，即使您知道自己想要什么并且编写了代码，您仍然需要在设备上进行测试、调整布局、重新思考流程、进行 App Store 审核。制作应用程序只需要时间。尝试一下 Digs 在 App Store 中是免费的。没有广告，没有任何跟踪，除了您的 Discogs 登录之外没有任何帐户。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>2026-03-22 I’ve been collecting vinyl for years and Discogs is where I catalog everything. But browsing my collection on the go never really worked for me. The official app is quite full of features, but some basics were missing for me: folder navigation, offline mode. I wanted something simpler, fast and offline to dig through my records, organized the way I already organize them on my shelves. So I built Digs. What it does It syncs your entire collection to your phone and lets you browse it offline. You still manage everything on Discogs. Digs just gives you a fast, mobile copy to dig through. After the initial sync, your whole collection is available offline. You can browse by folder, search across artists, albums and labels, or hit the random picker to rediscover something you forgot you owned. Subsequent syncs are incremental – only what’s changed gets fetched. I built this for a specific use case. If you organize your records into folders and want to quickly browse them without signal, it might be useful. If you want wantlist management, marketplace features, and digging through the many versions of a release this isn’t that. The tech It’s a React Native app built with Expo and TypeScript. Data lives in SQLite, with Drizzle ORM on top. Authentication goes through the official Discogs API using OAuth, with tokens stored in the iOS Keychain. The sync pipeline was more interesting to build. It starts by fetching your folder structure, then does a paginated download of every release in your collection – artist, title, year, format, thumbnail. Once that’s done you can already browse everything. From there it progressively fetches full details for each release (tracklist, high-res images, ratings, videos) and caches images to disk. Each phase can be paused or cancelled, and the whole thing can run as a background task. Rate limiting The rate limiter gave me the most trouble. Discogs allows 60 requests per minute. The naive approach, counting your requests and stopping at 60, doesn’t work when you have multiple requests in flight. By the time request 58 comes back and tells you you’ve hit the limit, requests 59 through 65 are already on their way. The solution I found is a token-bucket limiter that accounts for in-flight requests. It watches the X-Discogs-Ratelimit-Remaining header on every response, tracks how many requests are currently pending, and adjusts. When tokens run out, it probes with a single request to refresh the count from the response header. If it does hit a 429, it backs off exponentially using the Retry-After header. Local-first architecture All reads come from SQLite. I configured React Query with infinite stale time because the local DB is the source of truth, not a cache. In practice everything is instant: search, folder browsing, the random picker are all just SQLite queries. Building with Claude Code I built the whole thing with Claude Code. It took longer than I expected, but not how I expected. The code part was fast. Claude Code is good at turning a clear idea into working code. What took time was figuring out what I actually wanted to build. Should sync be cancellable? Should the random picker filter by folder? Wantlists, yes or no? Editing, yes or no? Those product decisions are where I spent the most time. And then even once you know what you want and the code is written, you’re still testing on device, tweaking layouts, rethinking flows, going through App Store review. Making an app just takes time. Try it Digs is free on the App Store. No ads, no tracking whatsoever, no account beyond your Discogs login.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">trvz</span>
+        <span class="meta-time">2026/03/24 08:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这可能是一个很好的原生可舔应用程序，因为它适合它的用途。<p>相反，我并不反对人工智能，人工智能不是原生的，有糟糕的设计和糟糕的字体选择。</p><p>应该有人接受这个想法，但正确地实施它。</p><p>封面流视图是必须的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This could’ve been a nice native lickable app, as befitting for what it does.<p>Instead, and I’m not against AI, AI slop that isn’t native, has awful design and awful font decisions.</p><p>Someone should take the idea but implement it properly.</p><p>And a Cover Flow view is a must.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497348" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">davidhariri</span>
+        <span class="meta-time">2026/03/24 08:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">迷人的！谢谢</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lovely! Thank you</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497059" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cauterize</span>
+        <span class="meta-time">2026/03/24 05:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">喜欢这个，因为我最喜欢的唱片店位于地下室，手机服务很差！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Love this given my favorite record store is in a basement with bad cell service!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495127" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rlustin</span>
+        <span class="meta-time">2026/03/24 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢它！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495171" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hu3</span>
+        <span class="meta-time">2026/03/24 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">博客标题缺少 iOS：“Building Digs，离线 Discogs 伴侣”<p>这是一个 RN 应用程序：</p><p>&gt; 这是一个使用 Expo 和 TypeScript 构建的 React Native 应用程序。数据存在于 SQLite 中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Blog title lacks iOS: "Building Digs, an offline Discogs companion"<p>And it's a RN app:</p><p>&gt; It’s a React Native app built with Expo and TypeScript. Data lives in SQLite.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rlustin</span>
+        <span class="meta-time">2026/03/24 04:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">提到 iOS 就很公平了。博客文章中详细介绍了技术堆栈（React Native、Expo、TypeScript、SQLite），我并不想隐藏它。<p>正如其他人在线程中指出的那样，RN 渲染实际的本机视图，而不是 Web 视图。对于这个用例：离线浏览本地 SQLite 数据库，它的效果非常好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fair enough on the iOS mention. The tech stack (React Native, Expo, TypeScript, SQLite) is detailed in the blog post, I wasn't trying to hide it.<p>As others pointed out in the thread, RN renders actual native views, not a webview. For this use case: browsing a local SQLite database offline, it works really well.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494670" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ZeWaka</span>
+        <span class="meta-time">2026/03/24 03:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">React Native 出了什么问题？我不太明白你的意思。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What's wrong with React Native? I don't quite get your point there.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493794" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Insanity</span>
+        <span class="meta-time">2026/03/24 03:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">推测 - 但基于 React Native 构建的 iOS 应用程序并不是真正的“原生 iOS 应用程序”。这可能会对性能产生一些影响等。<p>只是推测，自从 RN 出现之前我就没有做过移动开发了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Speculating - but an iOS app that's build on React Native is not really a 'native iOS app'. Which might have some performance implications etc.<p>Just speculating, I've not done mobile development since before RN was even a thing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493830" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rlustin</span>
+        <span class="meta-time">2026/03/24 04:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，这是我的第一个移动应用程序，我想出了办法。世博会帮助很大。另一方面，苹果的审核过程……这本身就是一次完整的学习经历。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Funny enough this was my first mobile app ever, I figured it out doing it. Expo helped a lot. The Apple review process on the other hand… that was a whole learning experience on its own.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494713" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">coffeecantcode</span>
+        <span class="meta-time">2026/03/24 06:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">天哪，我感觉到你在这里，第一次评论总是残酷的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">God I feel you here, that first review is always brutal.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495744" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skydhash</span>
+        <span class="meta-time">2026/03/24 03:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">RN 确实使用了大量本机代码。它不像 Electron 那样基于 webview。大多数内置组件都是原生视图，没有 CSS。 JS引擎也更简单。它更类似于 Neovim 中的 lua 运行时。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">RN does use a lot of native code. It’s not based on a webview like Electron is. Most of the builtin components are native views and there’s no CSS. The JS engine is also simpler. It’s more akin to the lua runtime in Neovim.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494106" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Insanity</span>
+        <span class="meta-time">2026/03/24 04:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊，我不知道。我认为它更像 Electron。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ah, I did not know that. I thought it was more Electron-like.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494428" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">davidhariri</span>
+        <span class="meta-time">2026/03/24 08:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个合理的假设。 React 部分更多的是关于复制 JSX 和其他 React 概念（声明式 UI 等），但这一切都归结为本机二进制文件。工具链也相当不错。它可以进行热重载，因此您无需在本地构建时重新编译应用程序。缺点是与 SwiftUI 相比，你免费获得的资源较少。但 SwiftUI 也有很多问题和 bug。没有免费的午餐！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s a fair assumption. The React part is more about copying JSX and other React concepts (declarative UI etc) but it all boils down to native binaries. The toolchain is also pretty nice. It does hot reloading so you don’t have to recompile the app while building locally. The downside is you get less for free compared to SwiftUI. But SwiftUI also has many footguns and bugs. No free lunch!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47497111" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">monster_truck</span>
+        <span class="meta-time">2026/03/24 03:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相当多。善意地问这个问题是不现实的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Quite a lot. Enough that it isn't realistic to ask this in good faith</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494220" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dnlzro</span>
+        <span class="meta-time">2026/03/24 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">How'd you design the icon/logo for it?</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How'd you design the icon/logo for it?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495173" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rlustin</span>
+        <span class="meta-time">2026/03/24 05:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根本不是设计师，我使用 recraft.ai 并迭代，直到得到我喜欢的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not a designer at all, I used recraft.ai and iterated until I got something I liked.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495234" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/24 04:47</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494875" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ebuyan</span>
+        <span class="meta-time">2026/03/24 06:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除了 React Native，你还有什么建议？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What do you recommend beyond React Native?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47495971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">imagetic</span>
+        <span class="meta-time">2026/03/24 02:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">太有趣了！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That’s fun!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47493349" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rlustin</span>
+        <span class="meta-time">2026/03/24 04:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47494726" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
