@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>在思科路由器中设置后门以监视世界的国家禁止外国路由器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>在思科路由器中设置后门以监视世界的国家禁止外国路由器</h1>
+      <p class="subtitle">Country that put backdoors in Cisco routers to spy on world bans foreign routers</p>
+      <div class="meta-line">
+        <span>www.theregister.com</span>
+        <span>作者 beardyw</span>
+        <span>分数 135</span>
+        <span>评论 40</span>
+        <span>2026/03/25 01:32</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47506279" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.theregister.com/2026/03/24/fcc_foreign_routers/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>以国家安全为由，美国实际上禁止在国外制造任何新的消费级网络路由器。美国联邦通信委员会 (FCC) 更新了其涵盖列表，将所有外国制造的消费类路由器纳入其中，禁止批准任何新型号。需要澄清的是，FCC 表示，这一变化并不妨碍该机构之前授权的任何现有型号的进口、销售或使用。</li><li>该涵盖清单详细列出了《安全网络法》第 2 条所涵盖的设备和服务，这些设备和服务一旦包含在内，就会被认为对美国国家安全构成不可接受的风险。</li><li>据美国联邦通信委员会称，此举是在“白宫召集的具有适当国家安全专业知识的行政部门跨机构机构”做出的决定之后做出的，符合特朗普总统的国家安全战略，即美国不得依赖任何其他国家获得国家国防或经济所需的核心部件。它的结论是，外国生产的路由器引入了供应链漏洞，可能会破坏关键基础设施和国防，并构成严重的网络安全风险，可能会伤害美国人。</li><li>FCC 指出，不法分子利用路由器中的安全缺陷来破坏网络或窃取知识产权，并且路由器也参与了 Volt、Flax 和 Salt Typhoon 网络攻击。所有这一切都存在虚伪的因素，因为美国情报机构此前曾被发现在向客户运送途中拦截思科制造的路由器并更新其固件以部署间谍工具。</li><li>美国做空中国“伏特台风”机组人员针对美国的批评者</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Citing national security fears, America is effectively banning any new consumer-grade network routers made abroad. The Federal Communications Commission (FCC) has updated its Covered List to include all foreign-made consumer routers, prohibiting the approval of any new models. For clarification, the FCC says this change does not prevent the import, sale, or use of any existing models that the agency previously authorized.</li><li>That Covered List details equipment and services covered by Section 2 of The Secure Networks Act, which, by their inclusion, are deemed to pose an unacceptable risk to US national security.</li><li>According to the FCC, this move follows a determination by a &quot;White House-convened Executive Branch interagency body with appropriate national security expertise,&quot; in line with President Trump&#39;s National Security Strategy that the US must not be dependent on any other country for core components necessary to the nation&#39;s defense or economy. Its determination was that foreign-produced routers introduce a supply chain vulnerability which could disrupt critical infrastructure and national defense, and pose a severe cybersecurity risk that could harm Americans.</li><li>The FCC notes that miscreants have exploited security flaws in routers to disrupt networks or steal intellectual property, and routers are also implicated in the Volt, Flax, and Salt Typhoon cyberattacks. There is an element of hypocrisy in all this because American intelligence agencies were previously caught intercepting Cisco-made routers on their way to customers and updating their firmware to deploy espionage tools.</li><li>US shorts China&#39;s Volt Typhoon crew targeting America&#39;s criticals</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hunter2_</span>
+        <span class="meta-time">2026/03/25 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我们抛开地缘政治因素，纯粹考虑加强专用网络的安全是否明智：路由器是否比各种物联网小玩意（智能电视、智能交换机/插座、智能家电等）等客户端设备构成更大的威胁？控制 NAT/防火墙功能对于打开端口和解决 VLAN 分段非常方便，但这对于许多场景来说并不是必需的；受感染的客户端设备通常可以窥探网络的其余部分，并泄露其发现的内容，即使使用未受感染的路由器也是如此。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If we set aside geopolitics and purely consider whether tightening the security of private networks is sensible whatsoever: are routers a substantially bigger threat than client devices such as the various IoT knickknacks (smart TVs, smart switches/outlets, smart appliances, etc.)? Controlling the NAT/firewall features is handy for opening ports and working around VLAN segmentation, but that isn't required for many scenarios; a compromised client device can often snoop on the rest of the network and exfiltrate what it discovers just fine even with an uncompromised router.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hedora</span>
+        <span class="meta-time">2026/03/25 11:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与大多数物联网设备不同，大多数路由器没有嵌入式摄像头或广告遥测，也没有提供广告服务。<p>如果他们这样做了，他们将是不可触碰的（因为联邦政府可以从经纪人那里购买数据）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unlike most IoT stuff, most routers don't have embedded cameras or ad telemetry, or serve ads.<p>If they did, they'd be untouchable (since the federal government could buy the data from brokers).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nizbit</span>
+        <span class="meta-time">2026/03/25 02:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自 2004 年以来，思科一直将这一点隐藏在众目睽睽之下：
+<a href="https://www.educause.edu/ir/library/pdf/CSD4291.pdf" target="_blank" rel="noopener noreferrer">https://www.educause.edu/ir/library/pdf/CSD4291.pdf</a><p>喜欢看到像新的一样突然出现。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cisco been hiding this in plain sight since 2004:
+<a href="https://www.educause.edu/ir/library/pdf/CSD4291.pdf" target="_blank" rel="noopener noreferrer">https://www.educause.edu/ir/library/pdf/CSD4291.pdf</a><p>Love seeing pop up like it’s new or something.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507221" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ranger_danger</span>
+        <span class="meta-time">2026/03/25 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是 CALEA，它已经被强制执行了几十年。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is just CALEA which has been mandated for decades now.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510607" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nrki</span>
+        <span class="meta-time">2026/03/25 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊？与所有互联网路由器一样，LI 是标准配置。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Huh? LI is standard on like every internet router there is.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507580" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nizbit</span>
+        <span class="meta-time">2026/03/25 05:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">后门没有？当然“合法”；）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Backdoor no? “Lawful” sure ;)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509639" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jdlyga</span>
+        <span class="meta-time">2026/03/25 02:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这只是地缘政治。你应该看看美国和欧洲在冷战期间的所作所为。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is just geopolitics. You should've seen what the US and Europe did during the Cold War.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506707" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">drivingmenuts</span>
+        <span class="meta-time">2026/03/25 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我更偏执一些，我会开始认为这项禁令是为了让我们更容易监视我们，因为我们将我们的选择限制在少数国内供应商身上，而这些供应商可能会受到监管捕获和“为了孩子”的政治言论的胁迫。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If I was more paranoid, I'd start thinking the ban is to make it easier to spy on us by limiting our choices to a few domestic vendors who can be coerced by regulatory capture and "for the kids" political rhetoric.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">john_strinlai</span>
+        <span class="meta-time">2026/03/25 02:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是有道理的，但我怀疑这更有可能是贿赂计划。 （“为什么不两者都做！”有人喊道）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">that makes sense, but i suspect it is more likely to be a bribery scheme. ("why not both!" someone yells)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507133" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">drivingmenuts</span>
+        <span class="meta-time">2026/03/25 03:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">迟早，一些白痴立法者/机会主义者会坚持 1) 连接到路由器的年龄检查和 2) 路由器的内容过滤器，这两者都可以用来获得廉价的政治分数。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sooner or later, some idiot lawmaker/opportunist is going to insist on 1) age checks to connect to a router and 2) content filters for routers, both of which can be used to score cheap political points.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507591" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">orwin</span>
+        <span class="meta-time">2026/03/25 01:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我公司新安装的现在使用的是西门子路由器。不过，似乎有些人会保留思科，所以我们还有另一个提供商。我想对我来说还有更多的工作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My company new installation now use Siemens routers. It seems a few will keep Cisco though, so we have yet another provider. More work for me I guess.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506632" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kevincloudsec</span>
+        <span class="meta-time">2026/03/25 03:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该禁令涵盖所有外国制造的消费类路由器，但实际上所有路由器都是在国外制造的，甚至包括美国公司销售的路由器。国内唯一的例外是 Starlink、iirc</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the ban covers all foreign-made consumer routers but practically every router is manufactured abroad, even the ones sold by American companies. the only domestic exception is Starlink, iirc</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507777" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">soumyaskartha</span>
+        <span class="meta-time">2026/03/25 02:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大胆禁止别人做你被发现做的事情。至少要微妙一点</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The audacity of banning others for doing exactly what you got caught doing. At least be subtle about</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507395" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ahartmetz</span>
+        <span class="meta-time">2026/03/25 02:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你将其视为权力斗争而不是道德问题，那就没有矛盾。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is no contradiction if you see it as a power struggle rather than an ethical matter.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507459" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">juliusceasar</span>
+        <span class="meta-time">2026/03/25 03:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">以色列在荷兰也采取了同样的做法，最大的电信公司 KPN 也这样做了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Israel did the same in Netherlands with the biggest telecom KPN.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507585" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mikkupikku</span>
+        <span class="meta-time">2026/03/25 02:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 曾经利用攻击媒介的国家现在正试图在该媒介上保护自己<p>我毫不怀疑美国在这方面的安全努力是不够的、无能的等等。但是虚伪吗？  不。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; country which once exploited an attack vector is now trying to protect itself on that vector<p>I have no doubt that American efforts at security on this front are inadaquate, incompetent, etc.  But hypocritical?  Nah.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506740" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ChrisArchitect</span>
+        <span class="meta-time">2026/03/25 03:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[欺骗]讨论： <a href="https://news.ycombinator.com/item?id=47495344" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47495344</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dupe] Discussion: <a href="https://news.ycombinator.com/item?id=47495344" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47495344</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 01:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，这不是虚伪的例子吗？如果我打你的鼻子，如果我阻止你反击我，我就不是伪君子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Um, this is not an example of hypocrisy? If I punch you in the nose, I am not a hypocrite if I block your attempt to punch me back.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506517" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">GorbachevyChase</span>
+        <span class="meta-time">2026/03/25 02:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有基于规则的秩序，当涉及到美国或任何其他国家安全机构时，没有好人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is no rule based order, and when it comes to state security establishments, the US or any other, there are no good guys.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507183" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也同意这一点，但这并不能让“虚伪”这条线变得更有意义。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree with that too, but that doesn't make the "hypocrisy" line make any more sense.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507374" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fooqux</span>
+        <span class="meta-time">2026/03/25 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很确定他们不在乎虚伪。他们有能力做到这一点并逃脱惩罚，所以他们就这么做了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm pretty sure they don't care about hypocrisy. They have the power to do this and get away with it, so they do.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506602" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，我同意，但是文章说：<p><i>这一切都存在虚伪的成分，因为美国情报机构此前曾被发现在思科制造的路由器运送给客户的途中拦截它们</i></p><p>不，没有！这并不虚伪！言语意味着事情！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, I agree, but the article says:<p><i>There is an element of hypocrisy in all this because American intelligence agencies were previously caught intercepting Cisco-made routers on their way to customers</i></p><p>No there isn't! That's not hypocritical! Words mean things!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506610" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">orwin</span>
+        <span class="meta-time">2026/03/25 02:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意这不是虚伪，但如果我正确理解它们的含义，我可以看到虚伪的要素。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree it's not hypocrisy, but I can see the element of hypocrisy, if I understand their meaning correctly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506656" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那你能帮我理解一下吗？我认为这是某种“逆转是公平竞争”的事情？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you help me understand it then? I assume it's some kind of "turnabout is fair play" thing?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506694" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">danparsonson</span>
+        <span class="meta-time">2026/03/25 06:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一方面，如果你打了某人的鼻子，然后大声宣布你的树屋是唯一安全的地方，并且禁止其他人进入，因为最近有人打别人的鼻子，那么这确实有点虚伪，不是吗？美国并没有禁止自己的路由器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On the other hand, if you punch someone in the nose and then loudly declare that your treehouse is the only safe place and everyone else is forbidden from entering because people have been punching people in the nose lately, then that does have a ring of hypocrisy about it doesn't it? The US is not banning its own routers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510527" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CoastalCoder</span>
+        <span class="meta-time">2026/03/25 01:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好点。<p>如果人们称这是虚伪，那么我怀疑还有更大的道德争论尚未阐明。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good point.<p>If people are calling this hypocrisy, then I suspect there's a larger moral argument that hasn't been articulated.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506575" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 01:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506623" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">convolvatron</span>
+        <span class="meta-time">2026/03/25 01:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然，那些抱怨被打的声音最大的人本身就是真正的拳手。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">apparently the kind of people that whine the most loudly about being punched turn out to be real avid punchers themselves.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506559" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 01:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">善于出拳的人往往也善于躲避拳击。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">People who are good at punching tend also to be good at avoiding punches.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506579" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/03/25 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你的鼻子被打了一拳，没有人会感到难过。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No-one will be sad if you do get punched in the nose.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506606" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adventured</span>
+        <span class="meta-time">2026/03/25 02:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自 1860 年代内战以来，美国并不真正需要这种同情。<p>只有当你没有有效的应对方式时，其他国家在你的鼻子被打中时感到悲伤才有用。</p><p>冷战期间，世界上一半的人不喜欢美国。人们表现得好像正在发生的任何事情都是新的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The US hasn't really needed that kind of sympathy since the 1860s Civil War.<p>Other nations being sad when you get punched in the nose is only useful if you have no effective way to respond.</p><p>Half the world disliked the US during the Cold War. People act like any of what is going on is new.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">keybored</span>
+        <span class="meta-time">2026/03/25 02:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">美国的国内宣传建立在虚伪的基础上（我们需要阻止X做Y……我们或我们的盟友已经在做的事情）。关于这个问题，这里可能没有明确说明（与《登记册》相反），但这就是背景。<p>称其为虚伪至少是一种很好的宣传，试图将美国人从昏迷中唤醒。</p><p>诚然，对于特朗普来说，不再有虚伪的宣传了。他只是说他“想要石油”之类的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">US domestic propaganda is built on hypocrisy (we need to stop X from doing Y... which we or our allies are doing already). It might not be explicitly stated right here, on this matter (contrary to The Register), but that’s the backdrop.<p>Calling it hypocrisy is at the very least good propaganda to try to wake Americans up from their stupor.</p><p>Admittedly though with Trump there’s no hypocritical propaganda any more. He just says he “wants the oil” or whatever.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我并不是说美国不是 <i>一般来说</i> 虚伪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is not my argument that the US isn't <i>generally</i> hypocritical.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507367" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nclin_</span>
+        <span class="meta-time">2026/03/25 02:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">权力陶醉于虚伪：规则保护内群体，但不约束内群体；约束外群体，但不保护外群体。<p>这不仅是逻辑上的，而且是情感上的：统治带来真正的快乐，而失去控制则带来真正的恐惧。坚强、掌控、被保护但不受束缚的感觉很好。统治就是霸权，霸权就是安全。</p><p>如果这些亿万富翁的权力受到任何方式的威胁，他们会真诚地感到自己受到了压迫。 [1]</p><p>---</p><p>[1] <a href="https://www.youtube.com/watch?v=5RpPTRcz1no" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=5RpPTRcz1no</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Power revels in hypocrisy: Rules protect the in-group but do not bind them, and bind the out-group but do not protect them.<p>It's not just logical, it's affective: There is a real pleasure in domination, and a real fear in any loss of control. It feels good to be strong, to be in control, to be protected but not bound. Domination is hegemony, hegemony is safety.</p><p>These billionaires genuinely feel themselves to be oppressed if their power is threatened in any way. [1]</p><p>---</p><p>[1] <a href="https://www.youtube.com/watch?v=5RpPTRcz1no" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=5RpPTRcz1no</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ranger_danger</span>
+        <span class="meta-time">2026/03/25 07:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://en.wikipedia.org/wiki/Frank_Wilhoit_(composer)#Wilhoit's_law" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Frank_Wilhoit_(composer)#Wilho...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://en.wikipedia.org/wiki/Frank_Wilhoit_(composer)#Wilhoit's_law" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Frank_Wilhoit_(composer)#Wilho...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 02:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">生命是一个谜。每个人都必须独立！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Life is a mystery. Everyone must stand alone!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506791" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tialaramex</span>
+        <span class="meta-time">2026/03/25 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们想要但不值得的 CryptoPals 版本？<p>我听“Ice Ice Matrix”的次数比我愿意承认的要多，每次我听到“你停下来了吗？” “不，我只是开车路过”我记得几年前解决过这些玩具示例。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The version of CryptoPals we wished for but didn't deserve?<p>I listen to "Ice Ice Matrix" more often than I'd like to admit and every time I hear "Did you stop?" "No, I just drove by" I remember years ago solving these toy examples.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507741" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tosapple</span>
+        <span class="meta-time">2026/03/25 01:59</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506642" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/03/25 01:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一家美国公司购买了印度操作系统，将其变成其 SOHO 路由器/防火墙产品。  结果正是您所期望的：<p><a href="https://www.youtube.com/watch?v=z4COrX9YHcU" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=z4COrX9YHcU</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A USA company bought an Indian OS to turn into it's SOHO router/firewall product.  The results are exactly what you would have expected:<p><a href="https://www.youtube.com/watch?v=z4COrX9YHcU" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=z4COrX9YHcU</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506419" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">palmotea</span>
+        <span class="meta-time">2026/03/25 01:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 一家美国公司购买了印度操作系统，将其变成其 SOHO 路由器/防火墙产品。结果正是您所期望的：<p>&gt; <a href="https://www.youtube.com/watch?v=z4COrX9YHcU" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=z4COrX9YHcU</a></p><p>您链接到一段时长 36 分钟的视频，标题为“Black Hat USA 2025 | 中国渗透外围网络防御的 5 年多运动”。描述中没有任何关于“美国公司购买了印度操作系统以使其成为 SOHO 路由器/防火墙产品”的内容。</p><p>要么你链接错了，要么你需要更好的来源。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; A USA company bought an Indian OS to turn into it's SOHO router/firewall product. The results are exactly what you would have expected:<p>&gt; <a href="https://www.youtube.com/watch?v=z4COrX9YHcU" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=z4COrX9YHcU</a></p><p>You're linking to a 36 minute video titled "Black Hat USA 2025 | China's 5+ Year Campaign to Penetrate Perimeter Network Defenses." There's nothing in the description about "USA company bought an Indian OS to turn into it's SOHO router/firewall product."</p><p>Either you linked the wrong thing or you need a better source.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506542" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/03/25 02:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 要么你链接错了<p>我没有。  演讲者在视频中两次明确表示，他们是从一家印度公司购买操作系统的。  无论如何，这是引用的直接链接：</p><p><a href="https://youtu.be/z4COrX9YHcU?si=hzsYtprPeYkEC9DF&amp;t=303" target="_blank" rel="noopener noreferrer">https://youtu.be/z4COrX9YHcU?si=hzsYtprPeYkEC9DF&amp;t=303</a></p><p>也许你的假设应该是你的努力不足，而不是别人的努力不足。</p><p>您也可以打开转录面板并直接搜索“印度”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Either you linked the wrong thing<p>I did not.  The speaker clearly says in the video,  twice,  that they bought their OS from an Indian company.  Anyways,  here's the direct link to the quote:</p><p><a href="https://youtu.be/z4COrX9YHcU?si=hzsYtprPeYkEC9DF&amp;t=303" target="_blank" rel="noopener noreferrer">https://youtu.be/z4COrX9YHcU?si=hzsYtprPeYkEC9DF&amp;t=303</a></p><p>Perhaps your assumption should be that your efforts were inadequate rather than others.</p><p>You also could have opened the transcription panel and literally just searched for "india."</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506714" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MisterTea</span>
+        <span class="meta-time">2026/03/25 02:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在思科路由器中安装后门以监视世界的国家禁止外国路由器<p>来自五眼国家英国的科技抹布说......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Country that put backdoors into Cisco routers to spy on world bans foreign routers<p>Says the tech rag hailing from the 5-eyes nation known as the UK...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506998" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

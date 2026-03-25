@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>揭穿 Zswap 和 Zram 神话 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>揭穿 Zswap 和 Zram 神话</h1>
+      <p class="subtitle">Debunking Zswap and Zram Myths</p>
+      <div class="meta-line">
+        <span>chrisdown.name</span>
+        <span>作者 javierhonduco</span>
+        <span>分数 189</span>
+        <span>评论 56</span>
+        <span>2026/03/24 18:39</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47500746" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://chrisdown.name/2026/03/24/zswap-vs-zram-when-to-use-what.html" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>tl;dr：如果有疑问，最好使用 zswap。仅当您有非常具体的原因时才使用 zram。就架构而言：zswap 位于磁盘交换之前，压缩 RAM 中的页面，并自动将冷数据分层到磁盘。它直接与内核的内存管理集成，并优雅地分配压力。zram 是一种具有硬容量限制的压缩 RAM 块设备。当你把交换放在它上面并且它被填满时，不会自动驱逐，并且内核几乎没有能力对这种情况做任何事情。系统要么 OOM，要么回退到优先级较低的交换，导致 LRU 反转（见下文）。它仅对于内存极其有限的嵌入式系统、无盘设置或具有特定安全要求（将私有数据远离持久存储）的情况才真正有意义。 zram 上的交换也越来越不受上游支持。我的建议是：尽可能不要将 zram 与磁盘交换一起运行。在这样的设置中，zram 用冷的、陈旧的页面填充快速 RAM，同时将活动工作集推送到慢速磁盘上，这使得事情比根本没有压缩交换更糟糕。如果必须使用 zram，请将其与用户空间 OOM 管理器（如 systemd-oomd 或 Earlyoom）配对。如果没有一个，内核的 OOM 杀手可能会让系统在行动前挂起几分钟，因为它通常只会在耗尽许多通常一事无成的积极回收周期后才会触发（更多内容见下文）。在服务器上，zram 还存在其他重大问题。一个主要问题是它的内存使用与系统的其余部分完全隔离，因此不会向任何 cgroup 收费，从而破坏了隔离语义。我最近收到了一位读者关于 Linux 上的压缩交换技术的问题：我阅读了您关于 Linux 上的内存管理（交换）的文章，最后是专家的一些话:)而不是互联网专家的“你有 32GB - 禁用它”。如果有关于 zswap 或 zram 的后续报道就好了……:)如果它们很好的话（在具有 32GB RAM 或更多内存的台式机上），哪一个更好以及为什么……我了解它们的工作原理（从描述中），但很难在现实生活中对其进行测量和比较。再说一次，很多“互联网专家”只是说“zram - 因为你不戴 SSD”……好吧，首先，自从我写这篇文章以来，显然奉承会让你到处走走；-)确实，互联网上存在很多关于何时使用 zswap 与 zram 以及它们之间的权衡的混乱和错误信息。十年来我一直致力于内核内存管理和交换代码，我看到了这些技术的发展以及围绕它们出现的一些常见误解。对于大多数人来说，简短的答案是：使用 zswap。如果没有广泛了解 zram 可能给您的工作负载带来的风险，请勿使用 zram。但是要理解其中的原因（以及理解 zram 何时可能是正确的选择）需要深入了解这两种技术在内核本身中的工作原理。架构差异大多数人认为 zswap 和 zram 只是同一事物的两种不同风格：压缩交换。从表面上看，这是正确的——两者都压缩页面，否则最终会出现在磁盘上——但它们对内核应如何处理内存压力做出了根本不同的押注，并且根据您的情况选择错误的页面可能会使事情变得比根本没有交换更糟糕。它们之间最显着的区别在于它们在内核存储层次结构中的位置，因此，它们能够向内核的其余部分发出信号：zram 充当压缩块设备，本质上是 RAM 中的虚拟磁盘。当进程需要交换时，内核会像对待任何其他块设备一样对待 zram 上的交换，通过块层发送 I/O 请求。重要的是，一旦 zram 填满，它只是另一个达到容量的存储设备。没有自动机制将数据移动到其他地方，这意味着首先换出的冷页会锁定在快速 RAM 中，无法驱逐它们。正如您可以想象的那样，这通常非常糟糕。另一方面，zswap 与内存管理子系统的集成程度更高。它充当位于磁盘交换前面的压缩层。当进程需要交换时，zswap 在页面到达磁盘之前拦截该页面，决定是否压缩它，如果压缩，则将其存储在内存池中。当该池填满时，zswap 使用自己的启发式方法将最近最少使用的页面移出到后备交换设备，旨在将热数据保留在压缩 RAM 缓存中。换句话说，zram 提供硬容量限制，而 zswap 提供快速交换（即压缩 RAM）和慢速交换（即磁盘）之间的自动分层，并随着内存压力的增加而优雅地降级。对于大多数人来说，优雅的降级是您想要的，但让我们看看这些在实践中如何发挥作用。zram 的块设备架构zram 创建了一个压缩块设备，充当独立交换。在 zram 上设置交换的典型过程是：通过使用 modprobe zramSet /sys/block/zram0/comp_algorithm（要使用的压缩算法）和 /sys/block/zram0/disksize（虚拟设备容量）加载模块来创建 zram 设备 mkswap on /dev/zram0swapon on /dev/zram0 您可能会注意到，这看起来与在分区上设置交换时执行的操作非常相似，并且这并非巧合：内核将其视为通过块层的另一个存储设备（请参阅 zram_submit_bio()）。这使得 zram 非常适合嵌入式系统：它完全独立，不依赖于磁盘存储，而这些系统可能一开始就没有磁盘存储。当您使用嵌入式控制器或带有 SD 卡的 Raspberry Pi 时，zram 可以为您提供一定量的内存卸载，而无需任何外部依赖。到目前为止，一切都相当合理。但是，当您确实有可用的磁盘存储（例如 SSD）时，zram 的块设备架构会产生一些重大限制。内核本质上很天真地认为 zram 与慢速磁盘上的典型块设备有任何不同，因此对其应用其正常的面向磁盘的默认设置。举一个例子，有一个名为 vm.page-cluster 的内核可调参数，它决定在单个交换页出现故障时我们要提前读取多少页。它默认为 3 – 意味着内核一次读取 2^3 = 8 个页面 – 以分摊顺序执行时成本较低的磁盘工作。这对于硬盘驱动器来说更为重要，但即使在现代 NAND 上，随机读取和顺序读取之间仍然存在有意义的性能差异。当我们开始在 Quest 上使用 zram 时（因为它在 Android 上运行，使用了 zram），这种预读行为是我们遇到的首要问题之一。对于磁盘，预读假设成立：磁盘上彼此靠近的页面往往需要在时间上彼此靠近，因此最好进行摊销。对于 zram，压缩页面没有局部性，因此假设颠倒了：现在，您每次需要 1 个页面时都不需要 7 个页面，从而污染了交换缓存，这对您来说相当不利。重要的是，这既不是 Quest 特有的东西，也不是 vm.page-cluster 特有的东西 – 这更多是内核像对待任何其他块设备一样对待 zram 的结果。 vm.page-cluster 至少是可调的，但是内核中还有其他假设，这些假设甚至没有作为 sysctls 公开。在许多情况下，内核会与你作对，并且需要付出大量的努力和知识才能做到这一点。 zswap 的内存管理集成相比之下，zswap 根本不创建块设备 – 它直接集成到内核的内存管理子系统中。这种区别比听起来更重要：因为 zswap 被编织到回收路径本身中，所以内核实际上知道 zswap 池中的哪些页面是热的，哪些是冷的。 zram 只是另一个块设备，没有这样的可见性。这种感知是自动分层的基础，也是 zswap 在内存压力下性能明显优于 zram 的主要原因。那么 zswap 的分层实际上是如何工作的呢？当内核需要换出一个页面时，它会调用swap_writeout()，它给zswap第一个权限来拦截它：int swap_writeout(struct folio *folio, struct swap_iocb **swap_plug) { /* ... */</li><li>if (zswap_store(folio)) { /* zswap 在页面上调用了 bagy */ count_mthp_stat(folio_order(folio), MTHP_STAT_ZSWPOUT);转到out_unlock； } if (!mem_cgroup_zswap_writeback_enabled(folio_memcg(folio))) { folio_mark_dirty(folio);返回AOP_WRITEPAGE_ACTIVATE； }</li><li>__swap_writepage（对开，swap_plug）；返回0； out_unlock：folio_unlock（对开）；返回ret； }如果 zswap_store() 返回 true，则页面已存储在压缩 RAM 中并且永远不会接触磁盘。仅当 zswap 拒绝（或未启用）时，内核才会回退到写入后备交换设备。这是 zswap_store() 内部执行的操作：bool zswap_store(struct folio *folio) { /* ... */</li><li>/* 检查是否达到池大小限制 */ if (zswap_check_limits()) goto put_objcg;</li><li>/* 获取当前压缩池 */ pool = zswap_pool_current_get(); if (!pool) 转到 put_objcg；</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>tl;dr:If in doubt, prefer to use zswap. Only use zram if you have a highly specific reason to.In terms of architecture:zswap sits in front of your disk swap, compresses pages in RAM, and automatically tiers cold data to disk. It integrates directly with the kernel&#39;s memory management and distributes pressure gracefully.zram is a compressed RAM block device with a hard capacity limit. When you put swap on it and it fills up, there is no automatic eviction, and the kernel has very little leverage to do anything about the situation. The system either OOMs or falls back to lower-priority swap, causing LRU inversion (see below). It only really makes sense for extremely memory-constrained embedded systems, diskless setups, or cases with specific security requirements around keeping private data off persistent storage. Swap on zram is also increasingly unsupported upstream.My advice is:Do not run zram alongside disk swap wherever possible. In such setups, zram fills fast RAM with cold, stale pages while pushing your active working set onto slow disk, making things actively worse than if you had no compressed swap at all.If you must use zram, pair it with a userspace OOM manager like systemd-oomd or earlyoom. Without one, the kernel&#39;s OOM killer can leave the system hung for minutes before acting, as it often only fires after exhausting many cycles of aggressive reclaim that often accomplish nothing (more on this below).On servers, zram has additional significant problems. One major one is that its memory usage is totally segregated from the rest of the system, and as such is not charged to any cgroup, breaking isolation semantics.I recently received a question from a reader about compressed swap technologies on Linux:I read your articles about memory management (swap) on Linux, finally some words from the expert :) instead of internet experts &quot;you have 32GB - disable it&quot;.It&#39;d be nice to have a follow-up about zswap or zram … :) if they&#39;re good (on desktop with 32GB RAM or more), which one is better and why … I understand how they work (from descriptions), but it&#39;s difficult to measure it and compare in real life. Again, a lot of &quot;internet experts&quot; just say &quot;zram - because you don&#39;t wear your SSD&quot; …Well, first of all, since I&#39;m writing this article, clearly flattery will get you everywhere ;-)It is true that there is a lot of confusion and misinformation on the internet about when to use zswap versus zram, and the tradeoffs between them. I&#39;ve worked on kernel memory management and swap code for the better part of a decade now, and I&#39;ve seen these technologies evolve and some of the common misconceptions that arise around them.The short answer for most people is: use zswap. Do not use zram without an extensive understanding of the risks it may pose to your workloads. But understanding why (and understanding when zram may actually be the right call) requires going into how each of these two technologies work in the kernel itself.Architectural differencesMost people think of zswap and zram simply as two different flavours of the same thing: compressed swap. At a surface level, that&#39;s correct – both compress pages that would otherwise end up on disk – but they make fundamentally different bets about how the kernel should handle memory pressure, and picking the wrong one for your situation can actively make things worse than having no swap at all.The most significant difference between them lies in where they sit in the kernel&#39;s storage hierarchy, and thus, what they are capable of signalling to the rest of the kernel:zram acts as a compressed block device, essentially a virtual disk in RAM. When a process needs to swap, the kernel treats swap on zram like it does on any other block device, sending I/O requests through the block layer. Importantly, once zram fills up, it&#39;s just another storage device that&#39;s reached capacity. There&#39;s no automatic mechanism to move data elsewhere, which means cold pages that were swapped out first stay locked in fast RAM with no way to evict them. As you can imagine, that&#39;s typically very bad.zswap, on the other hand, is more integrated with the memory management subsystem. It acts as a compression layer that sits in front of your disk swap. When a process needs to swap, zswap intercepts the page before it reaches disk, decides whether to compress it, and if it does, it stores it in a memory pool. When that pool fills up, zswap uses its own heuristics to evict the least recently used pages to your backing swap device, aiming to keep your hot data present in the compressed RAM cache.To put it another way, zram provides a hard capacity limit, whereas zswap provides automatic tiering between faster (that is, compressed RAM) and slower swap (that is, your disk) and gracefully degrades as memory pressure increases. For most people, graceful degradation is what you want, but let&#39;s look at how these play out in practice.zram&#39;s block device architecturezram creates a compressed block device that acts as standalone swap. The typical procedure for setting up swap on zram is to:Create a zram device by loading the module with modprobe zramSet /sys/block/zram0/comp_algorithm (the compression algorithm to use) and /sys/block/zram0/disksize (the virtual device capacity)mkswap on /dev/zram0swapon on /dev/zram0You may notice that this looks pretty much exactly like what you would do if you were setting up swap on a partition, and that&#39;s not a coincidence: the kernel sees it as just another storage device through the block layer (see zram_submit_bio()).This makes zram a natural fit for embedded systems: it&#39;s completely self-contained, with no dependency on disk storage, which these systems likely don&#39;t have in the first place. When you&#39;re on an embedded controller or a Raspberry Pi with an SD card, zram gives you some amount of memory offload without any external dependencies. All pretty reasonable so far.However, when you do have disk storage available (like an SSD), zram&#39;s block device architecture creates some significant constraints. The kernel is essentially naive to zram being any different from a typical block device on a slow disk, and so applies its normal disk-oriented defaults to it. As just one example, there is a kernel tunable called vm.page-cluster that decides how many pages we want to read ahead when faulting in a single swap page. It defaults to 3 – meaning the kernel reads 2^3 = 8 pages at once – to amortise disk work that&#39;s cheap when sequential. This is more important on hard drives, but there is still a meaningful performance delta between random and sequential reads even on modern NAND.When we started working on using zram on Quest (since it runs on Android, which makes use of zram), this readahead behaviour was one of the first problems we hit. With disk, the readahead assumption holds: pages near each other on disk tend to be needed near each other in time, so it&#39;s good to amortise. With zram, compressed pages have no locality, so the assumption inverts: you&#39;re now polluting the swap cache with 7 pages you don&#39;t need every time you want 1, working against you quite considerably.Importantly, this is neither something specific to Quest, nor vm.page-cluster – it&#39;s more a consequence of the kernel treating zram like any other block device. vm.page-cluster is at least tunable, but there are other assumptions baked into the kernel that aren&#39;t even exposed as sysctls. In many cases the kernel will fight against you, and it takes a lot of effort and knowledge to get this right.zswap&#39;s memory management integrationBy comparison, zswap doesn&#39;t create a block device at all – it integrates directly into the kernel&#39;s memory management subsystem. That distinction is more significant than it might sound: because zswap is woven into the reclaim path itself, the kernel actually knows which pages in the zswap pool are hot and which are cold. zram, being just another block device, has no such visibility.That awareness is the basis for automatic tiering, and it&#39;s the main reason that zswap degrades significantly better than zram when there is memory pressure.So how does zswap&#39;s tiering actually work? When the kernel needs to swap out a page, it calls swap_writeout(), which gives zswap first dibs to intercept it:int swap_writeout(struct folio *folio, struct swap_iocb **swap_plug) { /* ... */</li><li>if (zswap_store(folio)) { /* zswap has called bagsy on the page */ count_mthp_stat(folio_order(folio), MTHP_STAT_ZSWPOUT); goto out_unlock; } if (!mem_cgroup_zswap_writeback_enabled(folio_memcg(folio))) { folio_mark_dirty(folio); return AOP_WRITEPAGE_ACTIVATE; }</li><li>__swap_writepage(folio, swap_plug); return 0; out_unlock: folio_unlock(folio); return ret; }If zswap_store() returns true, the page has been stored in compressed RAM and never touches the disk. Only if zswap declines (or it isn&#39;t enabled) does the kernel fall back to writing to the backing swap device.Here&#39;s what zswap_store() does internally:bool zswap_store(struct folio *folio) { /* ... */</li><li>/* Check if we&#39;ve hit pool size limits */ if (zswap_check_limits()) goto put_objcg;</li><li>/* Get the current compression pool */ pool = zswap_pool_current_get(); if (!pool) goto put_objcg;</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">patrakov</span>
+        <span class="meta-time">2026/03/24 20:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">此处的用户，也充当存储的 2 级支持。<p>这篇文章包含一些扎实的逻辑以及我不同意的假设。</p><p>逻辑扎实：你应该更喜欢 zswap <i>如果您有可用于交换的设备</i>。</p><p>可靠的逻辑：zram + 其他交换 = 由于 LRU 反转而导致坏（zram 成为内存中的负担）。</p><p>与我的观察相符的建议：zram 与用户空间 OOM 杀手配合使用时效果最佳。</p><p>大胆假设：每个拥有 SSD 的人都有一个可用于交换的设备。</p><p>这个假设完全是错误的，并不是因为“SSD 磨损”的说法。许多消费类 SSD，尤其是无 DRAM 的 SSD（例如 Apacer AS350 1TB，但也见于 Crucial SSD），在同步写入时，由于它们需要管理单元的方式，会定期产生 10 秒或更长的延迟峰值。这比任何 HDD 都要糟糕得多。如果您只有 DRAMless 消费类 SSD，最好使用 zram。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">User here, who also acts as a Level 2 support for storage.<p>The article contains some solid logic plus an assumption that I disagree with.</p><p>Solid logic: you should prefer zswap <i>if you have a device that can be used for swap</i>.</p><p>Solid logic: zram + other swap = bad due to LRU inversion (zram becomes a dead weight in memory).</p><p>Advice that matches my observations: zram works best when paired with a user-space OOM killer.</p><p>Bold assumption: everybody who has an SSD has a device that can be used for swap.</p><p>The assumption is simply false, and not due to the "SSD wear" argument. Many consumer SSDs, especially DRAMless ones (e.g., Apacer AS350 1TB, but also seen on Crucial SSDs), under synchronous writes, will regularly produce latency spikes of 10 seconds or more, due to the way they need to manage their cells. This is much worse than any HDD. If a DRAMless consumer SSD is all that you have, better use zram.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501678" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cdown</span>
+        <span class="meta-time">2026/03/24 20:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的阅读和批评！您所描述的绝对是一个真正的问题，但我会稍微提出质疑，并建议结果通常与您的预期相反。<p>这里违反直觉的事情之一是，使用磁盘交换实际上可以减少磁盘 I/O。事实上，这对我们的某些存储层非常重要，以至于对我们的运营方式至关重要。现在，这听起来像是明显的废话，但听我说:-)</p><p>使用仅限 zram 的设置，一旦 zram 已满，匿名页面就无处可去。内核无法将它们驱逐到磁盘，因为没有磁盘交换，因此当它需要释放内存时，它别无选择，只能回收文件缓存。如果您不允许内核在匿名内存和文件支持内存中选择哪个页面更冷，而是强制它仅回收文件缓存，那么您最终将不可避免地回收实际上需要驻留以避免磁盘活动的文件缓存，并且这些读取和写入会触及您试图保护的同一个慢速 DRAMless SSD。</p><p>我在文章中提到，在某些情况下，启用 zswap 与完全不使用 swap 相比，可减少高达 25% 的磁盘写入量。当然，确切的数字会因工作负载而异，但该方向适用于大多数随着时间的推移积累冷匿名页面的工作负载，并且我们已经看到它适用于 BMC、服务器、桌面、VR 耳机等受限环境。</p><p>因此，与直觉相反，对于您的情况，zswap 很可能会减少磁盘 I/O，而不是通过适当大小的交换设备来增加磁盘 I/O。如果情况并非如此，那么这正是真实世界的数据，可以帮助我们改进毫米方面的东西，我们很乐意听到它:-)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you for reading and your critique! What you're describing is definitely a real problem, but I'd challenge slightly and suggest the outcome is usually the inverse of what you might expect.<p>One of the counterintuitive things here is that _having_ disk swap can actually _decrease_ disk I/O. In fact this is so important to us on some storage tiers that it is essential to how we operate. Now, that sounds like patent nonsense, but hear me out :-)</p><p>With a zram-only setup, once zram is full, there is nowhere for anonymous pages to go. The kernel can't evict them to disk because there is no disk swap, so when it needs to free memory it has no choice but to reclaim file cache instead. If you don't allow the kernel to choose which page is colder across both anonymous and file-backed memory, and instead force it to only reclaim file caches, it is inevitable that you will eventually reclaim file caches that you actually needed to be resident to avoid disk activity, and those reads and writes hit the same slow DRAMless SSD you were trying to protect.</p><p>In the article I mentioned that in some cases enabling zswap reduced disk writes by up to 25% compared to having no swap at all. Of course, the exact numbers will vary across workloads, but the direction holds across most workloads that accumulate cold anonymous pages over time, and we've seen it hold on constrained environments like BMCs, servers, desktop, VR headsets, etc.</p><p>So, counter-intuitively, for your case, it may well be the case that zswap reduces disk I/O rather than increasing it with an appropriately sized swap device. If that's not the case that's exactly the kind of real-world data that helps us improve things on the mm side, and we'd love to hear about it :-)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501782" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">patrakov</span>
+        <span class="meta-time">2026/03/24 21:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">1. 感谢您部分（在第 4 段但不是第 5 段）抢占了明显的反对意见。区分磁盘读取和写入对于消费类 SSD 非常重要，您在第 4 段中引用了完全正确的指标：减少写入，几乎与总 I/O 无关。没有写入的读取是可以容忍的。写入严重拖延一切。<p>2. 第 4 段中的比较是 no-swap 和 zswap 之间的比较，结果是合理的。但这里的相关比较是无交换、zram 和 zswap 之间的三向比较。</p><p>3. 当使用 zram 作为唯一的交换时，“正确”调整 Earlyoom 非常重要。将“-m”参数设置得太低会导致 Earlyoom 错过明显的重载，这些重载会通过页面缓存和内存映射文件对磁盘造成冲击。另一方面，在 Earlyoom 中，我无法在意外的 OOM 终止和错过掉电之间找到适当的平衡，这仅仅是因为，在 Earlyoomd 中，RAM 和基于 zram 的交换的使用级别是唯一可用于决策的信号。也许 systemd-oomd 会表现得更好。这篇文章确实提到需要将用户空间 OOM 杀手调整到令人不舒服的程度。</p><p>我已经在坏的 SSD 上尝试过带有交换文件的 zswap，但是，不可否认的是，没有与 Earlyoomd 一起使用。对于无法支持 10 MB/s 同步写入的 SSD，它会出现掉电情况，而 zram + Earlyoomd 可以调整为不出现掉电情况（以在主观上表现良好的系统上 OOM 终止为代价）。当它准备好时，我会尝试无后备存储的 zswap。</p><p>我同意，在像 Micron 7450 PRO 这样的企业级 SSD 上，zswap 是最佳选择 - 而且我怀疑 Meta 使用消费级 SSD。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">1. Thanks for partially (in paragraph 4 but not paragraph 5) preempting the obvious objection. Distinguishing between disk reads and writes is very important for consumer SSDs, and you quoted exactly the right metric in paragraph 4: reduction of writes, almost regardless of the total I/O. Reads without writes are tolerable. Writes stall everything badly.<p>2. The comparison in paragraph 4 is between no-swap and zswap, and the results are plausible. But the relevant comparison here is a three-way one, between no-swap, zram, and zswap.</p><p>3. It's important to tune earlyoom "properly" when using zram as the only swap. Setting the "-m" argument too low causes earlyoom to miss obvious overloads that thrash the disk through page cache and memory-mapped files. On the other hand, with earlyoom, I could not find the right balance between unexpected OOM kills and missing the brownouts, simply because, with earlyoomd, the usage levels of RAM and zram-based swap are the only signals available for a decision. Perhaps systemd-oomd will fare better. The article does mention the need for tuning the userspace OOM killer to an uncomfortable degree.</p><p>I have already tried zswap with a swap file on a bad SSD, but, admittedly, not together with earlyoomd. With an SSD that cannot support even 10 MB/s of synchronous writes, it browns out, while zram + earlyoomd can be tuned not to brown out (at the expense of OOM kills on a subjectively perfectly well performing system). I will try backing-store-less zswap when it's ready.</p><p>And I agree that, on an enterprise SSD like Micron 7450 PRO, zswap is the way to go - and I doubt that Meta uses consumer SSDs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502410" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nextaccountic</span>
+        <span class="meta-time">2026/03/24 23:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">磁盘读取挂起 UI 的情况非常罕见（您需要在 UI 线程中运行阻塞操作）<p>但是，高延迟的交换偶尔会挂起接口，并且会挂起任何手动释放内存的方法</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's very rare for disk reads to hang your UI (you would need to be running blocking operations ij the UI thread)<p>But a swap witu high latency will occasionally hang the interface, and with it hang any means to free memory manually</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Numerlor</span>
+        <span class="meta-time">2026/03/25 08:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这个假设完全是错误的，并不是因为“SSD 磨损”的说法。许多消费类 SSD，尤其是无 DRAM 的 SSD（例如 Apacer AS350 1TB，但也见于 Crucial SSD），在同步写入时，由于它们需要管理单元的方式，会定期产生 10 秒或更长的延迟峰值。这比任何 HDD 都要糟糕得多。如果您只有 DRAMless 消费类 SSD，最好使用 zram。<p>请注意，DRAMless 在 NVMe 上并不是什么问题。 NVMe 可以使用主机内存缓冲区将系统 RAM 用于其逻辑，这仍然比依赖 NAND 快几个数量级。</p><p>DRAMless 在 SATA 上的各个方面都更糟糕，如果可以的话你真的不想使用它；在 NVMe 上，区别更多在于拥有不良的低质量驱动器或良好的高质量驱动器。拥有 DRAM 是驱动器性能良好的良好指标，因为制造商不太可能将其与慢速 NAND 和控制器配对，但缺乏 DRAM 并不一定意味着驱动器性能不佳。在比较各代驱动器时，与带有 DRAM 的旧驱动器相比，即使在负载情况下，无 DRAM 的驱动器通常也会表现得更好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The assumption is simply false, and not due to the "SSD wear" argument. Many consumer SSDs, especially DRAMless ones (e.g., Apacer AS350 1TB, but also seen on Crucial SSDs), under synchronous writes, will regularly produce latency spikes of 10 seconds or more, due to the way they need to manage their cells. This is much worse than any HDD. If a DRAMless consumer SSD is all that you have, better use zram.<p>Do mind that DRAMless is much less of an issue on NVMe. NVMe can use Host Memory Buffer to use system RAM for its logic, which is still orders of magnitude faster than relying on the NAND.</p><p>DRAMless is strictly worse in every way on SATA, where you really don't want to use it if you can help it; on NVMe, the difference is more about having a bad lower-quality drive or a good higher-quality drive. Having DRAM is a good indicator of the drive being good as the manufacturer is unlikely to pair it with slow NAND and controller, but lacking it doesn't necessarily mean a drive will perform badly. When comparing drives between generations, DRAMless often ends up performing better, even in loaded scenarios, compared to an older drive with DRAM.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bilegeek</span>
+        <span class="meta-time">2026/03/24 21:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">反驳：您基本上可以禁用 zswap 写回，因此它只会在休眠时使用交换分区[1]。<p>[1]<a href="https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Disable_zswap_writeback_to_use_the_swap_space_only_for_hibernation" target="_blank" rel="noopener noreferrer">https://wiki.archlinux.org/title/Power_management/Suspend_an...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Counterargument: you can mostly disable zswap writeback, so it will only use the swap partition when hibernating[1].<p>[1]<a href="https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Disable_zswap_writeback_to_use_the_swap_space_only_for_hibernation" target="_blank" rel="noopener noreferrer">https://wiki.archlinux.org/title/Power_management/Suspend_an...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502683" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pamcake</span>
+        <span class="meta-time">2026/03/25 07:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这个假设完全是错误的，并不是因为“SSD 磨损”的说法。许多消费类 SSD，尤其是无 DRAM 的 SSD（例如 Apacer AS350 1TB，但也见于 Crucial SSD），在同步写入时，由于它们需要管理单元的方式，会定期产生 10 秒或更长的延迟峰值。<p>您知道过度配置可以在多大程度上缓解这种情况吗？就像只分区 50% 的驱动器并将其余部分作为“暂存空间”留给控制器？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The assumption is simply false, and not due to the "SSD wear" argument. Many consumer SSDs, especially DRAMless ones (e.g., Apacer AS350 1TB, but also seen on Crucial SSDs), under synchronous writes, will regularly produce latency spikes of 10 seconds or more, due to the way they need to manage their cells.<p>Do you know to what extent this can be mitigated by overprovisioning? Like only partitioning say 50% of the drive and leaving the rest free for controller as "scratch space"?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510954" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">scottlamb</span>
+        <span class="meta-time">2026/03/24 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 许多消费类 SSD，尤其是无 DRAM 的 SSD（例如 Apacer AS350 1TB，但也见于 Crucial SSD），在同步写入时，由于它们需要管理单元的方式，会定期产生 10 秒或更长的延迟峰值。<p>您是否建议进行一项实验来可靠地在此类 SSD 上展示此行为（或者理想情况下可以确信给定的 SSD 不受影响）？是不是就像使用 O_DIRECT 连续写入 10 分钟一样简单，这样您就可以轻松测量单个写入的延迟？你需要一定程度的并发吗？或者混合读/写负载？ ETC？重复写入小区域与写入大区域（或者可能给出无关紧要的重新映射）？这就像带有 `fio` 的单行吗？它是否取决于长期状态，例如 SSD 的容量有多少已被写入且未经过 TRIMed？</p><p>另外，人们可以做什么来提前知道他们是否要购买这样的 SSD？您提到了一款受影响的型号。您也提到了 DRAMless，但是消费者 SSD 规格表通常会说明设备有多少 DRAM（如果有）吗？也许有一些已知的不受影响的消费者模型？如果没有必要的话，跳到企业价格来避免这种情况将是一种耻辱。</p><p>我有一些消费类 SSD，但我从未真正使用过；看看他们是否有这种行为会很有趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Many consumer SSDs, especially DRAMless ones (e.g., Apacer AS350 1TB, but also seen on Crucial SSDs), under synchronous writes, will regularly produce latency spikes of 10 seconds or more, due to the way they need to manage their cells.<p>Is there an experiment you'd recommend to reliably show this behavior on such a SSD (or ideally to become confident a given SSD is unaffected)? Is it as simple as writing flat-out for say, 10 minutes, with O_DIRECT so you can easily measure latency of individual writes? do you need a certain level of concurrency? or a mixed read/write load? etc? repeated writes to a small region vs writes to a large region (or maybe given remapping that doesn't matter)? Is this like a one-liner with `fio`? does it depend on longer-term state such as how much of the SSD's capacity has been written and not TRIMed?</p><p>Also, what could one do in advance to know if they're about to purchase such an SSD? You mentioned one affected model. You mentioned DRAMless too, but do consumer SSD spec sheets generally say how much DRAM (if any) the devices have? maybe some known unaffected consumer models? it'd be a shame to jump to enterprise prices to avoid this if that's not necessary.</p><p>I have a few consumer SSDs around that I've never really pushed; it'd be interesting to see if they have this behavior.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504062" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">patrakov</span>
+        <span class="meta-time">2026/03/25 08:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 您是否建议进行一项实验来在此类 SSD 上可靠地展示此行为？<p></p><pre><code>  fio --name 4k-write --rw=write --bs=4k --size=1G --filename=fio.file --ioengine=libaio --sync=1 --time_based --runtime=60 --write_iops_log=ssd --log_avg_msec=1000 --randrepeat=0 --refill_buffers=1
+</code></pre>
+然后检查 ssd_iops.1.log。<p>宇瞻 AS350 1TB 结果： <a href="https://pastebin.com/F6pr5g29" target="_blank" rel="noopener noreferrer">https://pastebin.com/F6pr5g29</a> - 第一个字段是以毫秒为单位的时间戳，第二个字段是自上一行以来完成的写入 IO。</p><p>编辑：我被告知上面的测试无效，我应该添加 --direct=1。好的，这是新日志，显示相同的内容： <a href="https://pastebin.com/Wyw6r9TC" target="_blank" rel="noopener noreferrer">https://pastebin.com/Wyw6r9TC</a> - 请注意，某些时间戳完全丢失，表明 SSD 在该秒内执行了零 IO。</p><p>您可能想重复该实验几次。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Is there an experiment you'd recommend to reliably show this behavior on such a SSD?<p></p><pre><code>  fio --name 4k-write --rw=write --bs=4k --size=1G --filename=fio.file --ioengine=libaio --sync=1 --time_based --runtime=60 --write_iops_log=ssd --log_avg_msec=1000 --randrepeat=0 --refill_buffers=1
+</code></pre>
+Then examine ssd_iops.1.log.<p>Results from Apacer AS350 1TB: <a href="https://pastebin.com/F6pr5g29" target="_blank" rel="noopener noreferrer">https://pastebin.com/F6pr5g29</a> - the first field is the timestamp in milliseconds, the second one is the write IOs completed since the previous line.</p><p>EDIT: I was told that the test above is invalid and that I should add --direct=1. OK, here is the new log, showing the same: <a href="https://pastebin.com/Wyw6r9TC" target="_blank" rel="noopener noreferrer">https://pastebin.com/Wyw6r9TC</a> - note that some timestamps are completely missing, indicating that the SSD performed zero IOs in that second.</p><p>You may want to repeat the experiment a few times.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511729" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">magicalhippo</span>
+        <span class="meta-time">2026/03/25 00:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 另外，人们可以做什么来提前知道他们是否要购买这样的 SSD？您提到了一款受影响的型号。<p>通常，QLC 在这方面比 TLC 差得多，因为“实际”写入速度非常低。根据我的经验，任何 QLC 在写入量大的情况下都非常容易受到长时间暂停的影响。</p><p>但它确实取决于控制器。作为一个例子，查看这里的持续写入基准图[1]，您可以看到许多模型在耗尽伪 SLC 缓冲区后开始这种振荡模式，表明控制器正在超时以重新安排后台的事物。其他人也这样做，但比较不规律。</p><p>&gt; 您也提到了 DRAMless，但是消费者 SSD 规格表通常会说明设备有多少 DRAM（如果有）吗？</p><p>我以 TechPowerUp 为例，比较了 DRAM 缓存部分下的 Samsung 970 Evo[2] 和 990 Evo[3]。</p><p>[1]： <a href="https://www.tomshardware.com/pc-components/ssds/samsung-990-evo-2tb-ssd-review/2" target="_blank" rel="noopener noreferrer">https://www.tomshardware.com/pc-components/ssds/samsung-990-...</a> （IOMeter 图中的第二张图片）</p><p>[2]： <a href="https://www.techpowerup.com/ssd-specs/samsung-970-evo-1-tb.d65" target="_blank" rel="noopener noreferrer">https://www.techpowerup.com/ssd-specs/samsung-970-evo-1-tb.d...</a></p><p>[3]： <a href="https://www.techpowerup.com/ssd-specs/samsung-990-evo-plus-1-tb.d2207" target="_blank" rel="noopener noreferrer">https://www.techpowerup.com/ssd-specs/samsung-990-evo-plus-1...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Also, what could one do in advance to know if they're about to purchase such an SSD? You mentioned one affected model.<p>Typically QLC is significantly worse at this than TLC, since the "real" write speed is very low. In my experience any QLC is very susceptible to long pauses in write heavy scenarios.</p><p>It does depend on controller though. As an example, check out the sustained write benchmark graph here[1], you can see that a number of models starts this oscillating pattern after exhausting the pseudo-SLC buffer, indicating the controller is taking a time-out to rearrange things in the background. Others do it too but more irregularly.</p><p>&gt; You mentioned DRAMless too, but do consumer SSD spec sheets generally say how much DRAM (if any) the devices have?</p><p>I rely on TechPowerUp, as an example compare the Samsung 970 Evo[2] to 990 Evo[3] under DRAM cache section.</p><p>[1]: <a href="https://www.tomshardware.com/pc-components/ssds/samsung-990-evo-2tb-ssd-review/2" target="_blank" rel="noopener noreferrer">https://www.tomshardware.com/pc-components/ssds/samsung-990-...</a> (second image in IOMeter graph)</p><p>[2]: <a href="https://www.techpowerup.com/ssd-specs/samsung-970-evo-1-tb.d65" target="_blank" rel="noopener noreferrer">https://www.techpowerup.com/ssd-specs/samsung-970-evo-1-tb.d...</a></p><p>[3]: <a href="https://www.techpowerup.com/ssd-specs/samsung-990-evo-plus-1-tb.d2207" target="_blank" rel="noopener noreferrer">https://www.techpowerup.com/ssd-specs/samsung-990-evo-plus-1...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504943" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/24 23:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 许多消费类 SSD ...在同步写入下，会定期产生 10 秒或更长的延迟峰值<p>当然，“定期”是一种严重的夸大。大多数人实际上从未见过这种故障模式。如果它只发生在繁重的写入工作负载下，那么这不应该是纯粹由于交换而发生的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Many consumer SSDs ... under synchronous writes, will regularly produce latency spikes of 10 seconds or more<p>Surely "regularly" is a significant overstatement. Most people have practically never seen this failure mode. And if it only occurs under a heavy write workload, that's not something that's supposed to happen purely as a result of swapping.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504539" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">seba_dos1</span>
+        <span class="meta-time">2026/03/25 02:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在运行浏览器的情况下在线升级滚动发行版足以看到这种情况经常发生。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Online-upgrading a rolling distro with a browser running is enough to see it happen regularly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507241" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hrmtst93837</span>
+        <span class="meta-time">2026/03/25 04:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当排队的交换写入在内存压力下堆积时，您正在赌博消费者 SSD 固件不会转储 FTL 并擅离职守。在正常浏览中，您可能永远不会看到 10 秒的停顿，但添加大量写入的 Chrome 浏览器或虚拟机，“永远不会发生”的说法很快就会变得不稳定。<p>它取决于工作负载。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You're gambling on consumer SSD firmware not dumping the FTL and going AWOL when queued swap writes pile up under memory pressure. You may never see a 10 second stall in normal browsing, but add write-heavy Chrome churn or a VM and that 'never happens' claim gets shaky fast.<p>It is workload dependent.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509098" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AlexeyBelov</span>
+        <span class="meta-time">2026/03/25 14:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">LLM评论历史。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">LLM comment history.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">justsomehnguy</span>
+        <span class="meta-time">2026/03/24 22:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">此时，只需将你的劣质 SSD 扔进垃圾桶^W^W USB 盒并购买一个合适的。 OO 总是会让你付出更多的代价。<p>如果您仍然需要使用劣质 SSD，那么只需大幅增加交换大小，为驱动器提供喘息空间，并隐式对其进行过度配置。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">At this point just throw your shitty SSD in the garbage bin^W^W USB box and buy a proper one. OOMing would always cost you more.<p>And if you still need to use a shitty  SSD then just increase your swap size dramatically, giving a breathing room  for the drive and implicitly doing an overprovisioning for it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502949" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lproven</span>
+        <span class="meta-time">2026/03/24 23:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近也写过这个：<p><a href="https://www.theregister.com/2026/03/13/zram_vs_zswap/" target="_blank" rel="noopener noreferrer">https://www.theregister.com/2026/03/13/zram_vs_zswap/</a></p><p>与 zram 相比，我更喜欢 zswap，正如我在本文末尾所链接的那样，不仅仅是我：</p><p><a href="https://linuxblog.io/zswap-better-than-zram/" target="_blank" rel="noopener noreferrer">https://linuxblog.io/zswap-better-than-zram/</a></p><p>也许我想太多了，但我想知道这篇关于神话的文章是否是对我的文章的回应？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wrote about this recently too:<p><a href="https://www.theregister.com/2026/03/13/zram_vs_zswap/" target="_blank" rel="noopener noreferrer">https://www.theregister.com/2026/03/13/zram_vs_zswap/</a></p><p>I prefer zswap to zram and as I linked at the end of the piece, it's not just me:</p><p><a href="https://linuxblog.io/zswap-better-than-zram/" target="_blank" rel="noopener noreferrer">https://linuxblog.io/zswap-better-than-zram/</a></p><p>Maybe I am overthinking but I am wondering if this piece about myths is in any way a response to my article?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503873" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">CoolGuySteve</span>
+        <span class="meta-time">2026/03/24 22:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果 zswap 可以配置为没有后备缓存，这样它就可以完全取代 zram，那就太好了。有两个略有不同的系统很奇怪。<p>磁盘上的交换已满和内存中的交换已满之间实际上没有任何区别，无论哪种方式都需要杀死 OOM。</p><p>简化配置可能还会使其更容易在大多数发行版中默认启用。在这方面，除 ChromeOS 之外最常见的 Linux 发行版落后于 Mac 和 Windows，这有点倒退。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would be nice if zswap could be configured to have no backing cache so it could completely replace zram. Having two slightly different systems is weird.<p>There's not really any difference between swap on disk being full and swap in ram being full, either way something needs to get OOM killed.</p><p>Simplifying the configuration would probably also make it easier to enable by default in most distros. It's kind of backwards that the most common Linux distros other than ChromeOS are behind Mac and Windows in this regard.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502956" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cdown</span>
+        <span class="meta-time">2026/03/24 22:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这实际上是我们正在积极努力的事情！ Nhat Pham 正在开发一个名为“虚拟交换空间”的补丁系列（<a href="https://lwn.net/Articles/1059201/" target="_blank" rel="noopener noreferrer">https://lwn.net/Articles/1059201/</a>）这将 zswap 与其后备存储完全解耦。目标是通过适当的 MM 集成来巩固单一实施，而不是维护两个具有截然不同故障模式的系统。希望它应该在接下来的几个月内发布。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is actually something we're actively working on! Nhat Pham is working on a patch series called "virtual swap space" (<a href="https://lwn.net/Articles/1059201/" target="_blank" rel="noopener noreferrer">https://lwn.net/Articles/1059201/</a>) which decouples zswap from its backing store entirely. The goal is to consolidate on a single implementation with proper MM integration rather than maintaining two systems with very different failure modes. It should be out in the next few months, hopefully.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503497" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">MrDrMcCoy</span>
+        <span class="meta-time">2026/03/25 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常令人兴奋，谢谢！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very exciting, thanks!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507736" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jcalvinowens</span>
+        <span class="meta-time">2026/03/24 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 如果 zswap 可以配置为没有后备缓存就好了<p>现在从技术上讲，您可以使用 /dev/ram0 作为交换设备来实现这种行为，但这非常尴尬，而且几乎肯定是一个坏主意。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Would be nice if zswap could be configured to have no backing cache<p>You can technically get this behavior today using /dev/ram0 as a swap device, but it's very awkward and almost certainly a bad idea.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504050" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">seba_dos1</span>
+        <span class="meta-time">2026/03/25 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你还没有决定，你可以使用 zram 支持的 ram0 :D</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And you can use a zram-backed ram0 if you're still undecided :D</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507306" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adgjlsfhk1</span>
+        <span class="meta-time">2026/03/24 22:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常同意。我觉得发行版仍然经常犯这个错误（作为证据，Ubuntu、PopOS 和 Fedora 都有彼此相当不同的交换配置）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very much agreed. I feel like distros still regularly get this wrong (as evidence, Ubuntu, PopOS and Fedora all have fairly different swap configs from each other).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503340" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">prussian</span>
+        <span class="meta-time">2026/03/24 22:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有了 zram，我可以只使用 zram-generator[0]，它会为我做所有事情，我什至不需要设置任何东西，除了安装 systemd 生成器（在某些发行版上，它是默认安装的）。
+zswap 有等效的东西吗？
+否则，我对大多数人只使用 zram 并不感到惊讶，即使不是最理想的。<p>[0]： <a href="https://crates.io/crates/zram-generator" target="_blank" rel="noopener noreferrer">https://crates.io/crates/zram-generator</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With zram, I can just use zram-generator[0] and it does everything for me and I don't even need to set anything up, other than installing the systemd generator, which on some distros, it's installed by default.
+Is there anything equivalent for zswap?
+Otherwise, I'm not surprised most people are just using zram, even if sub-optimal.<p>[0]: <a href="https://crates.io/crates/zram-generator" target="_blank" rel="noopener noreferrer">https://crates.io/crates/zram-generator</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503120" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ac29</span>
+        <span class="meta-time">2026/03/25 07:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Zswap 在 Arch 中默认启用。不过，如果没有备份磁盘交换，就不会做任何事情</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Zswap is enabled by default in Arch. Wont do anything without a backing disk swap though</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510849" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bilegeek</span>
+        <span class="meta-time">2026/03/25 00:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">内核参数是主要方法： <a href="https://wiki.archlinux.org/title/Zswap#Using_kernel_boot_parameters" target="_blank" rel="noopener noreferrer">https://wiki.archlinux.org/title/Zswap#Using_kernel_boot_par...</a><p>障碍：我在启动时使用 zstd 时遇到问题。不确定这是否是 Debian 的一个错误或某些特性。由于其他原因最终编译了我自己的内核，并最终能够默认获得 zstd，但否则我必须将其制作/添加到启动脚本中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Kernel arguments are the primary method: <a href="https://wiki.archlinux.org/title/Zswap#Using_kernel_boot_parameters" target="_blank" rel="noopener noreferrer">https://wiki.archlinux.org/title/Zswap#Using_kernel_boot_par...</a><p>Snag: I had issues getting it to use zstd at boot. Not sure if it's a bug or some peculiarity with Debian. Ended up compiling my own kernel for other reasons, and was finally able to get zstd by default, but otherwise I'd have to make/add it to a startup script.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">seba_dos1</span>
+        <span class="meta-time">2026/03/25 02:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个方便的工具，但默认情况下它甚至不会为您提供合理的 zram 大小，并且不会触及页面集群等其他内容，因此仅当您不介意它与最佳效果相去甚远时，“我什至不需要设置任何内容”才适用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a handy tool, but it doesn't even give you a reasonable zram size by default and doesn't touch other things like page-cluster, so "I don't even need to set anything up" applies only if you don't mind it being quite far from optimal.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507349" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alfanick</span>
+        <span class="meta-time">2026/03/24 22:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这应该是一个 bash 脚本......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This should've been a bash script...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503478" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">melvyn2</span>
+        <span class="meta-time">2026/03/24 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>  echo 1 &gt; /sys/module/zswap/parameters/enabled
+
+</code></pre>
+它在 TFA 中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>  echo 1 &gt; /sys/module/zswap/parameters/enabled
+
+</code></pre>
+It's in TFA.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504046" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">prussian</span>
+        <span class="meta-time">2026/03/24 23:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">启用！=配置。
+您是说假设存在现有交换设备，这就是必需的吗？这一点应该说得更清楚。<p>编辑：
+需要特别说明的是。当我研究这个问题时，我最终选择了 zram，只是因为：</p><p>* 这是 Fedora 的默认设置。</p><p>* zramctl 为我提供已使用和压缩大小的实时统计数据。</p><p>* zswap 文档并没有帮助我解决支持设备如何工作的困惑（我猜它们是任何交换设备？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">enabling != configuring.
+Are you saying this is all that's necessary, assuming an existing swap device exists? That should be made clearer.<p>Edit:
+To be extra clear. When I was researching this, I ended up going with zram only because:</p><p>* It is the default for Fedora.</p><p>* zramctl gives me live statistics of used and compressed size.</p><p>* The zswap doc didn't help my confusion on how backing devices work (I guess they're any swapon'd device?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stdbrouw</span>
+        <span class="meta-time">2026/03/25 02:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在大多数发行版上它实际上不需要任何配置，不需要。<p>也就是说，如果您希望它在 OOM 时表现最佳，调整 vm.swappiness、vm.watermark_scale_factor、vm.min_free_kbytes、vm.page-cluster 和其他几个参数确实有帮助。</p><p>参见例如</p><p><a href="https://makedebianfunagainandlearnhowtodoothercoolstufftoo.computer/doku.php?id=start:memmanagement" target="_blank" rel="noopener noreferrer">https://makedebianfunagainandlearnhowtodoothercoolstufftoo.c...</a></p><p><a href="https://documentation.suse.com/sles/15-SP7/html/SLES-all/cha-tuning-memory.html" target="_blank" rel="noopener noreferrer">https://documentation.suse.com/sles/15-SP7/html/SLES-all/cha...</a></p><p>我不知道 zswap 有什么好的统计脚本，我使用下面的脚本作为自定义 waybar 模块：</p><p></p><pre><code>  #!/bin/bash
+  stored_pages="$(cat /sys/kernel/debug/zswap/stored_pages)"
+  pool_total_size="$(cat /sys/kernel/debug/zswap/pool_total_size)"
+  compressed_size_mib="$((pool_total_size / 1024 / 1024))"
+  compressed_size_gib="$((pool_total_size / 1024 / 1024 / 1024))"
+  compressed_size_mib_remainder="$((compressed_size_mib * 10 / 1024 - compressed_size_gib * 10))"
+  uncompressed_size="$((stored_pages * 4096))"
+  uncompressed_size_mib="$((uncompressed_size / 1024 / 1024))"
+  uncompressed_size_gib="$((uncompressed_size / 1024 / 1024 / 1024))"
+  uncompressed_size_mib_remainder="$((uncompressed_size_mib * 10 / 1024 - uncompressed_size_gib * 10))"
+  ratio="$((100 * uncompressed_size / (pool_total_size + 1)))"
+  echo "$compressed_size_gib.$compressed_size_mib_remainder"</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It doesn't really need any config on most distros, no.<p>That said, if you want it to behave at its best when OOM, it does help to tweak vm.swappiness, vm.watermark_scale_factor, vm.min_free_kbytes, vm.page-cluster and a couple of other parameters.</p><p>See e.g.</p><p><a href="https://makedebianfunagainandlearnhowtodoothercoolstufftoo.computer/doku.php?id=start:memmanagement" target="_blank" rel="noopener noreferrer">https://makedebianfunagainandlearnhowtodoothercoolstufftoo.c...</a></p><p><a href="https://documentation.suse.com/sles/15-SP7/html/SLES-all/cha-tuning-memory.html" target="_blank" rel="noopener noreferrer">https://documentation.suse.com/sles/15-SP7/html/SLES-all/cha...</a></p><p>I don't know of any good statistics script for zswap, I use the script below as a custom waybar module:</p><p></p><pre><code>  #!/bin/bash
+  stored_pages="$(cat /sys/kernel/debug/zswap/stored_pages)"
+  pool_total_size="$(cat /sys/kernel/debug/zswap/pool_total_size)"
+  compressed_size_mib="$((pool_total_size / 1024 / 1024))"
+  compressed_size_gib="$((pool_total_size / 1024 / 1024 / 1024))"
+  compressed_size_mib_remainder="$((compressed_size_mib * 10 / 1024 - compressed_size_gib * 10))"
+  uncompressed_size="$((stored_pages * 4096))"
+  uncompressed_size_mib="$((uncompressed_size / 1024 / 1024))"
+  uncompressed_size_gib="$((uncompressed_size / 1024 / 1024 / 1024))"
+  uncompressed_size_mib_remainder="$((uncompressed_size_mib * 10 / 1024 - uncompressed_size_gib * 10))"
+  ratio="$((100 * uncompressed_size / (pool_total_size + 1)))"
+  echo "$compressed_size_gib.$compressed_size_mib_remainder"</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507122" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 01:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505815" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 01:19</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rini17</span>
+        <span class="meta-time">2026/03/25 04:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是说 cleancache 的 zswap 部分吗？但这完全脱离了内核，不是吗？ zram 获得了对支持设备的支持。<p>顺便说一句，大多数 zram 教程都弄错了，您应该手动标记空闲页面并通过定期写入 /sys/block/zramX/idle 和 /sys/block/zramX/writeback 来启动写回。否则 zram 将永远不会向支持设备写入任何内容。它记录在内核文档中，只是如果您希望它自动工作，您可能会误读它。</p><p>您可以将交换转换为此类支持设备，但是您不需要对其进行交换（只需将其从 fstab 中删除），也不需要对其进行格式化（mkswap）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You mean zswap part of cleancache? But that fell out of kernel completely, no? And zram gained support for backing device.<p>BTW most of zram tutorials get it wrong, you are supposed to manually mark idle pages and initiate writeback by periodically writing to /sys/block/zramX/idle and /sys/block/zramX/writeback . Otherwise zram will never ever write anything to backing device. It is documented in kernel docs, just that if you expect it to work automatically you might misread it.</p><p>And you can convert swap into such backing device, but then you don't do swapon on it (just remove it from fstab) nor it's necesary to format(mkswap) it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508518" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">0x_rs</span>
+        <span class="meta-time">2026/03/25 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自从 zram 进入内核以来就一直在使用它，具有相同的优先级“petard”和磁盘支持的交换。我现在不记得细节了，但是很多年前的 zswap 无法“很好”地处理休眠（以及它可以得到的..），或者不比具有 -XXX 优先级的 zram+distinct 休眠更好。但 zram 的设置肯定有一些警告，它会导致磁盘缓存被使用并需要手动刷新，例如在休眠后，因为 zram 生成器（如果您正在使用它）在恢复时尚未准备好，据我所知。这看起来是一篇写得很工整的文章，从现在开始我将尝试使用 zswap。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Been using zram since it hit the kernel, with the same priorities "petard" and disk backed swap. I don't remember the details now, but zswap many years ago would not handle hibernation "well" (as well as it can get..), or not better than zram+distinct hibernation with -XXX priority. But zram definitely has some caveats with that setup and it will lead to disk cache being used and requiring manual flushing, for example after hibernation, because zram-generator (if you're using it) isn't ready yet on resume, from what I recall about it. This seems like such a neatly written post I'm going to try and go with zswap from now on.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508111" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">seba_dos1</span>
+        <span class="meta-time">2026/03/25 02:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OOM 守护进程的一个更简单的替代方案可以是启用 MGLRU 的抖动预防： <a href="https://www.kernel.org/doc/html/next/admin-guide/mm/multigen_lru.html#thrashing-prevention" target="_blank" rel="noopener noreferrer">https://www.kernel.org/doc/html/next/admin-guide/mm/multigen...</a><p>我在没有磁盘交换的低 RAM 手机上将它与大小为 200% RAM 的 zram 一起使用（加上一些像提到的集群旋钮这样的调整），如果你不介意一些本来可以预防的杀戮，它会工作得很好，但一旦准备好，我会很乐意切换到无盘 zswap。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A simpler alternative to OOM daemons could be enabling MGLRU's thrashing prevention: <a href="https://www.kernel.org/doc/html/next/admin-guide/mm/multigen_lru.html#thrashing-prevention" target="_blank" rel="noopener noreferrer">https://www.kernel.org/doc/html/next/admin-guide/mm/multigen...</a><p>I'm using it together with zram sized to 200% RAM size on a low RAM phone with no disk swap (plus some tuning like the mentioned clustering knob) and it works pretty well if you don't mind some otherwise preventable kills, but I will happily switch to diskless zswap once it's ready.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507149" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">garaetjjte</span>
+        <span class="meta-time">2026/03/25 01:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;他们将 zram 设备的大小设置为物理 RAM 的 100%，上限为 8GB。您可能想知道这有什么意义——一个人怎么可能拥有一个可能是整个 RAM 大小的交换设备？<p>zram 大小适用于未压缩的数据，实际使用量是动态增长的（加上静态簿记）。大多数内存压缩效果都很好，因此您可能希望 zram 设备大小比物理 RAM 更大。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;They size the zram device to 100% of your physical RAM, capped at 8GB. You may be wondering how that makes any sense at all – how can one have a swap device that's potentially the entire size of one's RAM?<p>zram size applies to uncompressed data, real usage is dynamically growing (plus static bookkeeping). Most memory compresses well, so you probably want to have zram device size even larger than physical RAM.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506022" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rhnDN1</span>
+        <span class="meta-time">2026/03/25 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从链接的评论来看，Zswap 似乎将解压缩的页面写入磁盘。我假设切斯特顿的栅栏适用，但为什么不将它们压缩写入磁盘并在需要加载时解压缩呢？<p>&gt; 将作品集解压缩到交换缓存后，可以释放 zswap 存储的压缩版本。</p><p><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/zswap.c?h=v6.19#n996" target="_blank" rel="noopener noreferrer">https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/lin...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the linked comment Zswap appears to write decompressed pages to disk. I assume Chesterton's fence applies, but why not write them compressed to disk and decompress when/if they need to be loaded back?<p>&gt; After the folio has been decompressed into the swap cache, the compressed version stored by zswap can be freed.</p><p><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/zswap.c?h=v6.19#n996" target="_blank" rel="noopener noreferrer">https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/lin...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kasabali</span>
+        <span class="meta-time">2026/03/25 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这。自从 zswap 进入内核以来，这让我很困惑。<p>实际上，忘记 zswap 吧。为什么在过去的 20 年里，当处理能力已经足够强大并且像 lzo/lz4 这样的压缩器已经在内核树中时，磁盘上的交换格式还没有被压缩。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">THIS. This boggles my mind ever since zswap landed in the kernel.<p>Actually, forget zswap. Why the fuck swap's on disk format hasn't been compressed in the last 2 decades when processing power has been abundant  and compressors like lzo/lz4 has been in kernel tree.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MaxCompression</span>
+        <span class="meta-time">2026/03/24 23:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">zswap 与 zram 的一个未被充分认识的方面是压缩算法的选择及其与被压缩数据的交互。<p>LZ4（两者均默认）针对速度进行了优化，但牺牲了比率 — 通常为内存页面的 2-2.5 倍。 zstd 可以将其提高到 3-3.5 倍，但每次页面错误的 CPU 成本要高得多。</p><p>有趣的权衡是：内存页与文件根本不同。它们包含大量指针大小的值、堆栈帧和堆元数据 - 在这些数据模式中，简单的 LZ 变体相对于更复杂的算法实际上表现得令人惊讶。超越 zstd（例如，基于 BWT 或上下文混合）将导致内存页面的回报递减，同时破坏延迟。</p><p>因此，真正的问题不仅仅是“zswap 与 zram”，而是“考虑到您的工作负载的内存访问模式，您愿意为每个压缩页面花费多少 CPU ？”对于延迟敏感的工作负载，具有 zswap 写回功能的 LZ4 很难被击败。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One underappreciated aspect of zswap vs zram is the compression algorithm choice and its interaction with the data being compressed.<p>LZ4 (default in both) is optimized for speed at the expense of ratio — typically 2-2.5x on memory pages. zstd can push that to 3-3.5x but at significantly higher CPU cost per page fault.</p><p>The interesting tradeoff: memory pages are fundamentally different from files. They contain lots of pointer-sized values, stack frames, and heap metadata — data patterns where simple LZ variants actually perform surprisingly well relative to more complex algorithms. Going beyond zstd (e.g., BWT-based or context mixing) would give diminishing returns on memory pages while destroying latency.</p><p>So the real question isn't just "zswap vs zram" but "how much CPU are you willing to spend per compressed page, given your workload's memory access patterns?" For latency-sensitive workloads, LZ4 with zswap writeback is hard to beat.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504109" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">messe</span>
+        <span class="meta-time">2026/03/25 15:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本网站不允许法学硕士书面评论。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">LLM written comments are not permitted on this site.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514342" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nephanth</span>
+        <span class="meta-time">2026/03/24 20:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我的笔记本电脑有早期的 SSD 之一时，我曾经在 zram 上放置交换，人们会告诉你 <i>不是</i> 穿上交换以免磨损它们<p>设置为 <i>乏味</i></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I used to put swap on zram when my laptop had one of those early ssds, that people would tell you <i>not</i> to put swap on for fear of wearing them out<p>Setup was <i>tedious</i></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501475" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Szpadel</span>
+        <span class="meta-time">2026/03/25 02:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">zram 还可以实现一项功能：多个压缩级别。我使用简单的 bash 脚本首先使用快速压缩，并在 1 小时后使用更强的压缩重新压缩它。<p>不幸的是，您无法将其与任何附加层链接或稍后卸载到磁盘，因为重新压缩会通过将时间戳设置为 0 来中断空闲跟踪（因此又是 1970 年）</p><p><a href="https://gist.github.com/Szpadel/9a1960e52121e798a240a9b320ec13c8" target="_blank" rel="noopener noreferrer">https://gist.github.com/Szpadel/9a1960e52121e798a240a9b320ec...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is one more feature that zram can do: multiple compression levels. I use simple bash script to first use fast compression and after 1h recompress it using much stronger compression.<p>unfortunately you cannot chain it with any additional layer or offload to disk later on, because recompression breaks idle tracking by setting timestamp to 0 (so it's 1970 again)</p><p><a href="https://gist.github.com/Szpadel/9a1960e52121e798a240a9b320ec13c8" target="_blank" rel="noopener noreferrer">https://gist.github.com/Szpadel/9a1960e52121e798a240a9b320ec...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Mashimo</span>
+        <span class="meta-time">2026/03/24 21:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">此建议也适用于桌面安装吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is this advice also applicable to Desktops installations?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502669" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">therealmarv</span>
+        <span class="meta-time">2026/03/25 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更好的发行版默认为桌面启用它（ZRAM）（我认为 PopOS 和 Fedora）。根据我个人的经验，每个桌面 Linux 都应该使用内存压缩（除非你有大量的 RAM），因为它有很大帮助，尤其是与浏览器和/或电子使用相关的所有内容！<p>Windows 和 macOS 多年来一直默认启用它（即使它的工作方式略有不同）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The better distros have it (ZRAM) enabled by default for desktops (I think PopOS and Fedora). In my personal experience every desktop Linux should use memory compression (except you have an absurd amount of RAM) because it helps so much, especially with everything related to browser and/or electron usage!<p>Windows and macOS have it enabled by default for many years (even if it works a little different there).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505170" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">captn3m0</span>
+        <span class="meta-time">2026/03/25 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我这个周末做了一个 Archinstall 设置，这也建议了 zram。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did an Archinstall setup this weekend, and that also suggested zram.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505846" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Schlaefer</span>
+        <span class="meta-time">2026/03/25 03:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为这是一个简单的解决方案，尤其是。对于一个相当新的安装程序：在磁盘上设置交换（分区或文件，如果文件是哪个文件系统，如果分区没有加密，...）。 Zram：安装一个额外的软件包然后就忘记了。<p>另请参阅文章中的“Fedora 上的 zram”部分。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because it's an easy solution esp. to a rather new installer: setting up swap on disk (partition or file, if file which file system, if partition w/o encryption, ...). Zram: install one additional package and forget.<p>See also the "zram on Fedora" section in the article.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507954" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stdbrouw</span>
+        <span class="meta-time">2026/03/25 02:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的印象是，大多数桌面用户启用 zram 或 zswap 来从他们的 RAM 中获得更多的资源，但从来没有真正担心 OOM，无论如何也不会定期，所以（根据文章中列出的原则）它应该不重要。<p>在我的工作站上，我在 R 中运行统计模拟，这可能会浪费内存并导致大量瞬时内存压力，对于这种情况，我确实喜欢 zswap 与常规交换一起工作。尤其是当与来自的建议相结合时 <a href="https://makedebianfunagainandlearnhowtodoothercoolstufftoo.computer/doku.php?id=start:memmanagement" target="_blank" rel="noopener noreferrer">https://makedebianfunagainandlearnhowtodoothercoolstufftoo.c...</a> 早点唤醒kswapd，似乎确实有所作为。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I get the impression that most desktop users enable zram or zswap to get a little bit more out of their RAM but there is never any real worry about OOM, not regularly anyway, so then (according to the principles laid out in the article) it shouldn't matter much.<p>On my workstation, I run statistical simulations in R which can be wasteful with memory and cause a lot of transient memory pressure, and for that scenario I do like that zswap works alongside regular swap. Especially when combined with the advice from <a href="https://makedebianfunagainandlearnhowtodoothercoolstufftoo.computer/doku.php?id=start:memmanagement" target="_blank" rel="noopener noreferrer">https://makedebianfunagainandlearnhowtodoothercoolstufftoo.c...</a> to wake up kswapd early, it really does seem to make a difference.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507360" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">astrobe_</span>
+        <span class="meta-time">2026/03/25 02:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 只有对于内存极其有限的嵌入式系统才真正有意义<p>即使“轻度”内存受限的嵌入式系统也不使用交换，因为它们的资源是根据其功能定制的。他们通常也不热衷于压缩[1]，因为压缩率通常是不可预测的。</p><p>[1] 是的，它们通常不需要风扇，因为过热和使用电机进行冷却是能源的双重浪费。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; It only really makes sense for extremely memory-constrained embedded systems<p>Even "mildly" memory constrained embedded systems don't use swap because their resources are tailored for their function. And they are typically not fans [1] of compression either because the compression rate is often unpredictable.</p><p>[1] Yes, they typically don't need fans because overheating and using a motor for cooling is a double waste of energy.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506891" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">guenthert</span>
+        <span class="meta-time">2026/03/24 21:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">争论这么多却没有数字？  如果是性能问题，请显示数字！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So much polemic and no numbers?  If it is a performance issue, show me the numbers!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502001" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cdown</span>
+        <span class="meta-time">2026/03/24 21:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">文章中有相当多的数字，当然我很高兴听到您想要提供的更多数字。<p>* 启用 zswap 后，Instagram 的磁盘写入量减少了 25%，这与直觉相反</p><p>* 使用 zswap + zstd 对 Django 工作负载的最终压缩比约为 5:1</p><p>* Cloudflare 出现 20-30 分钟的 OOM 停滞，OOM 杀手在 zram 下从未开火</p><p>从所提供的代码来看，LRU 反转参数很简单，也是交换优先级和 zram 的块设备架构如何交互的逻辑结果，我不确定数字会增加多少。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are quite a few numbers in the article, although of course I'm happy to hear any more you'd like presented.<p>* A counterintuitive 25% reduction in disk writes at Instagram after enabling zswap</p><p>* Eventual ~5:1 compression ratio on Django workloads with zswap + zstd</p><p>* 20-30 minute OOM stalls at Cloudflare with the OOM killer never once firing under zram</p><p>The LRU inversion argument is just plain from the code presented and a logical consequence of how swap priority and zram's block device architecture interact, I'm not sure numbers would add much there.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">guenthert</span>
+        <span class="meta-time">2026/03/24 22:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 从所提供的代码来看，LRU 反转参数是简单的，也是交换优先级和 zram 的块设备架构如何交互的逻辑结果，我不确定数字会增加多少。<p>是的，虽然这一切都很合理，但已知给定工作负载（在给定的、有记录的系统上）的运行时间会导致内存压力达到与普通 Linux（默认交换或某些适当的值）、zram 和 zswap 进行交换的程度。</p><p><a href="https://linuxblog.io/zswap-better-than-zram/" target="_blank" rel="noopener noreferrer">https://linuxblog.io/zswap-better-than-zram/</a> 至少证明 zswap 在使用快速 NVMe 设备作为交换设备时性能更好，而 zram 对于使用慢速或无交换设备的设备仍然表现出色。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The LRU inversion argument is just plain from the code presented and a logical consequence of how swap priority and zram's block device architecture interact, I'm not sure numbers would add much there.<p>Yes, while it is all very plausible, the run times of a given workload (on a given, documented system) known to cause memory pressure to the point of swapping with vanilla Linux (default swappiness or some appropriate value), zram and zswap would be appreciated.</p><p><a href="https://linuxblog.io/zswap-better-than-zram/" target="_blank" rel="noopener noreferrer">https://linuxblog.io/zswap-better-than-zram/</a> at least qualifies that zswap performs better when using a fast NVMe device as swap device and zram remains superior for devices with slow or no swap device.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503200" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MrDrMcCoy</span>
+        <span class="meta-time">2026/03/25 03:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你所做的一切出色的工作，克里斯！只是好奇：最终支持将页面簇以压缩状态发送到支持交换以进一步减少 I/O 是否可行？据我了解，集群在发送到磁盘之前会被解压缩，我认为这是为了简化寻址。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you for all your wonderful work, Chris! Just curious: is it feasible to eventually support sending the page clusters to backing swap in their compressed state to further reduce I/O? It's my understanding that the clusters get decompressed before getting sent to disk, which I presume is to simplify addressing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507844" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">adgjlsfhk1</span>
+        <span class="meta-time">2026/03/24 20:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能在这里跟进一下设置交换支持全盘加密+休眠的最佳方法吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">can you make a follow-up here for the best way to setup swap to support full disk encryption+hybernation?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501865" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tmtvl</span>
+        <span class="meta-time">2026/03/25 01:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您想要休眠，那么您只需加密交换分区，就像加密根分区一样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you want hibernation then you just encrypt your swap partition like you encrypt your root partition.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506511" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adgjlsfhk1</span>
+        <span class="meta-time">2026/03/25 13:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很公平。我主要只是希望操作系统安装程序为我处理这个问题。我有 32 GB 内存，但时不时地编译 llvm，所以 99% 的时间我不关心交换，但 1% 的时间我真的关心</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">that's fair. I mostly just want the OS installer to handle this for me. I have 32 gigs of ram, but compile llvm now and then, so 99% of the time I don't care about swap, but 1% of the time I really do</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513716" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tonnydourado</span>
+        <span class="meta-time">2026/03/24 23:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一篇很糟糕的文章，我什至不喜欢低级的东西，但还是读完了整篇文章。希望如果我有时间将我的个人笔记本切换回 Linux，我将有机会使用其中的一些功能</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's a banger article, I don't even like low level stuff and yet read the whole thing. Hopefully I will have opportunity to use some of it if I ever get around to switch my personal notebook back to linux</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503903" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jitl</span>
+        <span class="meta-time">2026/03/24 20:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢天谢地，Kubernetes 获得了对交换的支持； zswap 对我的一项工作负载来说是一个巨大的福音</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">thank goodness Kubernetes got support for swap; zswap has been a great boon for one of my workloads</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">devnotes77</span>
+        <span class="meta-time">2026/03/24 22:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502768" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">quapster</span>
+        <span class="meta-time">2026/03/24 23:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里有趣的元点是内核机制如何变成货物崇拜调整建议。<p>“使用 zram，节省 SSD”在微型 eMMC、无 TRIM 和神秘闪存控制器的时代很有意义。它也符合人类的偏见：磁盘 I/O 感觉可怕且有限，CPU 周期感觉自由且无限。因此，zram 成为一种护身符，启用一次后就再也不会想起。</p><p>但内核并没有针对您对 SSD 磨损的感受进行优化，而是针对全局内存压力进行优化。 zswap 适合该反馈循环，zram 大部分位于其外部。一旦你明白了这一点，人们抱怨的行为（“我的系统崩溃然后神秘地死掉”）就不再神秘了：他们有效地构建了第二个不透明的内存池，MM 子系统无法推理或干净地回收该内存池。</p><p>有趣的是，在现代台式机和服务器上，所谓的 zswap 缺点（有时写入磁盘）是硬件非常擅长的一件事，而 zram 的缺点（将冷垃圾锁定在 RAM 中并造成混乱的回收/oom）正是在机器处于压力下时您不希望看到的。民间智慧从未更新，但硬件和内核却更新了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The interesting meta-point here is how a kernel mechanism turned into cargo-cult tuning advice.<p>"Use zram, save your SSD" made sense in the era of tiny eMMC, no TRIM, and mystery flash controllers. It also fit a very human bias: disk I/O feels scary and finite, CPU cycles feel free and infinite. So zram became a kind of talisman you enable once and never think about again.</p><p>But the kernel isn't optimizing for your feelings about SSD wear, it's optimizing for global memory pressure. zswap fits into that feedback loop, zram mostly sits outside it. Once you see that, the behavior people complain about ("my system thrashes and then dies mysteriously") stops being mysterious: they effectively built a second, opaque memory pool that the MM subsystem can't reason about or reclaim from cleanly.</p><p>What's funny is that on modern desktops and servers, the alleged downside of zswap (writing to disk sometimes) is the one thing the hardware is extremely good at, while the downside of zram (locking cold garbage in RAM and confusing reclaim/oom) is exactly what you don't want when the machine is under stress. The folk wisdom never updated, but the hardware and the kernel did.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503716" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

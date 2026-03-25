@@ -1,0 +1,1824 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：Gemini 现在可以原生嵌入视频，因此我构建了亚秒级视频搜索 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>显示 HN：Gemini 现在可以原生嵌入视频，因此我构建了亚秒级视频搜索</h1>
+      <p class="subtitle">Show HN: Gemini can now natively embed video, so I built sub-second video search</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 sohamrj</span>
+        <span>分数 311</span>
+        <span>评论 86</span>
+        <span>2026/03/24 22:58</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47503617" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/ssrajadh/sentrysearch" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>对行车记录仪镜头进行语义搜索。输入您要查找的内容，然后返回修剪过的剪辑。爪毂技能</li><li>演示.mp4</li><li>工作原理 SentrySearch 将行车记录仪视频分割成重叠的块，使用 Google 的 Gemini Embedding 模型将每个块直接嵌入为视频，并将矢量存储在本地 ChromaDB 数据库中。当您搜索时，您的文本查询将嵌入到同一向量空间中，并与存储的视频嵌入进行匹配。顶部匹配会自动从原始文件中修剪并保存为剪辑。入门</li><li>克隆并安装：</li><li>git clone https://github.com/ssrajadh/sentrysearch.git cd Sentrysearch python -m venv venv &amp;&amp; 源 venv/bin/activate pip install -e 。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Semantic search over dashcam footage. Type what you&#39;re looking for, get a trimmed clip back. ClawHub Skill</li><li>demo.mp4</li><li>How it works SentrySearch splits your dashcam videos into overlapping chunks, embeds each chunk directly as video using Google&#39;s Gemini Embedding model, and stores the vectors in a local ChromaDB database. When you search, your text query is embedded into the same vector space and matched against the stored video embeddings. The top match is automatically trimmed from the original file and saved as a clip. Getting Started</li><li>Clone and install:</li><li>git clone https://github.com/ssrajadh/sentrysearch.git cd sentrysearch python -m venv venv &amp;&amp; source venv/bin/activate pip install -e .</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">macNchz</span>
+        <span class="meta-time">2026/03/25 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个非常酷的实现——嵌入对我来说仍然感觉很神奇。也就是说，这个确切的用例也是我对人工智能带我们去向的最大关注点，比你听到的很多讨论的大多数常见人工智能风险更重要。我们现在生活在一个充满摄像头的世界，但最终在公共场合保留了某种半匿名/隐私的外观，因为没有人可以真正观看或查看这些摄像头的所有视频，除非有令人信服的理由这样做，但这些技术正在使这成为一个更加现实的主张。<p>至少对我来说，无处不在的摄像头的存在比现状更令人担忧，因为人工智能正在监视并索引每个视频的每一秒——摄像头所有者、制造商或政府可以为通知的​​高度特定的人或活动设置简单的自然语言参数。这里有明显引人注目且易于销售的案例，肯定会推动采用，因为它变得具有成本效益：对正在进行的犯罪发出警报，当邻居不清理他的狗时收到警报，当有人摔倒时收到警报......但是，如果没有良好的监管，生活在这样的圆形监狱中的潜在影响是相当丑陋的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a really cool implementation—embeddings still often feel like magic to me. That said, this exact use case is sort of also my biggest point of concern with where AI takes us, much more so than most of the common AI risks you hear lots of chatter about. We live in a world absolutely loaded with cameras now but ultimately retain some semblance of semi-anonymity/privacy in public by virtue of the fact that nobody can actually watch or review all of the video from those cameras except when there is a compelling reason to do so, but these technologies are making that a much more realistic proposition.<p>The presence of cameras everywhere is considerably more concerning than the status quo, to me at least, when there is an AI watching and indexing every second of every feed—where camera owners or manufacturers or governments could set simple natural language parameters for highly specific people or activities notify about. There are obviously compelling and easy-to-sell cases here that will surely drive adoption as it becomes cost effective: get an alert to crime in progress, get an alert when a neighbor who doesn't clean up after his dog, get an alert when someone has fallen...but the potential implications of living in a panopticon like this if not well regulated are pretty ugly.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506611" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">citruscomputing</span>
+        <span class="meta-time">2026/03/25 03:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正如我们所说，它正在建造中。我昨天参加了市议会会议，讨论批准 ALPR 摄像机合同。我从摄像头供应商那里了解到了一款名为 Fusus[0] 的产品，这是一个集成了各种摄像头系统、ALPR、警报等的仪表板。有两件事对我来说很突出：视频源的自然语言查询，以及未来计划与民用部署摄像头的集成。该市只有 50 个 ALPR 的预算，他们强调只将它们部署在主要街道上，但你的邻居能够安装直接向当地警察局的人工智能系统提供数据的摄像头似乎只是时间问题。一位理事会成员特别对与公民应用程序[1]的集成提出了担忧（还有其他一些我没有听清名字的人）。我非常担心这一切将走向何方。<p>[0]： <a href="https://www.axon.com/products/axon-fusus" target="_blank" rel="noopener noreferrer">https://www.axon.com/products/axon-fusus</a>
+[1]： <a href="https://citizen.com/" target="_blank" rel="noopener noreferrer">https://citizen.com/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's being built as we speak. I attended at a city council meeting yesterday, discussing approving a contract for ALPR cameras. I learned about a product from the camera vendor called Fusus[0], a dashboard that integrates various camera systems, ALPRs, alerts, etc. Two things stood out to me: natural-language querying of video feeds, and future planned integration with civilian-deployed cameras. The city only had budget for 50 ALPRs, and they stressed how they're only deploying them on main streets, but it seems like only a matter of time before your neighbor is able to install a camera that feeds right into the local PD's AI-enabled systems. One council member raised concerns about integrations with the citizen app[1] specifically (and a few others I didn't catch the names of). I'm very worried about where all this is heading.<p>[0]: <a href="https://www.axon.com/products/axon-fusus" target="_blank" rel="noopener noreferrer">https://www.axon.com/products/axon-fusus</a>
+[1]: <a href="https://citizen.com/" target="_blank" rel="noopener noreferrer">https://citizen.com/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507598" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 02:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">完全有道理的担忧。目前，成本（2.50 美元/小时）和延迟使得连续实时索引不切实际，但情况并非总是如此。这是我希望看到开放权重本地模型的原因之一，将索引保留在您自己的硬件上，并且没有镜头离开您的机器。但你说得对，这里更广泛的轨迹值得仔细思考。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Totally valid concern. Right now the cost ($2.50/hr) and latency make continuous real-time indexing impractical, but that won't always be the case. This is one of the reasons I'd want to see open-weight local models for this, keeps the indexing on your own hardware with no footage leaving your machine. But you're right that the broader trajectory here is worth thinking carefully about.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507132" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jimmySixDOF</span>
+        <span class="meta-time">2026/03/25 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你如何达到 2.50 美元/小时？   价格表上显示每帧 0.00079 美元。<p><a href="https://ai.google.dev/gemini-api/docs/pricing#gemini-embedding-2" target="_blank" rel="noopener noreferrer">https://ai.google.dev/gemini-api/docs/pricing#gemini-embeddi...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How are you getting to $2.50/hr ?   The price sheet says its 0.00079 per frame.<p><a href="https://ai.google.dev/gemini-api/docs/pricing#gemini-embedding-2" target="_blank" rel="noopener noreferrer">https://ai.google.dev/gemini-api/docs/pricing#gemini-embeddi...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510419" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjwiseman</span>
+        <span class="meta-time">2026/03/25 07:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从我看到的代码将视频采样率降低到 5 fps，因此 1 小时的视频为 3600 秒 * 5 fps = 18,000 帧。 18,000 帧 * 0.00079 美元/帧 = 14.22 美元。重叠的话还要多花几美元。<p>（该代码还尝试跳过“静止”帧，但如果您的视频是动态的，您就会看到上面的成本。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From what I see the code downsamples video to 5 fps, so 1 hour of video is 3600 seconds * 5 fps = 18,000 frames. 18,000 frames * $0.00079/frame = $14.22. A couple dollars more with the overlap.<p>(The code also tries to skip "still" frames, but if your video is dynamic you're looking at the cost above.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511227" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 09:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你是对的，代码在发送块之前使用 ffmpeg 将块采样到 5fps，但这只是本地/带宽优化，而不是 api 实际处理的内容。<p>无论文件的帧速率如何，Gemini api 都会以 1 fps 的速度本地提取和标记化。 5 fps 的缩减只是使有效负载大小保持较小，因此 API 请求速度很快并且不会超时。</p><p>我将更新自述文件以使其更加清晰。感谢您提出这个问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">you're right that the code uses ffmpeg to downsample the chunks to 5fps before sending them, but that's only a local/bandwidth optimization, not what the api actually processes.<p>regardless of the file's frame rate, the gemini api natively extracts and tokenizes exactly 1 fps. the 5 fps downscaling just keeps the payload sizes small so the api requests are fast and don't timeout.</p><p>i'll update the readme to make this more clear. thanks for bringing this up.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512061" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjwiseman</span>
+        <span class="meta-time">2026/03/25 12:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的详细信息和更正。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for the details and correction.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513290" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mpalmer</span>
+        <span class="meta-time">2026/03/25 03:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每小时 2.50 美元，因为 Google 有利润。一个民族国家可以按成本做到这一点，即使差异不是很大，一年的嵌入价格也仅为 21,900 美元。这是一个舍入误差，特别是考虑到它是镜头的一次性成本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's 2.50 an hour because Google has margins. A nation state could do it at cost, and even if it's not a huge difference, the price of a year's worth of embeddings is just $21,900. That's a rounding error, especially considering it's a one time cost for footage.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507588" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wholinator2</span>
+        <span class="meta-time">2026/03/25 03:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正确的？对于一个可以投票发明一万亿美元的政府来说，每小时 2.50 美元是微不足道的。一年监控 45 个实时源的成本即使只有 100 万美元。我确信只有很多非常富有的人才会为了他们的住所的安全而支付这笔钱。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Right? $2.50 an hour is trivial to a Government that can vote to invent a trillion dollars. Even just 1 million dollars is the cost of monitoring 45 real time feeds for a year. I'm sure just many very rich people would pay that for the safety of their compound.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507635" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">FuckButtons</span>
+        <span class="meta-time">2026/03/25 07:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一旦用于运行推理（例如视觉理解模块）的硬件可以在低/中功率 ASIC 无人机上运行，​​那么无人机将成为绝对可怕的武器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Once the hardware to run inference for something like the vision understanding module of this can be run on a low / medium power asic drones are going to be absolutely horrifying weapons.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511318" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Ajedi32</span>
+        <span class="meta-time">2026/03/25 03:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大多数相机也不能被任何个人或组织查询。它们由不同的公司拥有，如果政府想要进入，他们必须在事后传唤他们。<p>当政府开始大规模部署摄像头的 Flock 或单个公司可以不受限制地访问每个人的私人摄像头的 Ring 之类的东西时，问题就开始出现了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most cameras are also not queryable by any one person or organization. They are owned by different companies and if the government wants access they have to subpoena them after the fact.<p>The problems start cropping up when you get things like Flock where governments start deploying cameras on a massive scale, or Ring where a single company has unrestricted access to everyone's private cameras.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507807" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Spivak</span>
+        <span class="meta-time">2026/03/25 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 Flock 只是底层技术变得如此便宜的一个症状，当警察如此依赖摄像机镜头时，“用摄像机覆盖整个城市”开始听起来像是一个可行的解决方案。<p>我认为这不是一件好事，但限制因素似乎是技术可行性，而不是任何反对它的原则。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think Flock is just a symptom of the underlying tech becoming so cheap that "just blanket the city in cameras" starts to sound like a viable solution when police rely so heavily on camera footage.<p>I don't think it's a good thing but it seems the limiting factor has been technological feasibility instead of any kind of principle against it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508182" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 10:54</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512656" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cake_robot</span>
+        <span class="meta-time">2026/03/25 03:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，圆形监狱现在在技术上非常可行，只是实施起来很昂贵（目前）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, the panopticon is now technically very feasible it's just expensive to implement (for now).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">whattheheckheck</span>
+        <span class="meta-time">2026/03/25 07:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不过，针对个人的成本非常低，因此他们不需要到处寻找</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Its very cheap to target an individual though so they dont need to look everywhere</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511238" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zahlman</span>
+        <span class="meta-time">2026/03/25 08:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这个确切的用例也是我对人工智能带我们走向何方最关心的一点，比你听到的很多讨论的大多数常见人工智能风险更重要。<p>早在人工智能看起来可行之前，我就已经听到警告称人工智能将用于此目的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; this exact use case is sort of also my biggest point of concern with where AI takes us, much more so than most of the common AI risks you hear lots of chatter about.<p>I've been hearing warnings that AI would be used for this since well before it seemed feasible.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">macNchz</span>
+        <span class="meta-time">2026/03/25 10:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">并不是说我在这里发现了一些独特的东西，但我认为它是现实的，而且经常被科幻废话淹没。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not claiming to have hit on something unique here, but I think it’s realistic and often drowned out in favor of sci-fi nonsense.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512423" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">greggsy</span>
+        <span class="meta-time">2026/03/25 04:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所有主要的云提供商都提供某种形式的面部检测和车牌读取，其中许多支持相机本身的物体检测（即包裹、车辆、人）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">All the major cloud providers offer some form of face detection and  numberplate reading, with many supporting object detection (ie package, vehicle, person) out of the camera itself.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508933" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">macNchz</span>
+        <span class="meta-time">2026/03/25 06:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它确实正在悄然渗透到事情中，尽管与当前 SoTA 多模式法学硕士对视频进行审查和索引时可能实现的功能相比，我所看到的大多数功能都相当简单。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's definitely creeping into things, though most of the features I've seen are fairly simplistic compared to what would be possible if the video was being reviewed + indexed by current SoTA multimodal LLMs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">janalsncm</span>
+        <span class="meta-time">2026/03/25 03:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于特定的人，他们可能不会使用通用嵌入。这些嵌入可以让你搜索“穿风衣的高个子男人”，但如果你想要一个特定的人，你可以使用面部识别。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For specific people they probably wouldn’t use general embeddings. These embeddings can let you search for “tall man in a trenchcoat” but if you want a specific person you would use facial recognition.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508005" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hypeatei</span>
+        <span class="meta-time">2026/03/25 04:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为一般性描述对于这样的监视/跟踪更好，不是吗？如果他们处于奇怪的角度或故意隐藏自己的脸，那么面部识别就会崩溃，但在我看来，能够自然地描述他们将导致更好的跟踪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think a general description is better for surveillance/tracking like this, no? If they're at a weird angle or intentionally concealing their face then facial recognition falls apart but being able to describe them naturally would result in better tracking IMO.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508251" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">macNchz</span>
+        <span class="meta-time">2026/03/25 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">想必理想的状态是某种融合。上传或标记一些图像/视频并链接某人的社交档案，系统可以根据面部识别、步态识别、车辆/宠物/常见衣柜物品的组合来寻找他们。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Presumably the ideal is some kind of a fusion. Upload or tag some images/videos and link someone's social profiles and the system can look out for them based on facial recognition, gait recognition, vehicle/pets/common wardrobe items in combination.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">novoreorx</span>
+        <span class="meta-time">2026/03/25 15:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在演示中，兄弟展示了如何搜索“一辆后面有自行车架的汽车，它在晚上切断了我的联系”。考虑到他一定对被切断的怨恨，我强烈怀疑找到这辆特定的汽车是他最初构建该项目的主要动机</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the demo bro shows how to search for "a car with a bike rack on the back that cut me off at night." Given the grudge he must've held from being cut off, I strongly suspect that finding this specific car was his main motivation for building the project in the first place</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514530" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">npilk</span>
+        <span class="meta-time">2026/03/25 12:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多模式人工智能将在广告检测与广告插入方面引发一场有趣的军备竞赛。我尝试使用较旧的 Gemini 型号进行 AI 广告删除，但这似乎更强大，可以立即识别广告（并可能将其静音或删除）。<p><a href="https://notes.npilk.com/experiments-with-ai-adblock" target="_blank" rel="noopener noreferrer">https://notes.npilk.com/experiments-with-ai-adblock</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Multimodal AI will lead to an interesting arms race in ad detection vs ad insertion. I played around with AI ad removal with older Gemini models, but it seems like this would be even more powerful to instantly identify ads (and potentially mute or strip them out).<p><a href="https://notes.npilk.com/experiments-with-ai-adblock" target="_blank" rel="noopener noreferrer">https://notes.npilk.com/experiments-with-ai-adblock</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sbinnee</span>
+        <span class="meta-time">2026/03/25 15:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好文章。我看到有人用人工智能描绘了网络搜索的未来。结论并不是光明的未来。简而言之，广告永远不会消失。人工智能提供商要么会因将广告列入白名单而获得报酬，要么更糟糕的是，这些人工智能将直接推广广告产品。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice article. I saw someone depicting the future of web search with AI. The conclusion was not the bright future. Simply put, ads will never go away. Either AI providers will get paid for whitelisting ads, or even worse these AI will directly promote advertised products.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514224" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rigrassm</span>
+        <span class="meta-time">2026/03/25 03:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几个月前，我买了一台 Reshing 行车记录仪，在对获取它的镜头的笨重感到沮丧后，我决定自己开发一些东西来浏览和下载记录，而无需拔出 SD 卡。在滚动浏览录音时，我清楚地记得我当时想，如果能描述我正在寻找的内容并进行搜索就好了。期待将其纳入我的项目中。<p>感谢分享！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I picked up a Rexing dash cam a few months back and after getting frustrated with how clunky it is to get footage of it, I decided to look into building something out myself to browse and download the recordings without having to pull the SD card. While scrolling through the recordings, I explicitly remember thinking it would be nice to just describe what I was looking for and run a search. Looking forward to incorporating this into my project.<p>Thanks for sharing!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508125" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lwarfield</span>
+        <span class="meta-time">2026/03/25 06:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该死，我需要继续我的嵌入项目。我目前已经有了一个使用嵌入（在我的例子中不是双子座）来制作有点反向连接的游戏的原型：<p>集合.lwarfield.dev</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Damn, I need to going with my embeddings project. I've currently got a prototype for using embeddings (not gemini in my case) for making a game that's kinda reverse connections:<p>collections.lwarfield.dev</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">emsign</span>
+        <span class="meta-time">2026/03/25 00:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个反乌托邦的出口在哪里？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Where is the Exit to this dystopia?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nclin_</span>
+        <span class="meta-time">2026/03/25 02:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，有了这样的数据分析能力，在群体摄像机前说几句叛逆的话就能给你指明道路。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, with data analysis powers like this a few treasonous words in front of a flock camera will show you the way.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506910" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RobotToaster</span>
+        <span class="meta-time">2026/03/25 01:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在矩阵中，出口是公用电话，这也许可以解释为什么我们的霸主要移除它们</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the matrix the exit was pay phones, which perhaps explains why our overlords are removing them</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506417" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anxoo</span>
+        <span class="meta-time">2026/03/25 06:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://pauseai.info/" target="_blank" rel="noopener noreferrer">https://pauseai.info/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://pauseai.info/" target="_blank" rel="noopener noreferrer">https://pauseai.info/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sbinnee</span>
+        <span class="meta-time">2026/03/25 15:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢分享。他们说“暂停”，而不是停止。假设我们现在暂停。那我们什么时候应该恢复呢？我们怎么知道？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for sharing. They say "pause", not stop. Assume that we pause now. When should we resume then? How do we know?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514241" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jama211</span>
+        <span class="meta-time">2026/03/25 01:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不认为这意味着我们处于反乌托邦</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don’t think this means we’re in a dystopia</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506644" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zwirbl</span>
+        <span class="meta-time">2026/03/25 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你可能没有注意</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You might not have been paying attention</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">52-6F-62</span>
+        <span class="meta-time">2026/03/25 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 Radiohead 是这么说的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think Radiohead said that</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507377" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">draw_down</span>
+        <span class="meta-time">2026/03/25 02:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">搜索视频剪辑并找到它们的反乌托邦？什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The dystopia of searching for video clips and finding them? What?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bitexploder</span>
+        <span class="meta-time">2026/03/25 06:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的？目前搜索视频相对昂贵。随着像这样的嵌入技术的进步并使其变得更加便宜，它只会增加搜索和分析每个动作的能力。 “使用持不同政见活动技能查找表明持不同政见活动的言语模式”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes? Right now it is relatively expensive to search video. As embedding tech like this advances and makes it even cheaper it just increases the ability to search and analyze every movement. “Locate speech patterns that indicate dissident activity using the dissident activity skill”</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">BrokenCogs</span>
+        <span class="meta-time">2026/03/25 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《黑客帝国》风格的人类豆荚：我们生活在《黑客帝国》中幸福的无知之中，而法学硕士从我们身上提取了越来越多的计算能力，因此某个地方的某些首席执行官可以声称他们现在已经在其业务中用机器取代了所有人类。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Matrix style human pods: we live in blissful ignorance in the Matrix, while the LLMs extract more and more compute power from us so some CEO somewhere can claim they have now replaced all humans with machines in their business.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">throwup238</span>
+        <span class="meta-time">2026/03/25 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我更多地想到了《神秘博士》第三季的那一集 <i>僵局</i> 每个人都住在在地下巨大高速公路上盘旋的飞行汽车中，而地面上的所有上层阶级都在几年前死于一场流行病。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was thinking more of the season 3 episode of Doctor Who titled <i>Gridlock</i> where everyone lives in flying cars circling a giant expressway underground, while all the upper class people on the surface died years ago from a pandemic.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506191" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ting0</span>
+        <span class="meta-time">2026/03/25 01:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有感觉宇宙在读你的心思？也许这毕竟是有一定道理的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ever get the feeling that the universe is reading your mind? Maybe there's some truth to that after all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506362" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cloogshicer</span>
+        <span class="meta-time">2026/03/25 03:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这可以用来创建视频编辑软件吗？<p>想象一个 Premiere 插件，您可以在其中说“删除所有包含猫的场景”，它会输出一个 EDL（编辑决策列表），您仍然可以手动调整。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could this be used for creating video editing software?<p>Imagine a Premiere plugin where you could say "remove all scenes containing cats" and it'll spit out an EDL (Edit Decision List) that you can still manually adjust.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507935" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 04:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这是一个好主意，我实际上一直在考虑将其作为下一个合乎逻辑的步骤。<p>SentrySearch 已经为任何自然语言查询返回精确的输入/输出时间戳，并使用 ffmpeg 自动修剪剪辑。将其转换为 EDL（甚至是导出可编辑剪切列表的直接 Premiere 插件）感觉很自然。</p><p>我自己不是 Premiere 专家，但我很乐意看到这种情况发生。如果您（或任何人）想要草拟一个快速的 EDL 导出器或插件，我会很乐意审查+合并 PR 并尽我所能提供帮助。如果您开始做某件事，只需在 GitHub 上提交问题即可！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, this is a great idea, I’ve actually been thinking about exactly this as the next logical step.<p>SentrySearch already returns precise in/out timestamps for any natural-language query and uses ffmpeg to auto-trim clips. Turning that into an EDL (or even a direct Premiere plugin that exports an editable cut list) feels natural.</p><p>I’m not a Premiere expert myself, but I’d love to see this happen. If you (or anyone) wants to sketch out a quick EDL exporter or plugin, I’ll happily review + merge a PR and help wherever I can. Just drop a GitHub issue if you start something!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mdrzn</span>
+        <span class="meta-time">2026/03/25 00:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常有趣（不是用于行车记录仪，而是用于家庭监控）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very interesting (not for a dashcam, but for home monitoring).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SoftTalker</span>
+        <span class="meta-time">2026/03/25 13:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大多数家庭监控只在有移动时记录？所以这已经大大压缩了搜索空间。只需向前和向后快速移动，就可以很容易地快速找到 30 秒内有一个人影走到你的前门。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most home monitoring only records when there is movement though? So that already compresses the search space a lot. And just zipping forward and back it's pretty easy to quickly find the 30 seconds where there is a figure wallking up to your front door.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513650" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fhe</span>
+        <span class="meta-time">2026/03/25 08:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该功能将是所有家庭安全系统的必备功能。我曾经花几个小时通过家庭安全摄像头检查我们的猫是否在门不小心开着时走出了房子（事实证明它真的很擅长躲在房子里）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this function will be a must-have for all home security systems. I used to spend hours going through home security cameras to check if our cat went out the house when the door was accidentally left open (turned out it was just really good at hiding within the house).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511751" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">martz</span>
+        <span class="meta-time">2026/03/25 14:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这可以在本地完成 <a href="https://github.com/intel/openvino-ai-video-retrieval-analysis" target="_blank" rel="noopener noreferrer">https://github.com/intel/openvino-ai-video-retrieval-analysi...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this can be done locally <a href="https://github.com/intel/openvino-ai-video-retrieval-analysis" target="_blank" rel="noopener noreferrer">https://github.com/intel/openvino-ai-video-retrieval-analysi...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513930" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">febed</span>
+        <span class="meta-time">2026/03/25 12:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来运行起来会非常昂贵。您是否有特定分辨率和帧速率下的一些代表性数据？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This seems like something that would be very expensive to run. Do you have some representative figures at a particular resolution and frame rate?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">danbrooks</span>
+        <span class="meta-time">2026/03/25 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从事内容/视频情报工作。 Gemini 非常适合此类开箱即用的用例。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I work in content/video intelligence. Gemini is great for this type of use case out of the box.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506848" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simonreiff</span>
+        <span class="meta-time">2026/03/25 01:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常令人印象深刻！可以将网络钩子配置为在检测到与任何类别的活动的语义匹配时触发警报，然后您基本上就拥有了虚拟保安和私家侦探。打的好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very impressive! A webhook could be configured to trigger an alarm if a semantic match to any category of activities is detected, and then you basically have a virtual security guard and private investigator. Well played.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506518" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！是的，这会很酷，但是连续索引现在会非常昂贵，因为该模型处于公共预览阶段，并且没有本地替代方案。<p>不过，这很可能在几年内成为现实！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Yeah that would be pretty cool, but continuous indexing would be pretty expensive now, because the model's in public preview and there are no local alternatives afaik.<p>This very well might be a reality in a couple years though!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507205" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">CamperBob2</span>
+        <span class="meta-time">2026/03/25 12:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可以 <a href="https://qwen.ai/blog?id=qwen3-vl-embedding" target="_blank" rel="noopener noreferrer">https://qwen.ai/blog?id=qwen3-vl-embedding</a> 是一个可能的本地替代方案吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could <a href="https://qwen.ai/blog?id=qwen3-vl-embedding" target="_blank" rel="noopener noreferrer">https://qwen.ai/blog?id=qwen3-vl-embedding</a> be a possible local alternative?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513178" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">QubridAI</span>
+        <span class="meta-time">2026/03/25 05:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个巨大的飞跃，真正的多模式搜索没有文本瓶颈，使视频查询最终感觉原生且非常实用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a big leap true multimodal search without text bottlenecks makes video querying feel finally native and insanely practical.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509272" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bobafett-9902</span>
+        <span class="meta-time">2026/03/25 04:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道视觉语言学习的根本改进是否会允许更有效的搜索。第一个完全通用的计算机动作模型 -&gt; <a href="https://si.inc/posts/fdm1/" target="_blank" rel="noopener noreferrer">https://si.inc/posts/fdm1/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder if the underlying improvements in visual language learning will allow for even more efficient search. The First Fully General Computer Action Model -&gt; <a href="https://si.inc/posts/fdm1/" target="_blank" rel="noopener noreferrer">https://si.inc/posts/fdm1/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508952" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">WatchDog</span>
+        <span class="meta-time">2026/03/25 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不太明白5秒的重叠。  
+我认为这是为了避免错过块边界上发生的事件，但是是否有任何示例或基准测试来检查这有多大用处？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't quite understand the 5 second overlap.  
+I assume it's so that events that occur over the chunk boundary don't get missed, but is there any examples or benchmarking to examine how useful this is?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509946" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 06:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，因此块边界上的事件仍然被捕获在至少一个块中。我还没有机会对重叠与无重叠进行正式的基准测试。 5s 默认值是一个务实的选择，足够长以捕获大多数否则会被拆分的事件，足够短以不会增加太多成本（120 块/小时到〜138）。也可以通过 --overlap 标志进行配置。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yea, it's so events on a chunk boundary still get captured in at least one chunk. i haven't had the chance to do formal benchmarks on overlap vs. no-overlap yet. the 5s default is a pragmatic choice, long enough to catch most events that would otherwise be split, short enough to not add much cost (120 chunks/hr to ~138). also it's configurable via the --overlap flag.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510466" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rao-v</span>
+        <span class="meta-time">2026/03/25 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有像样的开放视频嵌入模型？我很想在不上传视频的情况下玩这个。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a decent open video embedding model out there? I’d love to play with this without uploading video.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512141" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sans_souse</span>
+        <span class="meta-time">2026/03/25 10:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">完全放在一边，但我猜你是在开皮卡吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Total aside here but is that you driving the pickup I assume?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512318" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 10:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，不，我正在驾驶特斯拉，该剪辑来自左侧中继器摄像头（来自汽车各处的特斯拉记录）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">haha no i'm driving the tesla and that clip is from the left repeater camera (teslas record from all around the car)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nullbyte</span>
+        <span class="meta-time">2026/03/25 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多么绝妙的主意啊！这都是在本地完成的吗？那真是难以置信。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What a brilliant idea! is this all done locally? That's incredible.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506364" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">apwheele</span>
+        <span class="meta-time">2026/03/25 01:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然矢量存储是本地的，但它会将数据发送到 Gemini 的 API 进行嵌入。 （如果使用付费 API 密钥对于大多数用例来说可能没问题，无需长期保留/培训等。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While the vector store is local, it is sending the data to Gemini's API for embedding. (Which if using a paid API key is probably fine for most use cases, no long term retention/training etc.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506445" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">crashabr</span>
+        <span class="meta-time">2026/03/25 10:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道这对于舞蹈视频效果如何。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder how well this would work with dance videos.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512290" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cat-turner</span>
+        <span class="meta-time">2026/03/25 07:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个太棒了，谢谢分享</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is great, thanks for sharing</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510942" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ygouzerh</span>
+        <span class="meta-time">2026/03/25 00:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣，干得好！我没有想到嵌​​入的这个用例。它为许多潜在应用打开了大门！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's quite interesting, well done! I haven't thought of this use case for embeddings. It open the door to quite many potential applications!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504790" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stavros</span>
+        <span class="meta-time">2026/03/25 00:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">伙计，这方面的监控应用令人震惊。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Man, the surveillance applications for this are staggering.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505302" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kamranjon</span>
+        <span class="meta-time">2026/03/25 01:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有谁知道可以嵌入视频的开放权重模型？很想在本地尝试这个。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does anyone know of an open weights models that can embed video? Would love to experiment locally with this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506066" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 01:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不知道有什么可以像 Gemini Embedding 2 那样进行原生视频到矢量嵌入。有一些基于 CLIP 的模型（如 VideoCLIP）可以单独嵌入帧，但它们不处理时态视频。你需要平均帧嵌入，这会损失很多。<p>希望看到具有此功能的开放重量模型，因为它将消除 API 成本和上传素材的隐私问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not aware of any that do native video-to-vector embedding the way Gemini Embedding 2 does. There are CLIP-based models (like VideoCLIP) that embed frames individually, but they don't process temporal video. you'd need to average frame embeddings which loses a lot.<p>Would love to see open-weight models with this capability since it would eliminate the API cost and the privacy concern of uploading footage.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506358" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CamperBob2</span>
+        <span class="meta-time">2026/03/25 12:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">快速搜索出现 <a href="https://qwen.ai/blog?id=qwen3-vl-embedding" target="_blank" rel="noopener noreferrer">https://qwen.ai/blog?id=qwen3-vl-embedding</a> 但我不知道它是否像双子座在这里所做的那样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A quick search brought up <a href="https://qwen.ai/blog?id=qwen3-vl-embedding" target="_blank" rel="noopener noreferrer">https://qwen.ai/blog?id=qwen3-vl-embedding</a> but I have no idea if it does what Gemini is doing here.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513187" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">totisjosema</span>
+        <span class="meta-time">2026/03/25 03:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">到目前为止，您对回收的作品的质量有何评价？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What is your experience so far with the quality of the retrieved pieces?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508144" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 03:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现我必须非常具体才能获得我正在搜索的剪辑。例如，“汽车挡住了我的路”只是返回了一辆汽车驶过我的盲点的剪辑。但是，“后面有自行车架的汽车在晚上切断了我的路”给了我正是我正在寻找的剪辑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've found I have to be very specific to get the clip I'm searching for. For example, "car cuts me off" just returned a clip of a car driving past my blindspot. But, "car with bike rack on back cuts me off at night" gave me exactly the clip I was looking for.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508195" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dev_tools_lab</span>
+        <span class="meta-time">2026/03/25 00:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很好地使用了本机视频嵌入。你如何处理 
+双子座反应信心低的情况？ 
+你有后备措施或门槛吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice use of native video embedding. How do you handle 
+cases where Gemini's response confidence is low? 
+Do you have a fallback or threshold?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504887" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 00:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">截至目前，没有门槛，但未来有计划。<p>例如，现在如果我在索引行车记录仪镜头中搜索“cybertruck”，我的镜头中没有任何 Cyber​​truck，因此它将返回下一个最佳匹配的剪辑，该片段是一辆大卡车，但不是 Cyber​​truck</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">as of now, no threshold but that is planned in the future.<p>for example, for now if i search "cybertruck" in my indexed dashcam footage, i don't have any cybertrucks in my footage, so it'll return a clip of the next best match which is a big truck, but not a cybertruck</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Aeroi</span>
+        <span class="meta-time">2026/03/25 00:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷，有人有明显的用例吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">very cool, anybody have apparent use cases for this?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505320" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mannyv</span>
+        <span class="meta-time">2026/03/25 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">索引所有色情内容并跳过所有填充内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Indexing all your porn and skipping all the filler.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510806" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">行车记录仪和家庭安全录像是我能想到的两个主要的。<p>现在有点贵，所以大规模应用并不那么实用。但是一旦嵌入模型结束公共预览，并且我们希望获得本地等效模型，这将更加实用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">dashcam and home security footage are the 2 main ones i can think of.<p>a bit expensive right now so it's not as practical at scale. but once the embedding model comes out of public preview, and we hopefully get a local equivalent, this will be a lot more practical.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">giozaarour</span>
+        <span class="meta-time">2026/03/25 01:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为一个很好的用例是通过社交媒体（TikTok 和 Instagram）搜索某些产品或视频。也许对购物特别有用</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think a good use case would be searching for certain products or videos across social media (TikTok and Instagram). especially useful for shopping, maybe</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vidarh</span>
+        <span class="meta-time">2026/03/25 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">品牌/营销监控公司将全力以赴。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Branding/marketing monitoring companies would be all over this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506227" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hebelehubele</span>
+        <span class="meta-time">2026/03/25 01:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">国家监视</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">State surveillance</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505784" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wahnfrieden</span>
+        <span class="meta-time">2026/03/25 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">工人监控</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Worker surveillance</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506213" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CamperBob2</span>
+        <span class="meta-time">2026/03/25 12:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想到了越野和比赛摄像机。 “创建所有鹿遭遇的蒙太奇”，“找到今年黑熊的第一次出现”之类的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Trail and game cams come to mind. "Create a montage of all deer encounters," "Find first appearance of black bear this year," that sort of thing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513124" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thegabriele</span>
+        <span class="meta-time">2026/03/25 06:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么只有行车记录仪？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why just the dash cam?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510087" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 06:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">行车记录仪只是用例之一，也是我测试的用例之一。但理论上这可以适用于任何类型的视频片段，例如家庭安全片段</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">dashcam is just one of the use cases and the one i tested on. but this could theoretically work with any kind of video footage like home security footage</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510383" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SpaceManNabs</span>
+        <span class="meta-time">2026/03/25 01:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 无转录、无框架字幕、无中间文本。<p>如果视频上有文本（如标题或 wtv），嵌入会捕获该文本吗？以前从来没有想过这个问题。</p><p>如果视频有音频，嵌入是否也会捕获音频？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;  No transcription, no frame captioning, no intermediate text.<p>If there is text on the video (like a caption or wtv), will the embedding capture that? Never thought about this before.</p><p>If the video has audio, does the embedding capture that too?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506174" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 01:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">两者皆是。嵌入在原始视频帧上，因此任何可见的内容（文本、标志、标题）都会被捕获在向量中。 Gemini Embedding 2 提取音轨并将其嵌入到视觉帧旁边。因此，像“有人大喊大叫”这样的查询理论上会在音频上匹配。我的行车记录仪镜头没有音频，所以我还没有测试那一侧。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes to both. The embedding is over raw video frames, so anything visible (text, signs, captions) gets captured in the vector. And Gemini Embedding 2 extracts the audio track and embeds it alongside the visual frames. So a query like 'someone yelling' would theoretically match on audio. My dashcam footage doesn't have audio though, so I haven't tested that side yet.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506303" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">7777777phil</span>
+        <span class="meta-time">2026/03/25 01:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">今天我了解到 Gemini 现在可以原生嵌入视频了。<p>很酷的项目，感谢分享！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Today I learned that Gemini can now natively embed video..<p>Cool Project, thanks for sharing!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">klntsky</span>
+        <span class="meta-time">2026/03/25 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么不跳过文本转换呢？它到底有用吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">why not skip the text conversion? is it usable at all?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505177" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sohamrj</span>
+        <span class="meta-time">2026/03/25 00:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Gemini embedding 2 将直接视频转换为矢量。在这种情况下，行车记录仪剪辑没有可转录的音频，即使有，在搜索中也毫无用处</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">gemini embedding 2 converts straight video to vectors. in this case, dashcam clips don't have audio to transcribe and even if they did, it would be useless in the search</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505271" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">password4321</span>
+        <span class="meta-time">2026/03/25 00:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在有哪些 SoA 音频模型？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What are the SoA audio models right now?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505729" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hikaru_ai</span>
+        <span class="meta-time">2026/03/25 15:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rkaliupin</span>
+        <span class="meta-time">2026/03/25 09:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511952" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">matzalazar</span>
+        <span class="meta-time">2026/03/25 04:08</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>curl &gt; /dev/sda：我如何制作一个运行 wget 的 Linux 发行版 | DD | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>curl &gt; /dev/sda：我如何制作一个运行 wget 的 Linux 发行版 | DD</h1>
+      <p class="subtitle">curl &gt; /dev/sda: How I made a Linux distro that runs wget | dd</p>
+      <div class="meta-line">
+        <span>astrid.tech</span>
+        <span>作者 astralbijection</span>
+        <span>分数 143</span>
+        <span>评论 60</span>
+        <span>2026/03/24 18:06</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47500522" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://astrid.tech/2026/03/24/0/curl-to-dev-sda/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>我如何制作一个运行 `wget | dd`2026-03-24 02:10*Linux http 的 Linux 发行版 这是关于在早期 Linux 启动中做奇怪事情的四部分系列中的第 0 部分。要将 Linux 安装替换为新操作系统，您可以通过运行如下命令将预先准备好的磁盘映像直接下载到磁盘：curl https://something.example/foo.img &gt; /dev/sda #（或任何您的磁盘名称）</li><li>无需先将其保存在任何地方，只需将其直接通过管道传输到磁盘即可。然后您可以重新启动到该操作系统，恭喜您，您已经安装了一个新操作系统。这甚至适用于大多数 EFI 机器，无需任何进一步的 efibootmgr 命令，因为 EFI 固件会自动发现新的 EFI 系统分区！为什么？该命令之所以可行，是因为 /dev/sdX、/dev/nvmeX 和其他此类磁盘可以直接从文件系统访问，遵循古老的 Unix 概念“一切都是文件”。您可以写入/dev/sdX文件，并且直接写入磁盘！不，比如，为什么你要这样做而不是通过其他正常方式安装 Linux？好吧，我最初这样做的原因是因为我不想向 Contabo 额外支付 1.50 美元/月以获得对象存储，只是为了能够从预制磁盘映像生成 VPS。我认为这是一个巧妙的技巧，一个有趣的垃圾帖子，重复着永恒的卷曲|嘘辩论。我可以写一篇关于它的博客文章，我告诉你如何自己做，一千字，我学到一些东西，你学到一些东西，我得到互联网积分，双赢。问题是事情并没有就此结束。我又不断地问一个问题。我不断地从洋葱上剥一层。我不断地在魔法书中翻过一页……在我意识到之前，我结束了一个由四部分组成的博客系列，它并没有像你期望的那样结束。我们为什么不从头开始呢？如何以炫酷的方式刷新 Raspberry Pi 如今，Raspberry Pi 基金会为您提供了一款他们构建的软件，可以自动完成所有操作，但在我那个时代，您必须这样做。 Stack Exchange 的答案列出了一系列确切的步骤。</li><li>首先，您通过网络浏览器访问该网站。然后，单击按钮下载图像。然后，直接引用该答案：</li><li>通过运行 sudo dd bs=1M if=your_image_file_name.img of=/dev/sdx 将映像文件的内容复制到 SD 卡上</li><li>是的，他们还对图像进行了 sha256sum，但说实话，没有人会这样做，甚至连 Caligula 用户也没有。更懒？现在，此步骤的逻辑上的第一个改进是，如果您已经知道 URL，则可以直接从命令行 wget 或 curl 该文件，而不是通过 Web 浏览器导航。因此，您可以运行： wget -O disk.img https://www.raspberrypi.com/whatever sudo dd bs=1M if=disk.img of=/dev/sdx</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>How I made a Linux distro that runs `wget | dd`2026-03-24 02:10*Linux http This is part 0 of a four-part series about doing weird things in early Linux boot. To replace your Linux installation with a new OS, you can download a pre-prepared disk image directly to your disk by running a command like this: curl https://something.example/foo.img &gt; /dev/sda # (or whatever your disk is called)</li><li>No need to save it anywhere first, just pipe it directly to the disk. Then you can reboot into that OS, and congratulations, you’ve installed a new OS. This works even for most EFI machines without any further efibootmgr commands because EFI firmware automatically discovers the new EFI system partition! Why? This command is possible because /dev/sdX, /dev/nvmeX, and other such disks can be directly accessed from the filesystem, following the ancient Unix concept of “everything is a file.” You can write to the /dev/sdX file, and that directly writes to the disk! No, like, why would you want to do this instead of installing Linux any other normal way? Okay, so the reason I initially did this was because I didn’t want to pay Contabo an extra $1.50/mo to have object storage just to be able to spawn VPSes from premade disk images. I thought it was a neat trick, a funny shitpost that riffs on the eternal curl | sh debate. I could write a blog post about it, I tell you about how you can do it yourself, one thousand words, I learn something, you learn something, I get internet points, win win. The problem is that it didn’t stop there. I kept asking one more question. I kept peeling one more layer off the onion. I kept turning one more page in the grimoire… and before I knew it, I ended up with a four part blog series that doesn’t end where you expect it to end. Why don’t we start from the beginning? How to flash a Raspberry Pi the cool way Nowadays, the Raspberry Pi Foundation gives you a piece of software that they built that does everything automatically, but back in my day, you had to do it this way. There’s a Stack Exchange answer that lists the exact series of steps.</li><li>First, you go to the website in your web browser. Then, you click on the button to download the image. Then, quoting directly from that answer:</li><li>Copy the contents of the image file onto the SD card by running sudo dd bs=1M if=your_image_file_name.img of=/dev/sdx</li><li>Yeah, they also said to sha256sum the image, but let’s be honest, nobody fucking does that, not even Caligula users. lazier? Now, a logical first improvement to this step is, rather than navigating through the web browser, you can just wget or curl that file from the command line to begin with if you already know the URL. So, you can run: wget -O disk.img https://www.raspberrypi.com/whatever sudo dd bs=1M if=disk.img of=/dev/sdx</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rwmj</span>
+        <span class="meta-time">2026/03/24 20:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不幸的是，它并不安全，因为内核仍然可以写入（它认为的）设备上的旧文件系统，这将导致新磁盘映像损坏。<p>然而一个有趣的事实是你 <i>能</i> （实际上不要这样做！）从 /dev/sda 启动 qemu VM。  您必须使用覆盖（例如 qemu -drive snapshot=on 标志），以便 qemu 不会写入 /dev/sda。  我在 supernested 中使用了这个技巧，这是我编写的一个脚本，它无限地嵌套在嵌套虚拟机中运行，直到您的虚拟机管理程序崩溃。  <a href="http://git.annexia.org/?p=supernested.git;a=blob;f=run-supernested.sh.in;h=ea227f0c62eddc0c6d2e394b938d1a920a48e794;hb=HEAD#l65" target="_blank" rel="noopener noreferrer">http://git.annexia.org/?p=supernested.git;a=blob;f=run-super...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unfortunately it's not safe as the kernel can still write to (what it thinks is) the old filesystem on the device, which will introduce corruption to the new disk image.<p>However a fun fact is that you <i>can</i> (do not actually do this!) boot a qemu VM from /dev/sda.  You have to use an overlay (eg. qemu -drive snapshot=on flag) so that qemu won't write through to /dev/sda.  I use this trick in supernested, a script I wrote that runs nested within nested within nested VMs ad infinitum until your hypervisor crashes.  <a href="http://git.annexia.org/?p=supernested.git;a=blob;f=run-supernested.sh.in;h=ea227f0c62eddc0c6d2e394b938d1a920a48e794;hb=HEAD#l65" target="_blank" rel="noopener noreferrer">http://git.annexia.org/?p=supernested.git;a=blob;f=run-super...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501382" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tux3</span>
+        <span class="meta-time">2026/03/24 21:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我曾经双启动 Windows，但我懒得真正重新启动，所以很自然地，我让 Virtualbox 在 Linux 运行时启动物理 Windows 分区。这完全没问题！<p>如果不同时启动两个分区，则不是真正的双启动。</p><p>只要您不安装来宾 VBox 驱动程序，当它作为物理硬件上的主机启动时，这些驱动程序就会使其挂起，因为上面不再有人应答超级调用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I used to dual-boot windows, but I was too lazy to actually reboot, so naturally I had Virtualbox just boot the physical Windows partition while Linux was running. Which is totally fine!<p>It's not a real dual boot if you don't boot both partitions at the same time.</p><p>As long as you don't install guest VBox drivers, those would make it hang when it boots as the host on physical hardware, since there's no longer someone above to answer the hypercalls.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hdb2</span>
+        <span class="meta-time">2026/03/25 01:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我让 Virtualbox 在 Linux 运行时启动物理 Windows 分区。这完全没问题！<p>我不知道这是可能的，今天我学到了一些新东西。  谢谢你！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I had Virtualbox just boot the physical Windows partition while Linux was running. Which is totally fine!<p>I had no idea that this was possible, and I learned something new today.  Thank you!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506385" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ahartmetz</span>
+        <span class="meta-time">2026/03/24 23:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 Windows 在某些时候拒绝这样做？因此，如果我同时需要这两个分区，我会从 Windows 启动物理 Linux 分区。那是在一台几乎总是运行 Linux 的笔记本电脑上。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think Windows refused to do that at some point? So I booted the physical Linux partition from Windows if I needed both at the same time. That's on a laptop that otherwise almost always ran Linux.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503669" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">johnisgood</span>
+        <span class="meta-time">2026/03/24 22:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。这是有效的使用。我的意思是，这就是我开始安装 Windows 的方式，从 Linux 通过 QEMU 安装到我的另一个硬盘上。我重新启动并测试了一下，效果很好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah. That is a valid use. I mean, this is how I installed Windows to begin with, from Linux via QEMU, onto my other hard drive. I did reboot and test it out, and it worked just fine.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503637" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/24 21:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个脚本听起来非常精神错乱，我的意思是这是一种恭维:)<p>在不剧透太多的情况下，本系列最后的命令会执行与此类似的操作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That script sounds extremely unhinged, and I mean it as a compliment :)<p>Without spoiling too much, the command at the very end of the series does something adjacent to this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502517" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Joker_vD</span>
+        <span class="meta-time">2026/03/24 20:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我们首先将 /dev/sda 处的文件系统重新挂载为只读会怎样？然后制作一个带有静态链接的curl的小ramfs并执行它。唔。理想情况下，您还想在完成后调用reboot(2)...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What if we remount the filesystem(s) at /dev/sda as read-only first? Then make a small ramfs with statically-linked curl in it and exec it. Hmm. Ideally, you'd also want to call reboot(2) after it's done...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501444" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/24 20:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所有这些内容都在第 2、3 和 4 部分中介绍:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">All of those things get covered in parts 2, 3, and 4 :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Joker_vD</span>
+        <span class="meta-time">2026/03/24 20:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">帖子里没有第二部分吗？据我所知，这是该网站上最新的博客文章。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's... no part 2 in the post? And it's the latest blog post on the site, as far as I can see.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501941" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/24 21:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它确实在最底部链接起来，尽管不可否认它可以变得更清晰。 <a href="https://astrid.tech/2026/03/24/1/swap-out-the-root-before-boot/" target="_blank" rel="noopener noreferrer">https://astrid.tech/2026/03/24/1/swap-out-the-root-before-bo...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It does get linked at the very bottom, though admittedly it could be made clearer. <a href="https://astrid.tech/2026/03/24/1/swap-out-the-root-before-boot/" target="_blank" rel="noopener noreferrer">https://astrid.tech/2026/03/24/1/swap-out-the-root-before-bo...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501961" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Joker_vD</span>
+        <span class="meta-time">2026/03/24 21:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，我明白了，帖子是以相反的顺序发布的。<p>关于主题本身：哇，真是一次旅程。我个人完全支持“来吧，你应该完全能够将系统映像转储到磁盘上并重新启动/执行它！”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, I see, the posts got published in the reversed order.<p>On the topic itself: wow, what a journey. And I personally fully support "come on, you should totally be able to just dump the system image onto your disk and reboot/exec it!"</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502160" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">duskwuff</span>
+        <span class="meta-time">2026/03/25 03:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能感兴趣的一个神奇之处是pivot_root，它允许另一个文件系统取代根文件系统（例如/和/mnt变成/old和/）。它通常在启动期间使用，以允许“真正的”根文件系统取代 initrd，但也可以有其他用途。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One bit of magic you may be interested in is pivot_root, which allows another filesystem to take the place of the root filesystem (e.g. / and /mnt become /old and /). It's usually used during startup, to allow the "real" root filesystem to take the place of the initrd, but could have other uses.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507864" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Dylan16807</span>
+        <span class="meta-time">2026/03/25 04:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">上次我尝试使用它，但我只是 <i>不能</i> 即使在反复终止我可以杀死的进程并重新启动其余进程之后，让它释放主文件系统。<p>在 initrd 阶段进行控制（如本文第二页所示）明显更可靠。</p><p>但是在你的 initrd 中有 busybox 这样你就不用受苦了。  它占用了我的 initrd 文件大小的 0.5%。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Last time I tried to use it though I just <i>could not</i> get it to let go of the main filesystem even after repeatedly killing the processes I could and restarting the rest.<p>Taking control at the initrd stage, as in the second page of the article, is significantly more reliable.</p><p>But have busybox in your initrd so you don't have to suffer.  It takes up 0.5% of the size of my initrd file.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508320" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tremon</span>
+        <span class="meta-time">2026/03/25 03:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您也不想在任何类型的内存压力下执行此操作，因为如果内核认为可以在需要时从磁盘重新读取只读页面，那么内核会很乐意从内存中删除只读页面。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You also don't want to do this under any kind of memory pressure, because the kernel will happily drop read-only pages from memory if it thinks they can be re-read from disk when needed.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507756" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/03/24 20:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在大多数情况下，您可以直接返回到大多数发行版中包含的 initramfs<p>或者，如果您有权访问启动命令行，您通常也可以在pivot_root发生之前停止启动过程（因此您将在initramfs环境中运行）</p><p>在 Fedora/EL 上，可以通过在内核命令行中输入 `rd.break` 来完成</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">in most cases you could just drop back into the initramfs that is included in most distros<p>Or if you have access to the boot command line you can also usually stop the boot process before pivot_root happens (hence you’ll be left running in the initramfs environment)</p><p>On Fedora/EL it would be done by putting `rd.break` in the kernel command line</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501787" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">vidarh</span>
+        <span class="meta-time">2026/03/24 20:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本系列的第二部分通过从 initrd 将其以只读方式安装来解决这个问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The second part in the series deals with that by mounting it read-only from initrd.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501424" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ciupicri</span>
+        <span class="meta-time">2026/03/24 21:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可以 <i>xfs_freeze</i> 帮忙解决这个问题吗？<p>[0]： <a href="https://www.man7.org/linux/man-pages/man8/xfs_freeze.8.html" target="_blank" rel="noopener noreferrer">https://www.man7.org/linux/man-pages/man8/xfs_freeze.8.html</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could <i>xfs_freeze</i> help with this?<p>[0]: <a href="https://www.man7.org/linux/man-pages/man8/xfs_freeze.8.html" target="_blank" rel="noopener noreferrer">https://www.man7.org/linux/man-pages/man8/xfs_freeze.8.html</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502436" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kyrjtejkrtys</span>
+        <span class="meta-time">2026/03/25 01:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据磁盘映像的大小和 uefi+boot 分区，仍然可以安全地完成。<p>卸载 efi 和引导分区，将映像写入磁盘磁头，重新启动，然后从映像中扩展最后一个文件系统以覆盖磁盘的其余部分。</p><p>你可能很幸运，可以使用 uefi/boot/swap 的所有三个。</p><p>当然，随着 uefi 的出现，您可以直接将安装程序映像放入 efi 分区并启动它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">depending on the size of your disk image and your uefi+boot partitions it's still possible to safely pull off.<p>unmount the efi and boot partitions, write your image to the head of the disk, power cycle, then grow the last filesystem from the image to cover the rest of the disk.</p><p>you might get lucky and have all three of uefi/boot/swap to work with.</p><p>of course with the advent of uefi, you could instead just drop an installer image directly into the efi parition and boot that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506547" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">matja</span>
+        <span class="meta-time">2026/03/24 20:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 如何卸载操作系统磁盘，同时保持操作系统运行以便能够覆盖自身？<p>我自己也经历了类似的兔子洞，目标是安全地替换机器已经运行的磁盘上的 Linux 安装（例如，用您自己的镜像替换 VPS 的设置镜像），而不需要使用 KVM 风格的远程访问工具来访问控制台。</p><p>问题是，如果您在将文件系统安装到该磁盘上时直接修改该磁盘，那么所有的赌注都会被破坏，因为那里已经存在的文件系统以及您在顶部写入的文件系统都会被损坏。</p><p>我的解决方案是 kexec 进入一个新的内核 + initramfs，其中有一个 DHCP 客户端和 cURL - 在将映像写入磁盘时有效地停止任何文件系统访问，然后重新启动。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; How do you unmount your OS’s disk while keeping the OS running to be able to overwrite itself?<p>I went down a similar rabbit-hole myself, with the goal of safely replacing the Linux installation on a disk that a machine is already running from (e.g. replace a VPS's setup image with one of your own) without needing a KVM-style remote access tool to the console.</p><p>The problem there is if you directly modify the disk when a filesystem is mounted on that disk then all bets are off in terms of corruption of the filesystem that's already on there and also the filesystem(s) you're writing over the top.</p><p>My solution was to kexec into a new kernel+initramfs which has a DHCP client and cURL in it - that effectively stops any filesystem access while the image is being written over the disk, then to just reboot.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501446" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">codeflo</span>
+        <span class="meta-time">2026/03/24 20:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我的解决方案是 kexec 进入一个新的内核 + initramfs，其中有一个 DHCP 客户端和 cURL - 在将映像写入磁盘时有效地停止任何文件系统访问，然后重新启动。<p>这就是我对这篇文章的期望。</p><p>更新：这并不明显，但事实证明这是一篇多部分文章，kexec 保留用于第 3 部分： <a href="https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between-reboots/" target="_blank" rel="noopener noreferrer">https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; My solution was to kexec into a new kernel+initramfs which has a DHCP client and cURL in it - that effectively stops any filesystem access while the image is being written over the disk, then to just reboot.<p>That's what I was expecting from the article.</p><p>Update: It's not obvious, but it turns out that this is a multipart article, and kexec is reserved for part 3: <a href="https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between-reboots/" target="_blank" rel="noopener noreferrer">https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501503" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matja</span>
+        <span class="meta-time">2026/03/24 20:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我完全错过了第 2/3 部分，感谢您的链接！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I totally missed part 2/3, thanks for linking!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501568" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kees99</span>
+        <span class="meta-time">2026/03/24 20:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与本文的 YOLO 精神保持一致，我们可以更加懒惰，并使用这个小东西进行紧急 R/O 重新安装：<p><a href="https://www.kernel.org/doc/html/latest/admin-guide/sysrq.html" target="_blank" rel="noopener noreferrer">https://www.kernel.org/doc/html/latest/admin-guide/sysrq.htm...</a></p><p>它是 <i>技术上</i> 不是卸载，但仍然是一个相当有力的保证，操作系统不会损坏正在写入的映像。</p><p>当然，完成后，必须从同一个 sysrq 处理程序重新启动。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Keeping with the YOLO spirit of the article, one can be even lazier, and do emergency R/O remount using this little thing:<p><a href="https://www.kernel.org/doc/html/latest/admin-guide/sysrq.html" target="_blank" rel="noopener noreferrer">https://www.kernel.org/doc/html/latest/admin-guide/sysrq.htm...</a></p><p>It's <i>technically</i> not an unmount, but still a pretty strong guarantee OS will not corrupt the image being written.</p><p>When done, reboot has to be done from the same sysrq handler, of course.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501593" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rkeene2</span>
+        <span class="meta-time">2026/03/24 20:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我通常只是将所有文件移动到新目录（/oldroot）和pivot_root - 任何打开的文件都会引用新路径。  然后安装到文件系统的新空根目录中，重新启动并删除 /oldroot。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I usually just move all the files to a new directory (/oldroot) and pivot_root -- any open files reference the new paths.  Then install into the newly empty root directory of the filesystem, reboot and delete the /oldroot.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501931" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">arboles</span>
+        <span class="meta-time">2026/03/25 03:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">即使您立即启动pivot_root，您不会收到任何错误吗？ ivot_root 也不会立即修改所有打开的文件描述符。看起来这不是致命的，但是你是否设法通过 ssh 做到这一点并且不被断开连接？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Don't you get any errors even if you race immediately to start pivot_root? pivot_root also won't modify all open file descriptors at once. Seems it's not fatal, but have you managed to do this over ssh and not be disconnected?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507529" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rkeene2</span>
+        <span class="meta-time">2026/03/25 10:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不知道您关于影响文件描述符的pivot_root的意思，因为它们没有被修改，它们指向新名称，因为封闭的目录已被移动/重命名。  在移动根目录中的项目之间以及移动所有项目之后和启动pivot_root之前之间存在一个小竞赛，但该竞赛不涉及文件描述符，而是在建立新路径之前在旧路径上打开，尽管现在很多东西都使用openat()，所以在大多数情况下它甚至不会真正发生。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't know what you mean regarding pivot_root affecting file descriptors because they are not modified, they point to new names because the enclosing directory has been moved/renamed.  There is a small race between moving items in the root directory as well as after moving all items and before starting pivot_root, but that race doesn't involve file descriptors but opening at the old paths before the new one is established, though lots of things use openat() these days so it doesn't really even occur in most cases then.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512364" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matja</span>
+        <span class="meta-time">2026/03/24 23:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果可以选择保留文件系统，这听起来是最好的方法。  就我而言，我还想更改文件系统并应用 FDE，如果原始文件系统支持在线收缩，但许多文件系统不支持，则可以这样做。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That sounds like the best way if keeping the filesystem is an option.  In my case I wanted to also change filesystems and apply FDE, which is possible to do if the original filesystem supports online shrinking but many do not.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lloydatkinson</span>
+        <span class="meta-time">2026/03/24 20:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">体操 VPS 提供商强迫人们经历这样的过程，这样他们就可以拥有一些愚蠢的“向导”，而操作系统选择的数量有限，这令人发狂。只需允许人们上传 ISO！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The gymnastics VPS providers force people to go through just so they can have some dumb "wizard" with a limited number of OS choices is maddening. Just allow people to upload an ISO!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501482" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SamWhited</span>
+        <span class="meta-time">2026/03/24 23:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让我想起了我毕业后工作的第一家公司。<p>我们有一个大驱动器，其中包含用于启动我们所有机器的真实源镜像，并且我们将 rsync 添加到了 init 镜像中。当每台机器启动时，init 都会将存储盒中的所有内容同步到本地机器。我们会让存储机器保持最新状态，当我们想要更新机群中的其他机器时，我们只需重新启动，它就会同步最新文件（配置每台机器应该做的事情稍后发生，不记得现在是如何处理的）。存储机器正在运行 ZFS，因此我们还在进行任何滚动重新启动之前拍摄了快照，因此，如果出现任何问题，只要不破坏初始化映像，您就可以恢复到之前的快照并再次重新启动。</p><p>大声说出来听起来很卡顿，但我不记得它给我们带来过任何问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Reminds me of the first company I worked for out of school.<p>We had a big drive with the source of truth image used to boot all our machines on it, and we added rsync to the init image. When each machine booted init would rsync everything from the storage box to the local machine. We'd keep the storage machine up to date and when we wanted to update other machines in the fleet we'd just do a reboot and it would sync up the latest files (provisioning for whatever each machine was supposed to do happened later, can't remember how that was handled now). The storage machine was running ZFS so we also took a snapshot before doing any rolling reboots, so if anything did go wrong you could just revert to the previous snapshot and reboot again as long as you didn't break the init image.</p><p>Sounds jank saying it out loud, but I don't remember it ever causing us any problems.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504306" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pzmarzly</span>
+        <span class="meta-time">2026/03/24 21:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果目标驱动器的扇区大小与虚拟机不同，您将会遇到问题，因为 GPT 标头不会对齐。<p>QEMU 默认为 512B 扇区，这对于许多 NVMe 驱动器来说并非如此。有一些标志可以改变这一点。 <a href="https://unix.stackexchange.com/a/722450" target="_blank" rel="noopener noreferrer">https://unix.stackexchange.com/a/722450</a></p><p>我认为应该可以在不同位置制作一个具有多个标头的图像，以便它可以同时在所有类型的磁盘上运行，但我认为默认情况下没有任何工具可以为您做到这一点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You will run into problems if destination drive has different sector size than your VM, as GPT header won't be aligned.<p>QEMU defaults to 512B sectors, which isn't true for many NVMe drives. There are some flags to change that. <a href="https://unix.stackexchange.com/a/722450" target="_blank" rel="noopener noreferrer">https://unix.stackexchange.com/a/722450</a></p><p>I think it should be possible to make an image with many headers at different locations, so that it works on all types of disks at once, but I don't think any tools do it for you by default.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">M95D</span>
+        <span class="meta-time">2026/03/24 19:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">来自文章：<p>&gt; 操作系统可能会阻止您卸载 /dev/sda1，但它不会阻止您写入 /dev/sda1 或 /dev/sda，即使已安装了某些内容！</p><p>并不总是如此。有一个内核配置选项允许它。 CONFIG_BLK_DEV_WRITE_MOUNTED</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the article:<p>&gt; The OS may stop you from unmounting /dev/sda1, but it won’t stop you from writing to /dev/sda1 or /dev/sda even if there’s something mounted!</p><p>Not always true. There's a kernel config option that allows it. CONFIG_BLK_DEV_WRITE_MOUNTED</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Sophira</span>
+        <span class="meta-time">2026/03/25 02:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但值得注意的是，该配置选项仅在内核版本 6.8 中引入！在此之前，该选项不存在，您可以不受惩罚地写入已安装的设备（显然，以 root 身份）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's worth noting, though, that that config option was only introduced in kernel version 6.8! Before then the option didn't exist and you could write with impunity to mounted devices (as root, obviously).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507049" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/24 20:15</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501523" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alexellisuk</span>
+        <span class="meta-time">2026/03/24 22:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这让我想起 MaaS、Tinkerbell 和 Dan 的旧 Plunder 工具等网络启动工作流程。<p>他们会通过网络启动.. 不挂载磁盘，然后下载 ISO/IMG 并将其直接写入主启动磁盘。</p><p>如果网络启动是一项繁重的工作，为什么不启动到您构建的自定义 initramfs（安装了 dd/curl），并以这种方式刷新磁盘，而不安装 / 呢？然后kexec/chroot进去呢？</p><p>我更喜欢用这种方式来配置 Raspberry Pi。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This reminds me of netbooting workflows from things like MaaS, Tinkerbell, and Dan's old Plunder tool.<p>They'd netboot.. not mount the disks, then download an ISO/IMG and write it directly to the primary boot disk.</p><p>If netbooting is a heavy lift, why not boot into a custom initramfs you built, with i.e. dd/curl installed, and flash the disk that way, without mounting / at all? Then kexec/chroot into it?</p><p>I'd much prefer this as a way to provision Raspberry Pis.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503302" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/24 23:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">第 2 部分介绍了一个完全自动化的概念验证，可以完成所有这些操作： <a href="https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between-reboots/" target="_blank" rel="noopener noreferrer">https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Part 2 presents a fully automated proof of concept that does all of this: <a href="https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between-reboots/" target="_blank" rel="noopener noreferrer">https://astrid.tech/2026/03/24/2/how-to-pass-secrets-between...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">motrm</span>
+        <span class="meta-time">2026/03/25 05:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有点迂腐，当然忽略了这整件事是多么疯狂，但我不认为这一点是正确的：<p></p><pre><code>  After waiting for a little while, the program terminated with the following output:
+  
+  astrid@chungus infra  gzip -vc result/nixos.img | ssh root@myhost.example -- bash -c 'gunzip -vc &gt; /dev/sda'
+  root@myhost.example's password:
+   77.8% -- replaced with stdout
+  
+  What happened here?
+</code></pre>
+77.8% 位是gunzip -v 报告它已完成将数据解压缩到标准输出，并且压缩率为 77.8%...因此此调用很可能已成功。假设，正如 rwmj 指出的那样，没有任何其他东西踩踏任何写入的块。<p>我确实喜欢这个想法 - 在写入映像之前对系统进行充分的准备，即停止尽可能多的进程，尤其是那些可能进行一些写入的进程，这是用现成的映像替换库存操作系统的一种快速而肮脏的方法。做两次也许会更安全，一次是一个最小的镜像，除了网络启动和运行 ssh 之外几乎没有什么作用，然后以（更）受控的方式进行最终操作系统替换。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Mildly pedantic, and of course ignores how wild this whole thing is, but I don't think this bit is correct:<p></p><pre><code>  After waiting for a little while, the program terminated with the following output:
+  
+  astrid@chungus infra  gzip -vc result/nixos.img | ssh root@myhost.example -- bash -c 'gunzip -vc &gt; /dev/sda'
+  root@myhost.example's password:
+   77.8% -- replaced with stdout
+  
+  What happened here?
+</code></pre>
+The 77.8% bit is gunzip -v reporting that it finished decompressing the data to stdout and that the compression ratio was 77.8%... so this invocation may well have succeeded. Assuming, as rwmj points out, nothing else stomped on any of the written blocks.<p>I do like this idea - with sufficient prep of the system before writing the image, namely stopping as many processes as possible especially those that might do some writing, it's a quick and dirty way to replace a stock OS with a ready-made image. Could perhaps be safer doing it twice, once into a minimal image that does very little beyond network bringup &amp; runs ssh, followed by final OS replacement in a (more) controlled manner.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509610" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">e12e</span>
+        <span class="meta-time">2026/03/25 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不错的系列！真的让我回到了 Linux 1.x 内核、Lilo 的时代，并试图将内核和 initrd 放在一张软盘上。<p>所以最终结果是：</p><p>&gt; 从 292MB initramfs，我们现在有了 6.1MB initramfs，比几乎所有其他发行版的 initramfs 都要小，并且完全用于运行 busybox wget dd。</p><p>今天是相当伟大的成就 - 但比软盘上可以容纳的东西要大得多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice series! Really takes me back to the days of Linux 1.x kernel, Lilo and trying to fit a kernel and initrd on a single floppy disk.<p>So ending up at:</p><p>&gt; From a 292MB initramfs, we now have a 6.1MB initramfs, smaller than almost every other distro's initramfs and made entirely to run busybox wget dd.</p><p>Is pretty great achievement today - but way bigger than something that can fit on a floppy.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508184" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/25 04:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">老实说，即使这样，也还有很大的下降空间。我感觉如果我真的从默认的 Nixpkgs busybox 中删除了一些东西，并且可能还删除了一些内核驱动程序，我可以再压缩一些 MB。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To be honest, even this has plenty of room to go down. I get the feeling I could have squeezed a couple more MB off if I had actually cut things off of the default Nixpkgs busybox, and possibly also cut a couple of kernel drivers out.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508621" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PunchyHamster</span>
+        <span class="meta-time">2026/03/24 20:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 好吧，我们可以尝试什么？
+&gt; 无论如何都要写入已安装的磁盘。去你的<p>我学到的愚蠢的企鹅技巧：在 ramdisk 中添加一个文件（我使用 /dev/shm）作为 LVM PV。</p><p>pvmove 关闭硬盘</p><p>Boom，现在您的操作系统完全位于 RAM 中</p><p>您现在甚至可以更换硬盘，放入新硬盘，然后迁移回来。</p><p>或者迁移到网络存储（nbd、iSCSI 等），将磁盘重新排序为您需要的任何 RAID，然后迁移回来</p><p>之后需要修复 /boot，并且可能确保同时不会出现电源故障</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Well, what can we try instead?
+&gt; write to the mounted disk anyways. fuck you<p>Stupid penguin trick I learned: Add a file inside ramdisk (i use /dev/shm) as LVM PV.</p><p>pvmove off the hard drive</p><p>Boom, now your OS lives entirely in RAM</p><p>You can now even replace the hard disk, put a new one and migrate back.</p><p>Or migrate to network storage (nbd,iSCSI etc.), re-sequence disks into whatever RAID you need, and migrate back</p><p>Need to fix /boot after that tho, and probably make sure to not have power failure in meantime</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501842" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tosti</span>
+        <span class="meta-time">2026/03/25 01:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您有交换分区，请将其交换并安装在那里。或者至少有一个最小的内核和 initramfs。在 grub 中设置为默认值即可。<p>另外，我曾经使用 fifo 直接从 ftp 刻录了一个 iso。我的磁盘空间不足，确实需要那张 CD。工作得很好，因为互联网已经比 CDR 更快了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you have a swap partition, swapoff it and install there. Or at least a minimal kernel and initramfs. Set as default in grub and there you go.<p>Also, I once burned an iso straight from ftp using a fifo. I was low on disk space and really needed that CD. Worked fine because the Internet was already faster than the CDR.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506081" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dizhn</span>
+        <span class="meta-time">2026/03/24 20:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">提醒我如何通过 ubuntu 安装在 Oracle 云上安装 Alpine linux（不可用）。它使用 dd 并具有拥有控制台的优点。<p>当我使用它时，我在 github gist 中找到了它，但这里有一篇类似的博客文章。</p><p><a href="https://alextsang.net/articles/20191006-063049/index.html" target="_blank" rel="noopener noreferrer">https://alextsang.net/articles/20191006-063049/index.html</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Reminded me of how to install Alpine linux (which isn't available) on Oracle cloud over an ubuntu install. It uses dd and has the advantage of having a console.<p>I had found it in a github gist when I used it but here's a similar blog post.</p><p><a href="https://alextsang.net/articles/20191006-063049/index.html" target="_blank" rel="noopener noreferrer">https://alextsang.net/articles/20191006-063049/index.html</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501461" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mbana</span>
+        <span class="meta-time">2026/03/24 20:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">等等，你不能简单地使用 API 访问底层卷/块设备吗？ OCI 中的虚拟机有一个附加的启动卷，因此我认为可以以某种方式“安装”它并用您想要的任何数据覆盖它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wait hold on, can you not simply just access the underlying volume/block device using an API? The VMs in OCI have a boot volume that is attached, so I reckon it's possible to "mount" this somehow and overwrite it with whatever data you want.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501654" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dizhn</span>
+        <span class="meta-time">2026/03/24 20:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不知道。也许是因为无法下载 iso（控制台上没有网络？）或没有空间或其他原因。我不知道 API 的事情。我不是云用户。<p>但让我思考。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am not sure. Maybe it's a thing about not being able to download the iso (no network on the console?) or not having space for it or something. I wouldn't know about the API thing. I am not a cloud user.<p>Made me think though.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501681" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/24 22:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">听起来，因为您有一个控制台，因此不依赖于 SSHD 不被覆盖，您 <i>能</i> 只是在这里添加实时运行系统吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From what it sounds like, because you have a console and therefore aren't dependent on SSHD not getting overwritten, you <i>can</i> just dd the live running system here?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502831" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dizhn</span>
+        <span class="meta-time">2026/03/24 23:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就像我在其他评论中所说的那样，我对各种云并不是很熟悉。我自己主持。  控制台是一个奇怪的基于网络的东西，与您的虚拟机（或其虚拟机管理程序）的环境不同。它是一个准系统外壳，您可以在其中挂载卷等，而不是实际启动或进入虚拟机。 （编辑：这是不正确的）如果我没记错的话，我可能确实必须在那里进行一些安装以创建设备文件等。此后我对控制台也没有太多用处。我会尝试找到我所遵循的实际要点。<p>这是我使用过的要点。这真的很简单。 <a href="https://gist.github.com/unixfox/05d661094e646947c4b303f19f9bae11" target="_blank" rel="noopener noreferrer">https://gist.github.com/unixfox/05d661094e646947c4b303f19f9b...</a></p><p>为什么不在控制台上执行 dd 位呢？我不知道。又可能无法下载 iso 吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Like I said in the other comment I am not really familiar with the various clouds. I self host.  The console is a weird web based thing that isn't the same environment as your VMs (or their hypervisor). It's a barebones shell where you can mount your volumes and such, not actually boot or enter the vm. (Edit: This was incorrect) And if I remember correctly I probably did have to do some mounting there to create device files and such. I didn't really have much use for the console after that either. I will try to find the actual gist I followed.<p>Here's the gist I had used. It's really simple. <a href="https://gist.github.com/unixfox/05d661094e646947c4b303f19f9bae11" target="_blank" rel="noopener noreferrer">https://gist.github.com/unixfox/05d661094e646947c4b303f19f9b...</a></p><p>Why would not have not done the dd bit on the console? I have no idea. Again possibly can't download the iso there?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">klinch</span>
+        <span class="meta-time">2026/03/24 23:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">听起来像是被诅咒了。但我不会做出判断，因为我几乎每周都会使用 nixos-anywhere[0]。<p>[0] <a href="https://github.com/nix-community/nixos-anywhere" target="_blank" rel="noopener noreferrer">https://github.com/nix-community/nixos-anywhere</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sounds cursed. But I'm not judging, given that I use nixos-anywhere[0] on an almost weekly basis.<p>[0] <a href="https://github.com/nix-community/nixos-anywhere" target="_blank" rel="noopener noreferrer">https://github.com/nix-community/nixos-anywhere</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503826" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">astralbijection</span>
+        <span class="meta-time">2026/03/25 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该发行版是在 NixOS Anywhere 基础上构建的，然后又将 NixOS Anywhere 从中移植出来，这是否会让人更加受诅咒？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does it make it more cursed that the distro was built off of NixOS Anywhere, and then it theseus shipped NixOS Anywhere out of it?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508666" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PunchyHamster</span>
+        <span class="meta-time">2026/03/24 20:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们已经回到了原点，回到你在软盘上安装操作系统的那一天！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">and we've gone full circle, back in the day you installed os on diskettes like that!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501820" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">saidnooneever</span>
+        <span class="meta-time">2026/03/24 22:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请插入34号软盘...<p>现在回到软盘 2...</p><p>现在请再次放入 15 号软盘......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">please insert diskette 34...<p>now go back to diskette 2...</p><p>now please put diskette 15 again....</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502782" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aa-jv</span>
+        <span class="meta-time">2026/03/24 22:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那是Windows。  基于软盘的 Linux 安装通常刚刚完成整个系列，然后在重新启动之前要求磁盘 1 ..</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That was Windows.  Linux floppy-based installs usually just got through the whole series and then asked for disk 1 prior to reboot ..</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zoobab</span>
+        <span class="meta-time">2026/03/24 23:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我通过网络使用 netcat 和 dd 来克隆具有相同 HDD 的机器：<p><a href="https://support.tools/dd-over-netcat-clone-drive-remote-backup/" target="_blank" rel="noopener noreferrer">https://support.tools/dd-over-netcat-clone-drive-remote-back...</a></p><p>但我非常喜欢卷曲方法！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I used netcat and dd via the network to clone machines that has the same HDD:<p><a href="https://support.tools/dd-over-netcat-clone-drive-remote-backup/" target="_blank" rel="noopener noreferrer">https://support.tools/dd-over-netcat-clone-drive-remote-back...</a></p><p>But I like the curl approach very much!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504459" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">em3rgent0rdr</span>
+        <span class="meta-time">2026/03/25 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;“将预先准备好的磁盘映像直接下载到您的磁盘”<p>嗯，不太直接；这些位之间会经过您的 RAM。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; "download a pre-prepared disk image directly to your disk"<p>Well not quite direct; the bits go through your RAM in between.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506222" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">indigodaddy</span>
+        <span class="meta-time">2026/03/25 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NOC 技术人员几十年来一直在使用这些技巧</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">NOC techs have been doing these tricks for tens of years</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506101" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">creantum</span>
+        <span class="meta-time">2026/03/25 00:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仅仅因为你可以，并不意味着你应该这样做。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just because you can doesn’t mean you should.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505627" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anshulbasia27</span>
+        <span class="meta-time">2026/03/25 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也发生过</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Happened with me as well</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506118" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ma2kx</span>
+        <span class="meta-time">2026/03/24 21:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么不直接使用网络启动呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why not just use netboot?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502563" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kotaKat</span>
+        <span class="meta-time">2026/03/24 22:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能处于没有启动选项选择的受限环境中，例如在某些 VPS 和 dedi 服务器提供商上。<p>我见过类似的技术，通过启动进入救援模式，然后应用预先配置的原始 Windows 启动映像，然后重新启动回到 Windows 安装，并希望您能正确地放置映像，从而将 Windows 推到“linux”VPS/dedis 盒子上。</p><p>在 Kimsufi boxen 上安装 Windows 的美好时光。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">you may be in a restricted environment with no boot option selections, like on some VPS and dedi server providers.<p>i've seen similar techniques used to shove windows on "linux" VPS/dedis boxes by booting into rescue mode and then applying a raw Windows boot image that's preconfigured and rebooting back to the Windows install and hoping you stood the image up right.</p><p>good ol' days of getting Windows up on Kimsufi boxen.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502841" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">megous</span>
+        <span class="meta-time">2026/03/25 00:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">而不是对问题应用一些意义，并使用实际上允许您在运行时终止原始发行版的所有正在运行的进程的解决方案，包括。摆脱原来的 init 进程，以便能够在其他地方进行 hub_root 卸载原始系统的文件系统并释放块设备以进行重新安装，这种荒谬的方法被提升到了首页，哈哈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Instead of applying some sense to the problem, and using a solution that actually allows you to kill all running processes of the original distro at runtime, incl. getting rid of the original init process, to be able to pivot_root somewhere else amd umount the original system's filesystems and free the block device for re-installation, this ridiculous approach gets promoted to a front page, lol.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505532" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">igtztorrero</span>
+        <span class="meta-time">2026/03/24 23:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以在 Contabo Vps 上运行 Windows qcow2 磁盘映像吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can I run a Windows qcow2 disk imagen on a Contabo Vps ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504187" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">poppafuze</span>
+        <span class="meta-time">2026/03/24 23:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">期待看到带有简短图像的设备，上面有字符串“404”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looking forward to seeing a device with a short image that has the string "404" on it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503934" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">irishcoffee</span>
+        <span class="meta-time">2026/03/24 20:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多年来我一直在为嵌入式 yocto 发行版添加 A/B 分区。只读 rootfs（/var/log 是它自己的可写分区），dd “其他分区”，sed fstab，重新启动。<p>最妙的是，当您对 rootfs 进行 scp 操作时，整个过程就开始了，而 inotifywait 则开始了整个过程。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been dd-ing A/B partitions for embedded yocto distributions for years and years. read-only-rootfs (/var/log is its own writable partition), dd the "other partition", sed fstab, reboot.<p>The neat part was the whole process kicked off when you scp'd the rootfs and inotifywait kicked off the whole process.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47501712" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">BirAdam</span>
+        <span class="meta-time">2026/03/24 21:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，将 /home、/var/log 和 /usr/local rw 以及其他所有内容设为 ro。创造一个伟大的“不可变”系统，不像真正的“不可变”系统那么烦人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, make /home, /var/log, and /usr/local rw and everything else ro. Makes a great "immutable" that's not as annoying as truly "immutable" systems.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502640" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">unmayx</span>
+        <span class="meta-time">2026/03/25 15:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514526" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nkondratyk</span>
+        <span class="meta-time">2026/03/25 00:11</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Nahid890</span>
+        <span class="meta-time">2026/03/24 18:14</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47500587" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

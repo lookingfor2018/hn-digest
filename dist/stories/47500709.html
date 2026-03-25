@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM 神经解剖学 II：现代 LLM 黑客攻击和通用语言的提示？ | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>LLM 神经解剖学 II：现代 LLM 黑客攻击和通用语言的提示？</h1>
+      <p class="subtitle">LLM Neuroanatomy II: Modern LLM Hacking and Hints of a Universal Language?</p>
+      <div class="meta-line">
+        <span>dnhkng.github.io</span>
+        <span>作者 realberkeaslan</span>
+        <span>分数 121</span>
+        <span>评论 35</span>
+        <span>2026/03/24 18:33</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47500709" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://dnhkng.github.io/posts/rys-ii/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>在第 1 部分中，我描述了如何在 Qwen2-72B 中复制七个中间层的块（不改变权重，不进行训练）如何在 HuggingFace Open LLM 排行榜上生成排名第一的模型。这种方法我称之为 RYS（重复你自己），是在一对 RTX 4090 上使用硬数学探针和 EQ-Bench 发现的。那是 2024 年中期。从那时起，大量强大的开源模型出现了——Qwen3.5、MiniMax、GLM-4.7 等——我终于在家里有了足够的计算能力来正确扫描它们。所以推动这篇文章的问题很简单：RYS 是 Qwen2-72B 的侥幸，还是 Transformers 的一般属性？更具体地说：中继仍然有助于更强的现代模型吗？哪些修改实际上获得了额外的层？如果两个好的主题独立提供帮助，它们会吗？堆栈？简短的回答是肯定的，中继仍然存在。较长的答案需要 3,024 个波束搜索候选者、一个对 200 万个配置进行评分的代理模型以及统一的验证扫描才能正确计算出来。一路上，我还发布了扫码和一组新的RYS模型。让我们进入吧！为什么是Qwen3.5-27B Qwen3.5家族在2026年农历新年前后上市，立即成为LocalLLaMA人群的宠儿。强大的基准测试、良好的氛围、精心设计的。我对 200B 以上的模型最感兴趣——这就是我的双 Grace-Hopper 系统的构建目的——但更广泛的社区运行较小的模型，而 27B 的尺寸达到了最佳点：大到足以拥有有趣的内部结构，小到足以让大多数具有体面 GPU 的人实际上可以使用 RYS 变体。这也是有科学原因的。在第 1 部分中，我注意到较小的模型往往具有更复杂的功能解剖结构——编码、推理和解码分离得不太清晰。如果 RYS 仍然适用于 27B 模型，这告诉我们即使大脑更紧凑，电路结构也很稳健。如果它不起作用，那也很有趣。（MiniMax M2.5 和其他产品正在酝酿中。料斗正在打磨。更多热图即将推出。）直接查看解剖结构在我们开始优化工作之前，我想展示一些新东西。在第 1 部分中，从 Base64 观察和热图模式间接推断出三阶段假设 - 早期层编码、中间层推理、后期层解码。这是一个很好的故事，但我无法直接看到解剖结构。我只能看到它的后果。这要归功于 Evan Maunder，他在阅读第 1 部分后进行了一个非常简单的实验。他通过一个模型输入三个语义相同的句子——一个是英语，一个是普通话，一个编码为 Base64——并测量了它们在每一层的隐藏状态的余弦相似度。结果准确地显示了三阶段结构：前几层的快速收敛（编码）、中间近乎完美的相似性（在与格式无关的空间中推理）以及最后几层的发散（解码回表面形式）。我想进一步推动这一点。埃文的实验在保持内容固定的情况下比较了语言。但是当你改变两者时会发生什么？如果中间层确实在一个通用的“思维空间”中运行，那么关于同一主题的两个句子应该比关于不同主题的同一语言中的两个句子更相似——即使一个是英语，另一个是中文。使用以下语言样本：EN = 英语ZH = 中文AR = 阿拉伯语RU = 俄语JA = 日语KO = 韩语HI = 印地语FR = 法语以及以下主题：SCIENCEPOEMHISTORYCOOKINGLAWMEDICALSPORTSECONOMY 完整数据集（点击查看展开)&quot;EN_SCIENCE&quot;: &quot;光合作用将光能转化为储存在葡萄糖中的化学能。&quot;&quot;ZH_SCIENCE&quot;: &quot;光合作用把光能转化为储存在葡萄糖中的化学能。&quot;&quot;AR_SCIENCE&quot;: &quot; &quot;&quot;RU_SCIENCE&quot;: &quot;Фотосинтез преобразует световую энергию в химическую энергию, запасенную в глюкозе。&quot;&quot;JA_SCIENCE&quot;: &quot;光合成は光エネルギーをグルコーsuに蓄えられる化学エネルギーへ変换する。&quot;&quot;KO_SCIENCE&quot;: &quot;광합성은 빛 에너지를 포도당에 저장되는 화학 에너지로 바꾼다。&quot;&quot;HI_SCIENCE&quot;: &quot;प्रकाश संश्लेषण प्रकाश ऊर्जा को ग्लूकोज़ में संचित “FR_SCIENCE”：“光合作用将发光能量转化为葡萄糖的能量化学物质。” &quot;EN_POEM&quot;: &quot;黄昏时分，月亮在潮汐上洒下银光，风儿带着安静的歌声。&quot;&quot;ZH_POEM&quot;: &quot;黄昏时，月亮把银辉铺在潮汐上，风里带着一首安静的歌。&quot;&quot;AR_POEM&quot;: &quot;关于&quot;&quot;RU_POEM&quot;: &quot;В сумерках луна расстилает серебро по приливу, а ветер несет тихую песню。&quot;&quot;JA_POEM&quot;: &quot;夕暮れに月は潮の上へ银を敷き、风は静かな歌を运ぶ。&quot;&quot;KO_POEM&quot;: &quot;해질 무렵 달빛 Been 밀물 위에 은빛을 깔고 바람은 조용한 노래를 실어 나른다.&quot;&quot;HI_POEM&quot;: &quot;सांझ में चांद ज्वार पर चांदी बिछा देता है और हवा एक शांत गीत लेकर चलती है।&quot;&quot;FR_POEM&quot;: &quot;Au黄昏时分，月光姿势是在坦迪斯河畔的银色，是宁静之歌的通风口。” &quot;EN_HISTORY&quot;: &quot;印刷机加速了十五世纪知识在欧洲的传播。&quot;&quot;ZH_HISTORY&quot;: &quot;印刷机在十五世纪加速了知识在欧洲的传播。&quot;&quot;AR_HISTORY&quot;: &quot;拉贾姆斯&quot;&quot;RU_HISTORY&quot;: &quot;印刷机加速了 15 世纪知识在整个欧洲的传播。&quot;&quot;JA_HISTORY&quot;: &quot;活版印刷加速了知识在 15 世纪在欧洲的传播。&quot;&quot;KO_HISTORY&quot;: &quot;印刷机加速了知识在 15 世纪在整个欧洲的传播。&quot;&quot;HI_HISTORY&quot;: &quot;印刷机加速了知识在 15 世纪在整个欧洲的传播。 &quot;&quot;FR_HISTORY&quot;: &quot;EN_COOKING&quot;: &quot;做汤时，将洋葱、胡萝卜和豆类煮至汤汁浓郁而芳香。&quot;&quot;RU_COOKING&quot;: &quot;准备汤时，将洋葱、胡萝卜和豆类炒至汤汁变得浓郁而芳香。&quot;&quot;JA_COOKING&quot;: &quot;煮汤时，将洋葱、胡萝卜和扁豆煮至香味浓郁。汤汁变得又浓又香。” 。&quot;&quot;HI_COOKING&quot;: &quot;做汤时，用小火煮洋葱、胡萝卜和豆子，直到汤浓稠而香。&quot;&quot;FR_COOKING&quot;: &quot;准备汤时，将洋葱、胡萝卜和豆子煮至汤变得浓郁和香。&quot; &quot;EN_LAW&quot;: &quot;当双方同意明确的条款并交换对价时，合同即可强制执行。&quot;&quot;ZH_LAW&quot;: “当双方同意明确的条款和交换价值时，合同即可强制执行。”“AR_LAW”：“当双方同意明确的条款和交换对价时，合同即可强制执行。”“RU_LAW”：“当双方同意明确的条款和交换陈述时，合同即可强制执行。”“JA_LAW”：“当双方同意明确的条件和交换价值时，合同即可强制执行。” &quot;EN_MEDICAL&quot;: &quot;疫苗训练免疫系统在真正感染发生之前识别病原体。&quot;&quot;ZH_MEDICAL&quot;: &quot;疫苗训练免疫系统在真正感染发生之前识别病原体。&quot;&quot;ZH_MEDICAL&quot;: &quot;疫苗训练免疫系统在真正感染发生之前识别病原体。&quot;&quot;AR_MEDICAL&quot;: &quot;疫苗训练免疫系统在真正感染发生之前识别病原体&quot;&quot;JA_MEDICAL&quot;: &quot;疫苗训练免疫系统在实际感染发生之前识别病原体。&quot;&quot;KO_MEDICAL&quot;: &quot;疫苗训练免疫系统在实际感染发生之前识别病原体。&quot;&quot;HI_MEDICAL&quot;: &quot;疫苗训练免疫系统在实际感染发生之前识别病原体。&quot;&quot;FR_MEDICAL&quot;: &quot;疫苗训练免疫系统识别病原体reconnaitre un agent pathogene avant qu&#39;une veritable infection ne se produise.&quot; &quot;EN_SPORTS&quot;: &quot;A relay team wins when each runner exchanges the baton cleanly and maintains speed through every leg.&quot;&quot;ZH_SPORTS&quot;: &quot;接力队在每位跑者顺利交接接力棒并在每一棒保持速度时才能获胜。 &quot;&quot;AR_SPORTS&quot;: &quot;يفوز فريق التتابع عندما يسلم كل عداء العصا بسلاسة ويحافظ على السرعة في كل مرحلة.&quot;&quot;RU_SPORTS&quot;: &quot;Эстафетная команда побеждает, когда каждый бегун чисто передает палочку и сохраняет скорость на каждом этапе.&quot;&quot;JA_SPORTS&quot;: &quot;リレーチームは、各走者がバトンを确実に渡し、すべての区间で速度を保つと胜てる。 &quot;&quot;KO_SPORTS&quot;: &quot;계주 팀은 각 주자가 배턴을 깔끔하게 넘기고 모든 구간에서 속도를 유지할 때 승리한다.&quot;&quot;HI_SPORTS&quot;: &quot;रिले टीम तब जीतती है जब हर धावक बैटन को साफ़ी से सौंपता है और हर चरण में गति बनाए रखता है।&quot;&quot;FR_SPORTS&quot;: &quot;Une equipe de relais gagne lorsque chaque coureur transmet le temoin proprement et conserve sa vitesse sur chaque portion.&quot; &quot;EN_ECONOMY&quot;: &quot;When interest rates rise, borrowing often slows and household spending can weaken.&quot;&quot;ZH_ECONOMY&quot;: &quot;当利率上升时，借贷往往会放缓，家庭支出也可能减弱。 &quot;&quot;AR_ECONOMY&quot;: &quot;عندما ترتفع اسعار الفائدة، يتباطا الاقتراض غالبا وقد يضعف انفاق الاسر.&quot;&quot;RU_ECONOMY&quot;: &quot;Когда процентные ставки растут, заимствования часто замедляются, а расходы домохозяйств могут ослабеть.&quot;&quot;JA_ECONOMY&quot;: &quot;金利が上がると、借り入れは钝り、家计支出も弱くなりやすい。 &quot;&quot;KO_ECONOMY&quot;: &quot;금리가 오르면 차입이 둔화되고 가계 지출도 약해질 수 있다.&quot;&quot;HI_ECONOMY&quot;: &quot;जब ब्याज दरें बढ़ती हैं, तो उधार लेना अक्सर धीमा पड़ जाता है और घरेलू खर्च कमजोर हो सकता है।&quot;&quot;FR_ECONOMY&quot;: &quot;Lorsque les taux d&#39;interet augmentent, l&#39;emprunt ralentit souvent et les depenses des menages peuvent faiblir.&quot;Pairwise, that is $C(64, 2) = 2016$ natural-language comparisons. Then I computed pairwise cosine similarity of the pooled hidden states at every layer. This gives us 3 categories:224 Cross-language, Same content: comparisons (in red)224 Same language, Different content: comparisons (in green)1568 Cross-language, Different content: comparisons (in blue)Raw cosine similarity across layers. All pairs converge rapidly in the first few layers. The interesting divergence happens in the mid-to-late stack.The raw plot already tells a story. All pairs start at moderate similarity (0.2–0.6 at the embedding layer), then rapidly converge to near-1.0 by about layer 3. Through the mid-stack, they stay high but begin to separate. The red line (Cross-language, Same content:) stays above the green line (Same language, Different content:), which itself stays above the blue lines (Cross-language, Different content:), from roughly layer 15 onward. The model’s internal representation cares more about what你是总数字：跨语言，相同内容：0.902 意味着相似度相同语言，不同内容：0.891 意味着相似度跨语言，不同内容：0.829 意味着相似度但是原始余弦相似度由一个大的共享组件主导 - 给定层的每个隐藏状态都位于大致相同的空间区域（“超锥体”效应在文学）。为了更清楚地看到结构，我应用了每层居中：减去每层所有四个输入的平均向量，然后在计算余弦相似度之前重新归一化。这去掉了“我在 N 层”的成分，只揭示了表示之间的差异。中心余弦相似度。删除共享组件后，组织变得赤裸裸的中心余弦相似度。平均值/STD 展带图现在解剖结构是明确无误的。三个阶段：编码（第 0-5 层）。剧烈振荡。该模型正在做繁重的工作来规范完全不同的表面形状。该模型知道它正在阅读英语或中文，并且表示反映了这一点。推理（层〜10-45）。红线占主导地位。这些是跨语言的相同内容对。该模型已趋于一致，其中内容身份比语言身份更重要。相同语言不同内容对（绿色）要低得多。跨语言不同内容（蓝色）具有负余弦相似度。这是第 1 部分假设的与格式无关的推理空间。解码（层~45-64）。潜在的重新分化。该模型正在准备发出令牌，并且需要承诺特定的语言和格式。跨语言相似度下降。表示再次变得特定于表面。这是三相架构，在单个前向传递中直接可见。编码区域很窄，只有少数层。推理区域相当广泛，占变压器堆栈的大部分。解码区域是一切都分解回特定于语言的标记预测的地方。对于本文来说更重要的是：推理区域几乎完美地映射到 RYS 热图显示改进的地方。可以有利地复制的层是模型以其通用内部语言进行思考的层。无法复制的层（热图中的蓝色墙壁）是编码和解码边界。这并非巧合。如果某个层在格式无关的空间中运行，则其输入和输出分布足够相似，您可以环回而不会出现灾难性的分布不匹配。如果一个层正在执行特定于格式的工作，则循环意味着将解码的表示馈送到需要抽象表示的层中，反之亦然。解剖预测热图。让我们看看它们。热图：首先结果我将在介绍方法之前向您展示数据，因为热图是重点（而且看起来很棒，对吧？）设置与第 1 部分相同：对于每个有效的 $(i, j)$ 对，复制层 $i$ 到 $j{-}1$，运行数学和 EQ 探针，记录与未修改模型的增量。红色意味着进步。蓝色表示退化。Qwen3.5-27B 的组合（数学 + EQ）增量。最佳点显然位于堆栈的中间。数学三角洲。广泛的中端提升，边缘处明显下降。EQ 增量。更加结构化——有用区域更紧密、边界更清晰。签名非常清晰：即使在现代 27B 模型上，变压器堆栈的中间也包含可以有利地重新遍历的块。边界与 Qwen2-72B 不同（正如预期的那样，具有不同的架构、不同的训练），但总的原则成立：中间堆栈中有一致的电路，运行它们两次可以使模型明显更好。以下是单块获胜者：获胜者类型配置额外层大小增加数学 deltaEQ deltaDelta sum 最佳数学增强(24,35)+11+17.19%+0.1203+0.0900+0.2104最佳EQ增强(29,34)+5+7.81%+0.0644+0.0975+0.1619最佳组合boost(24,35)+11+17.19%+0.1203+0.0900+0.2104 最好的单个块 (24, 35) 增加了 11 层（+17% 开销），并大幅提升了数学和 EQ。但请注意，最佳 EQ 配置更严格（在 (29, 34) 处只有 5 层），并且以不到一半的开销获得几乎同样好的综合分数。这是我们稍后将探讨的一些内容的暗示：效率边界奖励精度而不是大小。 单层重复：再次运行配方的一个步骤在第 1 部分中，我表明重复单层几乎没有任何帮助。主要发现之一是中间层作为电路工作——需要作为一个整体执行的多层单元。复制七步食谱中的一个步骤并不能给你带来太多好处。但是“几乎从不”在这句话中意味着做了大量的工作。有了更强大的模型和更多的计算，我想知道是否有任何单层重复可以可靠地移动因此，我运行了重复 x8 扫描：对于 64 层堆栈中的每一层，尝试重复 2×、3×、4×，一直到 8×。这是 64 × 7 = 448 个配置，针对相同的数学和 EQ 探针进行评分。单层重复的 EQ 增量（x2 到 x8）。 y轴是图层索引； x 轴是重复计数。同一扫描的数学增量。注意景观看起来有多么不同。这次扫描的基线分数：数学：0.8763EQ：0.7394获胜者：获胜者类型配置额外层大小增加数学deltaEQ deltaDelta总和最佳数学boostlayer10_x3+2+3.125%+0.0774+0.0071+0.0845最佳EQ boostlayer27_x2+1+1.5625%-0.0405+0.0131-0.0274最佳组合 boostlayer10_x3+2+3.125%+0.0774+0.0071+0.0845有两件事跳出来。首先，单层重复可以移动模型——layer10_x3 以最小的开销获得了坚实的数学提升。其次，情况是不对称的：数学可以显着提高，而情商增益却很小而且不稳定。最好的 EQ 重复实际上会损害数学。Beam Search：组合块在单块结果之后，下一个明显的问题是：如果我重复一个块两次怎么办？如果组合多个块怎么办？也许一个模块可以提高数学，另一个模块可以提高情商，并且它们一起可以做到这两点。蛮力是没有希望的。即使只有两个块，组合空间也会爆炸。所以我使用了波束搜索：从最好的单个块开始，然后通过尝试所有可能的第二个块来贪婪地扩展，保留最佳候选，再次扩展。 （这当然包括多次重复同一个块，这是一个高度要求的功能。）波束搜索参数：波束宽度：24（在每个深度保留 24 个最佳候选）起始深度：3（从前 3 个单块结果开始）完成深度：3、4、5、6 评估的候选数：3,024 停止标准：耗尽 14 小时计算预算最大额外层数：上限为 56 （为了防止模型比原始模型重复更多的荒谬配置）每个候选者都经过全面评估：加载重新分层的模型，运行两个探针，记录分数。此阶段没有替代预测 - 这些都是经过测量的。来自波束搜索的最佳候选：BucketConfigSizeincreaseMath deltaEQ deltaDelta sumBest ≤20% 开销43,45;28,34+12.50%+0.0978+0.1232+0.2210Best总体而言39,45;24,35;9,20;43,46+48.44%+0.1122+0.1275+0.2397Beam确实发现了比单块搜索更强的绝对增量。最好的 ≤20% 开销候选者由两个块组成（一个在中间堆栈，一个在更高的位置），并获得 +0.2210 的组合增量，击败了最佳单个块的 +0.2104，同时使用更少的开销（12.5% vs 17.19%）。但 Beam 也使成本问题变得明显。最佳总体候选者使用四个组合块，开销为 +48.44%，仅比两个块版本有适度的改进。收益是真实的，但是次线性的：你不会从四个区块中获得四倍的收益。这些电路相互作用，但并不总是有建设性的。有些组合会相互抵消。其他人互相踩对方的脚趾。教训：构图有效，但它不是相加的。每个额外的区块购买的数量都比上一个区块少，而开销则线性增长。对于实际部署，您需要最少数量的块来让您超过您关心的性能阈值。代理模型：排名数百万，测量数百束搜索有效但昂贵。每次评估都意味着加载重新分层的模型并运行两个探针集，每个配置需要几分钟的时间。共有 3,024 名候选者，这已经突破了单次夜间运行的极限。为了更广泛地探索这个空间，我训练了一个代理模型：一个廉价的预测器，可以估计配置的好坏，因此我们可以对数百万个候选者进行排名，并只对最有前途的候选者进行基准测试。训练代理这个想法很简单。我们已经从全扫描、波束搜索和重复扫描中获得了数千个测量的 $(i, j)$ 结果。每个测量行都是一个训练示例：输入配置参数，输出数学增量和 EQ 增量。在这些对上训练一个快速模型，并用它来对我们尚未测量的配置进行评分。我使用了 XGBoost（梯度增强树），它非常适合此目的：快速训练，快速预测，处理很好地描述层配置的结构化表格特征。训练详细信息：总测量行数：4,643 训练/保留分割：4,411 训练/232 保留（5%）功能：从配置规范（哪些层）编码重复、多少次、块边界等）保留验证（Spearman 排名相关）：TargetSpearman ρCombined0.933EQ delta0.944Math delta0.788A Spearman 的组合指标为 0.93+，这意味着代理在对配置进行排名方面非常出色 - 这正是我们所需要的。它不必预测准确的分数；它只需要知道配置 A 可能比配置 B 更好。数学相关性较低 (0.79)，这是有道理的：数学表现有更多噪声，并取决于块边界的微妙特征。扫描 200 万个候选者通过训练代理，我生成了 2,000,000 个候选配置 - 跨越单个块、多块组合、稀疏重复和各种奇异的排列。代理人在几分钟内对所有这些进行了评分。应用大小和健全性过滤器后：候选人得分：2,000,000 过滤后接受：430,464 完全基准测试的最佳候选人：100 随后测量的代理人排名最高的候选人：配置：围绕层 19/43/51 的稀疏重复主题额外层：+3 (+4.69%) 数学增量： +0.0328EQ delta：+0.0824Delta sum：+0.1152这很有趣——仅三个单独层的稀疏重复，而不是连续的块，尽管如此，它仍然以低于 5% 的开销产生有意义的增益。代理找到了波束搜索不会有的东西：一个很好的配置，正是因为它很小。重要警告：代理仅用于排名。下面比较表中的每个数字都来自实际测量的运行，而不是替代预测。更大的验证集：从 16 个问题毕业到目前为止，所有搜索（全扫描、光束、重复、替代）都使用原始的小型探针集：16 个数学问题和 16 个 EQ 场景。这些都是为了速度而设计的，而且它们很好地实现了这个目的。但 16 个问题不足以做出最终的主张。幸运或不幸的问题抽签可能会改变排名。为了最终比较，我建立了更大的验证集：数学120：120个问题，故意混合难度类型：60个平方根问题30个乘法问题30个立方根问题这比最初的16个问题更加平衡，后者严重依赖立方根。不同的操作强调模型数值直觉的不同方面，较大的样本量可以消除噪声。EQ140：139 个首次通过 EQ-Bench 场景（文件中显示有 140 个，但其中一个在预处理过程中被过滤 - 提醒您数据总是比您想要的更混乱）。与原始 16 相比，这些涵盖了更广泛的社交情境、情绪状态和复杂程度。此时的工作流程是：使用小型探针进行快速搜索（全扫描、光束、重复、代理）。从每种方法中列出最佳候选者。在 Math120 + EQ140 上重新测量所有内容。仅比较重新测量的结果。这意味着搜索阶段和验证阶段使用不同的数据集。小探测器找到了候选者；大型探测器对它们进行判断。这与使用您从未训练过的验证集的逻辑相同，并且与原始 RYS-XLarge 结果可信的原因相同，因为我从未针对排行榜基准进行优化。Pareto Punchline对于最终比较，我从每个方法系列中选取了前 100 个候选者：全扫描（连续的单个块）：100Beam 搜索（多块组合）：100Repeat-x8（单层重复）： 97（一些无用的东西低于阈值）代理测量（顶级代理选择，完全基准测试）：100这是 397 个配置，全部在共享的 Math120 + EQ140 验证集上重新测量。然后我计算了帕累托前沿：没有其他配置既更好又更小的配置集。经过所有这些工程——波束搜索、代理模型、200 万个候选者、更大的验证集——帕累托前沿有四个点。所有四个都来自连续块系列：ConfigBlock viewSize raiseMath deltaEQ deltaDelta重复次数总和：33(33,34)+1.5625%+0.0179+0.0945+0.1124重复次数：31,32,33(31,34)+4.6875%+0.0207+0.0972+0.1179重复次数：30,31 ,32,33,34(30,35)+7.8125%+0.0279+0.0979+0.1257重复:26,27,28,29,30,31,32,33(26,34)+12.5%+0.0279+0.1009+0.1288这个对我来说，关键结果是：在尝试了解决问题的所有搜索方法后，中间堆栈中干净的连续块仍然主导着大小/性能前沿。注意：单独重复第 33 层既是一个块，又是一个单层重复，但仅仅说它是一个块会让故事变得更好，好吗？看看进展。单独添加第 33 层即可以较低的成本（增加 1.5% 的计算量）获得大部分 EQ 提升 (+0.0945)。扩展到第 31-33 层会增加更多内容。一直到 26-33 给出了最好的绝对分数，但边际收益明显递减。在开销增加 10 倍的情况下，EQ 增量几乎没有从 +0.0945 移动到 +0.1009。这正是电路假设所预测的。第 30-34 层周围有一个核心计算单元，它执行完整的推理操作。复制它可以使模型第二次通过该操作。使块变大可以捕获一些邻近的上下文，这有一定帮助，但基本电路很小且定义明确。值得注意的是，帕累托前沿不存在：多块光束组合和奇异的替代选择。它们可以产生强大的原始分数，但与简单的连续块相比，它们的开销更高，以获得相同的好处。复杂性并不能提高效率。那说起来，对于模型扩展和持续微调来说，可能会很惊人。你已经通过添加正确类型的层来完善“思维”来准备好模型，我认为这是一个供 Frontier Labs 使用的 via 模型（如果没有，至少赞助我一些 Nvidia 设备）。模型分析完成后，我构建了 RYS 变体并将其上传到 HuggingFace。这些使用上表中的帕累托最优配置。ModelConfigExtra groupsHuggingFaceRYS-Qwen3.5-27B-FP8-S(33,34)+1dnhkng/RYS-Qwen3.5-27B-SRYS-Qwen3.5-27B-FP8-M(31,34)+3dnhkng/RYS-Qwen3.5-27B- FP8-MRYS-Qwen3.5-27B-FP8-L(30,35)+5dnhkng/RYS-Qwen3.5-27B-FP8-LRYS-Qwen3.5-27B-FP8-XL(26,34)+8dnhkng/RYS-Qwen3.5-27B-FP8-XLS适合那些希望以接近零的开销获得最大 EQ 提升的人。尝试使用 M 和 L，找到您喜欢的性能和成本的最佳平衡点。 XL 适用于您拥有计算能力并想要最强的绝对分数的情况。这些是常规的 HuggingFace 权重，但我将与 TurboDerp 合作构建具有基于指针的层复制的 Exllama v3 模型：重复的层与其原始层共享权重。参数本身不会消耗额外的 VRAM——您只需为额外的前向传递的计算时间和 KV 缓存支付额外费用。这意味着您可以在运行基本模型的同一硬件上运行 RYS-Qwen3.5-27B！请继续关注……正如第 1 部分中所讨论的，我相信连接点（模型循环回到较早层的位置）是剩余低效率的主要来源。仅针对这些连接层的 LoRA 微调应进一步提高性能，而无需将基于指针的副本转换为真实副本。我自己还没有这样做，但如果 Qwen2-72B 模式成立，社区将从这里获取它。代码扫描管道、探针数据集和模型构建脚本可在以下位置获得：github.com/dnhkng/RYS 存储库包含：扫描仪：$(i, j)$ 扫描管道，包括数学和 EQ 探针评估工具探针：本工作中使用的所有数据集（math_16、math_120、EQ_16、 EQ_140)Beam 搜索：多块组合搜索代理：XGBoost 训练、候选生成和 top-k 基准测试管道模型构建器：根据给定配置规范从任何 HuggingFace 模型生成 RYS 变体的脚本热图生成：绘制大脑扫描代码核心依赖项是用于量化推理的 ExLlamaV3。大部分扫描是使用 FP8 量化模型完成的，该模型非常适合我的 Hopper 系统上的 192GB HBM3。对于最初的 Qwen2-72B 工作，我在双 4090 上使用了 ExLlamaV2 — 该管道在消费类硬件上工作，只是需要更长的时间。这对于 Qwen3.5-27B 特别意味着什么：如果您想要低开销和可靠的增益，中间堆栈中的单个连续块仍然是最好的第一步。 (33, 34) 几乎可以为您带来最大的好处。稀疏单层重复是真实且有用的低成本替代方案，特别是对于数学繁重的工作负载。组合许多主题可以产生强大的原始分数，但开销会快速攀升，并且交互是次线性的。帕累托边界是干净的。一旦考虑到大小，连续的块就占主导地位。更广泛地说，这项工作证实了第 1 部分的建议：变压器推理被组织成离散的功能电路，并且这种组织是一种通用属性，而不是一个模型或一代模型的产物。这些电路存在于 Qwen3.5-27B 中，就像它们存在于 Qwen2-72B、Llama-3-70B 和 Phi-3 中一样。界限不同。但原理并非如此。该方法与微调正交，与量化正交，并且与您正在进行的任何即时工程正交。这是免费的午餐，或者至少是非常便宜的零食。该模型通过使用已有的推理电路思考更长时间，变得更加智能。更多架构正在酝酿之中。 Hopper 仍在 MiniMax M2.5 上进行磨合。观看此空间！引用此作品1 2 3 4 5 6 7 @article{ng2026rysii，标题 = {LLM Neuroanatomy II：现代 LLM 黑客和通用语言的提示？}，作者 = {Ng，David Noel}，年份 = {2026}，月份 = {March}，url = {https://dnhkng.github.io/posts/rys-ii/} }</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>In Part 1, I described how duplicating a block of seven middle layers in Qwen2-72B — no weight changes, no training — produced the #1 model on the HuggingFace Open LLM Leaderboard. The method, which I called RYS (Repeat Your Self), was discovered using nothing but hard math probes and EQ-Bench on a pair of RTX 4090s.That was mid-2024. Since then, a flood of strong open-source models has arrived — Qwen3.5, MiniMax, GLM-4.7, and others — and I finally have enough compute at home to scan them properly.So the question driving this post is simple: was RYS a fluke of Qwen2-72B, or is it a general property of Transformers?More specifically:Does relayering still help on stronger modern models?Which modifications actually earn their extra layers?If two good motifs help independently, do they stack?The short answer is yes, relayering survives. The longer answer took 3,024 beam search candidates, a surrogate model scoring 2 million configurations, and a unified validation sweep to work out properly. Along the way, I also released the scanning code and a set of new RYS models.Let’s get into it!Why Qwen3.5-27BThe Qwen3.5 family dropped around Chinese New Year 2026 and immediately became the darling of the LocalLLaMA crowd. Strong benchmarks, good vibes, well-engineered.I’m most interested in models over 200B — that’s what my dual Grace-Hopper system is built for — but the broader community runs smaller models, and the 27B size hits a sweet spot: large enough to have interesting internal structure, small enough that most people with a decent GPU can actually use a RYS variant.There’s also a scientific reason. In Part 1, I noted that smaller models tend to have more entangled functional anatomy — encoding, reasoning, and decoding are less cleanly separated. If RYS still works on a 27B model, that tells us the circuit structure is robust even when the brain is more compact. If it doesn’t work, that’s also interesting.(MiniMax M2.5 and others are in the pipeline. The Hopper is grinding. More heatmaps to come.)Seeing the Anatomy DirectlyBefore we get to the optimisation work, I want to show something new. In Part 1, the three-phase hypothesis — early layers encode, middle layers reason, late layers decode — was inferred indirectly from the Base64 observation and the heatmap patterns. It was a good story, but I couldn’t see the anatomy directly. I could only see its consequences.That changed thanks to Evan Maunder, who ran a beautifully simple experiment after reading Part 1. He fed three semantically identical sentences through a model — one in English, one in Mandarin, one encoded as Base64 — and measured the cosine similarity of their hidden states at every layer. The results showed exactly the three-phase structure: rapid convergence in the first few layers (encoding), near-perfect similarity through the middle (reasoning in a format-agnostic space), and divergence in the final layers (decoding back to surface form).I wanted to push this further. Evan’s experiment compared languages while holding content fixed. But what happens when you vary both? If the middle layers really operate in a universal “thinking space,” then two sentences about the same topic should be more similar than two sentences in the same language about different topics — even if one is in English and the other is in Chinese.Using language samples from:EN = EnglishZH = ChineseAR = ArabicRU = RussianJA = JapaneseKO = KoreanHI = HindiFR = FrenchAnd on the following topics:SCIENCEPOEMHISTORYCOOKINGLAWMEDICALSPORTSECONOMY Full Dataset (Click to expand)&quot;EN_SCIENCE&quot;: &quot;Photosynthesis converts light energy into chemical energy stored in glucose.&quot;&quot;ZH_SCIENCE&quot;: &quot;光合作用把光能转化为储存在葡萄糖中的化学能。&quot;&quot;AR_SCIENCE&quot;: &quot;تحول عملية التمثيل الضوئي طاقة الضوء إلى طاقة كيميائية مخزنة في الجلوكوز.&quot;&quot;RU_SCIENCE&quot;: &quot;Фотосинтез преобразует световую энергию в химическую энергию, запасенную в глюкозе.&quot;&quot;JA_SCIENCE&quot;: &quot;光合成は光エネルギーをグルコースに蓄えられる化学エネルギーへ変換する。&quot;&quot;KO_SCIENCE&quot;: &quot;광합성은 빛 에너지를 포도당에 저장되는 화학 에너지로 바꾼다.&quot;&quot;HI_SCIENCE&quot;: &quot;प्रकाश संश्लेषण प्रकाश ऊर्जा को ग्लूकोज़ में संचित रासायनिक ऊर्जा में बदलता है।&quot;&quot;FR_SCIENCE&quot;: &quot;La photosynthese transforme l&#39;energie lumineuse en energie chimique stockee dans le glucose.&quot; &quot;EN_POEM&quot;: &quot;At dusk, the moon lays silver on the tide while the wind carries a quiet song.&quot;&quot;ZH_POEM&quot;: &quot;黄昏时，月亮把银辉铺在潮汐上，风里带着一首安静的歌。&quot;&quot;AR_POEM&quot;: &quot;عند الغسق يفرش القمر فضته على المد وتحمل الريح اغنية هادئة.&quot;&quot;RU_POEM&quot;: &quot;В сумерках луна расстилает серебро по приливу, а ветер несет тихую песню.&quot;&quot;JA_POEM&quot;: &quot;夕暮れに月は潮の上へ銀を敷き、風は静かな歌を運ぶ。&quot;&quot;KO_POEM&quot;: &quot;해질 무렵 달빛이 밀물 위에 은빛을 깔고 바람은 조용한 노래를 실어 나른다.&quot;&quot;HI_POEM&quot;: &quot;सांझ में चांद ज्वार पर चांदी बिछा देता है और हवा एक शांत गीत लेकर चलती है।&quot;&quot;FR_POEM&quot;: &quot;Au crepuscule, la lune pose de l&#39;argent sur la maree tandis que le vent porte une chanson tranquille.&quot; &quot;EN_HISTORY&quot;: &quot;The printing press accelerated the spread of knowledge across Europe in the fifteenth century.&quot;&quot;ZH_HISTORY&quot;: &quot;印刷机在十五世纪加速了知识在欧洲的传播。&quot;&quot;AR_HISTORY&quot;: &quot;سرعت المطبعة انتشار المعرفة عبر اوروبا في القرن الخامس عشر.&quot;&quot;RU_HISTORY&quot;: &quot;Печатный станок ускорил распространение знаний по Европе в пятнадцатом веке.&quot;&quot;JA_HISTORY&quot;: &quot;活版印刷は十五世紀のヨーロッパで知識の拡散を加速させた。&quot;&quot;KO_HISTORY&quot;: &quot;인쇄기는 15세기 유럽 전역으로 지식이 퍼지는 속도를 높였다.&quot;&quot;HI_HISTORY&quot;: &quot;मुद्रण यंत्र ने पंद्रहवीं शताब्दी में पूरे यूरोप में ज्ञान के प्रसार को तेज कर दिया।&quot;&quot;FR_HISTORY&quot;: &quot;L&#39;imprimerie a accelere la diffusion du savoir en Europe au quinzieme siecle.&quot; &quot;EN_COOKING&quot;: &quot;To make soup, simmer onions, carrots, and beans until the broth becomes rich and fragrant.&quot;&quot;ZH_COOKING&quot;: &quot;做汤时，把洋葱、胡萝卜和豆子慢炖，直到汤汁变得浓郁而香。&quot;&quot;AR_COOKING&quot;: &quot;لتحضير الحساء، اطه البصل والجزر والفاصوليا على نار هادئة حتى يصبح المرق غنيا وعطرا.&quot;&quot;RU_COOKING&quot;: &quot;Чтобы приготовить суп, томите лук, морковь и фасоль, пока бульон не станет насыщенным и ароматным.&quot;&quot;JA_COOKING&quot;: &quot;スープを作るには、玉ねぎ、にんじん、豆を煮込み、だしが濃く香るまで待つ。&quot;&quot;KO_COOKING&quot;: &quot;수프를 만들려면 양파와 당근, 콩을 천천히 끓여 국물이 진하고 향긋해질 때까지 익힌다.&quot;&quot;HI_COOKING&quot;: &quot;सूप बनाने के लिए प्याज, गाजर और बीन्स को धीमी आंच पर पकाएं, जब तक शोरबा गाढ़ा और सुगंधित न हो जाए।&quot;&quot;FR_COOKING&quot;: &quot;Pour preparer une soupe, faites mijoter des oignons, des carottes et des haricots jusqu&#39;a ce que le bouillon devienne riche et parfume.&quot; &quot;EN_LAW&quot;: &quot;A contract becomes enforceable when both parties agree to clear terms and exchange consideration.&quot;&quot;ZH_LAW&quot;: &quot;当双方同意明确条款并交换对价时，合同就具有可执行性。&quot;&quot;AR_LAW&quot;: &quot;يصبح العقد قابلا للتنفيذ عندما يوافق الطرفان على شروط واضحة ويتبادلان المقابل.&quot;&quot;RU_LAW&quot;: &quot;Договор становится подлежащим исполнению, когда обе стороны согласны с ясными условиями и обмениваются встречнымпредоставлением.&quot;&quot;JA_LAW&quot;: &quot;契約は、当事者双方が明確な条件に合意し、対価を交わしたときに執行可能になる。&quot;&quot;KO_LAW&quot;: &quot;계약은 양측이 명확한 조건에 동의하고 대가를 교환할 때 집행 가능해진다.&quot;&quot;HI_LAW&quot;: &quot;जब दोनों पक्ष स्पष्ट शर्तों पर सहमत होते हैं और प्रतिफल का आदान-प्रदान करते हैं, तब अनुबंध लागू करने योग्य बनता है।&quot; &quot;FR_LAW&quot;: &quot;Un contrat devient executoire lorsque les deux parties acceptent des conditions claires et echangent une contrepartie.&quot; &quot;EN_MEDICAL&quot;: &quot;Vaccination trains the immune system to recognize a pathogen before a real infection occurs.&quot;&quot;ZH_MEDICAL&quot;: &quot;疫苗接种会训练免疫系统在真正感染发生前识别病原体。&quot;&quot;AR_MEDICAL&quot;: &quot;يدرب التطعيم الجهاز المناعي على التعرف على الممرض قبل حدوث عدوى حقيقية.&quot;&quot;RU_MEDICAL&quot;: &quot;Вакцинация обучает иммунную систему распознавать патоген до того, как произойдет настоящая инфекция.&quot;&quot;JA_MEDICAL&quot;: &quot;ワクチン接種は、実際の感染が起こる前に免疫系が病原体を見分けられるようにする。&quot;&quot;KO_MEDICAL&quot;: &quot;백신 접종은 실제 감염이 일어나기 전에 면역 체계가 병원체를 알아보도록 훈련한다.&quot;&quot;HI_MEDICAL&quot;: &quot;टीकाकरण प्रतिरक्षा तंत्र को वास्तविक संक्रमण से पहले रोगजनक को पहचानना सिखाता है।&quot;&quot;FR_MEDICAL&quot;: &quot;La vaccination entraine le systeme immunitaire a reconnaitre un agent pathogene avant qu&#39;une veritable infection ne se produise.&quot; &quot;EN_SPORTS&quot;: &quot;A relay team wins when each runner exchanges the baton cleanly and maintains speed through every leg.&quot;&quot;ZH_SPORTS&quot;: &quot;接力队在每位跑者顺利交接接力棒并在每一棒保持速度时才能获胜。&quot;&quot;AR_SPORTS&quot;: &quot;يفوز فريق التتابع عندما يسلم كل عداء العصا بسلاسة ويحافظ على السرعة في كل مرحلة.&quot;&quot;RU_SPORTS&quot;: &quot;Эстафетная команда побеждает, когда каждый бегун чисто передает палочку и сохраняет скорость на каждом этапе.&quot;&quot;JA_SPORTS&quot;: &quot;リレーチームは、各走者がバトンを確実に渡し、すべての区間で速度を保つと勝てる。&quot;&quot;KO_SPORTS&quot;: &quot;계주 팀은 각 주자가 배턴을 깔끔하게 넘기고 모든 구간에서 속도를 유지할 때 승리한다.&quot;&quot;HI_SPORTS&quot;: &quot;रिले टीम तब जीतती है जब हर धावक बैटन को साफ़ी से सौंपता है और हर चरण में गति बनाए रखता है।&quot;&quot;FR_SPORTS&quot;: &quot;Une equipe de relais gagne lorsque chaque coureur transmet le temoin proprement et conserve sa vitesse sur chaque portion.&quot; &quot;EN_ECONOMY&quot;: &quot;When interest rates rise, borrowing often slows and household spending can weaken.&quot;&quot;ZH_ECONOMY&quot;: &quot;当利率上升时，借贷往往会放缓，家庭支出也可能减弱。&quot;&quot;AR_ECONOMY&quot;: &quot;عندما ترتفع اسعار الفائدة، يتباطا الاقتراض غالبا وقد يضعف انفاق الاسر.&quot;&quot;RU_ECONOMY&quot;: &quot;Когда процентные ставки растут, заимствования часто замедляются, а расходы домохозяйств могут ослабеть.&quot;&quot;JA_ECONOMY&quot;: &quot;金利が上がると、借り入れは鈍り、家計支出も弱くなりやすい。&quot;&quot;KO_ECONOMY&quot;: &quot;금리가 오르면 차입이 둔화되고 가계 지출도 약해질 수 있다.&quot;&quot;HI_ECONOMY&quot;: &quot;जब ब्याज दरें बढ़ती हैं, तो उधार लेना अक्सर धीमा पड़ जाता है और घरेलू खर्च कमजोर हो सकता है।&quot;&quot;FR_ECONOMY&quot;: &quot;Lorsque les taux d&#39;interet augmentent, l&#39;emprunt ralentit souvent et les depenses des menages peuvent faiblir.&quot;Pairwise, that is $C(64, 2) = 2016$ natural-language comparisons. Then I computed pairwise cosine similarity of the pooled hidden states at every layer. This gives us 3 categories:224 Cross-language, Same content: comparisons (in red)224 Same language, Different content: comparisons (in green)1568 Cross-language, Different content: comparisons (in blue)Raw cosine similarity across layers. All pairs converge rapidly in the first few layers. The interesting divergence happens in the mid-to-late stack.The raw plot already tells a story. All pairs start at moderate similarity (0.2–0.6 at the embedding layer), then rapidly converge to near-1.0 by about layer 3. Through the mid-stack, they stay high but begin to separate. The red line (Cross-language, Same content:) stays above the green line (Same language, Different content:), which itself stays above the blue lines (Cross-language, Different content:), from roughly layer 15 onward. The model’s internal representation cares more about what you’re saying than what language you’re saying it in.The aggregate numbers:Cross-language, same content: 0.902 mean similaritySame-language, different content: 0.891 mean similarityCross-language, different content: 0.829 mean similarityBut the raw cosine similarities are dominated by a large shared component — every hidden state at a given layer lives in roughly the same region of the space (the “hyper-cone” effect that’s well-documented in the literature). To see the structure more clearly, I applied per-layer centering: subtract the mean vector across all four inputs at each layer, then re-normalise before computing cosine similarity. This strips out the “I’m at layer N” component and reveals only how the representations differ from each other.Centered cosine similarity. After removing the shared component, the organisation becomes stark.Centered cosine similarity. Mean/STD spread-band plotsNow the anatomy is unmistakable. Three phases:Encoding (layers 0–5). Wild oscillation. The model is doing heavy lifting to normalise radically different surface forms. The model knows it’s reading English or Chinese, and the representations reflect that.Reasoning (layers ~10–45). The red line dominates. These are the cross-language same-content pairs. The model has converged on a representation where content identity matters far more than language identity. Same-language different-content pairs (green) are much lower. And cross-language different-content (blue) has negative cosine similarity. This is the format-agnostic reasoning space that Part 1 hypothesised.Decoding (layers ~45–64). The latenst re-differentiates. The model is preparing to emit tokens, and it needs to commit to a specific language and format. Cross-language similarity drops. The representations become surface-specific again.This is the three-phase architecture, directly visible in a single forward pass. The encoding region is narrow, just a handful of layers. The reasoning region is quite broad, the bulk of the transformer stack. And the decoding region is where everything unravels back into language-specific token predictions.More importantly for this post: the reasoning region maps almost perfectly onto where the RYS heatmaps show improvement. The layers that can be profitably duplicated are the layers where the model is thinking in its universal internal language. The layers that can’t be duplicated (the blue walls in the heatmaps) are the encoding and decoding boundaries. This isn’t a coincidence. If a layer is operating in a format-agnostic space, its input and output distributions are similar enough that you can loop back without catastrophic distribution mismatch. If a layer is doing format-specific work, looping back means feeding decoded representations into a layer that expects abstract ones, or vice versa.The anatomy predicts the heatmaps. Let’s look at them.The Heatmaps: Results FirstI’ll show you the data before the methodology, because the heatmaps are the whole point (and look awesome, right?)The setup is the same as Part 1: for every valid $(i, j)$ pair, duplicate layers $i$ through $j{-}1$, run the math and EQ probes, record the delta versus the unmodified model. Red means improvement. Blue means degradation.Combined (math + EQ) delta for Qwen3.5-27B. The sweet spot sits clearly in the middle of the stack.Math delta. Broad mid-stack boost with a clean drop-off at the edges.EQ delta. More structured — the useful region is tighter and more sharply bounded.The signature is pretty clear: even on a modern 27B model, the middle of the transformer stack contains blocks that can be profitably re-traversed. The boundaries are different from Qwen2-72B (as expected, with different architecture, different training), but the general principle holds: there are coherent circuits in the mid-stack, and running them twice makes the model measurably better.Here are the single-block winners:Winner typeConfigExtra layersSize increaseMath deltaEQ deltaDelta sumBest math boost(24,35)+11+17.19%+0.1203+0.0900+0.2104Best EQ boost(29,34)+5+7.81%+0.0644+0.0975+0.1619Best combined boost(24,35)+11+17.19%+0.1203+0.0900+0.2104The best single block, (24, 35), adds 11 layers (+17% overhead) and boosts both math and EQ substantially. But notice that the best EQ configuration is tighter (just 5 layers at (29, 34)) and gets nearly as good a combined score at less than half the overhead. This is a hint of something we’ll explore a bit later: the efficiency frontier rewards precision over size.Single-Layer Repeats: Running One Step of the Recipe AgainIn Part 1, I showed that repeating a single layer almost never helps. One of the key findings was that the middle layers work as circuits — multi-layer units that need to execute as a whole. Duplicating one step of a seven-step recipe doesn’t give you much.But “almost never” is doing a lot of work in that sentence. With a stronger model and more compute, I wanted to know if there were any single-layer repeats that reliably moved the needle, and what the profile looked like when you repeated a single layer multiple times.So I ran a repeat-x8 sweep: for each layer in the 64-layer stack, try repeating it 2×, 3×, 4×, all the way up to 8×. That’s 64 × 7 = 448 configurations, scored against the same math and EQ probes.EQ delta for single-layer repeats (x2 through x8). The y-axis is the layer index; x-axis is the repeat count.Math delta for the same sweep. Note how different the landscape looks.The baseline scores for this sweep:Math: 0.8763EQ: 0.7394And the winners:Winner typeConfigExtra layersSize increaseMath deltaEQ deltaDelta sumBest math boostlayer10_x3+2+3.125%+0.0774+0.0071+0.0845Best EQ boostlayer27_x2+1+1.5625%-0.0405+0.0131-0.0274Best combined boostlayer10_x3+2+3.125%+0.0774+0.0071+0.0845Two things jump out. First, single-layer repeats can move the model — layer10_x3 gets a solid math boost at minimal overhead. Second, the profile is asymmetric: math can improve significantly while EQ gains are small and unstable. The best EQ repeat actually hurts math.Beam Search: Composing BlocksAfter single-block results, the obvious next question: What if I repeat a block twice? What if you compose multiple blocks? Maybe one block boosts math and a different block boosts EQ, and together they do both.Brute force is hopeless. Even with just two blocks, the combinatorial space explodes. So I used beam search: start with the best single blocks, then greedily extend by trying all possible second blocks, keep the top candidates, extend again. (This includes of course repeating the same block multiple times, a highly requested feature.)The beam search parameters:Beam width: 24 (keep the 24 best candidates at each depth)Starting depth: 3 (begin with the top 3 single-block results)Completed depths: 3, 4, 5, 6Candidates evaluated: 3,024Stopping criterion: 14-hour compute budget exhaustedMax extra layers: capped at 56 (to prevent absurd configurations where the model is more duplicate than original)Each candidate was fully evaluated: load the re-layered model, run both probes, record scores. No surrogate predictions at this stage — these are all measured.Best candidates from the beam search:BucketConfigSize increaseMath deltaEQ deltaDelta sumBest ≤20% overhead43,45;28,34+12.50%+0.0978+0.1232+0.2210Best overall39,45;24,35;9,20;43,46+48.44%+0.1122+0.1275+0.2397Beam did find stronger absolute deltas than single-block search. The best ≤20% overhead candidate composes two blocks (one in the mid-stack, one higher up), and gets a combined delta of +0.2210, beating the best single block’s +0.2104 while using less overhead (12.5% vs 17.19%).But beam also made the cost problem obvious. The best overall candidate uses four composed blocks at +48.44% overhead for only a modest improvement over the two-block version. The gains are real but sublinear: you don’t get four times the benefit from four blocks. The circuits interact, and not always constructively. Some combinations cancel out. Others step on each other’s toes.The lesson: composition works, but it’s not additive. Each additional block buys less than the last, while the overhead grows linearly. For practical deployment, you want the minimum number of blocks that gets you past the performance threshold you care about.Surrogate Model: Ranking Millions, Measuring HundredsBeam search is effective but expensive. Each evaluation means loading a re-layered model and running both probe sets, which takes minutes per configuration. At 3,024 candidates, that’s already pushing the limits of a single overnight run.To explore the space more broadly, I trained a surrogate model: a cheap predictor that estimates how good a configuration will be, so we can rank millions of candidates and only benchmark the most promising ones.Training the SurrogateThe idea is straightforward. We already have thousands of measured $(i, j)$ results from the full scan, the beam search, and the repeat sweep. Each measured row is a training example: the configuration parameters go in, the math delta and EQ delta come out. Train a fast model on these pairs, and use it to score configurations we haven’t measured.I used XGBoost (gradient-boosted trees), which is perfect for this: fast to train, fast to predict, handles the kind of structured tabular features that describe layer configurations well.Training details:Total measured rows: 4,643Train/holdout split: 4,411 train / 232 holdout (5%)Features: encoded from the configuration spec (which layers are repeated, how many times, block boundaries, etc.)Holdout validation (Spearman rank correlation):TargetSpearman ρCombined0.933EQ delta0.944Math delta0.788A Spearman of 0.93+ on the combined metric means the surrogate is excellent at ranking configurations — which is exactly what we need. It doesn’t have to predict the exact score; it just needs to know that configuration A is probably better than configuration B. The math correlation is lower (0.79), which makes sense: math performance has more noise and depends on subtler features of the block boundaries.Sweeping 2 Million CandidatesWith the surrogate trained, I generated 2,000,000 candidate configurations — spanning single blocks, multi-block compositions, sparse repeats, and various exotic arrangements. The surrogate scored all of them in minutes.After applying size and sanity filters:Candidates scored: 2,000,000Accepted after filters: 430,464Top candidates fully benchmarked: 100The top surrogate-ranked candidate that was subsequently measured:Config: sparse repeat motif around layers 19/43/51Extra layers: +3 (+4.69%)Math delta: +0.0328EQ delta: +0.0824Delta sum: +0.1152This is interesting — a sparse repeat of just three individual layers, not a contiguous block, that nonetheless produces meaningful gains at under 5% overhead. The surrogate found something the beam search wouldn’t have: a configuration that’s good precisely because it’s minimal.Important caveat: the surrogate was only used for ranking. Every number in the comparison tables below comes from actual measured runs, not surrogate predictions.Larger Validation Sets: Graduating from 16 QuestionsUp to this point, all the search — full scan, beam, repeats, surrogate — used the original small probe sets: 16 math questions and 16 EQ scenarios. These were designed for speed, and they served that purpose well. But 16 questions is thin for making final claims. A lucky or unlucky draw of questions could shift rankings.For the final comparison, I built larger validation sets:Math120: 120 questions with a deliberate mix of difficulty types:60 square root questions30 multiplication questions30 cube root questionsThis is more balanced than the original 16, which leaned heavily on cube roots. Different operations stress different aspects of the model’s numerical intuition, and the larger sample size smooths out noise.EQ140: 139 first-pass EQ-Bench scenarios (the file says 140, but one was filtered during preprocessing — a reminder that data is always messier than you’d like). These span a wider range of social situations, emotional states, and complexity levels than the original 16.The workflow from this point was:Use the small probes for fast search (full scan, beam, repeats, surrogate).Shortlist the top candidates from each method.Re-measure everything on Math120 + EQ140.Compare only the re-measured results.This means the search phase and the validation phase use different datasets. The small probes found the candidates; the large probes judge them. It’s the same logic as using a validation set you never trained on, and the same reason the original RYS-XLarge result was credible, since I never optimised for the leaderboard benchmarks.Pareto PunchlineFor the final comparison, I took the top 100 candidates from each method family:Full scan (contiguous single blocks): 100Beam search (multi-block compositions): 100Repeat-x8 (single-layer repeats): 97 (a few duds fell below threshold)Surrogate-measured (top surrogate picks, fully benchmarked): 100That’s 397 configurations, all re-measured on the shared Math120 + EQ140 validation sets. Then I computed the Pareto frontier: the set of configurations where no other configuration is both better and smaller.After all that engineering — beam search, surrogate models, 2 million candidates, larger validation sets — the Pareto frontier had four points. All four are from the contiguous-block family:ConfigBlock viewSize increaseMath deltaEQ deltaDelta sumrepeats:33(33,34)+1.5625%+0.0179+0.0945+0.1124repeats:31,32,33(31,34)+4.6875%+0.0207+0.0972+0.1179repeats:30,31,32,33,34(30,35)+7.8125%+0.0279+0.0979+0.1257repeats:26,27,28,29,30,31,32,33(26,34)+12.5%+0.0279+0.1009+0.1288This was the key result for me: After throwing every search method I had at the problem, clean contiguous blocks in the mid-stack still dominate the size/performance frontier.Note: repeating layer 33 alone is both a block AND a single layer repeat, but just saying it’s a block makes the story nicer, ok?Look at the progression. Adding layer 33 alone gets you most of the EQ boost (+0.0945) at low cost (1.5% more compute). Expanding to layers 31–33 adds a bit more. Going all the way to 26–33 gives the best absolute score, but the marginal returns are clearly diminishing. The EQ delta barely moves from +0.0945 to +0.1009 across a 10× increase in overhead.This is exactly what the circuit hypothesis predicts. There’s a core computational unit somewhere around layers 30–34 that performs a complete reasoning operation. Duplicating it gives the model a second pass through that operation. Making the block larger captures some neighbouring context, which helps marginally, but the essential circuit is small and well-defined.Notably absent from the Pareto frontier: multi-block beam compositions and exotic surrogate picks. They can produce strong raw scores, but they do it at higher overhead than a simple contiguous block achieves for the same benefit. Complexity doesn’t pay on the efficiency frontier. That said, it would probably be amazing for model expansion and continued fine-tuning. You have already prepared the model by adding the right kind of layers to refine ‘thinking’, and I think this is a via model for Frontier Labs to play with (and if not, sponsor me with some Nvidia gear at least).The ModelsWith the analysis complete, I built the RYS variants and uploaded them to HuggingFace. These use the Pareto-optimal configurations from the table above.ModelConfigExtra layersHuggingFaceRYS-Qwen3.5-27B-FP8-S(33,34)+1dnhkng/RYS-Qwen3.5-27B-SRYS-Qwen3.5-27B-FP8-M(31,34)+3dnhkng/RYS-Qwen3.5-27B-FP8-MRYS-Qwen3.5-27B-FP8-L(30,35)+5dnhkng/RYS-Qwen3.5-27B-FP8-LRYS-Qwen3.5-27B-FP8-XL(26,34)+8dnhkng/RYS-Qwen3.5-27B-FP8-XLS is for people who want the maximum EQ boost at near-zero overhead. Play around with M and L to find your preferred best balance of performance and cost. XL is for when you have the compute and want the strongest absolute scores.These are regular HuggingFace weights, but I’ll be working with TurboDerp to build Exllama v3 models with pointer-based layer duplication: the repeated layers share weights with their originals. No additional VRAM is consumed for the parameters themselves — you only pay extra for the compute time and KV cache of the additional forward passes. This means you can run RYS-Qwen3.5-27B on the same hardware that runs the base model! Stay tuned…As discussed in Part 1, I believe the junction points (where the model loops back to an earlier layer) are the main source of residual inefficiency. A LoRA fine-tune targeting just those junction layers should further improve performance without converting the pointer-based duplicates into real copies. I haven’t done this myself, but if the Qwen2-72B pattern holds, the community will take it from here.The CodeThe scanning pipeline, probe datasets, and model-building scripts are available at:github.com/dnhkng/RYSThe repo contains:Scanner: the $(i, j)$ sweep pipeline, including the math and EQ probe evaluation harnessesProbes: all datasets used in this work (math_16, math_120, EQ_16, EQ_140)Beam search: the multi-block composition searchSurrogate: XGBoost training, candidate generation, and top-k benchmarking pipelineModel builder: scripts to produce RYS variants from any HuggingFace model given a configuration specHeatmap generation: plotting code for the brain scansThe core dependency is ExLlamaV3 for quantized inference. Most of the scanning was done with FP8 quantized models, which fit comfortably in the 192GB HBM3 on my Hopper system. For the original Qwen2-72B work, I used ExLlamaV2 on dual 4090s — the pipeline works on consumer hardware, it just takes longer.What This MeansFor Qwen3.5-27B specifically:If you want low overhead and reliable gains, a single contiguous block in the mid-stack is still the best first move. (33, 34) gives you most of the benefit for almost nothing.Sparse single-layer repeats are real and useful as low-cost alternatives, especially for math-heavy workloads.Composing many motifs can produce strong raw scores, but overhead climbs fast and the interactions are sublinear.The Pareto frontier is clean. Contiguous blocks dominate once you account for size.More broadly, this work confirms what Part 1 suggested: Transformer reasoning is organised into discrete functional circuits, and this organisation is a general property, not an artifact of one model or one generation of models. The circuits are there in Qwen3.5-27B, just as they were in Qwen2-72B, Llama-3-70B, and Phi-3. The boundaries differ. The principle doesn’t.The method is orthogonal to fine-tuning, orthogonal to quantisation, and orthogonal to whatever prompt engineering you’re doing. It’s a free lunch, or at least a very cheap snack. The model gets smarter by thinking longer, using the reasoning circuits it already has.More architectures are in the pipeline. The Hopper is still grinding on MiniMax M2.5. Watch this space!Citing this work1 2 3 4 5 6 7 @article{ng2026rysii, title = {LLM Neuroanatomy II: Modern LLM Hacking and hints of a Universal Language?}, author = {Ng, David Noel}, year = {2026}, month = {March}, url = {https://dnhkng.github.io/posts/rys-ii/} }</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dnhkng</span>
+        <span class="meta-time">2026/03/24 21:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在此。我想强调的另一件事是：与语言无关的“思维空间”发现来自 Evan Maunder，他阅读了第 1 部分并进行了一项优雅的实验——英语、普通话和 Base64 中的同一个句子，每一层都有余弦相似度。这些表示在早期层收敛，在中间堆栈中保持几乎相同，然后在模型提交为输出格式时在最后再次发散。<p>我将其扩展为 2×2 设计（两种语言 × 两种内容类型），结果更加明显：到第 10 层，跨语言相同内容对比相同语言不同内容对更相似。该模型关心的是你在说什么，而不是你在说什么语言。</p><p>这也是层复制发挥作用的原因——这些中间堆栈层在输入和输出分布匹配的空间中运行，因此您可以循环遍历它们而不会破坏任何内容。编码和解码边界是热图中蓝色墙壁出现的位置。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Author here. Another thing I want to highlight: the language-agnostic "thinking space" finding came from Evan Maunder, who read Part 1 and ran an elegant experiment — same sentence in English, Mandarin, and Base64, cosine similarity at every layer. The representations converge by the early layers, stay nearly identical through the mid-stack, then diverge again at the end as the model commits to an output format.<p>I extended this to a 2×2 design (two languages × two content types) and the result is even starker: by layer 10, cross-language same-content pairs are more similar than same-language different-content pairs. The model cares about what you're saying, not what language you're saying it in.</p><p>This is also what makes layer duplication work — those mid-stack layers operate in a space where input and output distributions match, so you can loop through them without breaking anything. The encoding and decoding boundaries are where the blue walls show up in the heatmaps.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502672" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">thesz</span>
+        <span class="meta-time">2026/03/25 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>  &gt; The model cares about what you're saying, not what language you're saying it in.
+</code></pre>
+训练模型的语言数量是多少？训练集句子的数量是多少？我相信这些数字有很大不同，余弦相似度很大程度上取决于句子的数量。<p>如果我们均衡训练集中的语言数量和句子数量会怎样？可以说，是一个银河系的法学硕士。</p><p>此外，模型无法不关心语言，因为您的工作在解码（输出）阶段显示了余弦相似度的分歧。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>  &gt; The model cares about what you're saying, not what language you're saying it in.
+</code></pre>
+What is the number of languages model is trained upon? And what is the number of training set sentences? I believe that these numbers are vastly different and cosine similarity is overwhelmingly biased by number of sentences.<p>What if we equalize number of languages and number of sentences in the training set? A galaxy-wise LLM, so to say.</p><p>Also, model can't help but care about language because your work shows divergence of cosine similarity at the decoding (output) stage(s).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507371" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hmokiguess</span>
+        <span class="meta-time">2026/03/25 02:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在努力理解你所说的，如果我错了，你能纠正我吗？<p>这是否有点像说跨语言的不同原语的嵌入最终分布在向量空间中的方式都遵循相同的原则和“法则”？</p><p>例如，如果我分别训练一个大型英语语料库和一个大型西班牙语语料库，在这两种情况下，两者之间等效的语言构造方式最终将使用相同的向量空间模式表示？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm trying to understand what you said, can you please correct me if I'm wrong here.<p>Would this be sort of like saying the way embeddings of different primitives across languages end up distributed in a vector space all follow the same principles and "laws"?</p><p>For example, if I train a large corpus of english and, separately, a large corpus of spanish, in both cases the way language constructs that are equivalent across both will end up represented using the same vector space patterns?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">canjobear</span>
+        <span class="meta-time">2026/03/25 05:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这似乎确实发生了，至少足够接近，可以跨语言对齐嵌入空间并进行一些翻译，而无需对并行文本进行训练。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This does seem to happen, at least close enough that it's possible to align embedding spaces across languages and do some translation without training on parallel texts.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509380" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">1bpp</span>
+        <span class="meta-time">2026/03/25 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一件有趣的事情是说服模型在字符集之间流畅地切换，以尽可能“高效”地表达想法。它喜欢用汉字来表达抽象概念。我还看到双子座在英语句子中间自发地使用它们。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A fun thing to do is convince a model to fluidly switch between character sets to express ideas as 'efficiently' as possible. It likes to use Chinese hanzi a lot for abstract concepts. I've also seen Gemini use them unprompted in the middle of an English sentence.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mikkupikku</span>
+        <span class="meta-time">2026/03/25 02:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AI 在人类语言之间进行代码转换就是赛博朋克 AF。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AIs code switching between human languages is cyberpunk AF.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506789" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">theredsix</span>
+        <span class="meta-time">2026/03/25 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">推断基准测试，这是否意味着最好的 RYS 27B 能够超越 397B MoE？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Extrapolating the benchmarks, this would imply the best RYS 27B is capable of out performing the 397B MoE?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dnhkng</span>
+        <span class="meta-time">2026/03/24 21:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在此。最让我惊讶的结果是：在评估了 3,024 个波束搜索候选者、在约 4,600 个测量值上训练了一个代理模型并对 200 万个配置进行评分之后，帕累托最优配置都是简单的连续块。没有奇异的多块组合，没有稀疏的重复。只需“重复第 31-33 层”，您就处于效率前沿。<p>我认为这说明了变压器如何在内部组织计算的一些有趣的事情。中间堆栈推理电路足够连贯，您可以循环它们两次而不会出现分布不匹配。编码/解码边界不是。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Author here. The result that surprised me most: after evaluating 3,024 beam search candidates, training a surrogate model on ~4,600 measurements, and scoring 2 million configurations — the Pareto-optimal configs were all simple contiguous blocks. No exotic multi-block compositions, no sparse repeats. Just "repeat layers 31–33" and you're on the efficiency frontier.<p>I think this says something interesting about how transformers organise computation internally. The mid-stack reasoning circuits are coherent enough that you can loop through them twice without distribution mismatch. The encoding/decoding boundaries are not.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502311" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yodon</span>
+        <span class="meta-time">2026/03/24 22:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您查看图像处理中使用的卷积神经网络，就会发现第一层左右学习一系列小波基函数是非常常见的。然后，后面的层在小波空间中进行识别，而该空间不会被解释或传达给训练算法。<p>这里的工作显然比这更复杂，但表明早期层转换为某种定义通用语言表示的广义基函数正在发生类似的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you look at convolutional neural nets used in image processing, it's super common for the first layer or so to learn a family of wavelet basis functions. Later layers then do recognition in wavelet space, without that space ever being explained or communicated to the training algorithm.<p>This work here is obviously more complex than that, but suggests something similar is going on with early layers transforming to some sort of generalized basis functions defining a universal language representation.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503138" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vessenes</span>
+        <span class="meta-time">2026/03/25 01:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大卫，<p>感谢您进行这项研究。我记得当歌利亚出现并……工作时我感到震惊；这感觉像是目前尚未探索的研究。</p><p>我一直在思考这对本地生成的影响——重复层的真正好处是它不占用额外的内存——因此在边缘运行良好。</p><p>您能建议一些边缘侧的探索角度吗？我最近开始考虑修复整个生成运行的专家层，这很有趣 - 基本上，您只需为加载选定的专家支付一次内存成本 - 我认为 RYS 类型思维是这种想法的自然延伸。如果你有什么想法，我洗耳恭听。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">David,<p>Thanks for this research. I remember being stunned when Goliath showed up and .. worked; this feels like under explored research right now.</p><p>I've been thinking about implications of this for local generation -- what's really nice about a repeated layer is it takes up no extra memory -- and therefore works well on the edge.</p><p>Can you suggest some exploration angles on the edge side? I've recently started looking at fixing expert layers for an entire generation run as interesting - basically you pay the memory cost once for loading in selected experts - and I think RYS type thinking is a natural extension of this. If you've got some ideas, I'm all ears.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505809" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">driese</span>
+        <span class="meta-time">2026/03/25 01:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自从我读到这篇文章以来，我一直在思考下一个逻辑步骤：训练神经网络在每层之后动态路由内部循环。不是仅仅选择一组给定的重复层，而是让新分类器决定是否要循环、要循环的位置、是否循环多次、循环大部分，或者直接跳到最终层。每个标记可以根据其相关性或多或少地循环。<p>它与 MoE 架构有一些相似之处，但它不是选择专家，而是选择层路由。如果有效的话，与法学硕士一起训练这个神经网络分类器可以大大减少给定智能所需的层数。如果有人想从事这方面的工作，请随时给我留言。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ever since I read about this, I have been thinking about the next logical step: train a NN to route the internal loops dynamically after each layer. Instead of just choosing a given set of layers that are repeated, let the new classifier decide whether it wants to loop, where it wants to loop, whether to loop multiple times, to loop a big part, or to just jump to the final layers straight away. Each token could loop more or less based on its relevance.<p>It has some similarities of a MoE architecture, but instead of choosing experts, it chooses layer routes. Training this NN classifier together with the LLM could condense the required amount of layers for a given intelligence down drastically if it works. If anyone wants to work on this, feel free to send me a message.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dnhkng</span>
+        <span class="meta-time">2026/03/25 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！<p>我已将基本代码推送到 GitHub (<a href="https://github.com/dnhkng/RYS" target="_blank" rel="noopener noreferrer">https://github.com/dnhkng/RYS</a>）</p><p>一些值得探索的有趣领域可能是删除某些图层和复制其他图层的组合。即通过删除某些层来减少 VRAM（这有效，有详细记录），并通过复制其他层来恢复性能（节省 VRAM）。我不追求这个，但看起来很有趣！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks!<p>I have pushed basic code to GitHub (<a href="https://github.com/dnhkng/RYS" target="_blank" rel="noopener noreferrer">https://github.com/dnhkng/RYS</a>)</p><p>Some interesting areas to explore might be a combination of deleting some layers and duplicating others. i.e. reduce VRAM by dropping some layer (this works, well documented), and recovering performance by duplicating others (saves VRAM). I am not pursuing this, but it seems interesting!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vessenes</span>
+        <span class="meta-time">2026/03/25 02:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢——有趣。我喜欢烧蚀层的想法。我想你可以获得一个可微的堆栈，它具有层跳过和层复制/循环以及总内存使用损失函数；这将让某人运送一个大的（通常是烧蚀的）或小的（通常是复制的）模型。我对较长序列的专家路由非常感兴趣，因为边缘推理问题始终是内存带宽。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks -- interesting. I like the idea of ablating layers. I guess you could get a differentiable stack that has a layer skip and layer copy/loop and a total memory use loss function; that would let someone ship either a big (usually ablate) or little (usually copy) model. The expert routing for longer sequences interests me a lot because the edge inference issue is always memory bandwidth.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507197" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">big_toast</span>
+        <span class="meta-time">2026/03/25 00:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这对我来说有点难以理解。这些结果是众所周知的还是有抽象的总结？<p>RYS（重复一遍）假设复制（正确的）层足以提高性能（抱歉，没有仔细阅读，它真的只是堆叠相关层？）。</p><p>ERD（编码、推理、解码）层结构是一个相对稳健的观察？神经网络的中间层将在通用空间中进行推理，这可以通过给定相似或不相似输入的每一层隐藏状态的余弦相似性来证明。相似的输入在第 5 层收敛，你可以观察余弦相似度中发生的情况吗？</p><p>这篇文章令人难以置信，我担心在人们深入参与之前它就会从头版消失。 （该方法很有趣，也许我还缺少其他重要的想法。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This was a little dense for me to grok. Are these well known results or is there an abstract-like summary?<p>The RYS (repeat yourself) hypothesis that duplicating (the right) layers is enough to improve performance (sorry for not reading closely enough, it's really just stacking the relevant layers?).</p><p>The ERD (encoding, reasoning, decoding) layer structure is a relatively robust observation? That the middle layers of the NN will reason in universal space, and this is kinda evidenced by cosine similarities of the hidden states at each layer given similar or dissimilar inputs. And that similar inputs converges by layer 5 and you can kinda watch that happen in the cosine similarities?</p><p>This post is incredible and I'm afraid it'll drop off the front page before people engage deeply with it. (The methodology was interesting, maybe there's other big ideas I'm missing.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504893" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wongarsu</span>
+        <span class="meta-time">2026/03/25 00:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现 RYS 结果比 ERD 结果更令人惊讶。编码-推理-解码毕竟是一种非常流行的设计神经网络的方法（即使是自动编码器也只是没有推理步骤），优化中出现的相同结构并不令人惊讶。<p>但是衡量它并计算哪些层参与编码/解码以及推理发生的位置的方法非常有价值。</p><p>有趣的是，在大型模型中，各相的分离更加清晰。我想知道这对于嵌入模型意味着什么？通常我们采用小型法学硕士并砍掉最后几层以获得嵌入模型。但我想知道是否可以使用 Qwen3.5-27B 的前五层或 Kimi K2.5 的前 X 层来获得更好的嵌入模型？文章中的方法似乎给出了寻找最佳切割点的直接方法</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find the RYS result far more surprising than the ERD result. Encode-Reasoning-Decode is after all a very popular way to design neural networks (even an autoencoder is just that without the reasoning step), the same structure emerging from optimization isn't that surprising.<p>But the methodology to measure it and put numbers on which layers are most involved in encoding/decoding and where the reasoning takes place is very valuable.</p><p>The finding that the phases are more cleanly separated in large-ish models is interesting. I wonder what this could mean for embedding models? Usually we take small LLMs and chop off the last couple layers to get an embedding model. But I wonder if you could get better embedding models using something like the first five layers of Qwen3.5-27B, or the first X layers of Kimi K2.5? The methodology in the article seems to give a straight forward way to find the optimal cutting point</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505504" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">vibe42</span>
+        <span class="meta-time">2026/03/25 00:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许并不广为人知，但在法学硕士研究中肯定是众所周知的。两年前做了很多这样的实验，有趣的是它似乎仍然适用于最新的模型。<p>但请注意，数学和情商分数的提高可能会导致其他领域的分数下降；我很想看看这些模型在所有开放基准测试中的得分如何。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Perhaps not widely known but certainly known in LLM research. There was a bunch of these experiments done 2 years ago and what's interesting is that it still seems to work on the latest models.<p>Though beware that the increased score on math and EQ could lead to other areas scoring less well; would love to see how these models score on all open benchmarks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505083" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">v9v</span>
+        <span class="meta-time">2026/03/25 00:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在第一篇文章中声称，他用这种层重复方法修改的模型在huggingface open llm排行榜上名列前茅： <a href="https://dnhkng.github.io/posts/rys/" target="_blank" rel="noopener noreferrer">https://dnhkng.github.io/posts/rys/</a><p>您还记得之前对此进行的实验的名称吗？很想看看。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The author claimed that the models he modified with this layer repetition method topped the huggingface open llm leaderboard in his first post: <a href="https://dnhkng.github.io/posts/rys/" target="_blank" rel="noopener noreferrer">https://dnhkng.github.io/posts/rys/</a><p>Do you remember the names of the previous experiments done on this? Would love to take a look.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505724" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vibe42</span>
+        <span class="meta-time">2026/03/25 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">前几天刚刚从 2024 年 2 月的这个帖子中了解到这一点： <a href="https://old.reddit.com/r/LocalLLaMA/comments/1aqrd7t/i_made_an_inference_sever_that_supports_repeating/" target="_blank" rel="noopener noreferrer">https://old.reddit.com/r/LocalLLaMA/comments/1aqrd7t/i_made_...</a><p>有一些有趣的 github 链接。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just learned about it the other day from this thread from Feb, 2024: <a href="https://old.reddit.com/r/LocalLLaMA/comments/1aqrd7t/i_made_an_inference_sever_that_supports_repeating/" target="_blank" rel="noopener noreferrer">https://old.reddit.com/r/LocalLLaMA/comments/1aqrd7t/i_made_...</a><p>Has some interesting github links.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506181" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">saidnooneever</span>
+        <span class="meta-time">2026/03/24 22:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有时我会想起一个人（丹尼尔·塔米特）的某个视频，他的大脑有一些差异，这导致他学习语言的速度非常快。他说所有语言对他来说都具有相同的模式，他通过联觉或其他什么方式看到了这一点。<p>他在一周内学会了冰岛语，并在国家电视台上进行了流利的对话来证明这一点。 （这太疯狂了，用鼻音等语言很难拾取语言。）</p><p>当然，我猜想拥有这样的人类能力还达不到平均水平，但我想知道法学硕士和人工智能算法和模型是否会在某个时候揭示这种抽象概念（就像评论中提到的关于图像识别算法的一些概念），这可能会帮助人类真正学习这些东西，对其进行训练，甚至可能被教授这样的技能。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it sometimes makes me think of a video at some point of a guy (Daniel Tammet) who had some brain difference,which caused him to be extremely fast at language learning. He said all language carries the same patterns for him, which he sees through synestesia or whatever.<p>he learnt icelandic in week and had a fluent conversation on their national TV to prove it. (this is nuts, that language is extremely difficult to pickup with nasal sounds etc.)</p><p>ofcourse i guess its not even close to average to have such a abilities as a human, but i wonder if at some point LLMs and AI algorithms and models might shed light on such kind of abstractions (like some mentioned in comments also about image recognition algos)  that might help humans actually learn these things themselves, train on them and perhaps even get taught such a thing as a skill.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503370" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nealabq</span>
+        <span class="meta-time">2026/03/25 06:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">乔普斯基早期所写的内容是深层语法或深层结构，而不是表面结构。他的理论是，人类大脑中存在一套通用的语义概念，例如“动词”或“名词短语”以及它们如何相互连接。但乔普斯基并没有走得太远。
+本文的工作可能正在梳理人类的“深层结构”是什么，一种至少部分由基因编码的世界观和社会观。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Chompsky, in his early days, wrote of deep grammar or deep structure as opposed to surface structure. He theorized that there was a universal set of semantic concepts represented in human brains -- like "verbs" or "noun phrases" and how they interconnect. But Chompsky didn't take this too far.
+The work in this paper may be teasing out what this human "deep structure" is, a sort of world view and social view that's at least partly genetically encoded.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510648" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">notnullorvoid</span>
+        <span class="meta-time">2026/03/25 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人难以置信的研究。我想知道我们离将通用语言输出到它自己的推理上下文（跳过编码层）有多近。然后使用后面的解码层来延迟检查推理上下文。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Incredible research. I wonder how close we are to outputting the universal language into it's own reasoning context (which skips encoding layers). Then using the later decoding layers to lazily inspect the reasoning context.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505955" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">savoyard</span>
+        <span class="meta-time">2026/03/25 02:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相关的：<p><a href="https://plato.stanford.edu/entries/language-thought/" target="_blank" rel="noopener noreferrer">https://plato.stanford.edu/entries/language-thought/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Relevant:<p><a href="https://plato.stanford.edu/entries/language-thought/" target="_blank" rel="noopener noreferrer">https://plato.stanford.edu/entries/language-thought/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507484" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vibe42</span>
+        <span class="meta-time">2026/03/25 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这与量化正交。可能会对 4B-14B 范围内的较小模型产生重大影响，人们经常尝试特定的量化和上下文大小以适应笔记本电脑/台式机 GPU 的 VRAM。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is orthogonal to quantisation. Could have big impact on smaller models in the 4B-14B range where people often try specific quants and context sizes to fit into the VRAM of a laptop/desktop GPU.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505180" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yodon</span>
+        <span class="meta-time">2026/03/24 22:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我在本文（或该系列的第一篇文章）中错过了这一点，我深表歉意 - 如果添加图层集的两个副本会发生什么？与添加图层集的一份副本相比，性能是否有所提高？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Apologies if I missed this in the article (or in the first article in the series) - what happens if you add two copies of the layer set? Does performance improve over adding one copy of the layer set?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503199" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dnhkng</span>
+        <span class="meta-time">2026/03/24 22:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在这里：这是在这篇博客文章中通过束搜索完成的。我从最好的重新分层配置开始，并在长波束搜索期间迭代添加更多块，包括多次相同的块。<p>事实证明这并没有帮助（有点令人惊讶）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Author here: That was done in this blog post, in the beam search. I started with the best re-layer configs, and iteratively added more blocks, including the same multiple times, during a long beam search.<p>It turns out this does not help (somewhat surprisingly).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503539" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">coppsilgold</span>
+        <span class="meta-time">2026/03/25 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">尽管粗略过程引入了噪声，但增益可能是存在的。重复两次后，噪音可能会压倒优势。<p>残差连接类似于欧拉方法（这一观察结果导致了神经常微分方程的 IIRC），但该方法并不完全干净。如果模型已被训练为特定数量的层，则添加更多层也会增加大量噪声。</p><p>最终，LLM 需要使用从头开始训练的循环或循环架构进行微调，例如：&lt;<a href="https://ouro-llm.github.io" target="_blank" rel="noopener noreferrer">https://ouro-llm.github.io</a>&gt; 不幸的是，他们犯了一个错误，循环了整个 LLM 而不仅仅是中间部分。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's possible that the gains are despite the noise the coarse process introduces. After two repetitions the noise may overwhelm the advantage.<p>The residual connections resemble the Euler method (this observation led to Neural ODE's IIRC) which isn't known to be exactly clean. If the model has been trained to be a particular number of layers, adding more layers will also add a lot of noise.</p><p>Ultimately, the LLM will need to be fine tuned with the loops or a looped architecture trained from scratch, such as: &lt;<a href="https://ouro-llm.github.io" target="_blank" rel="noopener noreferrer">https://ouro-llm.github.io</a>&gt; unfortunately they made the mistake of looping the entire LLM rather than just the center portion.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508060" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skyde</span>
+        <span class="meta-time">2026/03/24 23:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其实并不意外。
+我想这与“说两次”[1] 起作用的原因相同。因为 LLm 被训练为因果语言模型，所以过去的 token 无法关注未来的 token。 
+图层集的一份副本可以解决此问题。
+[1]<a href="https://arxiv.org/html/2512.14982v1" target="_blank" rel="noopener noreferrer">https://arxiv.org/html/2512.14982v1</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Actually not surprised.
+I guess this is for the same reason “say it twice” [1] is working. Because LLm are trained as causal language model, past token cannot attend to future token. 
+One copy of the layer set solve this.
+[1]<a href="https://arxiv.org/html/2512.14982v1" target="_blank" rel="noopener noreferrer">https://arxiv.org/html/2512.14982v1</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504248" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">JPLeRouzic</span>
+        <span class="meta-time">2026/03/24 21:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有人开始在 Llama.cpp 或类似的推理工具中实现这项技术？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Has anyone started to implement this technique in Llama.cpp or similar inference tool?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dnhkng</span>
+        <span class="meta-time">2026/03/24 21:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不久前，在 23' 的 FrankenMerge 热潮期间，对此做了一些工作<p>我正在与 TurboDerp 合作将其集成到 Exllama v3 格式中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There was some work done on this a while back, during the FrankenMerge craze of 23'<p>I am working with TurboDerp to integrate this into the Exllama v3 format.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sigbottle</span>
+        <span class="meta-time">2026/03/25 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，超级有趣的关键词。您是机器学习研究员吗？你做了什么样的实验？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow, super interesting keywords. Are you a ML researcher? What kind of experiments do you do?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505854" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lostmsu</span>
+        <span class="meta-time">2026/03/24 22:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">结果的重现性如何？就像 10 次运行的平均得分与原始得分相比。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How's the reproducibility of the results? Like avg score of 10 runs vs original.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503009" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dnhkng</span>
+        <span class="meta-time">2026/03/24 22:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在这里：代码位于 GitHub 上。<p>我使用的探针似乎有助于识别良好的配置，但噪音很大。最初使用小型探针组来使扫描易于处理，然后在大约 10 倍大的探针组上重新测试排名较高的模型。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Author here: The code is up on GitHub.<p>The probes I used seem to help identify good configurations, but are quite noisey. A small probe set was initially used to make the scan tractable, and then the higher ranked models were retested on a set ~10x larger.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503576" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">eightysixfour</span>
+        <span class="meta-time">2026/03/24 22:38</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503290" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">OhNoNotAgain_99</span>
+        <span class="meta-time">2026/03/24 23:59</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504631" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">manudaro</span>
+        <span class="meta-time">2026/03/25 01:45</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506474" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">_lex</span>
+        <span class="meta-time">2026/03/24 22:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们已经发现了这种语言。它改变了计算的经济性。<p>比如说，整个云构建是不必要的，因为它就像使用计算器一样。</p><p>伸出手来聊天。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We've discovered the language. It changes the economics of computing.<p>As in, this entire cloud buildout is unnecessary because it becomes like using a calculator.</p><p>Reach out to chat.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502961" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cjameskeller</span>
+        <span class="meta-time">2026/03/24 22:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您愿意详细说明吗？我很想听到更多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would you be willing to elaborate? I would be curious to hear more.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503071" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">_lex</span>
+        <span class="meta-time">2026/03/25 00:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">给我发一封电子邮件，然后让我们接听电话。我会让你大吃一惊。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">shoot me an email and lets jump on a call. I'll blow your mind.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505218" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

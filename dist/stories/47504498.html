@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WolfGuard：采用 FIPS 140-3 加密技术的 WireGuard | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>WolfGuard：采用 FIPS 140-3 加密技术的 WireGuard</h1>
+      <p class="subtitle">WolfGuard: WireGuard with FIPS 140-3 cryptography</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 789c789c789c</span>
+        <span>分数 85</span>
+        <span>评论 60</span>
+        <span>2026/03/24 23:51</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47504498" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/wolfssl/wolfguard" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>采用 FIPS 140-3 加密技术的 WolfGuard VPN WolfGuard 是基于 Linux 内核的 WireGuard 的 WolfSSL FIPS 兼容重构，最初由 Jason Donenfeld 设计和创作。用法基本相同。 WolfGuard 有两个主要组件：wolfguard.ko 内核模块和 wg-fips 配置工具。 Wolfguard.ko 依赖于 libwolfssl.ko 内核模块，而 wg-fips 依赖于 libwolfssl.so 库 - 这些依赖项是从相同的 WolfSSL 源构建的，分别具有内核模块和用户库配置。 wg-fips-quick 脚本的工作方式与 WireGuard 中的 wg-quick 完全相同，但 /etc/wolfguard 中的配置脚本包含 SECP256R1 公钥和私钥。符号链接安装在安装 bin 目录中，从 wg 到 wg-fips，以及从 wg-quick 到 wg-fips-quick，以透明地直接替换 WireGuard。如果在安装过程中发现 WireGuard 可执行文件，它们将被重命名为 wg-wireguard 和 wg-wireguard-quick，并将 wg-wireguard-quick 修改为调用 wg-wireguard，并在 wg-wireguard-quick.unpatched 处留下安全副本。 WolfGuard 从 WireGuard 重新映射加密技术，如下所示：</li><li>算法类别 WireGuard WolfGuard</li><li>ECDH 曲线25519 SECP256R1</li><li>AEAD XChaCha20-Poly1305 AES-256-GCM</li><li>摘要 Blake2s SHA2-256</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>WolfGuard VPN with FIPS 140-3 cryptography WolfGuard is the wolfSSL FIPS-compliant refactor of Linux kernel-based WireGuard, originally designed and authored by Jason Donenfeld. Usage is essentially identical. There are two principal components to WolfGuard, the wolfguard.ko kernel module and the wg-fips configuration tool. wolfguard.ko depends on the libwolfssl.ko kernel module, and wg-fips depends on the libwolfssl.so library — these dependencies are built from the same wolfSSL source, with kernel module and user library configuration respectively. The wg-fips-quick script works exactly like wg-quick in WireGuard, but with configuration scripts in /etc/wolfguard containing SECP256R1 public and private keys. Symbolic links are installed in the installation bin directory from wg to wg-fips, and from wg-quick to wg-fips-quick, for transparent drop-in replacement of WireGuard. If WireGuard executables are found during installation, they are renamed to wg-wireguard and wg-wireguard-quick, with wg-wireguard-quick modified to call wg-wireguard, and with a safety copy left at wg-wireguard-quick.unpatched. WolfGuard remaps cryptography from WireGuard as follows:</li><li>Algo category WireGuard WolfGuard</li><li>ECDH Curve25519 SECP256R1</li><li>AEAD XChaCha20-Poly1305 AES-256-GCM</li><li>digest Blake2s SHA2-256</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">AaronFriel</span>
+        <span class="meta-time">2026/03/25 00:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">密码学中的传统观点是，如果您不知道自己需要 FIPS，如果您没有纸张和美元数字来告诉您需要多少，那么您就不需要或不想要 FIPS。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The conventional wisdom in cryptography is that if you don't know you need FIPS, if you don't have paper and a dollar figure telling you how much you need it, you don't need or want FIPS.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505285" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jandrese</span>
+        <span class="meta-time">2026/03/25 03:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FIPS 只是将您锁定在所有内容的特定（通常相当旧）版本中，并设置一些更烦人的默认值。  唯一的好处是能够勾选表格上表明您符合资格的框。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FIPS just locks you into a specific (generally fairly old) version of everything and sets some more annoying defaults.  The only benefit is to be able to check a box on a form saying you qualify.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pseudohadamard</span>
+        <span class="meta-time">2026/03/25 13:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不仅如此，您会依赖 Jason Donenfeld 的加密代码还是“所有 CVE”WolfSSL 的加密代码， <a href="https://www.wolfssl.com/docs/security-vulnerabilities/" target="_blank" rel="noopener noreferrer">https://www.wolfssl.com/docs/security-vulnerabilities/</a>？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not just that, would you rely on crypto code from Jason Donenfeld or crypto code from "all the CVEs" WolfSSL, <a href="https://www.wolfssl.com/docs/security-vulnerabilities/" target="_blank" rel="noopener noreferrer">https://www.wolfssl.com/docs/security-vulnerabilities/</a>?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513666" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">UltraSane</span>
+        <span class="meta-time">2026/03/25 02:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FIPS 是痛苦</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FIPS is pain</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507509" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gormami</span>
+        <span class="meta-time">2026/03/25 04:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于所有说 FIPS 是加密技术倒退的人来说，你是对的，这些标准总是落后于最先进的技术。  也就是说，CMMC 正在美国 MilGov 领域发挥作用，许多小型企业需要符合 CMMC，这需要 FIPS 认证的加密货币。  因此，拥有符合 FIPS 标准的开源选项对他们来说是一件好事。  WolfSSL 很好地帮助了这个领域。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For all those saying that FIPS is a step backwards in crypto, you are right, the standards always lag the state of the art.  That said, CMMC is coming into it's own in the US MilGov space, and a LOT of small businesses need to be CMMC compliant, which requires FIPS certified crypto.  So having an open sourced FIPS compliant option is a good thing for them.  Good on WolfSSL for helping out that space.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508770" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ronsor</span>
+        <span class="meta-time">2026/03/25 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得 FIPS 的问题甚至不是落后，而是 FIPS 批准的算法通常比非 FIPS 替代方案更难实施。<p>WireGuard 本身就是一个完美的例子：ChaCha20-Poly1305 实施起来相对简单，不会搞砸。 Curve25519 也适合。即使只有 32 位整数，Blake2s 也很快。</p><p>没有任何微妙漏洞的良好 AES 实现是 <i>难的</i>。他们在桌子上给你留了很多步枪。 DJB 对 secp256r1 和类似曲线有很多批评，这就是 Ed25519 和 Curve25519 存在的首要原因。</p><p>算法可能没问题，但难度和复杂性增加了出错的可能性。即使您信任的实现也可能存在错误或稍后出现错误，而且还有更多地方可以隐藏这些错误。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like the issue with FIPS is not even the lagging behind, but the fact that FIPS-approved algorithms are often harder to implement than non-FIPS alternatives.<p>WireGuard itself is the perfect example: ChaCha20-Poly1305 is relatively simple to implement without screwing up. Curve25519 fits as well. Blake2s is fast even with only 32-bit integers.</p><p>A good AES implementation without any subtle vulnerabilities is <i>hard</i>. They left plenty of footguns on the table for you. DJB has plenty of criticisms of secp256r1 and similar curves, which is why Ed25519 and Curve25519 exist in the first place.</p><p>The algorithms might be fine, but the difficulty and complexity increases the odds that something will go wrong. Even your trusted implementation might have a bug or get one later, and there's more places for those to hide.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 05:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">普通实现者并没有从头开始实现 AES，而且 P 曲线和 Curve25519 之间的差距已经缩小，所以这感觉像是一个 10-15 年前可能更切题的批评？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ordinary implementers aren't doing de novo implementations of AES, and the gap between the P-curves and Curve25519 has closed, so this feels like a critique that might have been more germane 10-15 years ago?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509881" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MisterTea</span>
+        <span class="meta-time">2026/03/25 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正在符合 CMMC 标准。承包商被认为是“业内最好的并且备受尊敬的”，但除了与 Cisco Gear 配对的最基本的 MS AD 设置之外，显然对任何事情一无所知。我最喜欢的部分是 CMMC 要求的安全策略非常疯狂，就像 IT 需要评估单个网站并将其列入白名单一样。因此，如果一名工作人员正在进行研究并需要访问数十个网站，您必须对该网站进行安全审核并将每个网站列入白名单。 -或者-您可以向某个维护着经过审查的白名单的寻租中间人支付月费。所有这些政策所做的就是为人们发明了向公司行贿的新方法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the process of becoming CMMC compliant. Contractor is supposedly "the best in the industry and well respected" but is clearly ignorant of anything beyond the most basic MS AD setup paired with Cisco Gear. My favorite part is the security policies CMMC requires are bonkers like IT needing to evaluate and white list individual websites. So if a worker is doing research and needs to visit dozens of websites you have to do a security audit of the site and white list each one. -OR- you can pay a monthly fee to some rent seeking middle man who maintains a vetted white list. All these policies do is invent new ways for people to grift companies.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509776" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gnarlynarwhal42</span>
+        <span class="meta-time">2026/03/25 08:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您指的是 SC.L2-3.13.6 吗？<p>这种控制的目的绝对不是要求单个网站有白名单。</p><p>此控制旨在应用于端口和协议，即加强和记录您的防火墙规则</p><p>如果您引用的是 SI.L2-3.14.7，则也不需要将网站列入白名单。 pDNS 服务在此有所帮助，但不是必需的。有多种免费选项可供选择，其中一种是通过 NSA 的 CCC 计划向 DIB 中的小型企业提供的。这还可以让您进行漏洞扫描和其他一些东西，全部免费。</p><p>如果您有任何疑问，请告诉我。 CMMC 不是小菜一碟，但如果您不想通过 4 万美元的 C3PAO 评估，就需要正确完成它:)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you referring to SC.L2-3.13.6?<p>The intent of this control is absolutely not to require a whitelist of individual websites.</p><p>This control is meant to apply to ports and protocols aka tighten up and document your firewall rules</p><p>If you are referring to SI.L2-3.14.7, you also do not need to whitelist websites. A pDNS service helps here but is not required. There are free options available, one of which is offered to small businesses in the DIB through the NSA's CCC program. This also gets you vulnerability scanning and some other stuff, all free.</p><p>Let me know if you have any questions. CMMC isnt a cakewalk but it needs to be done right if you don't want to fail your $40k C3PAO assessment :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511464" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">elevation</span>
+        <span class="meta-time">2026/03/25 00:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Wireguard 体现了合格的独立开发人员相对于您从行业努力和合规性 STIGS 中获得的僵化残骸的分形层的优越性。<p>因此，将wireguard 应用于合规性目的感觉是错误的。  如果合规组织想要卓越的技术，请让其标准机构批准/采用wireguard，而无需对其进行修改。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wireguard exemplifies the superiority of a qualified independent developer over the fractal layers of ossified cruft that you get from industry efforts and compliance STIGS.<p>So it feels wrong to see wireguard adapted for compliance purposes.  If compliance orgs want superior technology, let their standards bodies approve/adopt wireguard without modifying it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505578" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dmbche</span>
+        <span class="meta-time">2026/03/25 01:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 骨化碎屑的分形层<p>今天有人在咖啡里找到了同义词库！ （不是刺拳）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; fractal layers of ossified cruft<p>Someone got a thesaurus in their coffee today! (Not a jab)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506178" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">LtWorf</span>
+        <span class="meta-time">2026/03/25 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但 Wolfssl 的业务是销售 FIPS 合规性，所以……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">but wolfssl is in the business of selling FIPS compliance so…</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505850" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">alfanick</span>
+        <span class="meta-time">2026/03/25 01:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们做得很快，值得庆幸的是，兼容的静态代码分析器可以捕获诸如 <a href="https://github.com/wolfSSL/wolfGuard/commit/fa21e06f26de201bf9139bf742f514ef9ddf4f28#diff-d0f0f5117b6e6bc7d9b9c8ae7197cf26cf0f972c6f056b689960c0b7f778ce36R253" target="_blank" rel="noopener noreferrer">https://github.com/wolfSSL/wolfGuard/commit/fa21e06f26de201b...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And they do it fast, thankfully Compliant Static Code Analyser catches issues like <a href="https://github.com/wolfSSL/wolfGuard/commit/fa21e06f26de201bf9139bf742f514ef9ddf4f28#diff-d0f0f5117b6e6bc7d9b9c8ae7197cf26cf0f972c6f056b689960c0b7f778ce36R253" target="_blank" rel="noopener noreferrer">https://github.com/wolfSSL/wolfGuard/commit/fa21e06f26de201b...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">johnisgood</span>
+        <span class="meta-time">2026/03/25 01:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">天哪。这些都是新手错误[1]，最终可能会变得严重。<p>[1] 未提及修复。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Holy shit. Those are rookie mistakes[1], that could end up being SEVERE.<p>[1] Not referring to the fixes.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506387" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dietsche</span>
+        <span class="meta-time">2026/03/25 02:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说看起来像人工智能。它总是会犯一些看似合理的菜鸟错误！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">looks like AI to me. It’s always making rookie mistakes that look plausible!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">johnisgood</span>
+        <span class="meta-time">2026/03/25 02:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，我的意思是，例如，未初始化的指针是一个巨大的危险信号，因此看到一个未设置为 NULL 的指针确实令人震惊，特别是在加密代码中，杂散指针可能会导致崩溃或微妙的安全问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, I mean, for example uninitialized pointers are a huge red flag, so seeing one not set to NULL is honestly shocking, especially in crypto code where a stray pointer can lead to crashes or subtle security issues.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507415" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jmclnx</span>
+        <span class="meta-time">2026/03/25 01:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，但请注意，如果您居住在中国、俄罗斯和其他一些国家/地区，openvpn 会更好。  这是由于 wireguard 的一个已知设计问题造成的。<p>对于大多数人来说，wireguard 就可以了。</p><p>编辑：我应该说“选择”而不是“问题”，但是 Firefox 140 在这个网站上失败了，所以我无法更正 txt。  恢复到 Firefox 128 后我能够编辑此内容。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, but be aware, openvpn is much better if you live in a Country like China, Russia and a few others.  That is due to a known design issue with wireguard.<p>For most people, wireguard is fine.</p><p>Edit: I should have said "choice" instead of "issue", but Firefox 140 is failing on this site so I could not correct the txt.  I was able to edit this after reverting back to Firefox 128.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506144" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LunaSea</span>
+        <span class="meta-time">2026/03/25 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能详细说明一下有问题的设计缺陷吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could you expand on the design flaw in question?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506195" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eptcyka</span>
+        <span class="meta-time">2026/03/25 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OpenVPN 看起来像一个常规的 tls 流 - 很难区分它和 HTTPS 连接。 WireGuard 看起来像 WireGuard。但是您可以将 WireGuard 包装在您可能想要混淆它的任何标头中，并且性能仍然会更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OpenVPN looks like a regular tls stream - difficult to distinguish between that and a HTTPS connection. WireGuard looks like WireGuard. But you can wrap WireGuard in whatever headers you might want to obfuscate it and the perf will still be better.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506255" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 01:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让 WireGuard 看起来像常规 TLS 流很简单。为了获得该属性，可能不值得花费 15 年的时间来降低安全特性；  只需为其编写代理即可完成。这对我们来说是一个为期 1 天的项目（我们经历了惨痛的教训，我们的用户中有两位数的比例根本无法说 UDP，因此必须解决这个问题）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's trivial to make WireGuard look like a regular TLS stream. It's probably not worth a 15 year regression in security characteristics just to get that attribute;  just write the proxy for it and be done with it. It was a 1 day project for us (we learned the hard way that a double digit percentage of our users simply couldn't speak UDP and had to fix that).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eptcyka</span>
+        <span class="meta-time">2026/03/25 02:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我们也做了同样的事情。遗憾的是，只有 Linux 支持正确的 fake TCP 。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is, we did the same. It is a shame that only Linux supports proper fake TCP though.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507228" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">coppsilgold</span>
+        <span class="meta-time">2026/03/25 02:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">中国的防火墙没有进行复杂的过滤吗？假 TCP 应该不难被发现。我记得读过防火墙如何使用代理来发起连接只是为了看看发生了什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn't the Chinese firewall perform sophisticated filtering? Fake TCP should not be difficult to catch. I recall reading how the firewall uses proxies to initiate connections just to see whats up.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507292" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eptcyka</span>
+        <span class="meta-time">2026/03/25 02:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以在服务器端托管一个诱饵。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can host a decoy on the server side.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mmooss</span>
+        <span class="meta-time">2026/03/25 02:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想你不会释放它吧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't suppose you'd release it, please?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507422" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 02:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是 `flyctl` 的一部分，是开源的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's part of `flyctl`, which is open source.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507440" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gruez</span>
+        <span class="meta-time">2026/03/25 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;OpenVPN 看起来像一个常规的 tls 流 - 很难区分它和 HTTPS 连接。<p>我认为 openvpn 在 TLS 之上有一些奇怪的包装器，使它很容易被检测到？另外，要绕过最先进的防火墙（例如中国的 gfw），仅仅“tls”是不够的。执行 TLS-in-TLS 会产生易于检测的泄露统计签名，因此可以检测到更简单的协议，例如基于 TLS 的 http CONNECT 代理。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;OpenVPN looks like a regular tls stream - difficult to distinguish between that and a HTTPS connection.<p>I thought openvpn had some weird wrapper on top of TLS that makes it easily detectable? Also to bypass state of the art firewalls (eg. China's gfw), it's not sufficient to be just "tls". Doing TLS-in-TLS produces telltale statistical signatures that are easily detectable, so even simpler protocols like http CONNECT proxy over TLS can be detected.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507038" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cyberax</span>
+        <span class="meta-time">2026/03/25 03:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Raw OpenVPN 很容易区分，它的握手签名与常规 TLS 有很大不同。<p>如果您想通过阻止 UDP 的酒店网络进行隧道传输，OpenVPN 没问题，但如果您想突破中国防火墙或类似的阻止，则 OpenVPN 就没用了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Raw OpenVPN is very easy to distinguish, its handshake signature is very different from the regular TLS.<p>OpenVPN is fine if you want to tunnel through a hotel network that blocks UDP, but it's useless if you want to defeat the Great China Firewall or similar blocks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507670" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">randomstuffs</span>
+        <span class="meta-time">2026/03/25 03:51</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508114" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jmclnx</span>
+        <span class="meta-time">2026/03/25 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是设计缺陷，而是设计选择。<p>&gt;OpenVPN 不会在 VPN 服务器上存储您的任何私人数据，包括 IP 地址，这是理想的。</p><p><a href="https://www.pcmag.com/comparisons/openvpn-vs-wireguard-which-protocol-is-best-for-your-vpn" target="_blank" rel="noopener noreferrer">https://www.pcmag.com/comparisons/openvpn-vs-wireguard-which...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is not a design flaw, but a design choice.<p>&gt;OpenVPN does not store any of your private data, including IP addresses, on VPN servers, which is ideal.</p><p><a href="https://www.pcmag.com/comparisons/openvpn-vs-wireguard-which-protocol-is-best-for-your-vpn" target="_blank" rel="noopener noreferrer">https://www.pcmag.com/comparisons/openvpn-vs-wireguard-which...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506226" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">usui</span>
+        <span class="meta-time">2026/03/25 01:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我知道软件开发人员抱怨由于安全方面的原因而被迫遵守规定，但我想向对符合 FIPS 的加密技术有技术了解的人询问。使 WireGuard 符合 FIPS 标准在技术上有任何实际的安全优势吗？假设目标不是安抚铅笔推动者。我很想知道这种努力是否有技术成果。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I know software developers complain about forced compliance due to the security theatre aspects, but I would like to charitably ask from someone who has technical understanding of FIPS-compliant cryptography. Are there any actual security advantages on technical grounds for making WireGuard FIPS-compliant? Assume the goal is not to appease pencil pushers. I really want to know if this kind of effort has technical gains.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505873" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ongy</span>
+        <span class="meta-time">2026/03/25 01:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就加密而言，fips 已经过时，但并不可怕。<p>实际符合 fips（经过认证）让您对解决方案的某些基本能力充满信心。</p><p>仅 fips 兼容（即选择可能符合 fips 的算法）通常是中性到负面的。</p><p>我不是 100% 最新的，所以这可能已经改变，但如果你不遵循 fips，AEAD 曾经比 fips 兼容更容易。仍有可能，但由于技术监管滞后，更多的脚枪。</p><p>总的来说，国际海事组织的另一个顶级评论“如果你有推铅笔的好处，只有小费”适用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Crypto wise, fips is outdated but not horrible.<p>Actual fips compliant (certified) gives you confidence in some basic competence of the solution.</p><p>Just fips compatible (i.e. picking algos that could be fips compliant) is generally neutral to negative.</p><p>I'm not 100% up to date, so that might have changed, but AEAD used to be easier if you don't follow fips than fips compatible. Still possible, but more foot guns due to regulatory lag in techniques.</p><p>Overall, IMO the other top-level comment of "only fips if you have pencil pusher benefit" applies.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506505" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">loeg</span>
+        <span class="meta-time">2026/03/25 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 WireGuard 克隆中使用 FIPS 算法代替 Chacha / Blake2 没有安全优势或技术依据。  这纯粹是一个合规举措。  ChaPoly、Blake2 等尚未被破解，我们有充分的理由相信它们很强大。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is no security advantages or technical grounds for using FIPS algorithms in a WireGuard clone instead of Chacha / Blake2.  It's purely a compliance move.  ChaPoly, Blake2, etc, are not known to be broken and we have every reason to believe they are strong.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">briandw</span>
+        <span class="meta-time">2026/03/25 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有限的理解是，像容易受到侧通道攻击这样的问题很难检测到。所以你必须证明整个开发过程是安全的。从代码到编译器到硬件再到微代码，都需要检查。也就是说，合规性似乎确实比安全性更重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My limited understanding is that issues like being vulnerable to side channel attacks are very difficult to detect. So you have to have shown that the entire development process is safe. From the code to the compiler to the hardware to the microcode, it all needs to be checked. That said it does seem like compliance is a bigger priority than safety.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">IncRnd</span>
+        <span class="meta-time">2026/03/25 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您正在考虑是否使用 FIPS 140-3 模块进行加密，请考虑 FIPS 140-3 实际上仅适用于特定的合规性垂直领域。如果您不知道是否需要它，那么您可能不需要它。<p>因此，按照这些思路，如果您想知道软件包的加密技术是否应符合 FIPS 140-3，那么真正的问题是您是否属于需要遵守的垂直行业。再说一遍，如果您不确定，答案可能是否定的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you're considering whether to use a FIPS 140-3 module for your cryptography, consider that FIPS 140-3 is really only for specific compliance verticals. If you don't know whether you need it, you probably don't need it.<p>So, along those lines, if you wonder whether a package's cryptography should be FIPS 140-3 compliant, then the real question is whether you are a vertical that needs to be compliant. Again, if you aren't sure, the answer is likely NO.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507005" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">derektank</span>
+        <span class="meta-time">2026/03/25 04:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;同样，如果您不确定，答案可能是否定的。<p>可能不会，我同意。但我认为可能有很多销售企业软件的公司后来尝试寻求 FedRAMP 授权，这将受益于提前规划和立即构建合规版本。值得考虑并进行内部对话。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Again, if you aren't sure, the answer is likely NO.<p>Likely no, I agree. But I think there are probably a lot of companies selling enterprise software that later attempt to solicit a FedRAMP authorization that would benefit from planning ahead and building a compliant version from the jump. Worth considering and having a conversation internally.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508828" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">some_furry</span>
+        <span class="meta-time">2026/03/25 02:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不。<p>获得通过 FIPS 140-3 验证的加密模块只是让您可以将其出售给美国政府（类似于 FedRAMP）。它不会为您的设计或实现的实际安全性提供更好的保证，只是验证您正在使用美国政府批准用于经过验证的模块的算法，以独立实验室所说的“LGTM”的方式。</p><p>您通常希望将合规性（FIPS 等）与实际的保障实践分层。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No.<p>Getting a crypto module validated by FIPS 140-3 simply lets you sell to the US Government (something something FedRAMP). It doesn't give you better assurance in the actual security of your designs or implementations, just verifies that you're using algorithms the US government has blessed for use in validated modules, in a way that an independent lab has said "LGTM".</p><p>You generally want to layer your compliance (FIPS, etc.) with actual assurance practices.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507334" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alfanick</span>
+        <span class="meta-time">2026/03/25 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这是一种产品策略，提供一盒“合规”的库/服务，这样其他公司就可以快速勾选并签署一个复选框，上面写着“我们使用合规的VPN”，因为其他人会查看该复选框是否被勾选并签署，因为其他人会......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I presume it's a product strategy to provide a box of "compliant" libraries/services, so other companies can quickly tick and sign a checkbox saying "we use compliant VPN", because someone else is going to look whether the checkbox is ticked and signed, because someone else is going to...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505902" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">NewJazz</span>
+        <span class="meta-time">2026/03/25 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你没能回答问题。你为什么回复？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You failed to answer the question. Why did you reply?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 01:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，没有。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, there are not.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506428" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">coppsilgold</span>
+        <span class="meta-time">2026/03/25 02:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不幸的是，WireGuard 不包含一个开关，如果双方都同意使用的加密货币将是 AES 和 SHA256。不是因为 FIPS 合规性，而是因为性能和节能。我从来没有在没有 AES 和 SHA 内在函数的硬件上使用过 WireGuard，所有电池都浪费了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's unfortunate that WireGuard doesn't include a switch that if both sides agree the crypto in use would be AES and SHA256. Not due to FIPS compliance but performance and power savings. I never once used WireGuard on hardware that didn't have AES and SHA intrinsics, all that battery wasted.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507357" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rainsford</span>
+        <span class="meta-time">2026/03/25 08:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我将采取可能有争议的立场，即 WireGuard 在没有协商选项的情况下对加密选择采取固执己见的方法确实是正确的选择，但如果它使用符合 FIPS 的加密，它将是一个更好、甚至更成功的协议。<p>采用 DJB 加密路径为 Wireguard 带来了一些实现易用性的微妙优势，但无论您使用什么算法，从头开始构建新的安全加密协议的难度几乎完全掩盖了这些优势。  权衡是，由于标准合规性要求，有很多地方永远不会使用它，正如您所指出的，这对硬件效率也有重大影响。</p><p>线卫很酷。  我认为这种酷炫与 DJB 与 NIST 加密选择无关。  走 DJB 道路不必要地限制了其酷感的影响，至少目前如此。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'll take the possibly controversial position that WireGuard's opinionated approach to cryptographic choices without the option for negotiation was indeed the right call, but it would have been a better and even more successful protocol if it used FIPS compliant cryptography.<p>Taking the DJB crypto path gave Wireguard some subtle advantages to implementation ease-of-use that are almost entirely overshadowed by the difficultly in building a new, secure cryptographic protocol from scratch regardless of what algorithms you're using.  The tradeoff was that there are plenty of places it will never be used due to standards compliance requirements which as you point out also has significant implications for efficiency in hardware.</p><p>Wireguard is cool.  I think very little of that coolness has to do with the DJB vs NIST cryptographic choices.  And taking the DJB path unnecessarily limited the impact of its coolness at least for now.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511580" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 11:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为密码学工程师越来越同意这种看法，但这也是一个不同的世界：现在执行 XAES 和现代 P 曲线实现会很简单（现在它们已经通过完整的加法和类似的东西制定出来），但 WireGuard 首次发布时情况并非如此。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think cryptography engineers increasingly agree with this take, but it's also a different world: it would be straightforward to do XAES and modern P-curve implementations (now that they've been worked out with complete addition and stuff like that) now, but that was less the case when WireGuard was first published.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512752" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">smashed</span>
+        <span class="meta-time">2026/03/25 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">已知问题页面 [1] 已解决此问题。<p>基本上它不需要专用的硬件加速，因为它可以使用通用向量指令来达到类似的速度。  我想知道这是多么真实。</p><p>[1]： <a href="https://www.wireguard.com/known-limitations/#:~:text=WireGuard%20uses%20ChaCha20Poly1305%2C%20which%20is,)%20than%20AES%2DNI%20instructions." target="_blank" rel="noopener noreferrer">https://www.wireguard.com/known-limitations/#:~:text=WireGua...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is addressed on the known issues page [1].<p>Basically it does not need dedicated hw acceleration because it can use generic vector instructions to reach similar speeds.  I wonder how true that is though.</p><p>[1]: <a href="https://www.wireguard.com/known-limitations/#:~:text=WireGuard%20uses%20ChaCha20Poly1305%2C%20which%20is,)%20than%20AES%2DNI%20instructions." target="_blank" rel="noopener noreferrer">https://www.wireguard.com/known-limitations/#:~:text=WireGua...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509916" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">WireGuard 安全设计的核心部分不是协商加密。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A core part of the security design of WireGuard is not negotiating cryptography.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508072" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">coppsilgold</span>
+        <span class="meta-time">2026/03/25 03:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有人提出大多数标准中存在的谈判混乱。当两端都可用时，使用单个二进制开关来解决硬件加速问题将是一个不错的决定。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No one suggests the negotiated mess that exists in most standards. A single binary switch to account for hardware acceleration when it's available on both ends would have been a good decision.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PunchyHamster</span>
+        <span class="meta-time">2026/03/25 01:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么安全性倒退了一步吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So a step backward in security ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505811" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kstrauser</span>
+        <span class="meta-time">2026/03/25 01:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平地说，现代版本的 FIPS 并没有那么糟糕。 AFAICT 现在可以符合 FIPS 标准 <i>和</i> 满足合理的加密预期，而以前的情况并非总是如此。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In fairness, modern versions of FIPS are much less awful. AFAICT it's now possible to be FIPS compliant <i>and</i> meet reasonable crypto expectations, which was not always the case before.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">loeg</span>
+        <span class="meta-time">2026/03/25 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没关系。  目前还没有已知 FIPS 算法被破坏。  这里唯一的风险是执行转换时的实施错误以及由于与上游wireguard 不同而产生的任何维护负担。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's fine.  None of the FIPS algorithms are known to be broken, either.  The only risk here is implementation bugs doing the conversion and any maintenance burden incurred due to diverging from upstream wireguard.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506103" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">poemxo</span>
+        <span class="meta-time">2026/03/25 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望他们只是将 ChaCha20-Poly1305 和 Blake2 添加到 FIPS 中，而不是迎来 WireGuard 分叉时代。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish they would just add ChaCha20-Poly1305 and Blake2 to FIPS, instead of ushering in the era of WireGuard forks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510164" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gte525u</span>
+        <span class="meta-time">2026/03/25 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是否有可用于比较 vanilla wireguard 和 fips wireguard 的基准？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are there benchmarks available to compare vanilla wireguard to fips wireguard?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507468" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MrDrMcCoy</span>
+        <span class="meta-time">2026/03/25 04:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这将如何避免 WireGuard 的商标问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How will this avoid trademark issues with WireGuard?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508927" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">loeg</span>
+        <span class="meta-time">2026/03/25 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“WolfGuard”与“WireGuard”是不同的词。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"WolfGuard" is a different word than "WireGuard."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509310" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">MrDrMcCoy</span>
+        <span class="meta-time">2026/03/25 05:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">商标侵权有一个完整的相似类别。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Trademark infringement has a whole category for similarity.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509464" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">loeg</span>
+        <span class="meta-time">2026/03/25 06:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果多南菲尔德希望他们更改名称，他们可以更改名称。  我不认为这是一个大问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If Donenfeld wants them to change the name, they can change the name.  I don't think this is a huge problem.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510666" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kittikitti</span>
+        <span class="meta-time">2026/03/25 03:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个很棒的项目，感谢分享。即使我不打算更改任何 WireGuard 部署，我也会关注该存储库。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a great project, thanks for sharing. I'll be following the repository even though I don't plan on changing any of my WireGuard deployments.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507703" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pphysch</span>
+        <span class="meta-time">2026/03/25 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">难道您不能通过使用 Go 中新的原生 FIPS 支持来编译wireguard-go 来获得FIPS 140-3 WireGuard 吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can't you also get FIPS 140-3 WireGuard by compiling wireguard-go with the new native FIPS support in Go?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505598" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">inahga</span>
+        <span class="meta-time">2026/03/25 00:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">WireGuard 使用的密码未经过 FIPS 140-3 认证。因此，您还必须更改密码，正如本项目中所做的那样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The ciphers used by WireGuard are not FIPS 140-3 certified. So you have to also change the ciphers, as is done in this project.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505765" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">loeg</span>
+        <span class="meta-time">2026/03/25 01:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">例如，ChaPoly AEAD -&gt; AES-GCM、Blake2s -&gt; SHA2/3 之类的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">E.g., ChaPoly AEAD -&gt; AES-GCM, Blake2s -&gt; SHA2/3, that kind of thing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 01:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506278" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cookiengineer</span>
+        <span class="meta-time">2026/03/25 03:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; XChaCha20-Poly1305 替换为 AES-256-GCM<p>可能会出现什么问题？并不是每个设计的 CTF 都有分组密码或计数器模式挑战。 /秒</p><p>如果该项目不是由 WolfSSL 完成的，我会认为这是一次模仿 FIPS 要求的恶作剧尝试。但事实并非如此，这就是问题所在。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; XChaCha20-Poly1305 replaced with AES-256-GCM<p>What could possibly go wrong? It's not like every CTF ever designed has a block cipher or counter mode challenge. /s</p><p>If the project wasn't done by WolfSSL, I would have assumed it's a trolling attempt to mock FIPS requirements. But it's not, and that's the problem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507535" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arter45</span>
+        <span class="meta-time">2026/03/25 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您在谈论侧通道攻击吗？因为据我所知，随机数重用在这两种情况下都是一个问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you talking about side channel attacks? Because AFAIK nonce reuse is an issue in both cases.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/03/25 03:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白这里的担忧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't understand the concern here?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

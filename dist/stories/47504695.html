@@ -1,0 +1,1728 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hypura – 适用于 Apple Silicon 的存储层感知 LLM 推理调度程序 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>Hypura – 适用于 Apple Silicon 的存储层感知 LLM 推理调度程序</h1>
+      <p class="subtitle">Hypura – A storage-tier-aware LLM inference scheduler for Apple Silicon</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 tatef</span>
+        <span>分数 199</span>
+        <span>评论 75</span>
+        <span>2026/03/25 00:02</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47504695" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/t8/hypura" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>_ _ | | | |_ _ _ __ _ _ _ __ __ _ | |_| | | | | &#39;_ \| | | | &#39;__/_` | | _ | |_| | |_) | |_| | | | (_| | |_| |_|\__, | .__/ \__,_|_| \__,_| |___/|_| 运行对于 Mac 内存来说太大的模型</li><li>Hypura 是一款适用于 Apple Silicon 的存储层感知 LLM 推理调度程序。它根据访问模式、带宽成本和硬件功能将模型张量放置在 GPU、RAM 和 NVMe 层中，从而使超出物理内存的模型能够运行而不会导致系统崩溃。在 32 GB Mac Mini 上以 2.2 tok/s 运行 31 GB Mixtral 8x7B。 40 GB Llama 70B，速度为 0.3 tok/s。 Vanilla llama.cpp 在两者上都会崩溃。为什么这很重要？消费类硬件（MacBook Pro、Mac Studio）配备快速统一内存和 NVMe 存储，但容量有限。 32 GB M1 Max 无法直接加载 40 GB 模型 - 操作系统将发生交换冲突，直到 OOM 杀手介入。 Hypura 通过理解模型架构来解决这个问题：</li><li>规范和嵌入很小，但可以访问每个令牌 - 固定到 GPU MoE 专家路由利用稀疏性 - 每个令牌只有 8 个专家中的 2 个触发。路由器拦截会识别 eval 回调中选定的专家，然后仅从 NVMe 加载所需的专家步长（减少 75% I/O）。神经元缓存跟踪跨令牌加载的专家切片，从时间局部性实现 99.5% 的命中率。协同激活跟踪可预测哪些专家接下来将进行推测性预取。密集的 FFN 权重（门、上、下——模型大小的 60%）从 NVMe 流经动态大小的池缓冲区，同时注意力 + 规范保持 GPU 驻留。预取前瞻深度会根据可用内存自动缩放。</li><li>结果：在 naive mmap 下会使机器崩溃的模型变得可以运行。适合内存的模型以全 Metal GPU 速度运行，开销为零。它是如何工作的 Hypura 读取 GGUF 文件，分析您的硬件（GPU 工作集、RAM、NVMe 带宽），并解决将每个张量分配到一个层的布局优化：</li><li>GPU (金属) — 注意力层、规范、嵌入。最快的访问，受RecommendedMaxWorkingSetSize 限制。 RAM — 不适合 GPU 工作集的溢出层。通过 mmap 访问。 NVMe — 通过直接 I/O (F_NOCACHE + pread) 按需加载剩余层，在正向传递之前预取。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>_ _ | | | |_ _ _ __ _ _ _ __ __ _ | |_| | | | | &#39;_ \| | | | &#39;__/ _` | | _ | |_| | |_) | |_| | | | (_| | |_| |_|\__, | .__/ \__,_|_| \__,_| |___/|_| Run models too big for your Mac&#39;s memory</li><li>Hypura is a storage-tier-aware LLM inference scheduler for Apple Silicon. It places model tensors across GPU, RAM, and NVMe tiers based on access patterns, bandwidth costs, and hardware capabilities — enabling models that exceed physical memory to run without crashing the system. Run a 31 GB Mixtral 8x7B on a 32 GB Mac Mini at 2.2 tok/s. A 40 GB Llama 70B at 0.3 tok/s. Vanilla llama.cpp crashes on both. Why does this matter? Consumer hardware (MacBook Pro, Mac Studio) ships with fast unified memory and NVMe storage, but limited capacity. A 32 GB M1 Max cannot naively load a 40 GB model — the OS will swap-thrash until the OOM killer intervenes. Hypura solves this by understanding the model architecture:</li><li>Norms and embeddings are tiny but accessed every token — pinned to GPU MoE expert routing exploits sparsity — only 2 of 8 experts fire per token. Router interception identifies selected experts in the eval callback, then loads only the needed expert strides from NVMe (75% I/O reduction). A neuron cache tracks loaded expert slices across tokens, achieving 99.5% hit rate from temporal locality. Co-activation tracking predicts which experts will fire next for speculative prefetch. Dense FFN weights (gate, up, down — ~60% of model size) stream from NVMe through a dynamically-sized pool buffer while attention + norms stay GPU-resident. Prefetch lookahead depth scales automatically with available memory.</li><li>The result: models that would crash your machine under naive mmap become runnable. Models that fit in memory run at full Metal GPU speed with zero overhead. How it works Hypura reads the GGUF file, profiles your hardware (GPU working set, RAM, NVMe bandwidth), and solves a placement optimization that assigns every tensor to a tier:</li><li>GPU (Metal) — Attention layers, norms, embeddings. Fastest access, limited by recommendedMaxWorkingSetSize. RAM — Overflow layers that don&#39;t fit in the GPU working set. Accessed via mmap. NVMe — Remaining layers loaded on-demand via direct I/O (F_NOCACHE + pread), prefetched ahead of the forward pass.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/25 04:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">给维护者的建议：比较表目前列出了一些相当老的模型，Qwen 2.5 14B和Mixtral 8x7B和Llama 3.3 70B。<p>很多人都报告说，Qwen 3.5 MoE 模型现在在 Apple 硬件上取得了令人难以置信的结果（流媒体专家 - 请参阅 <a href="https://simonwillison.net/2026/Mar/24/streaming-experts/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2026/Mar/24/streaming-experts/</a>） - 如果能将其中一些模型放入该表中那就太好了。</p><p>也许 1T 参数 Kimi K2.5 也可以，如果你能让它工作，请参阅 <a href="https://twitter.com/seikixtc/status/2036246162936910322" target="_blank" rel="noopener noreferrer">https://twitter.com/seikixtc/status/2036246162936910322</a> 和 <a href="https://twitter.com/danpacary/status/2036480556045836603" target="_blank" rel="noopener noreferrer">https://twitter.com/danpacary/status/2036480556045836603</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Suggestion for the maintainers: the comparison table currently lists some pretty old models, Qwen 2.5 14B and Mixtral 8x7B and Llama 3.3 70B.<p>A lot of people are reporting incredible results with the Qwen 3.5 MoE models on Apple hardware right now (streaming experts - see <a href="https://simonwillison.net/2026/Mar/24/streaming-experts/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2026/Mar/24/streaming-experts/</a>) - it would be great to get some of those models into that table.</p><p>Maybe the 1T parameter Kimi K2.5 too if you can get that to work, see <a href="https://twitter.com/seikixtc/status/2036246162936910322" target="_blank" rel="noopener noreferrer">https://twitter.com/seikixtc/status/2036246162936910322</a> and <a href="https://twitter.com/danpacary/status/2036480556045836603" target="_blank" rel="noopener noreferrer">https://twitter.com/danpacary/status/2036480556045836603</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508390" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 05:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您分享这个！如果您有兴趣自己使用 Hypura 运行基准测试，我很乐意合并到我们的统计数据中。否则将添加到我的待办事项列表中:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for sharing this! If you'd be interested in running the benchmark yourself with Hypura I'd happily merge into our stats. Otherwise will add to my todo list :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509648" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Imustaskforhelp</span>
+        <span class="meta-time">2026/03/25 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">西蒙，有点离题，但您的网站似乎无法正常工作。<p>&gt; 应用程序发生错误，无法提供您的页面。如果您是应用程序所有者，请检查您的日志以了解详细信息。您可以使用以下命令从 Heroku CLI 执行此操作</p><p>当我访问 simonwillison.net 时出现此错误</p><p>例如，任何随机博客/链接都可以： <a href="https://simonwillison.net/2026/Mar/19/openai-acquiring-astral/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2026/Mar/19/openai-acquiring-astra...</a></p><p>（我检查了你的网站，因为我想看看你是否也写过一些关于 trivy/litellm 的东西，我强烈建议如果可能的话，检查一下 litellm 空间内发生的事情，因为我很想读一下你对此的想法）</p><p>祝你有美好的一天，西蒙！</p><p>编辑：现在网站可以运行了，但我不确定之前出了什么问题（可能是heroku 的问题？），因为它现在可以运行了</p><p>Edit-2：网站运行后，我可以看到您已经发布了有关它的帖子。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Simon, A little offtopic but it seems that your website isn't working.<p>&gt; An error occurred in the application and your page could not be served. If you are the application owner, check your logs for details. You can do this from the Heroku CLI with the command</p><p>I get this error when I go to simonwillison.net</p><p>Any random blog/link works for example though: <a href="https://simonwillison.net/2026/Mar/19/openai-acquiring-astral/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2026/Mar/19/openai-acquiring-astra...</a></p><p>(I checked your website because I wanted to see if you had written something about trivy/litellm as well, I highly recommend checking out what has happened within litellm space if possible as I would love to read your thoughts on it)</p><p>Have a nice day simon!</p><p>Edit: now the website works but I am not sure what had gone wrong previously, (an issue from heroku maybe?) as its working now</p><p>Edit-2: after the website working, I am able to see that you have already made a post about it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508708" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">abtinf</span>
+        <span class="meta-time">2026/03/25 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">kimi 示例缺乏令牌率指标，这令人失望。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The lack of a token rate metric for the kimi example is disappointing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509488" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 06:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">后一个链接表示它们获得了约 1.7 tok/s，这对于在普通硬件上运行的近 SOTA 本地模型来说相当令人印象深刻。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The latter link says they get ~1.7 tok/s which is quite impressive for a near-SOTA local model running on ordinary hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510207" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vanyaland</span>
+        <span class="meta-time">2026/03/25 02:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于许多本地工作负载，低于 1 tok/s 在前台毫无用处，但在后台完全可以接受。如果选择是“这崩溃了”还是“这在一夜之间完成”，这仍然是一个有意义的能力跳跃。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For a lot of local workloads, sub-1 tok/s is useless in foreground and perfectly acceptable in background. If the choice is “this crashes” vs “this finishes overnight,” that’s still a meaningful capability jump.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vicchenai</span>
+        <span class="meta-time">2026/03/25 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际问题是，读取模式是否足够连续，足以实际饱和 NVME 带宽，或者注意层访问模式是否足够随机，足以杀死吞吐量。一个不错的 NVME 上的顺序读取速度为 5-7 GB/s，随机读取速度可能会下降到 500 MB/s，具体取决于队列深度。<p>对于 1T 模型，您需要在 fp16 下每次前向传递 2TB 的权重。即使在峰值顺序下，每个令牌也需要 300 秒以上，这对于交互式使用来说不太好，但对于不关心延迟的批量推理来说可能很好。</p><p>不过，这仍然是一个很酷的概念证明。 “可以运行”和“有效运行”之间的差距是事情变得有趣的地方。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the practical question is whether the read pattern is sequential enough to actually saturate nvme bandwidth or if the attention layer access pattern ends up being random enough to kill throughput. sequential reads on a decent nvme get you 5-7 GB/s, random reads drop to maybe 500 MB/s depending on queue depth.<p>for a 1T model youd need to stream something like 2TB of weights per forward pass at fp16. even at peak sequential thats 300+ seconds per token which is... not great for interactive use but maybe fine for batch inference where you dont care about latency.</p><p>still a cool proof of concept though. the gap between 'can run' and 'runs usefully' is where things get interesting.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506320" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">p_ing</span>
+        <span class="meta-time">2026/03/25 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">M1 Max 上队列深度为 1 的 4K 随机读取约为 65MB/s。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">4K random read with a queue depth of 1 on an M1 Max is about 65MB/s.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507021" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，绝对同意。它更像是一个 POC，而不是一个功能用例。然而，对于许多较小的 MoE 模型，这种方法实际上很有用，并且能够实现每秒多个令牌。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, definitely agree. It's more of a POC than a functional use case. However, for  many smaller MoE models this method can actually be useful and capable of achieving multiple tokens/sec.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507006" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 01:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 对于 1T 模型，您需要每次前向传递 2TB 的权重<p>这不是完全忽略了教育部模型的意义吗？ MoE 推理是稀疏的，您只能读取每层权重的一小部分。  您仍然遇到一个问题，即每个单独的专家层都非常小（每个提供或获取几个 MiB），但这些读取对于 NVMe 来说足够大。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; for a 1T model youd need to stream something like 2TB of weights per forward pass<p>Isn't this missing the point of MoE models completely? MoE inference is sparse, you only read a small fraction of the weights per layer.  You still have a problem of each individual expert-layer being quite small (a few MiBs each give or take) but those reads are large enough for the NVMe.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">visarga</span>
+        <span class="meta-time">2026/03/25 01:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但在整个序列中，您仍然需要加载其中的大部分。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But across a sequence you still have to load most of them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506561" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">marksully</span>
+        <span class="meta-time">2026/03/25 00:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“1T参数模型”从何而来？我只能看到存储库中提到的 70B 参数或更少的模型。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Where does "1T parameter model" come from? I can only see models with 70B params or less mentioned in the repo.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505475" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为它是可能的，但是我没有分享基准测试，因为坦率地说，性能会非常慢，它只对长期的非常具体的任务有用。更实际的用例不那么华丽，但能够实现每秒多个令牌（即较小的 MoE 模型，其中并非所有专家都需要同时加载到内存中）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm referencing it as being possible, however I didn't share benchmarks because candidly the performance would be so slow it would only be useful for very specific tasks over long time horizons. The more practical use cases are less flashy but capable of achieving multiple tokens/sec (ie smaller MoE models where not all experts need to be loaded in memory simultaneously)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507031" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">causal</span>
+        <span class="meta-time">2026/03/25 00:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，标题来自链接中的任何地方。毫无疑问这是可能的，但最重要的是速度，而我们在这里什么也没学到......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah title comes from nowhere in the link. No doubt it's possible but all that matters is speed and we learn nothing of that here...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">baq</span>
+        <span class="meta-time">2026/03/25 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">英特尔傲腾在坟墓中滚动。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Intel Optane rolling in its grave.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505910" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aitchnyu</span>
+        <span class="meta-time">2026/03/25 02:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">忆阻器在人工智能的炒作中也被忽视了，即使它们在 10 年前就已经出现了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Memristors are also missing in this AI hype even when they were around the corner 10 years back.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507081" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">liuliu</span>
+        <span class="meta-time">2026/03/25 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的储物柜里还有 4 个全新的。以防万一这些时刻。<p>开个玩笑（我确实有它们！），我不认为 Optane 有多大用处（更不用说我的设备只有 256GiB）。如果您拥有未设计为并行发出多个读/写的旧版软件，那么它是有用的旧版拐杖。如果这样做的话，它确实不比 NVMe 快，尤其是这些现代的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Still have 4 brand new ones in my storage unit. Just in case these moments.<p>Joke aside (I do have them tho!), I don't think Optane is that much use (not to mention it is only 256GiB for my unit). It is useful legacy crutch if you have legacy software that is not designed to issue multiple reads / writes in parallel. If you do, it is really not faster than NVMe, especially these modern ones.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505972" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 01:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不是为了更快（除了延迟占主导地位的小读取，这在路由后立即读取少数专家层时实际上是相关的），而是磨损阻力开启了存储 KV 缓存（包括最近 Qwen 的“线性”KV 缓存，它不像纯注意力模型那样仅附加）甚至每层激活的可能性 - 尽管考虑到这些激活的短暂性，这几乎没有用处。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not about being faster (except for small reads where latency dominates, which is actually relevant when reading a handful of expert-layers immediately after routing), it's the wearout resistance which opens up the possibility of storing KV-cache (including the "linear" KV-cache of recent Qwen, which is not append-only as it was with the pure attention model) and maybe even per-layer activations - though this has the least use given how ephemeral these are.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506145" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">speedgoose</span>
+        <span class="meta-time">2026/03/25 01:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">英特尔让它们起死回生是否为时已晚？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it too late for Intel to bring them back to life?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506233" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">c0balt</span>
+        <span class="meta-time">2026/03/25 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，他们的 NAND 部门已经卖掉了，现在大部分都在 Solidigm 之下。也许solidigm 可以让它回来，但似乎不太可能（考虑到之前的商业失败）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, their NAND division has been sold, it is now mostly under solidigm. Maybe solidigm could bring it back, but it seems unlikely (given the previous commercial failure).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">walterbell</span>
+        <span class="meta-time">2026/03/25 02:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Nvidia 和 SK Hynix 正在以 $$ 的价格将 HBF 推向市场。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nvidia and SK Hynix are bringing HBF to market for $$.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507490" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">moffkalast</span>
+        <span class="meta-time">2026/03/25 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果他们没有在一件好事上中途退出，就不会成为英特尔。<p>不过，难道就不能获得一张带有四个驱动器的 RAID 0 卡来满足 16x 通道的需求吗？无论如何，这已经是 PCIe 所能达到的最大极限了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wouldn't be Intel if they didn't quit halfway through on a good thing.<p>Still, couldn't one get a RAID 0 card with four drives to saturate a 16x lane? That's already the max one could push through PCIe anyhow.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506346" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">0ptan3</span>
+        <span class="meta-time">2026/03/25 01:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">下午</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">pmem</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shubhamintech</span>
+        <span class="meta-time">2026/03/25 03:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">MoE 点在这里很重要，即稀疏激活意味着每次前向传递您不会读取所有 2TB 数据，但访问模式从顺序翻转为随机，这正是 NVMe 的最坏情况。对于代理推理工作负载，您需要一致的延迟而不是峰值吞吐量，对此进行了很多思考。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The MoE point matters here ie sparse activation means you're not reading all 2TB per forward pass, but the access pattern flips from sequential to random which is exactly the worst case for NVMe. Been thinking about this a lot for agent inference workloads where you want consistent latency more than peak throughput.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508100" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Insanity</span>
+        <span class="meta-time">2026/03/25 00:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个非常酷的项目！本质上，这就像使用交换内存来扩展 RAM，但是以“智能”方式，这样您就不会不必要地使 NVMe 过载。<p>我确实想知道“智能”在实践中是如何发挥作用的，因为在生成过程中对 NVMe 施加大量压力可能不是其寿命的最佳选择。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a pretty cool project! Essentially this is like using Swap memory to extend your RAM, but in a 'smart' way so you don't overload the NVMe unnecessarily.<p>I do wonder in practice how the 'smarts' pan out, because putting a ton of stress on your NVMe during generation is probably not the best choice for it's longevity.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505632" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 00:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不会对 NVMe 造成任何压力或磨损，而是纯粹的读取工作负载。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is not putting any stress or wear on the NVMe, it's a pure read workload.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505725" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 02:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，正是这个。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, exactly this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507064" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">embedding-shape</span>
+        <span class="meta-time">2026/03/25 00:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但以“智能”方式，这样您就不会不必要地使 NVMe 过载<p>“NVMe 超载”？那是关于什么的？我第一次听说这件事。</p><p>&gt; 因为在生成过程中给您的 NVMe 带来了巨大的压力</p><p>真的不应该“给你的 NVMe 带来压力”，如果发生这种情况，那就是严重错误。我一直在锤击我的 SSD，虽然写入操作会“损害”闪存单元本身的寿命，但控制器接口实际上根本不应该受到此影响，除非我在这里遗漏了一些东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; but in a 'smart' way so you don't overload the NVMe unnecessarily<p>"overloading NVMe"? What is that about? First time I've heard anything about it.</p><p>&gt; because putting a ton of stress on your NVMe during generation</p><p>Really shouldn't "stress your NVMe", something is severely wrong if that's happening. I've been hammering my SSDs forever, and while write operations "hurt" the longevity of the flash cells themselves, the controller interface really shouldn't be affected by this at all, unless I'm missing something here.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505755" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 02:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Hypura 将张量权重从 NVMe 上的 GGUF 文件读取到 RAM/GPU 内存池中，然后计算完全在 RAM/GPU 中进行。<p>使用此架构进行推理时不会写入 SSD。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hypura reads tensor weights from the GGUF file on NVMe into RAM/GPU memory pools, then compute happens entirely in RAM/GPU.<p>There is no writing to SSDs on inference with this architecture.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507087" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">embedding-shape</span>
+        <span class="meta-time">2026/03/25 03:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">即使有大量的写作，我也不确定 NVMe 到底在哪里，写入耐久性与 SSD 上的闪存单元有关，与接口无关，如果我错了，有人纠正我。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Even if there was a ton of writing, I'm not sure where NVMe even comes in the picture, write durability is about the flash cells on SSDs, nothing to do with the interface, someone correct me if I'm wrong.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507829" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Insanity</span>
+        <span class="meta-time">2026/03/25 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我假设如果控制器连续读取，就会产生热量。但也许这实际上并不坏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I had assumed heat generation on the controller if it's continuously reading. But maybe it's not actually bad.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">throwway120385</span>
+        <span class="meta-time">2026/03/25 01:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">只要在上面装一个散热器就可以了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just pop a heatsink on it and call it good.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506460" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hrmtst93837</span>
+        <span class="meta-time">2026/03/25 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人们谈论“SSD 耐用性”，但 M1/M2 上足够的并行 I/O 可能会使 NVMe 控制器阻塞，并出现非常奇怪的延迟峰值。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">People talk about "SSD endurance", but enough parallel I/O on M1/M2 can make the NVMe controller choke, with very weird latncy spikes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507860" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">astrange</span>
+        <span class="meta-time">2026/03/25 05:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 消费类硬件（MacBook Pro、Mac Studio）配备快速统一内存和 NVMe 存储，但容量有限。 32 GB M1 Max 无法直接加载 40 GB 模型 - 操作系统将发生交换冲突，直到 OOM 杀手介入。<p>从这个意义上来说，macOS 并没有“OOM 杀手”。 （它有一个交换空间不足的杀手，但它非常弱。）</p><p>所以会发生的情况是，要么你的内存接线失败，要么它会变得非常缓慢和恐慌。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Consumer hardware (MacBook Pro, Mac Studio) ships with fast unified memory and NVMe storage, but limited capacity. A 32 GB M1 Max cannot naively load a 40 GB model — the OS will swap-thrash until the OOM killer intervenes.<p>macOS doesn't have an "OOM killer" in that sense. (It has an out of swap space killer but it's pretty weak.)</p><p>So what will happen is, either your memory wiring will fail, or else it will get really slow and panic.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509817" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">msbhogavi</span>
+        <span class="meta-time">2026/03/25 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“尽可能多的内存”对于模型容量来说是正确的，但会错过带宽。 Apple Silicon 有不同的等级：M4 Pro 为 273 GB/s，M4 Max 为 546 GB/s，M4 Ultra 为 819 GB/s。一旦模型适合内存，带宽就决定了 tok/s。 M4 Max 的解码速度是同一型号 M4 Pro 的 2 倍。<p>就 Hypura 的功能而言，Max 是最佳选择。 64GB 在第四季度加载了 70B，还有剩余空间，而 Pro 的带宽加倍意味着这一代实际上是可用的，而不仅仅是技术上可能的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"As much memory as possible" is right for model capacity but misses bandwidth. Apple Silicon has distinct tiers: M4 Pro at 273 GB/s, M4 Max at 546 GB/s, M4 Ultra at 819 GB/s. Bandwidth determines tok/s once the model fits in memory. An M4 Max gives you 2x the decode speed of an M4 Pro on the same model.<p>For what Hypura does, the Max is the sweet spot. 64GB loads a 70B at Q4 with room to spare, and double the bandwidth of the Pro means generation is actually usable instead of just technically possible.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 00:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">将其与以下内容进行比较会很有趣 <a href="https://news.ycombinator.com/item?id=47476422" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47476422</a> 和 <a href="https://news.ycombinator.com/item?id=47490070" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47490070</a> 。  设计非常相似，只不过这显然是使用 mmap，根据早期的实验，这会产生大量开销。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It will be interesting to compare this to <a href="https://news.ycombinator.com/item?id=47476422" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47476422</a> and <a href="https://news.ycombinator.com/item?id=47490070" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47490070</a> .  Very similar design except that this is apparently using mmap, which according to the earlier experiment incurs significant overhead.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505542" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">salynchnew</span>
+        <span class="meta-time">2026/03/25 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是由法学硕士写的，所以......是的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It was written by an LLM, so... yeah.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505906" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeffybefffy519</span>
+        <span class="meta-time">2026/03/25 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除此之外，这并没有使用模型的高度量化版本，从而降低了质量。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Except this isnt using heavily quantised versions of the model thus reducing quality.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506250" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">root_axis</span>
+        <span class="meta-time">2026/03/25 01:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有1T参数的开源模型？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are there any 1T parameter open source models?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506530" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 01:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">比如2.5？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Kimi 2.5?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506562" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ai-inquisitor</span>
+        <span class="meta-time">2026/03/25 02:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该模型是“开放权重”，而不是开源的。我们不知道 Moonshot 训练的数据是什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That model is "open weight", not open source. We have no idea what data Moonshot trained on.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">root_axis</span>
+        <span class="meta-time">2026/03/25 02:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢，蒂尔。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks, TIL.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nullbyte</span>
+        <span class="meta-time">2026/03/25 01:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很好奇 TPS 与默认操作系统虚拟内存分页相比如何</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am curious how the TPS compares vs default OS virtual memory paging</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506073" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">speedgoose</span>
+        <span class="meta-time">2026/03/25 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道 GLM 5 上每个代币需要多少分钟。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder how many minutes per token on GLM 5.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">amelius</span>
+        <span class="meta-time">2026/03/25 01:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 40GB 型号，该值 &lt;1 tok/s。<p>得了吧，“跑”这个词不太合适。 “爬”是。</p><p>类似的标题具有误导性。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is &lt;1 tok/s for the 40GB model.<p>Come on, "Run" is not the right word. "Crawl" is.</p><p>Headlines like that are misleading.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506283" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">feznyng</span>
+        <span class="meta-time">2026/03/25 02:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仍然可能有用；也许适合夜间异步工作负载？告诉您的代理人晚上研究 xyz，醒来后会收到报告。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could still be useful; maybe for overnight async workloads? Tell your agent research xyz at night and wake up to a report.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507125" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">maleldil</span>
+        <span class="meta-time">2026/03/25 02:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">假设每秒 1 个代币，“过夜”为 12 小时，则为 43 200 个代币。我不确定你能用它实现什么有意义的目标。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Assuming 1 token per second and "overnight" being 12 hours, that's 43 200 tokens. I'm not sure what you can meaningfully achieve with that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507386" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 05:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然，但如果长期吞吐量是一个真正的限制，那么有很多方法可以解决这个问题，同时仍然不需要保持接近 <i>全部</i> RAM 中的模型权重（这仍然是 MoE 的传统方法）。因此，更小的内存占用所带来的好处是非常真实的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure, but if long-term throughput is a real limitation there's plenty of ways to address that while still not needing to keep anywhere close to <i>all</i> model weights in RAM (which is still the conventional approach with MoE). So the gain of a smaller memory footprint is quite real.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">smlacy</span>
+        <span class="meta-time">2026/03/25 01:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，而且上下文几乎为零，这对 MoE 模型上的 TTFT 产生了巨大的影响。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, and with virtually zero context, which makes an enormous difference for TTFT on the MoE models.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506648" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">monksy</span>
+        <span class="meta-time">2026/03/25 01:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">奥拉马需要有类似的东西。目前，Ollama 有很多缺陷，使其无法获得出色的性能。 （我的理解是更好的 GPU/CPU 分割等）。但 Ollama 是举办法学硕士课程并按需切换的唯一途径。叹。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There needs to be something like this from Ollama. At the moment Ollama has a lot of flaws that prevent it from getting great performance. (My understanding is better GPU/CPU splits, etc). But Ollama is the only way to host an LLM and have it switch out on demand. Sigh.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 01:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ollama 目前对 mmap 的支持非常不标准，这会损害较大模型的推理。最近有一些正在进行的拉取请求至少在某种程度上有助于解决这个问题 <a href="https://github.com/ollama/ollama/pull/14525" target="_blank" rel="noopener noreferrer">https://github.com/ollama/ollama/pull/14525</a> <a href="https://github.com/ollama/ollama/pull/14134" target="_blank" rel="noopener noreferrer">https://github.com/ollama/ollama/pull/14134</a> <a href="https://github.com/ollama/ollama/pull/14864" target="_blank" rel="noopener noreferrer">https://github.com/ollama/ollama/pull/14864</a> 但进展似乎陷入停滞。他们对最新 Qwen 模型的支持似乎也与 llama.cpp 存在一些定制的不兼容性，这无济于事；用两者来测试同一个模型是很困难的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ollama has very substandard support for mmap at present, which hurts inference with larger models. There are some recent pull requests in flight that should help address this to at least some extent <a href="https://github.com/ollama/ollama/pull/14525" target="_blank" rel="noopener noreferrer">https://github.com/ollama/ollama/pull/14525</a> <a href="https://github.com/ollama/ollama/pull/14134" target="_blank" rel="noopener noreferrer">https://github.com/ollama/ollama/pull/14134</a> <a href="https://github.com/ollama/ollama/pull/14864" target="_blank" rel="noopener noreferrer">https://github.com/ollama/ollama/pull/14864</a> but progress seems to be stalling. Their support for recent Qwen models seems to also have some bespoke incompatibilities with llama.cpp, which doesn't help matters; it's difficult to test the same model with both.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506031" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rubiquity</span>
+        <span class="meta-time">2026/03/25 01:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">llama.cpp 和 llama-swap 比 Ollama 做得更好，并且具有更多的控制能力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">llama.cpp and llama-swap do this better than Ollama and with far more control.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505927" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">circularfoyers</span>
+        <span class="meta-time">2026/03/25 02:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">既然 llama-server 支持相同的功能，甚至不再需要使用 llama-swap 。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Don't even need to use llama-swap anymore now that llama-server supports the same functionality.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507414" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rubiquity</span>
+        <span class="meta-time">2026/03/25 08:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不知道。感谢分享！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did not know that. Thanks for sharing!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">EnPissant</span>
+        <span class="meta-time">2026/03/25 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您没有提供 llama.cpp 与 mmap 的任何比较。<p>您没有解释任何类型的预测器如何为教育部专家发挥作用。</p><p>您没有解释预测如何有用。我可以预测密集模型中使用的层（所有层都按顺序使用），但这对我没有多大帮助。它仍然存在带宽瓶颈（提示：教育部不会改变这一点）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You do not provide any comparison to llama.cpp with mmap.<p>You do not explain how any kind of predictor can work for MoE experts.</p><p>You do not explain how prediction can even be useful. I can predict the layers used in a dense model (all of them are used in order), but that doesn't help me much. It's still bottlenecked on bandwidth (hint: MoE doesn't change this).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506212" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jeff_antseed</span>
+        <span class="meta-time">2026/03/25 15:20</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anshulbasia27</span>
+        <span class="meta-time">2026/03/25 01:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">操作系统分页在这里会明显更糟。内核的页面错误处理程序是反应性的——它不知道
+  您将要读取第 47 层的 FFN 权重，因此它无法预取。你在每一个错误上都停滞不前，等待     
+  加载 4KB/16KB 页面，然后恢复。通过 80 层密集 FFN 流，每层有数千个冷故障
+   令牌。<p></p><pre><code>  What makes this approach faster is that the model's access pattern is completely deterministic during         
+  inference. You know exactly which tensors are needed next because transformer layers execute sequentially. So
+  you can issue large sequential reads and prefetch the next layer while the current one is computing on Metal. 
+  The OS page cache can't do that — it has no concept of "layer N+1 comes after layer N."
+
+  For MoE it's even more stark. The OS would page in all 8 experts on the first token that routes to each one,  
+  then evict them under memory pressure with LRU, which has no idea that expert 3 fires 10x more often than
+  expert 7. The neuron cache here is basically a domain-specific replacement policy.</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OS paging would be significantly worse here. The kernel's page fault handler is reactive — it doesn't know
+  you're about to read layer 47's FFN weights, so it can't prefetch. You stall on every fault, wait for the     
+  4KB/16KB page to load, then resume. With 80 layers of dense FFN streaming, that's thousands of cold faults per
+   token.<p></p><pre><code>  What makes this approach faster is that the model's access pattern is completely deterministic during         
+  inference. You know exactly which tensors are needed next because transformer layers execute sequentially. So
+  you can issue large sequential reads and prefetch the next layer while the current one is computing on Metal. 
+  The OS page cache can't do that — it has no concept of "layer N+1 comes after layer N."
+
+  For MoE it's even more stark. The OS would page in all 8 experts on the first token that routes to each one,  
+  then evict them under memory pressure with LRU, which has no idea that expert 3 fires 10x more often than
+  expert 7. The neuron cache here is basically a domain-specific replacement policy.</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506170" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 内核的页面错误处理程序是反应性的 — 它不知道您将要读取第 47 层的 FFN 权重，因此它无法预取。<p>男人2疯狂</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The kernel's page fault handler is reactive — it doesn't know you're about to read layer 47's FFN weights, so it can't prefetch.<p>man 2 madvise</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506188" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">astrange</span>
+        <span class="meta-time">2026/03/25 05:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这适用于预读，但不适合随机访问。 readv、aio、dispatch_io 在那里更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That works for readahead but it's not good for random access. readv, aio, dispatch_io are better there.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509801" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 05:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个说法有点像苹果和橘子（没有双关语！）。 madvise 的作用就是向内核提供提示以调整页面缓存和预读（包括可能完全禁用预读）。  它不是关于执行对私有内存缓冲区的读取，这实际上是您提到的选项适合的地方。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This claim is a bit apples and oranges (no pun intended!). madvise is all about providing hints to the kernel to tune the page cache and readahead (including possibly disabling readahead altogether).  it's not about performing reads into private memory buffers, which is actually where the options you mentioned fit in.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47509983" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">EnPissant</span>
+        <span class="meta-time">2026/03/25 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这假设您在两次提取之间有大量工作要做（因此您可以在使用当前数据时预取）。使用 LLM 解码，您就不需要了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That assumes you have significant work to do between fetches (so you can prefetch while using the current data). With LLM decode you don't.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506246" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 01:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506249" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/03/25 07:08</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510856" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">skillflow_ai</span>
+        <span class="meta-time">2026/03/25 07:44</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511203" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">leontloveless</span>
+        <span class="meta-time">2026/03/25 06:03</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510105" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Yanko_11</span>
+        <span class="meta-time">2026/03/25 02:01</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506672" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anshulbasia27</span>
+        <span class="meta-time">2026/03/25 01:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506157" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jee599</span>
+        <span class="meta-time">2026/03/25 02:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507020" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 00:04</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504731" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">password4321</span>
+        <span class="meta-time">2026/03/25 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>不要发布生成的/人工智能编辑的评论。 HN 用于人与人之间的对话</i><p><a href="https://news.ycombinator.com/item?id=47340079" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47340079</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>Don't post generated/AI-edited comments. HN is for conversation between humans</i><p><a href="https://news.ycombinator.com/item?id=47340079" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47340079</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505606" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 02:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">已注意到，谢谢。我让法学硕士帮助我定位了这条信息，但我完成了初稿和编辑。将来会牢记在心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Noted, thanks. I had LLM help positioning this message but I did the initial draft along with edits. Will keep in mind for the future.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507177" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">DennisP</span>
+        <span class="meta-time">2026/03/25 01:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说，这不像是人工智能生成的评论。他确实提到他对该项目进行了振动编码，但这并不违反指导方针。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That doesn't read like an AI-generated comment to me. He did mention he vibe-coded the project but that's not against the guidelines.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505993" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/03/25 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它要么是由法学硕士编写的，要么是由通过阅读法学硕士输出学会写作的​​人编写的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's either written by an LLM, or written by someone who learned to write by reading LLM output</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506192" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">password4321</span>
+        <span class="meta-time">2026/03/25 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Vibe 编码的项目很好。<p>至少提示你的法学硕士在发表评论时避开明显的暗示！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Vibe-coded project is fine.<p>At least prompt your LLM to dodge the obvious tells when commenting!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506202" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Forgeties79</span>
+        <span class="meta-time">2026/03/25 01:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">gptzero 表示 99% 的可能性是 AI 生成的<p>它确实有很多明显的迹象</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">gptzero says 99% chance it’s AI-generated<p>It certainly has a lot of telltale signs</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Izikiel43</span>
+        <span class="meta-time">2026/03/25 01:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 核心见解：<p>这是人工智能书面文本的明显标志。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The core insight:<p>That's a telltale sign of ai written text.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506049" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">causal</span>
+        <span class="meta-time">2026/03/25 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您需要更改标题或实际包含 1T 参数模型内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You need to change the title or actually include 1T parameter model content.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505603" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">frikk</span>
+        <span class="meta-time">2026/03/25 00:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个有趣的工作，谢谢你的分享。您今天会购买什么硬件进行实验？看来新一代的 MacBook Pro 很强大？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is interesting work, thank you for sharing. What hardware would you buy today for experimenting? Seems like the new gen of macbook pros are pretty powerful?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505525" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tatef</span>
+        <span class="meta-time">2026/03/25 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，绝对是。我每天使用配备 32GB RAM 的 M1 Max，从性能角度来看，它与新的基本 M5 Pro 24GB 相当。如果您有兴趣查看特定的性能指标，您可以查看存储库中的基准测试，但投资具有尽可能多内存的 Apple 硬件将 <i>一般来说</i> 让你在这场游戏中走得更远。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes definitely. I use a M1 Max with 32gb of RAM daily and it's about on par from a performance standpoint with the new base M5 Pro 24gb. You can check the benchmarks in the repo if you're interested in seeing specific performance metrics, but investing in Apple hardware with as much memory as possible will <i>generally</i> get you furthest in this game.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507207" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">WithinReason</span>
+        <span class="meta-time">2026/03/25 00:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否曾经为这些模型中的专家生成过访问频率统计数据（例如直方图）？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you ever generated access frequency statistics for the experts in these models, something like a histogram?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505694" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Gracana</span>
+        <span class="meta-time">2026/03/25 01:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ktransformers 可以动态放置专家，并且大概可以生成这样的直方图，尽管目前它的激活统计数据只是一个“.pt”文件。 <a href="https://github.com/kvcache-ai/ktransformers/blob/main/doc/en/kt-kernel/experts-sched-Tutorial.md" target="_blank" rel="noopener noreferrer">https://github.com/kvcache-ai/ktransformers/blob/main/doc/en...</a><p>FWIW我从来没有让它发挥作用，也没有深入研究它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ktransformers can do dynamic placement of experts and could presumably produce such a histogram, though currently its activation statistics are just a ".pt" file. <a href="https://github.com/kvcache-ai/ktransformers/blob/main/doc/en/kt-kernel/experts-sched-Tutorial.md" target="_blank" rel="noopener noreferrer">https://github.com/kvcache-ai/ktransformers/blob/main/doc/en...</a><p>FWIW I never got it to work and did not dig into it much.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lostmsu</span>
+        <span class="meta-time">2026/03/25 00:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么使用 --mmap 的 llama 会崩溃？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why would llama with --mmap crash?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505543" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/03/25 00:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不让我感到惊讶，mmap 支持一般很少受到关注，并且与 GPU 端推理的交互很差。  （这是默认的，您甚至不需要将其指定为 CLI 选项。）OP 已与 llama.cpp 人员进行了讨论 <a href="https://github.com/ggml-org/llama.cpp/discussions/20852" target="_blank" rel="noopener noreferrer">https://github.com/ggml-org/llama.cpp/discussions/20852</a> 但到目前为止兴趣不大</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This doesn't surprise me all that much, mmap support gets little attention in general and interacts poorly with GPU-side inference.  (And that's with it being default, you don't even really need to specify it as a CLI option.) OP has raised a discussion with the llama.cpp folks <a href="https://github.com/ggml-org/llama.cpp/discussions/20852" target="_blank" rel="noopener noreferrer">https://github.com/ggml-org/llama.cpp/discussions/20852</a> but little interest so far</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505746" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">erikcw</span>
+        <span class="meta-time">2026/03/25 01:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Simon Willison 写了一篇关于 Dan Woods 工作的好文章“Autoresearching Apple's “LLM in a Flash” to run Qwen 397B local”。<p>[0] <a href="https://simonwillison.net/2026/Mar/18/llm-in-a-flash/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2026/Mar/18/llm-in-a-flash/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Simon Willison wrote a good post about Dan Woods’ work on “Autoresearching Apple's "LLM in a Flash" to run Qwen 397B locally”.<p>[0] <a href="https://simonwillison.net/2026/Mar/18/llm-in-a-flash/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2026/Mar/18/llm-in-a-flash/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506359" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

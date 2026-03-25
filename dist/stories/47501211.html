@@ -1,0 +1,2520 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nanobrew：与brew兼容的最快的macOS包管理器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-25-1555/">返回本批次</a>
+      <h1>Nanobrew：与brew兼容的最快的macOS包管理器</h1>
+      <p class="subtitle">Nanobrew: The fastest macOS package manager compatible with brew</p>
+      <div class="meta-line">
+        <span>nanobrew.trilok.ai</span>
+        <span>作者 syrusakbary</span>
+        <span>分数 198</span>
+        <span>评论 124</span>
+        <span>2026/03/24 19:40</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47501211" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://nanobrew.trilok.ai/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>纳米啤酒</li><li>最快的 macOS 包管理器。用齐格写成。 $ 卷曲 -fsSL https://nanobrew.trilok.ai/install | bash 然后重新启动终端或运行它打印的导出命令。</li><li>3.5 毫秒热安装时间 比 Homebrew 快 7,000 倍 · 比 echo 快</li><li>速度 Apple Silicon、macOS 15、同一网络。冷=新鲜下载。温暖 = 缓存在存储中。</li><li>树 / 0 deps，冷萃8.99s nb1.19s 7.6x 快</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>nanobrew</li><li>The fastest macOS package manager. Written in Zig. $ curl -fsSL https://nanobrew.trilok.ai/install | bash Then restart your terminal or run the export command it prints.</li><li>3.5ms warm install time 7,000x faster than Homebrew · faster than echo</li><li>Speed Apple Silicon, macOS 15, same network. Cold = fresh download. Warm = cached in store.</li><li>tree / 0 deps, cold brew8.99s nb1.19s 7.6x faster</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mikemcquaid</span>
+        <span class="meta-time">2026/03/24 22:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果它不执行 Ruby：它无法与 Homebrew 兼容。 “兼容”在这里做了一些工作，同时它也意味着“隐式依赖 Homebrew 的 CDN、CI、打包基础设施和保持所有这些运行的维护人员”。<p>每隔几周就会有一个新的 Vivi 编码 Homebrew 前端，具有部分兼容性并提高速度。</p><p>Homebrew 正在开发一个官方的 Rust 前端，该前端实际上具有完全兼容性。希望这将有助于在更广泛的生态系统中分享努力。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If it doesn’t ever execute Ruby: it cannot be compatible with Homebrew. “Compatible” is doing a bit of work here when it also means “implicitly relies on Homebrew’s CDN, CI, packaging infrastructure and maintainers who keep all this running”.<p>There’s a new vibe coded Homebrew frontend with partial compatibility and improved speed every few weeks.</p><p>Homebrew is working on an official Rust frontend that will actually have full compatibility. Hopefully this will help share effort across the wider ecosystem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">runjake</span>
+        <span class="meta-time">2026/03/25 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于那些不知道的人来说，背景是：评论者 mikemcquaid 是 Homebrew 的项目负责人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Context for those unaware: the commenter, mikemcquaid, is the project lead for Homebrew.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505855" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 01:55</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506594" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Xunjin</span>
+        <span class="meta-time">2026/03/25 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢，他的论点完全有道理，只有让我讨厌的部分是：<p>&gt; 每隔几周就会有一个新的 Vivi 编码 Homebrew 前端，具有部分兼容性和改进的速度。</p><p>人们是自由的，可能会这样做，因为它很慢。替代方案通常并不是一件坏事。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you, his arguments totally makes sense, only the part that makes me icky is:<p>&gt; There’s a new vibe coded Homebrew frontend with partial compatibility and improved speed every few weeks.</p><p>People are free and probably do this because it is slow. Alternatives often are not a bad thing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506105" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bentcorner</span>
+        <span class="meta-time">2026/03/25 09:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 人们是自由的，可能会这样做，因为它很慢。替代方案通常并不是一件坏事。<p>替代品总是好的，但在我看来，brew 并不是我经常接触的东西，对我来说它“足够好”。它有效并且达到了我的预期，尽管公平地说也许我正走在快乐的道路上&lt;耸肩&gt;。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; People are free and probably do this because it is slow. Alternatives often are not a bad thing.<p>Alternatives are always good but IMO brew is just not something I interact with all that much and to me it's "good enough". It works and does what I expect, although to be fair maybe I'm on the happy path &lt;shrug&gt;.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511940" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">alwillis</span>
+        <span class="meta-time">2026/03/25 01:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自从我启用 HOMEBREW_DOWNLOAD_CONCURRENCY 以来，下载对我来说已经改善到下载速度不再是问题的程度。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Since I enabled HOMEBREW_DOWNLOAD_CONCURRENCY, downloads have improved for me to the point where download speed is no longer an issue.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506576" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">firecall</span>
+        <span class="meta-time">2026/03/25 07:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您的版本是 5.0.0 或更高版本，则默认情况下并发已处于活动状态。<p><a href="https://brew.sh/2025/11/12/homebrew-5.0.0/" target="_blank" rel="noopener noreferrer">https://brew.sh/2025/11/12/homebrew-5.0.0/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If your version is 5.0.0 or newer, concurrency is already active by default.<p><a href="https://brew.sh/2025/11/12/homebrew-5.0.0/" target="_blank" rel="noopener noreferrer">https://brew.sh/2025/11/12/homebrew-5.0.0/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511151" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pugio</span>
+        <span class="meta-time">2026/03/25 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你。不知何故，我一直在 4.5.3 上徘徊。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for that. And here I was somehow hanging around on 4.5.3.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511794" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">brailsafe</span>
+        <span class="meta-time">2026/03/25 03:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴知道！我是用一句老套的话来做这件事的，但没有意识到这个标志。我认为顺序构建/安装过程是令人痛苦的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good to know! I was doing this with a hacky one-liner but wasn't aware of this flag. I think the sequential build/install process is the agonizing bit though.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507869" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naikrovek</span>
+        <span class="meta-time">2026/03/25 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我不知道人们怎么说它很慢。  如果你安装了 5000 个软件包？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah I don’t know how people are saying it’s slow.  If you have 5000 packages installed maybe?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511263" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rbanffy</span>
+        <span class="meta-time">2026/03/25 04:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 替代方案通常并不是一件坏事。<p>确切地。我使用 MacPorts 已经很多年了，我很喜欢它。</p><p>/我鸭子。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Alternatives often are not a bad thing.<p>Exactly. I’ve been using  MacPorts for ages and I love it.</p><p>/me ducks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508764" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">runjake</span>
+        <span class="meta-time">2026/03/25 01:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">指出点！我将其视为“代理编码”的半开玩笑措辞。希望这是对的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Point noted! I took it as a tongue-in-cheek phrasing of "agentically coded". Hopefully, that's right.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506429" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mpalmer</span>
+        <span class="meta-time">2026/03/25 04:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白他在哪里说这是一件坏事，甚至不明白他在哪里暗示了这一点。在我看来，他确实暗示像“最快的包管理器”这样的最高级的东西在这种环境下没有多大价值。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't see where he said it's a bad thing, or even implied it. As I see it, he did imply that superlatives like THE FASTEST PACKAGE MANAGER aren't worth much in this environment.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508450" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">huflungdung</span>
+        <span class="meta-time">2026/03/25 01:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506309" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jazzpush2</span>
+        <span class="meta-time">2026/03/25 03:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，说实话，自制程序慢得要命。在我的 2020 mbp 上安装 aws cli 实际上花了 30 分钟。我会很高兴地涌向每一个更快的新版本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, tbh homebrew is slow as fuck. It literally took 30 minutes to install aws cli on my 2020 mbp. I will happily flock to every new version that's faster.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507751" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pxc</span>
+        <span class="meta-time">2026/03/24 22:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实很酷的是，Homebrew 提供了足够全面的 JSON API ，让人们以有用的方式在 Homebrew 上进行构建，而无需直接运行 Ruby，尽管一切都是在 Ruby DSL 中构建的。这看起来确实是一个“两全其美”的交易，而且其他客户可以利用这一点，这很酷。<p>我不知道待定的官方 Rust 前端！这很有趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is really coll that Homebrew provides a comprehensive enough JSON API to let people build on Homebrew in useful ways without directly running Ruby, despite everything being built in a Ruby DSL. That really does seem like a "best of both worlds" deal, and it's cool that alternative clients can take advantage of that.<p>I didn't know about the pending, official Rust frontend! That's very interesting.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503253" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SOLAR_FIELDS</span>
+        <span class="meta-time">2026/03/24 23:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，他们终于摆脱Ruby了？惊人的。速度将是一个很好的福音</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow they are finally getting away from Ruby? Awesome. The speed will be a nice boon</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503738" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">petcat</span>
+        <span class="meta-time">2026/03/25 00:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我不知道为什么人们说速度并不重要。  我用的是 Homebrew，速度很慢。<p>这就像 Linux 世界中的 yum 与 apt 之争。  APT (C++) 很快，而 yum (Python) 很慢。  两者都工作得很好，但是每天都会多次增加几秒钟或一分钟的小挫折。  加起来。  他们最终用 dnf (C++) 修复了这个问题，现在 yum 已被弃用。</p><p>很高兴听到 Rust 重写很快就会出现在 Homebrew 中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah I don't know why people are saying that speed doesn't matter.  I use Homebrew and it is slow.<p>It's like yum vs apt in the Linux world.  APT (C++) is fast and yum (Python) was slow.  Both work fine, but yum would just add a few seconds, or a minute, of little frustrations multiple times a day.  It adds up.  They finally fixed it with dnf (C++) and now yum is deprecated.</p><p>Glad to hear a Rust rewrite is coming to Homebrew soon.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504910" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kelvie</span>
+        <span class="meta-time">2026/03/25 02:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从基于 Debian 的发行版切换到 arch 的原因之一就是 pacman 与 APT 相比要快得多——当我拥有（多）千兆位连接和 SSD 时，系统更新不应超过半小时。<p>这主要是由于容器的出现而引发的，老实说，与我的 Ubuntu 盒子相比，我对 apk 在 alpine 上安装软件包的速度感到震惊（使用 apt）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One of the reasons I switched to arch from debian based distros was precisely how much faster pacman was compared to APT -- system updates shouldn't take over half an hour when I have a (multi)gigabit connection and an SSD.<p>It was mostly precipitated by when containers came in and I was honestly shocked at how fast apk installs packages on alpine compared to my Ubuntu boxes (using apt)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506733" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/03/25 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">pacman 更快只是因为它做的事情更少并且支持更少的用例。<p>例如，pacman 不需要验证系统的部分升级，因为 Arch 不支持这些升级，如果系统出现故障，那么就需要您来修复。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">pacman is faster simply because it does less things and it supports less use cases.<p>For example pacman does not need to validate the system for partial upgrades because those are unsupported on Arch and if the system is borked then it’s yours to fix.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507215" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pxc</span>
+        <span class="meta-time">2026/03/25 08:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不那么仁慈的是，吃豆人之所以快是因为它是错误的。依赖解析器错误；即使有正确的答案，它也无法找到依赖解析问题的正确答案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Less charitably, pacman is fast because it's wrong. The dependency resolver is wrong; it fails to find correct answers to dependency resolution problems even when correct answers are available.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511477" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">novok</span>
+        <span class="meta-time">2026/03/25 01:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ruby 不一定是慢的部分，bazel 使用 starlark，它主要是 python，而且速度非常快。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ruby doesn't have to be the slow part, bazel uses starlark which is mostly python and it's very fast.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506448" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/03/25 02:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">yum 慢不是因为 python，而是因为用于解决依赖关系的算法<p>不管怎样，python 程序会调用用 C 实现的 libsolv。</p><p>dnf5 速度要快得多，但该程序的作者相信算法的变化，而不是因为它是用 C++ 编写的</p><p>dnf &lt; 5 的性能仍然与 yum 类似（而且它也是用 python 实现的）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yum was slow not because of python but because of the algorithm used to solve dependencies<p>Anyway the python program would call into libsolv which is implemented in C.</p><p>dnf5 is much faster but the authors of the program credit the algorithmic changes and not because it is written in C++</p><p>dnf &lt; 5 was still performing similarly to yum (and it was also implemented in python)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507146" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wavemode</span>
+        <span class="meta-time">2026/03/25 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; dnf &lt; 5 的性能仍然与 yum 类似（而且它也是用 python 实现的）<p>我可能没有正确理解你的评论。如果算法的改变导致了速度的提高，为什么 Python 版本的 dnf 的性能与 yum 相似？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; dnf &lt; 5 was still performing similarly to yum (and it was also implemented in python)<p>I'm perhaps not properly understanding your comment. If the algorithmic changes were responsible for the improved speed, why did the Python version of dnf perform similarly to yum?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507878" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/03/25 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为 dnf4 使用与 yum 相同的依赖关系解析，但他们在 dnf5 中对其进行了修改（最初应该是一个具有不同名称的全新包管理器）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because dnf4 used the same dependency resolution as yum but they revamped it in dnf5 (it was initially supposed to be a whole new package manager with a different name)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508340" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mhurron</span>
+        <span class="meta-time">2026/03/25 02:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 是的，我不知道为什么人们说速度并不重要。我使用 Homebrew，速度很慢<p>因为你有多少次在除了一天休息一下的机会之外什么都没有的情况下运行它？我确实没什么意思，这里吹捧的加速是几秒钟。</p><p>对于对启动时间的痴迷，我也有同样的反应，您在实际影响任何事情的情况下启动计算机的频率是多少？您多久安装一次软件包？</p><p>你是否也同样厌恶上厕所？或者喝杯水？或者基本上生活中所有不是瞬时的事情？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Yeah I don't know why people are saying that speed doesn't matter. I use Homebrew and it is slow<p>Because how often are you running it where it's not anything but a opportunity to take a little breather in a day? And I do mean little, the speedups being touted here are seconds.</p><p>I have the same response to the obsession with boot times, how often are you booting your machine where it is actually impacting anything? How often are you installing packages?</p><p>Do you have the same time revulsion for going to the bathroom? Or getting a glass of water? or basically everything in life that isn't instantaneous?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">what</span>
+        <span class="meta-time">2026/03/25 10:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这。放弃brew有比“它很慢”更好的理由。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This. There are much better reasons to abandon brew than “it’s slow”.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512691" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">joemi</span>
+        <span class="meta-time">2026/03/25 09:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ruby 真的是 Homebrew 的速度瓶颈吗？我认为这是由于文件操作（和下载操作），而不是编程语言的选择。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is Ruby really the speed bottleneck in Homebrew? I would assume it would be due to file operations (and download operations), not choice of programming language.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512047" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SlightlyLeftPad</span>
+        <span class="meta-time">2026/03/25 11:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">基本上同意，尽管有些事情在某些语言中特别困难。例如，由于全局解释器锁，诸如真正的并发之类的事情在 Ruby 中并没有那么自然。当然还有第三方库和解决方法。较新版本的 Ruby 使其更加原生，正如我们所见，Homebrew 已经实验性地采用并使用了它一段时间，并且默认值相对较新。<p>当然，我不能说这是它缓慢的唯一原因。我站在“我使用它的频率不够高，根本不会成为问题”的一边。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Largely agree, though some things are notably difficult in some languages. Things like true concurrency for example didn’t come as naturally in Ruby because of the global interpreter lock. Of course there are third party libs, and workarounds though. Newer versions of Ruby bring it more natively, and as we’ve seen, Homebrew has adopted and makes use of that experimentally for a while, and the default relatively recently.<p>I can’t say that’s the only reason it’s slow of course. I’m on the “I don’t use it often enough for it to be a problem at all” side of the fence.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512809" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pxc</span>
+        <span class="meta-time">2026/03/25 02:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我猜想这个更改建立在包元数据的现有 json 端点之上，但 Ruby DSL 保持不变。<p>我认为如何将 Ruby 公式和 Rust 前端结合起来是 Homebrew 开发人员可以弄清楚的事情，我很想知道它会走向何方，但我并不真正关心 Ruby 最终是否“离开”Homebrew。这是一种可爱的语言，所以如果他们可以将其保留在 DSL 中，同时提高客户端性能，我认为那就太好了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would guess this change builds on the existing json endpoints for package metadata but that the Ruby DSL is remaining intact.<p>I think how to marry the Ruby formulas and a Rust frontend is something the Homebrew devs can figure out and I'm interested to see where it goes, but I don't really care whether Ruby "goes away" from Homebrew in the end or not. It's a lovely language, so if they can keep it for their DSL but improve client performance I think that's great.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506982" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">derefr</span>
+        <span class="meta-time">2026/03/25 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; Homebrew 正在开发一个官方 Rust 前端，该前端实际上具有完全兼容性。<p>当你说“Rust 前端”时，是 Homebrew 前端最终转变为一个愿景 <i>纯的</i> Rust 项目 — 没有最终用户安装 portable-ruby 等？</p><p>如果是这样（如果不是，请忽略下面的所有内容）：</p><p>我可以看到这对于大多数“无聊”的公式是如何工作的：公式 JSON 在公式发布时预先烘焙； Rust 前端拉动它；发现配方奶粉可以通过瓶子安装；拉瓶子；永远不需要执行任何 Ruby。</p><p>但在边缘情况下会发生什么——没有瓶子的配方、Ruby `post_install` 块等等？ （还有，本地配方开发是如何完成的？）</p><p>这项工作的最终目标是构建一个微小的“Formula Ruby DSL”解释器并将其嵌入到 Rust 前端，该解释器支持 <i>只是</i> Ruby 的语法 + 语义足以执行实际公式、方法/块中实际出现的代码吗？ （我个人认为这很容易处理，但我想你可能不同意。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Homebrew is working on an official Rust frontend that will actually have full compatibility.<p>When you say "Rust frontend", is the vision that Homebrew's frontend would eventually transition to being a <i>pure</i> Rust project — no end-user install of portable-ruby and so forth?</p><p>If so (ignore everything below if not):</p><p>I can see how that would work for most "boring" formulae: formula JSON gets pre-baked at formula publish time; Rust frontend pulls it; discovers formula is installable via bottle; pulls bottle; never needs to execute any Ruby.</p><p>But what happens in the edge-cases there — formulae with no bottles, Ruby `post_install` blocks, and so forth? (And also, how is local formula development done?)</p><p>Is the ultimate aim of this effort, to build and embed a tiny little "Formula Ruby DSL" interpreter into the Rust frontend, that supports <i>just</i> enough of Ruby's syntax + semantics to execute the code that appears in practice in the bodies of real formulae methods/blocks? (I personally think that would be pretty tractable, but I imagine you might disagree.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508641" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mikemcquaid</span>
+        <span class="meta-time">2026/03/25 15:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们永远不会是 100% Rust 和 0% Ruby。不过，有可能 99% 的用户最终从未运行过任何 Ruby。本地发展和我们的 CI 仍然需要它。我们正在优化以尽可能加快 99% 的情况。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We will never be 100% Rust an 0% Ruby. It’s possible that 99% of users end up never running any Ruby, though. It’ll still be needed for local development and our CI. We’re optimising for speeding up the 99% case as much as possible.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514217" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">orf</span>
+        <span class="meta-time">2026/03/25 00:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://github.com/Homebrew/brew/tree/main/Library/Homebrew/rust/brew-rs" target="_blank" rel="noopener noreferrer">https://github.com/Homebrew/brew/tree/main/Library/Homebrew/...</a> 供参考</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://github.com/Homebrew/brew/tree/main/Library/Homebrew/rust/brew-rs" target="_blank" rel="noopener noreferrer">https://github.com/Homebrew/brew/tree/main/Library/Homebrew/...</a> for reference</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504755" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">atonse</span>
+        <span class="meta-time">2026/03/24 23:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Heyyyy，你是谁，能告诉我们什么与自制软件兼容，什么不兼容？<p>（开个玩笑，感谢您创建自制程序并继续努力！）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heyyyy, who are you to tell us what is and isn't compatible with homebrew?<p>(Just kidding, thank you for creating homebrew and your continued work on it!)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504136" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">samgranieri</span>
+        <span class="meta-time">2026/03/25 03:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 Max Howell 创建了 Homebrew。  我认为麦克奎德是当前的维护者</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think Max Howell created Homebrew.  I think McQuaid is the current maintainer</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">AbanoubRodolf</span>
+        <span class="meta-time">2026/03/25 09:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从严格意义上讲，McQuaid 是正确的，但有趣的问题是，实际安装的公式中有多少比例使用了除存档提取和路径操作之外的 Ruby DSL 功能。我的猜测是，这只是大多数开发人员机器上拥有的一小部分。<p>真正的兼容性测试不是“运行所有 Homebrew 公式”，而是“运行每个开发人员实际使用的 15-20 个公式”。在实践中，正确处理这些问题并在边缘情况下明显失败的工具比技术上较慢的完整实现更有用。</p><p>该线程缺少的是该表面积上的任何数据，而不是更多基准数据。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">McQuaid is correct in the strict sense, but the interesting question is what percentage of actually installed formulae use Ruby DSL features beyond archive extraction and path manipulation. My guess is it's a small minority of what most developers have on their machines.<p>The real compatibility test isn't "runs all Homebrew formulae" — it's "runs the 15-20 formulae each developer actually uses." A tool that handles those correctly and fails clearly on edge cases is more useful in practice than a technically complete implementation that's slower.</p><p>What's missing from this thread is any data on that surface area, not more benchmark numbers.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512162" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tfrancisl</span>
+        <span class="meta-time">2026/03/24 23:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很欣赏官方 Rust 前端的推动。我个人已经（慢慢地）迁移到使用 nix 来管理我的 Mac 软件，但是有很多限制导致我无论如何都依赖自制软件。加速将受到赞赏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I appreciate the push for an official rust frontend. I've personally been migrating (slowly) to using nix to manage my Mac's software, but there are a ton of limitations which lead me to rely on homebrew anyway. The speed ups will be appreciated.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504490" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hirvi74</span>
+        <span class="meta-time">2026/03/25 07:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我很欣赏官方 Rust 前端的推动<p>为什么？我想我已经开始认真地因为“害怕错过”而开始签约了。我觉得 Rust 每天都在迅速扩张。我的意思是，我想这很好。我从未使用过它，所以我对这门语言没有真正的看法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I appreciate the push for an official rust frontend<p>Why? I think I am seriously starting to contract as case of FOMO. I feel like Rust is rapidly gaining territory everyday. I mean, that's fine and all, I suppose. I have never used it, so I have no real opinions on the language.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511015" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">boobsbr</span>
+        <span class="meta-time">2026/03/24 23:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请不要移除被守门人阻挡的瓶子和木桶。 :~(</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please, don't remove bottles and casks that are blocked by Gatekeeper. :˜(</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504575" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">halapro</span>
+        <span class="meta-time">2026/03/25 00:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有意义，措辞表明它可以使用 Homebrew 的后端，而不是说它是 Homebrew 的完全替代品。没有人对此感到困惑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Makes no sense, the wording suggests it can use Homebrew's backend, not that it's a complete alternative to Homebrew. Nobody is confused about that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504706" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/03/25 02:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">构建和安装自制程序包的方法是用 Ruby 编写的<p>除非你运行 Ruby，否则你无法真正兼容它，因为安装脚本可以执行任何任意计算</p><p>实际上，大多数食谱都包含一个简单的声明性配置，但没有什么可以阻止您在其中使用 Ruby。</p><p>因此，为了实现完全兼容性，需要运行 Ruby</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The recipes for building and installing homebrew packages are written in Ruby<p>You cannot really be compatible with this unless you run the Ruby as the install scripts could do whatever arbitrary computations</p><p>In reality most recipes contain a simple declarative config but nothing stops you from doing Ruby in there.</p><p>Hence to achieve total compatibility one would need to run Ruby</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507246" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/03/25 03:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于他们改为分发二进制文件而不是在每次安装时从源代码构建，这仍然是真的吗？自从我上次安装从源代码构建的自制程序以来已经有很多年了，因此从我的角度来看，可以安装相同二进制文件的东西将是兼容的。<p>也就是说，我已经有一段时间没有真正对brew 的速度有过任何巨大的抱怨了。我在我的个人机器上使用 Linux，我喜欢的 Linux 发行版的包管理器和brew 的体验差异过去是可笑的。值得赞扬的是，现在，brew 在很大程度上感觉“足够好”，所以老实说，我什至不会争论基于性能需求从 Ruby 移植。我怀疑部分动机可能是担心依赖运行时的可用性。 Brew 对 Ruby 的使用来自于人们更典型地依赖 MacOS 附带的 Python 和 Ruby 版本的时代，但现在很多人可能更有可能使用 Brew 本身的工具来管理这些版本，并且使所有内容都原生化，避免了从现有运行时引导的需要。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is this still true since they swapped to distributing binaries rather than building from source on each install? It's been years since I last installed something from homebrew that built from source, so something that could install the same binaries would be compatible from my standpoint.<p>That said, it's also been a while since I've really had any huge complaints about brew's speed. I use Linux on my personal machines, and the difference in experience with my preferred Linux distro's package manager and brew used to be laughable. To their credit, nowadays, brew largely feels "good enough", so I honestly wouldn't even argue for porting from Ruby based on performance needs at this point. I suspect part of the motivation might be around concerns about relying on the runtime to be available. Brew's use of Ruby comes from a time when it was more typical for people to rely on the versions of Python and Ruby that were shipped with MacOS, but nowadays a lot of people are probably more likely to use tooling from brew itself to manage those, and making everything native avoids the need to bootstrap from an existing runtime.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507780" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/03/25 04:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在某些情况下它可以恢复从源代码构建，我仍然认为即使在进行二进制下载时它也会执行安装钩子，这些钩子是配方中的 ruby<p>我同意你的观点，Ruby 本身可能不是瓶颈（除了 depsolving，因为这是 cpu 限制的）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It can revert back to building from source under some cases and I still think even when doing binary downloads it will execute install hooks which are ruby inside the recipe<p>I would agree with you that probably Ruby itself is probably not the bottleneck (except maybe for depsolving cuz that’s cpu bound)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nozzlegear</span>
+        <span class="meta-time">2026/03/25 00:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，我对此感到困惑。 Nanobrew 主页是这样说的：<p>&gt; <i>纳米啤酒</i></p><p>&gt; <i>最快的 macOS 包管理器。用齐格写成。</i></p><p>&gt; <i>3.5ms 热安装时间</i></p><p>&gt; <i>比 Homebrew 快 7,000 倍 · 比 echo 快</i></p><p>它是 Homebrew 的替代品。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean, I'm confused about it. The nanobrew homepage says this:<p>&gt; <i>nanobrew</i></p><p>&gt; <i>The fastest macOS package manager. Written in Zig.</i></p><p>&gt; <i>3.5ms warm install time</i></p><p>&gt; <i>7,000x faster than Homebrew · faster than echo</i></p><p>It presents itself as an alternative to Homebrew.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504885" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">halapro</span>
+        <span class="meta-time">2026/03/25 00:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">npm 也有很多这样的例子：许多“兼容”的管理器，一个注册表。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are many such examples for npm as well: many "compatible" managers, one registry.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505106" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nozzlegear</span>
+        <span class="meta-time">2026/03/25 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，什么例子？包管理器将自己呈现为其他包管理器的替代品？或者包管理器与它们应该兼容的注册表不兼容？您对恐吓引号的使用令人困惑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry, examples of what? Package managers that present themselves as replacements for other package managers? Or package managers that aren't compatible with the registry they're supposed to be compatible with? Your use of scare quotes is confusing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">0x457</span>
+        <span class="meta-time">2026/03/25 01:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">pnmp、npm、yard 都有不同的锁定文件，都使用相同的注册表格式（以及相同的注册表本身），都尝试以其他方式保持兼容。<p>不过，您不会遇到在同一个项目中一个人使用yarn而另一个人使用pnpm的情况。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">pnmp, npm, yard all have different lockfiles, all use the same registry format (and the same registry itself), all try to stay compatible in other ways.<p>You won't be having situation where one uses yarn and someone uses pnpm on the same project tho.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506401" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/25 00:16</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">waterTanuki</span>
+        <span class="meta-time">2026/03/25 12:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; Homebrew 正在开发一个官方 Rust 前端，该前端实际上具有完全兼容性。希望这将有助于在更广泛的生态系统中分享努力。<p>我在哪里可以阅读有关这项工作的更多信息？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Homebrew is working on an official Rust frontend that will actually have full compatibility. Hopefully this will help share effort across the wider ecosystem.<p>Where can I read more on this effort?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513097" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yokoprime</span>
+        <span class="meta-time">2026/03/25 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您（和您的共同维护者）为社区所做的一切！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">thank you for all you (and your co-maintainers) do for the community!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510805" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hirvi74</span>
+        <span class="meta-time">2026/03/25 07:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是什么促使我们选择使用 Rust 作为官方前端？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What drove the choice to use Rust for an official frontend?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">drob518</span>
+        <span class="meta-time">2026/03/24 22:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这感觉就像是在寻找问题的解决方案。我的系统上有几百个 BREW 软件包，在进行更新时我从来没有坐在那里思考“要是能快 2 秒就好了……”。我确信 Homebrew 的人们可以从这个问题中获得一些关于如何进一步优化 brew 的想法，但我认为我不会很快采用它。在这种情况下，兼容性比速度更重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This feels like a solution looking for a problem. I have a couple hundred brew packages on my system and I’ve never sat there thinking “If this was only 2 seconds faster…” while doing an update. I’m sure the Homebrew folks could mine this for a few ideas of how to further optimize brew, but I don’t think I’ll be adopting it anytime soon. Compatibility is more important than speed in this case.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503061" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">swiftcoder</span>
+        <span class="meta-time">2026/03/24 22:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在进行更新时，我从来没有坐在那里思考“要是能快 2 秒就好了……”<p>我肯定也有过类似的想法（主要是当我去安装一个小工具时，首先遇到的是 20 分钟的自动更新）。</p><p>很确定我也不会采用这个特定的解决方案，但是</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I’ve never sat there thinking “If this was only 2 seconds faster…” while doing an update<p>I definitely have thought something along those lines (mostly when I go to install a small tool, and get hit with 20 minutes of auto-updates first).</p><p>Pretty sure I also will not be adopting this particular solution, however</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503308" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/03/24 22:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从来没有想过“只快了 2 秒”——我当然想过“为什么这需要 Gentoo 重新编译整个服务器的一半时间”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've never thought "only 2 seconds faster" - I've certainly thought "why is this taking half the time it takes Gentoo to recompile an entire server".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503626" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">joshstrange</span>
+        <span class="meta-time">2026/03/24 23:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但是您可以关闭该行为，IIRC 如果您不希望它每次运行时都这样做，它会告诉您要设置的环境变量。<p>我同意这很烦人，但我没有将其关闭，因为它只是很烦人，因为我没有保持我的计算机（酿造包）正常更新（也就是说，这是我自己的错）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But you can turn that behavior off, IIRC it tells you the environment variable to set if you don’t want it to do that every time it runs.<p>I agree it’s annoying, but I haven’t turned it off because it’s only annoying because I’m not keeping my computer (brew packages) up-to-date normally (aka, it’s my own fault).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503723" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">swiftcoder</span>
+        <span class="meta-time">2026/03/24 23:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果它在后台作业，我会更高兴，而不是在调用命令时任意运行</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd be much happier if it were on a background job, than arbitrarily running when I invoke a command</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504382" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">slackfan</span>
+        <span class="meta-time">2026/03/24 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">糟糕的默认行为是放弃软件包的一个重要原因。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Terrible default behavior is a great reason to abandon a software package.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504051" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/03/25 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不确定我是否只是比大多数人安装的东西少得多，或者只是更新得更频繁，但我已经很多年没有经历过这样的事情了。我可能每个（工作日）运行一次 `brew upgrade` ，通常是在执行 git pull 或其他操作之前，然后我会快速查看几封电子邮件或松弛消息，然后当我切换回来时它总是完成</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not sure if I just have way fewer things installed than most people or I just update more often, but I haven't experienced anything like this for years. I run `brew upgrade` probably around once every (work)day, usually right before doing a git pull or something, and then I'll quickly look at a couple emails or slack messages, and then it's always done by the time I switch back</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507859" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">what</span>
+        <span class="meta-time">2026/03/25 11:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">什么？为什么你每天都运行brew升级？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What? Why are you running brew upgrade every day?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512730" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/03/25 15:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">升级我的套餐？我不确定我是否理解这个问题。这就是我使用几乎所有具有包管理器的系统的方式。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To upgrade my packages? I'm not sure I understand the question. That's how I use pretty much all of my systems that have package managers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514398" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SOLAR_FIELDS</span>
+        <span class="meta-time">2026/03/24 23:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FWIW 近年来这似乎有所改善。回到非并行下载的黑暗时期，我会故意等到一天结束并在离开之前关闭它</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FWIW this seems to have improved in recent years. Back in the dark times of non parallelized downloads I would purposefully wait to end of day and fire the thing off before leaving</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503722" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pxc</span>
+        <span class="meta-time">2026/03/24 22:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您使用 Nix-Darwin 的 Homebrew 模块，则针对生成的 brewfile 运行 `brew` 成为迄今为止 `darwin-rebuild switch` 中最慢的部分。在快速情况下，它会将可能需要 1 秒的事情变成需要 10 秒的事情，当运行该命令是配置更改过程的一部分时（即使您没有更新任何内容），这绝对很烦人。针对不变的 Brewfile 的自制程序空操作非常慢。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you use the Homebrew module for Nix-Darwin, running `brew` against the generated brewfile becomes the slowest part of a `darwin-rebuild switch` by far. In the fast cases, it turns something that could take 1 second into something that takes 10, which is definitely annoying when running that command is part of your process for configuration changes even when you don't update anything. Homebrew no-ops against an unchanging Brewfile are really slow.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503212" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rconti</span>
+        <span class="meta-time">2026/03/25 02:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经是轻量级自制软件用户很多很多年了。我只是用它来下载或更新我需要的东西，每 3-6 个月一次。<p>在我一生中拥有的最快的硬件上做一些简单的事情需要多么疯狂的时间，这一直让我感到震惊。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been a lightweight homebrew user for many, many, many years now. I just use it to download or update a thing I need, once every 3-6mo.<p>It constantly blows my mind how insanely long it takes just to do a few simple things on the fastest hardware I've ever owned in my life.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506660" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zerd</span>
+        <span class="meta-time">2026/03/25 12:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没关系，因为我很少需要它，但有时它太慢了，我正在寻找替代安装方法，同时它正在做它的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's ok because I rarely need it, but sometimes it's so slow I'm looking for alternative install methods while it's doing it's thing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47513104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ziml77</span>
+        <span class="meta-time">2026/03/25 00:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在此同意。我遇到的速度瓶颈很简单，就是经常有很多软件包需要更新，所以需要下载很多。如果需要从源代码编译任何内容，那么所需的时间将占主导地位（尽管我认为我当前运行的所有内容都是预先构建的）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed here. The speed bottleneck I run into is simply that there's often a lot of packages that need updating, so there's a lot to download. And if anything needs to be compiled from source then the time that takes will dominate (though I think everything I currently run is thankfully pre-built)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504794" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/03/25 03:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Brew 过去肯定要慢很多，而且我曾经觉得它非常乏味。我觉得多年来他们在改进方面做得相当不错（默认情况下切换到分发二进制文件在速度方面是一个巨大的胜利）。我想知道这样的事情是否更多是由于以前的挥之不去的感觉以及易于访问的氛围编码工具。如果法学硕士编码早几年出现，也许像这样的项目对我来说会更有意义。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Brew definitely used to be a lot slower, and I used to find it very tedious. I feel like they've done a reasonably good job in improving that over the years though (with the switch to distributing binaries by default being a huge win in terms of speed). I have to wonder if stuff like this is more due to lingering feelings from before combined with the easy access to vibe coding tools. If LLM coding came a few years earlier, maybe projects like this one would have made more sense to me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507835" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">motorpixel</span>
+        <span class="meta-time">2026/03/25 00:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我必须处理甚至提到跨平台开发生态系统中的另一个包管理器，我就会崩溃</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If I have to deal with even the mention of another package manager in the cross-platform dev ecosystem I am going to snap</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504833" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">noahbp</span>
+        <span class="meta-time">2026/03/24 23:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Deno、Pnpm 和 Bun 也受到了同样的批评，然而，尽管它们各自发布这么多年，node 和 npm 仍然比这三个选项慢。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The same criticism has been said of Deno and Pnpm and bun, and yet, despite all these years since their respective releases, node and npm remain slower than all three options.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504156" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fleebee</span>
+        <span class="meta-time">2026/03/25 00:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，但是他们有吗 <i>工作</i>？上次我给了bun一个机会，他们的运行时出现了频繁崩溃的严重问题。如果以牺牲稳定性和兼容性为代价，那么更快的软件包安装或启动时间是没有意义的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, but do they <i>work</i>? Last time I gave bun a chance their runtime had serious issues with frequent crashes. Faster package installation or spin-up time is meaningless if it comes at the cost of stability and compatibility.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">alwillis</span>
+        <span class="meta-time">2026/03/25 01:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Bun 是我寻找 npm 包的首选；它比 npm 好得多、快得多，但这并不好笑。<p>从来没有任何问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">bun is my go to for npm packages; it’s so much better and faster than npm, it’s not funny.<p>Never had any issues.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506650" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">never_inline</span>
+        <span class="meta-time">2026/03/24 23:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，pnpm 解决了存储问题，这是使用它的更紧迫的原因。 （我不知道 deno/bun）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, pnpm solves the storage issue, which is a more pressing reason to use it. (I don't know about deno/bun)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504201" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dilap</span>
+        <span class="meta-time">2026/03/24 22:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">马课程，但我已经停止使用brew'因为它太慢了，所以这可能会让我回来！<p>编辑：不，不会...</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Horses for courses, but I've stopped using brew 'cuz it's too slow, so this might bring me back!<p>Edit: no, it won't...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503214" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">drob518</span>
+        <span class="meta-time">2026/03/24 22:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意在课程中使用马匹。不同的人有不同的容忍度。是的，在所有条件相同的情况下，速度越快越好，但它们几乎永远不会相等。如果您不介意我问，在这种情况下“太慢”对您来说意味着什么？您有特别复杂的设置吗？您现在使用什么作为替代方案？这对更新速度有何影响？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed on horses for courses. Different people have different tolerances. And yea, all things being equal, faster is better, but they are almost never equal. If you don’t mind me asking, what does “too slow” mean for you in this context? Do you have a particularly complex setup? And what do you use now as an alternative and how has that impacted the update speed?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503327" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dilap</span>
+        <span class="meta-time">2026/03/25 02:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望我能记住细节——我知道我对运行缓慢感到恼火，当我得到一台新电脑时，我决定走非自制路线。我正在使用 nix，到目前为止看起来还不错，但我也真的完全不理解它，这有点令人担忧。 :-)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish I could remember the details -- I know I got annoyed with things being slow and when I got a new computer decided to go the no-homebrew route. I'm using nix, and it seems fine so far, but I also really don't understand it at all, which is a little concerning. :-)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mproud</span>
+        <span class="meta-time">2026/03/24 23:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的 brew 更新/升级需要很长时间</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My brew update/upgrade takes forever</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503864" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">staticassertion</span>
+        <span class="meta-time">2026/03/25 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望酿造速度更快。这对我来说将是一个很好的生活质量。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've wanted brew to be faster. It would be a nice QoL for me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505238" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">password4321</span>
+        <span class="meta-time">2026/03/25 01:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另请参阅：asdf 和 mise<p><a href="https://github.com/asdf-vm/asdf/issues/290#issuecomment-2365369222" target="_blank" rel="noopener noreferrer">https://github.com/asdf-vm/asdf/issues/290#issuecomment-2365...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">See also: asdf and mise<p><a href="https://github.com/asdf-vm/asdf/issues/290#issuecomment-2365369222" target="_blank" rel="noopener noreferrer">https://github.com/asdf-vm/asdf/issues/290#issuecomment-2365...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">devkarev</span>
+        <span class="meta-time">2026/03/25 02:43</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507295" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ryandrake</span>
+        <span class="meta-time">2026/03/24 23:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最好的是一个兼容 Homebrew 的系统，并且不会切断对旧机器的支持。我有一台 3.8 GHz 四核 i5 iMac，仍然很糟糕，但 Homebrew 认为我太老了，太讨厌了[1]，无法再使用了。我不得不转向 MacPorts，它出人意料地好，但我仍然怀念 brew。<p>是的，我知道。它是开源的。他们可以做他们想做的事。还是很烂。</p><p>1： <a href="https://docs.brew.sh/Support-Tiers" target="_blank" rel="noopener noreferrer">https://docs.brew.sh/Support-Tiers</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What would be great is a Homebrew-compatible system that doesn't cut off support for older machines. I have a 3.8 GHz Quad core i5 iMac that still crushes, yet Homebrew has determined that I'm just too old and icky[1] to work with anymore. I had to move over to MacPorts, which is surprisingly nice, but I still miss brew.<p>Yea, I know. It's open source. They can do what they want. Still sucks.</p><p>1: <a href="https://docs.brew.sh/Support-Tiers" target="_blank" rel="noopener noreferrer">https://docs.brew.sh/Support-Tiers</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503970" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">happyopossum</span>
+        <span class="meta-time">2026/03/25 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平地说，Apple 大约 4 年前就停止为 Mojave 提供安全修复程序，从那时起已经发布了 7 或 8 个新操作系统……<p>我认为期望开源项目支持是不合理的 <i>一切</i></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To be fair, Apple stopped providing security fixes for Mojave ~4+ years ago, and there have been 7 or 8 new os releases since then…<p>I don’t think it’s reasonable to expect an open source project to support <i>everything</i></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505672" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rbanffy</span>
+        <span class="meta-time">2026/03/25 04:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 MacPorts 仍然支持 PowerPC Mac。我需要重建我的 G5 来验证它，因为硬盘早已失效，但上次我检查时，它可以工作。<p>我明白了——它是一个不同的野兽，背后有非常不同的想法，但 MacPorts 是 BSD 坚实的，这就是很多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think MacPorts still supports PowerPC Macs. I would need to rebuild my G5 to verify it because the hard disk is long dead, but last time I checked, it worked.<p>I get it - it’s a different beast with very different ideas behind it, but MacPorts is BSD-solid, and that’s a lot.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508916" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skybrian</span>
+        <span class="meta-time">2026/03/25 09:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实如此，但我认为如果您对旧版 Mac 版本感兴趣，您仍然希望避免使用 Homebrew。特定项目可能对您感兴趣的版本有一些支持。例如，Go 1.23 工具链（不是最新版本）支持 Mac 版本回 Big Sur。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">True, but I think you still want to avoid Homebrew if you're interested in older Mac versions. A specific project might have some support for the version you're interested in. For example, the Go 1.23 toolchain (which isn't the latest version) supports Mac releases back to Big Sur.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511991" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gabagool</span>
+        <span class="meta-time">2026/03/25 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我原则上同意，但 Homebrew 仅支持最新的 3 个版本的 macOS。目前，2022 年 10 月发布的 Ventura 13 不受支持。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree in principle but Homebrew only supports the latest 3 versions of macOS. Right now Ventura 13 which came out in October 2022 is unsupported.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506242" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dewey</span>
+        <span class="meta-time">2026/03/25 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我仍然认为这对于像 homebrew 这样的高级用户工具来说是完全公平的。考虑到 macOS 的升级率，这可能意味着 98% 的用户都将被覆盖。期望开源项目接受来自更多版本的错误请求，然后需要这些版本上的测试设备来复制问题，这听起来不现实。对于更大的公司，或者苹果本身，我会坚持更高的标准。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I still think that's entirely fair for a power user tool like homebrew. With the upgrade rates of macOS that probably means that's 98% of the users would be covered. Expecting an open source project to accept bug requests from a bigger variety of versions that then would need test devices on these versions to replicate issues sounds unrealistic. Bigger companies, or Apple itself I would hold to much higher standards when it comes to that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bsagdiyev</span>
+        <span class="meta-time">2026/03/25 02:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 高级用户工具，如自制软件。<p>那就没有意义了。出于某种原因，高级用户可能仍希望运行较旧的操作系统版本。去掉辅助轮，它将成为一个高级用户工具。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; power user tool like homebrew.<p>That makes no sense then. A power user may still want to run older OS versions for a reason. Take the training wheels off it and then it'll be a power user tool.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dewey</span>
+        <span class="meta-time">2026/03/25 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 出于某种原因，高级用户可能仍希望运行较旧的操作系统版本。<p>毫无疑问存在这样的边缘情况，但我不会责怪一个项目没有迎合不到 1% 的用户，这些用户可能会属于这个范围，并且可能会导致更棘手的支持案例。这些也可能是用户可以在没有自制软件的情况下安装它，这并不是说自制软件是安装软件的唯一方法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; A power user may still want to run older OS versions for a reason.<p>No doubt there are edge cases like that, but I don't fault a project for not catering to the &lt; 1% of users who would fall into that bucket and would probably be the ones that cause trickier support cases. These would maybe also be the user that could just install it without homebrew then, it's not like homebrew is the only way to install software.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">edschofield</span>
+        <span class="meta-time">2026/03/25 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是一个极端情况。大多数 HN 评论者将 macOS 的最新两个版本描述为客观上比早期版本更糟糕：速度较慢、稳定性较差、损坏较多。有大量“高级用户”故意避免升级或主动将 macOS 降级到 Sonoma，因为他们关心自己的计算体验。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is not an edge case. Most HN commenters describe the latest two versions of macOS as being objectively worse than earlier versions: slower, less stable, more broken. There are significant numbers of “power users” who deliberately avoid upgrading or have actively downgraded macOS to Sonoma because they care about their computing experience.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510162" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dewey</span>
+        <span class="meta-time">2026/03/25 06:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">降级到索诺玛的人是边缘案例的定义，也许您在 HN 上听到他们中的一些人的声音，这听起来像是一个大群体，但这是利基中的利基。<p><a href="https://telemetrydeck.com/survey/apple/macOS/versions/" target="_blank" rel="noopener noreferrer">https://telemetrydeck.com/survey/apple/macOS/versions/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">People who downgraded to Sonoma are the definition of an edge case, maybe you hear from some of them on HN and it sounds like a big group but this is a niche of a niche.<p><a href="https://telemetrydeck.com/survey/apple/macOS/versions/" target="_blank" rel="noopener noreferrer">https://telemetrydeck.com/survey/apple/macOS/versions/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510247" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ksherlock</span>
+        <span class="meta-time">2026/03/25 02:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">brew 过去或多或少会说，“这个操作系统很旧且不受支持。不要提交错误报告。如果你有问题，那就太糟糕了。如果你提交 PR 来修复某些问题，我们可能会合并它”。  很公平，对吧？  现在它只是说：“去你妈的吧，爷爷。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">brew used to say, more or less, "This OS is old and unsupported. Don't submit bug reports.  If you have problems, too bad.  If you submit a PR to fix something, we might merge it".  Fair enough, right?  Now it just says, "Go fuck yourself, grandpa."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yabutlivnWoods</span>
+        <span class="meta-time">2026/03/25 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在其上运行 Linux。无论如何，苹果已经切断了该操作系统。拥有更新的操作系统会更安全</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Run Linux on it. Apple has cut that OS off anyway. Would be safer security wise to have an OS that's updated</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">password4321</span>
+        <span class="meta-time">2026/03/25 01:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，MacPorts 就是这样。在新的 MacOS 版本发布后我就切换了，这意味着我的版本太旧了——brew update 卸载了我一直在使用的一堆东西，然后它停止了并让我知道。<p>还有 <a href="https://github.com/dortania/OpenCore-Legacy-Patcher" target="_blank" rel="noopener noreferrer">https://github.com/dortania/OpenCore-Legacy-Patcher</a> 对于喜欢冒险的人来说。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes MacPorts is the way. I switched after a new MacOS release meant mine was too old - brew update uninstalled a bunch of stuff I had been using then it stopped and let me know.<p>There's also <a href="https://github.com/dortania/OpenCore-Legacy-Patcher" target="_blank" rel="noopener noreferrer">https://github.com/dortania/OpenCore-Legacy-Patcher</a> for the adventurous.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505790" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">maxkfranz</span>
+        <span class="meta-time">2026/03/25 01:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以使用 OpenCode 旧版修补程序升级到 v15/Sequoia： <a href="https://dortania.github.io/OpenCore-Legacy-Patcher/" target="_blank" rel="noopener noreferrer">https://dortania.github.io/OpenCore-Legacy-Patcher/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You could use the OpenCode legacy patcher to upgrade to v15/Sequoia: <a href="https://dortania.github.io/OpenCore-Legacy-Patcher/" target="_blank" rel="noopener noreferrer">https://dortania.github.io/OpenCore-Legacy-Patcher/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505895" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ryandrake</span>
+        <span class="meta-time">2026/03/25 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然可以，但这最多可以为你赢得几年的时间。我链接的 Homebrew 的“支持层”页面也针对 OCLP 用户，甚至指定了最低的 Intel 架构。因此，即使您使用 OCLP 来支持较新的操作系统版本，最终您的 CPU 架构也会太旧，您会回到第 3 层。<p>此外，这是不祥之兆：一旦 Apple 的传统支持变成仅限 ARM，Homebrew 最终将仅限于 ARM。至此，英特尔 Mac 的游戏就结束了。</p><p>Homebrew 解决了 Mac 生态系统中的“软件可用性”问题，但没有解决“需要留在新硬件跑步机上”的问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure, but this might win you a couple of years max. Homebrew's "Support Tiers" page, which I linked, also addresses OCLP users, going so far as to specify a minimum Intel architecture. So, even if you use OCLP to allow support for newer OS versions, eventually your CPU architecture will be too old and you're back in Tier 3.<p>Also, the writing is on the wall: Ultimately, Homebrew will be ARM-only, once Apple's legacy support becomes ARM-only. At which point it's game-over for Intel Macs.</p><p>Homebrew solves the "availability of software" problem in the Mac ecosystem, but it does not solve the "Need to stay on the new hardware treadmill" problem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506185" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">themadsens</span>
+        <span class="meta-time">2026/03/25 02:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我天真地认为它会在 <i>已经</i> 安装了自制程序包。没有这样的运气。<p>安装后，“nb list”，例如。 'nb outdated' 将产生空列表！
+我绝对没有使用竞争的自制软件安装 <i>大多</i> 兼容的 ..</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I naively assumed it would work on the <i>already</i> installed homebrew packages. No such luck.<p>After installing, 'nb list' and thus eg. 'nb outdated' will yield the empty list!
+I have absolutely no use for a competing homebrew installation that is <i>mostly</i> compatible ..</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506902" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">luizfelberti</span>
+        <span class="meta-time">2026/03/24 22:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最好解释一下这与 Zerobrew [0] 有何不同，Zerobrew [0] 试图完成同样的事情<p>[0] <a href="https://github.com/lucasgelfond/zerobrew" target="_blank" rel="noopener noreferrer">https://github.com/lucasgelfond/zerobrew</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It might be good to explain how this differs from zerobrew [0], which is trying to accomplish the same thing<p>[0] <a href="https://github.com/lucasgelfond/zerobrew" target="_blank" rel="noopener noreferrer">https://github.com/lucasgelfond/zerobrew</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Alifatisk</span>
+        <span class="meta-time">2026/03/25 01:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Zerobrew看起来很成熟，我会检查一下。<p>顺便说一句，我注意到了这一点：</p><p>&gt; Zerobrew 是实验性的。我们建议将其与 Homebrew 一起运行，而不是作为替代品，并且不建议清除 homebrew 并将其替换为 Zerobrew，除非您完全确定这样做的影响。</p><p>所以我想将它与 Homebrew 一起运行是可以的，并且它们不会冲突。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Zerobrew looks mature, I'll check it out.<p>Btw, I noted this:</p><p>&gt; Zerobrew is experimental. We recommend running it alongside Homebrew rather than as a replacement, and do not recommend purging homebrew and replacing it with zerobrew unless you are absolutely sure about the implications of doing so.</p><p>So I guess its fine to run this alongside Homebrew and they don't conflict.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505839" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tomComb</span>
+        <span class="meta-time">2026/03/24 23:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Zerobrew 与最初的 Homebrew 一样，与 Linux 兼容。<p>Nanobrew 似乎并非如此。</p><p>当我想在一些小型 Linux 容器或 VM 或 CI 上使用brew时，我比在我的macOS开发机器上使用brew更关心这些新的本机代码变体的轻量级效率。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And zerobrew, like the original Homebrew, is compatible with Linux.<p>It appears that Nanobrew is not.</p><p>I care about the light-weight efficiency of these new native code variants much more when I want to use brew on some little Linux container or VM or CI, than I do for my macOS development machine.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504135" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">phist_mcgee</span>
+        <span class="meta-time">2026/03/25 04:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;按照官方说明通过brew安装zerobrew。<p>&gt;立即出现错误，提示安装路径太长，需要修复，因为 /opt/zerobrew/prefix 字节太多。</p><p>是的，需要一些工作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Install zerobrew via brew as per the official instructions.<p>&gt;Immediately get an error saying the install path is too long and needs to be fixed as /opt/zerobrew/prefix is too many bytes.</p><p>Yeah gonna need some work.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508619" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">chuckadams</span>
+        <span class="meta-time">2026/03/24 22:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于自制程序来说，在下载/安装过程中采用这可能是一件好事，但如果它不包含 ruby​​ 解释器，我很难看到它如何与除了搜索和安装 Bottle 之外的任何东西兼容。  我从 Brewfile 安装大部分软件包，它本身就是 Ruby 代码。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This might be a good thing for homebrew to adopt for the download/install process, but if it doesn't include a ruby interpreter, I have a hard time seeing how it's going to be compatible with anything but searching and installing bottles.  I install most of my packages from a Brewfile, which itself is Ruby code.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502793" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alwillis</span>
+        <span class="meta-time">2026/03/25 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我从 Brewfile 安装大部分软件包，它本身就是 Ruby 代码。<p>相同的。无论发生什么，新版本都应该支持 Brewfile。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I install most of my packages from a Brewfile, which itself is Ruby code.<p>Same. Whatever happens, the new version should support Brewfile.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506698" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">denkmoon</span>
+        <span class="meta-time">2026/03/25 08:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Brew 就是一个漏水的垃圾。尼克斯 4 lyf。说真的，我曾经讨厌任何时候我需要用brew安装一些东西，而不知道它是否会破坏其他一切，因为使用nixpkgs来满足我的macos开发要求，它要好得多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Brew is a leaky piece of crap. nix 4 lyf. Seriously, I used to hate any time I needed to install something with brew not knowing if it was going to break everything else, since using nixpkgs for my macos dev requirements it's been so much nicer.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511362" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tzs</span>
+        <span class="meta-time">2026/03/25 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OT：说到 Homebrew，我做出了一个错误的假设，最终导致了一些问题。是我太蠢了，但我敢打赌其他人也犯过同样的错误，但还没有遇到问题。因此有此评论。<p>我的错误是，当我在 2024 年初从 2017 年 iMac（英特尔处理器）升级到 Apple Silicon Mac 并通过 Time Machine 迁移时，我没有专门为 Homebrew 做任何额外的事情。我只是假设，当通过正常的定期 Homebrew 更新进行更新时，我运行的它会开始抓取 Apple 芯片二进制文件来获取它安装的二进制文件。</p><p>事实证明这是错误的。他们使苹果芯片自制程序独立于英特尔自制程序。 Intel Homebrew 使用 /usr/local，而 Apple Silicon Homebrew 使用 /opt/homebrew。如果您需要的话，这允许同时安装本机和 Intel Homebrew。</p><p>从 Intel Mac 迁移到 Apple Silicon Mac 的正确方法是在新 Mac 上安装 Apple Silicon Homebrew，然后安装所需的所有软件包。 Intel Homebrew 在 Apple Silicon Mac 上运行良好，因此您可以使用通过 Time Machine 迁移的 Intel Homebrew 来制作与 Apple Silicon Homebrew 一起使用的软件包列表（或者您可以在旧 Mac 上制作）。</p><p>我只是注意到这一点，因为我试图使用一些通过 Homebrew 安装的库从源代码构建一些东西，但遇到了问题。法学硕士正在帮助解决这个问题，它告诉我，我可能必须手动将这些库从它们在 /opt/homebrew 中的位置符号链接到我正在构建的东西的构建过程期望找到它们的位置，而我没有 /opt/homebrew。这些库位于 /usr/local 中的某个位置。然后我注意到这些库不适用于 Apple 芯片，检查了 Homebrew 中安装的其他内容，发现没有任何内容适用于 Apple 芯片，并意识到我安装了错误的 Homebrew。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OT: speaking of Homebrew, I made an incorrect assumption about it that eventually led to some problems. It was me being stupid, but I bet others have made the same mistake but not yet hit problems. Hence this comment.<p>My mistake was when I upgraded from my 2017 iMac (Intel processor) to an Apple silicon Mac at the start of 2024 and migrated via Time Machine I did not do anything extra specifically for Homebrew. I just assumed that as things got updated via the normal periodic Homebrew updates I run it would start grabbing the Apple silicon binaries for binary things it installed.</p><p>It turn out that is wrong. They made Apple silicon Homebrew kind of independent of Intel Homebrew. Intel Homebrew uses /usr/local and Apple silicon Homebrew uses /opt/homebrew. This allows having both native and Intel Homebrew installed at the same time if you need both.</p><p>The correct way to migrate from an Intel Mac to an Apple silicon Mac is to install Apple silicon Homebrew on the new Mac, and then install all the packages you want. Intel Homebrew works fine on Apple silicon Macs so you can use the Intel Homebrew that migrated via Time Machine to make the package list to use with Apple silicon Homebrew (or you can make it on the old Mac).</p><p>I only noticed this because I was trying to build something from source using some libraries that were installed via Homebrew and running into problems. An LLM was helping figure this out and it was telling me I might have to manually symlink those libraries from where they were in /opt/homebrew to where the build process for the thing I was building expected to find them and I didn't have a /opt/homebrew. The libraries were somewhere in /usr/local. I then noticed those libraries were not for Apple silicon, checked other things installed view Homebrew and saw nothing was for Apple silicon, and realized I had the wrong Homebrew.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508638" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sanderwebs</span>
+        <span class="meta-time">2026/03/25 10:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现brew 太痛苦了，所以我转而使用nix。不幸的是，尼克斯也有自己的痛苦。然而，我最近发现了 devbox，它是 nix 的包装器。作为包管理器，它的效果非常好。只需运行“devbox global add &lt;package&gt;”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've found brew so painful that I switched to nix. Nix unfortunately is painful in its own way. However, I recently discovered devbox which is a wrapper around nix. It works really well as a package manager. Just run "devbox global add &lt;package&gt;"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512366" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">commandersaki</span>
+        <span class="meta-time">2026/03/25 15:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个帖子激发了我对 Nix 管理 Mac 环境的兴趣。<p>我的点文件中已经有一个 Brewfile 存储在 git 中，但想要一种方法来设置我的 Mac 上的所有小东西，如触控板设置、扩展坞设置、文件关联等。nix-darwin 是明显的解决方案。</p><p>将任务交给 ChatGPT，它回来说这是一个很好的开始方式，但随后提供了一个幂等脚本的中间立场来设置。所以我研究了后者，几分钟后，我的 .bash_profile 中现在有了一个 setupmac() 函数（是的，我使用 bash），它主要由一堆“默认”命令和其他一些东西组成，现在继续使用 brew 来管理软件，使用 setupmac() 来设置其他所有内容，当然还可以手动管理 Ghostty/nvim 的点文件。</p><p>我希望我能早点拥有这个，因为我在上周左右刚刚在 3 台不同的 Mac 上进行了设置。我也很高兴我不需要学习新的语言和工具来完成一些非常简单的事情。一切都有点脱节，不像正确的 nix 设置那样自动化，也没有 nix 所具有的保真度，但它很直接、紧凑，因为它很容易就在我的大脑中，并且易于执行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This thread invigorated my interest in Nix to manage my Mac environment.<p>I already have a Brewfile in my dotfiles stored in git, but wanted a way to setup all the little things on my Mac like trackpad settings, dock settings, file associations, etc. nix-darwin is the obvious solution.</p><p>Gave the task to ChatGPT and it came back saying it's a good way to get started, but then offered a middle-ground of an idempotent script to set things up. So I investigated the latter, and after a couple of minutes I now have a setupmac() function in my .bash_profile (yeah I use bash) which mostly consists of a bunch of 'defaults' commands and a few other things, and now continue with brew for managing software and setupmac() to setup everything else, and of course manually manage my dotfiles for ghostty/nvim.</p><p>I wish I had this earlier, because I just set myself up on 3 different Macs in the last week or so. I'm also glad I don't need to learn a new language and tooling for something pretty simple. Everything is a bit disjointed and not as automated as a proper nix setup and doesn't have that fidelity that nix has, but it's straight-forward, compact in that it sits in my brain easily, and easy to execute.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514307" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kassadin</span>
+        <span class="meta-time">2026/03/24 22:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">选择兼容性还是速度？<p>nb 信息 --cask codex-app</p><p>注意：未找到公式“--cask”</p><p>注意：找不到公式“codex-app”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you choose compatibility or speed?<p>nb info --cask codex-app</p><p>nb: formula '--cask' not found</p><p>nb: formula 'codex-app' not found</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503229" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">orefalo</span>
+        <span class="meta-time">2026/03/25 14:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，nanobrew 不在brew 上！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">well nanobrew is not on brew!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514041" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maxloh</span>
+        <span class="meta-time">2026/03/25 00:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是如何运作的？ AFAIK Homebrew 公式是用 Ruby 编写的 [0]。<p>他们是否使用某种 Ruby 解析器来解析公式？</p><p>[0]： <a href="https://github.com/Homebrew/homebrew-core/blob/26-tahoe/Formula/f/ffmpeg.rb" target="_blank" rel="noopener noreferrer">https://github.com/Homebrew/homebrew-core/blob/26-tahoe/Form...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How does this work? AFAIK Homebrew formulae are written in Ruby [0].<p>Do they use some kind of Ruby parser to parse formulae?</p><p>[0]: <a href="https://github.com/Homebrew/homebrew-core/blob/26-tahoe/Formula/f/ffmpeg.rb" target="_blank" rel="noopener noreferrer">https://github.com/Homebrew/homebrew-core/blob/26-tahoe/Form...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fny</span>
+        <span class="meta-time">2026/03/25 00:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它使用 Homebrew API 并使用自己的依赖解析器和链接器来拉取 Homebrew 的预编译包。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It uses the Homebrew API and uses its own dependency resolver and linker to pull Homebrew's precompiled packages.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505515" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alsetmusic</span>
+        <span class="meta-time">2026/03/24 22:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不是 Python 开发人员，但我很欣赏 uv 给其他包管理器带来的激励。上个月我尝试了另一种名为 Zerobrew 的啤酒替代品。它将软件包安装到与自制软件不同的目录中，所以我在看到它后并没有实际测试驱动。无论如何，我期待竞争能够推动主流工具提高其性能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not a Python dev, but I appreciate the motivation uv has inspired across other package managers. I tried another brew replacement called zerobrew last month. It installed packages to a different directory from homebrew, so I didn't actually test drive after seeing that. Regardless, I look forward to the competition pushing mainstream tools to improve their performance.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503544" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">manlymuppet</span>
+        <span class="meta-time">2026/03/24 23:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我们能够对每个包管理器和语言生态系统进行 Bun 化，那将是一件很棒的事情。这是一个伟大的趋势。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If we get the Bun-ification of every package manager and language ecosystem that would be an awesome thing. This is a great trend.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">12_throw_away</span>
+        <span class="meta-time">2026/03/25 01:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么，A）这种氛围的编码程度如何？ B) 您从哪里下载“trilok.ai”？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So, A) to what extent is this vibe coded? And B) what is "trilok.ai" where you download it from?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506173" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">an0malous</span>
+        <span class="meta-time">2026/03/24 21:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它会为每个软件包安装重新安装 postgres 吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does it reinstall postgres for every package install?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502617" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ericcholis</span>
+        <span class="meta-time">2026/03/24 22:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">HOMEBREW_NO_AUTO_UPDATE=1 将禁用这种（烦人的）行为。在 bashrc 或 zshrc 中设置它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">HOMEBREW_NO_AUTO_UPDATE=1 will disable this (annoying) behavior. Set it in your   bashrc or zshrc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502779" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/24 23:38</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504267" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mitchitized</span>
+        <span class="meta-time">2026/03/24 21:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">（an0malous 的成绩单）：“与其他学生相处不好。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">(report card for an0malous): "Does not play nice with other students."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47502655" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">an0malous</span>
+        <span class="meta-time">2026/03/24 22:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是真的:')</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's true :')</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503210" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">NamlchakKhandro</span>
+        <span class="meta-time">2026/03/25 15:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有人应该使用brew。<p>太可怕了</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No one should be using brew.<p>It's terrible</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47514352" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tantalor</span>
+        <span class="meta-time">2026/03/24 23:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么速度在这种情况下很重要？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And why does speed matter in this case?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47504033" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">coldtea</span>
+        <span class="meta-time">2026/03/25 08:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">尝试用它安装一个包，但失败了。<p>尝试了与brew相同的包。工作起来就像一个魅力。</p><p>已卸载 nanobrew。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Tried to install a package with it, it failed.<p>Tried the same package with brew. Worked like a charm.</p><p>Uninstalled nanobrew.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47511357" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pxc</span>
+        <span class="meta-time">2026/03/24 22:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直在寻找类似的东西，特别是现在 Homebrew 已经删除了对不添加隔离位的支持，因此只能与木桶一起使用。期待尝试一下！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been looking for something like this, especially to use only with casks now that Homebrew has removed support for not adding the quarantine bit. Looking forward to giving it a try!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503152" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/24 22:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47503172" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MoonWalk</span>
+        <span class="meta-time">2026/03/25 03:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">无法访问：net::ERR_CERT_AUTHORITY_INVALID</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Inaccessible: net::ERR_CERT_AUTHORITY_INVALID</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508139" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">marksully</span>
+        <span class="meta-time">2026/03/25 00:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我通过安装一些软件包来测试此工具然后删除（该工具）会发生什么？我仍然可以使用 Homebrew 来管理这些新软件包吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what happens if I test this tool by installing some packages and then remove (the tool)? will I still be able to use Homebrew to manage these new packages?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505327" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hsaliak</span>
+        <span class="meta-time">2026/03/25 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这肯定会受到一些以优化为重点的提示的影响。是的——性能是一个特点，但缺乏风险也是一个特点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is most certainly vibed with a few optimization focused prompts. Yes - performance is a feature, but so is lack of risk.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47507737" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Onavo</span>
+        <span class="meta-time">2026/03/25 00:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当前版本的brew 有一个缺陷，安装程序无法以无菌方式安装隔离的依赖关系树。如果您的软件包 A、B、C 和 D 都已更新，并且假设 A、B、C 相互依赖并且总计为 1MB，而 D 为 1000MB，则brew 以 MapReduce 方式工作，在进行任何安装之前，它将尝试并行完成所有内容的下载（即使真正的瓶颈是 D）。<p>由于前 3 个不依赖于 D，更好的方法是在 D 仍在下载时并行安装它们。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The current version of brew has a flaw where the installer can't install isolated dependency trees in a sterile manner. If you have packages A, B, C, and D that all have updates, and assuming A,B,C depend on each other and come out to a total of say 1MB, and D is 1000MB, brew works in a MapReduce manner where it will attempt to finish downloading everything in parallel (even though the real bottleneck is D) before doing any installation.<p>Since the first 3 has no dependency on D, a better way would be to install them in parallel while D is still downloading.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47505150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hirvi74</span>
+        <span class="meta-time">2026/03/25 07:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么包管理器的速度很重要？我也是真心的我使用过无数的包管理器，但速度并不是我注意到的任何一个包管理器的属性。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why does the speed of a package manager matter? I'm being sincere too. I have used countless package managers, and speed is not an attribute of any of them that I have noticed.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47510824" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bibimsz</span>
+        <span class="meta-time">2026/03/25 11:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这会像 litellm 一样吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">is this going to be like litellm?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47512900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">peytongreen_dev</span>
+        <span class="meta-time">2026/03/25 01:35</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47506328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ryguz</span>
+        <span class="meta-time">2026/03/25 04:27</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47508675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
