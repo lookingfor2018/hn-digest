@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>在 Raspberry Pi 上使用 FireWire | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-27-1343/">返回本批次</a>
+      <h1>在 Raspberry Pi 上使用 FireWire</h1>
+      <p class="subtitle">Using FireWire on a Raspberry Pi</p>
+      <div class="meta-line">
+        <span>www.jeffgeerling.com</span>
+        <span>作者 jandeboevrie</span>
+        <span>分数 72</span>
+        <span>评论 31</span>
+        <span>2026/03/27 04:23</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47535249" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.jeffgeerling.com/blog/2026/firewire-on-a-raspberry-pi/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026 年 3 月 24 日得知 Apple 在 macOS 26 Tahoe 中取消了 FireWire (IEEE 1394) 支持后，我开始寻找旧 FireWire 设备的替代品，例如硬盘驱动器、DV 摄像机和 A/V 设备。我拥有一台旧的 Canon GL1 相机，带有“DV”端口。我可以将其插入带有 FireWire 的旧 Mac（例如上面的双 G4 MDD），甚至是运行 macOS &lt; 26 的现代 Mac，带有一些加密狗，并在摄像机和 Final Cut Pro 等应用程序之间传输数字视频片段。但是随着 Apple 取消支持，以及我希望拥有一个现代的、受支持的硬件解决方案，我转向 Linux 和 dvgrab。Linux 可能会在 2029 年放弃对 IEEE 1394 的支持，但这至少让我多了三个年！在 Raspberry Pi 上，我可以插入这个 GeeekPi Mini PCIe HAT，并连接 StarTech Mini PCIe FireWire 适配器。这使得 Pi 能够识别 FireWire 控制器：$ lspci 0001:00:00.0 PCI 桥接器：Broadcom Inc. 及其子公司 BCM2712 PCIe 桥接器 (rev 21) 0001:01:00.0 PCI 桥接器：Texas Instruments XIO2213A/B/XIO2221 PCI Express 至 PCI 桥接器 [Cheetah Express] (rev 01) 0001:02:00.0 FireWire (IEEE 1394)：Texas Instruments XIO2213A/B/XIO2221 IEEE-1394b OHCI 控制器 [Cheetah Express]（修订版 01） 0002:00:00.0 PCI 桥接器：Broadcom Inc. 及其子公司 BCM2712 PCIe 桥接器（修订版 21） 0002:01:00.0 以太网控制器：Raspberry Pi Ltd RP1 PCIe 2.0 南桥 但是要使用它，您必须重新编译支持 FireWire 的 Linux 内核，然后将 Pi 的 PCIe 总线配置为 32 位 DMA 支持，因为 TI XIO2213A 和 VIA VT6315N 等旧 FireWire 控制器不支持 64 位访问。使用 Firewire 重新编译 Linux 内核支持重新编译 Linux 内核，启用以下功能：CONFIG_FIREWIRE（设备驱动程序 -&gt; IEEE 1394（FireWire）支持 -&gt; FireWire 驱动程序堆栈）CONFIG_FIREWIRE_OHCI（设备驱动程序 -&gt; IEEE 1394（FireWire）支持 -&gt; FireWire 驱动程序堆栈 -&gt; OHCI-1394 控制器）配置 Pi 启动选项在 /boot/firmware/config.txt 末尾的 [all] 下， add:dtparam=pciex1 dtoverlay=pcie-32bit-dma 在 /boot/firmware/cmdline.txt 行的末尾添加：pcie_aspm=off 重新启动您的 Pi。在 Pi 上使用 FireWire 此时，您应该能够使用连接到 FireWire 400 端口的 FireWire 设备。如果你想使用 FireWire 800 端口，你必须找到一种方法将辅助电源连接到 Mini PCIe 卡上的电源接头（StarTech 为此提供了一个适配器）。我的所有设备都是 FireWire 400，所以这对我来说不是一个问题。使用 dvgrab（可以通过 sudo apt install -y dvgrab 安装），你可以在摄像机或“VCR”模式下记录来自摄像机的剪辑，例如示例：$ sudo apt install -y dvgrab</li><li>$ dvgrab 发现 AV/C 设备 GUID 为 0x000085000014e35a libiec61883 错误：无法获取可用通道。等待 DV... 捕获开始 ^C&quot;dvgrab-002.dv&quot;: 45.89 MiB 401 帧时间码 00:00:00.00 日期 2067.02.15 22:26:25 捕获停止 您也可以交互地使用 dvgrab:$ dvgrab -i 找到带有 GUID 的 AV/C 设备0x000085000014e35a libiec61883 错误：无法获取可用通道。进行互动。按 &#39;？&#39;寻求帮助。 q=quit, p=play, c=capture, Esc=stop, h=reverse, j=backward scan, k=pause l=forward scan, a=rewind, z=fastforward, 0-9=trickplay, &lt;space&gt;=play/pause 我在 GitHub 上发布了使用此设置的第一个示例视频录制。DVgrab 很简单，并且可以轻松地在脚本中使用 - 我稍后将通过原型 Firehat 进行探索，这对项目很有用就像 Open MRU，这两个都是我在 r/tapeless subreddit 上找到的...</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Mar 24, 2026After learning Apple killed off FireWire (IEEE 1394) support in macOS 26 Tahoe, I started looking at alternatives for old FireWire equipment like hard drives, DV cameras, and A/V gear.I own an old Canon GL1 camera, with a &#39;DV&#39; port. I could plug that into an old Mac (like the dual G4 MDD above) with FireWire—or even a modern Mac running macOS &lt; 26, with some dongles—and transfer digital video footage between the camera and an application like Final Cut Pro.But with Apple killing off support, and my desire to have a modern, supported hardware solution, I turned to Linux and dvgrab.Linux will likely drop support for IEEE 1394 in 2029, but at least that gives me three more years!On a Raspberry Pi, I can plug in this GeeekPi Mini PCIe HAT, and connect a StarTech Mini PCIe FireWire adapter. This allows the Pi to recognize the FireWire controller:$ lspci 0001:00:00.0 PCI bridge: Broadcom Inc. and subsidiaries BCM2712 PCIe Bridge (rev 21) 0001:01:00.0 PCI bridge: Texas Instruments XIO2213A/B/XIO2221 PCI Express to PCI Bridge [Cheetah Express] (rev 01) 0001:02:00.0 FireWire (IEEE 1394): Texas Instruments XIO2213A/B/XIO2221 IEEE-1394b OHCI Controller [Cheetah Express] (rev 01) 0002:00:00.0 PCI bridge: Broadcom Inc. and subsidiaries BCM2712 PCIe Bridge (rev 21) 0002:01:00.0 Ethernet controller: Raspberry Pi Ltd RP1 PCIe 2.0 South Bridge But to use it, you have to recompile the Linux kernel with FireWire support, then configure the Pi&#39;s PCIe bus for 32-bit DMA support, since old FireWire controllers like the TI XIO2213A and VIA VT6315N don&#39;t support 64-bit access.Recompile the Linux Kernel with Firewire supportRecompile the Linux kernel, enabling the following features:CONFIG_FIREWIRE (Device Drivers -&gt; IEEE 1394 (FireWire) support -&gt; FireWire driver stack)CONFIG_FIREWIRE_OHCI (Device Drivers -&gt; IEEE 1394 (FireWire) support -&gt; FireWire driver stack -&gt; OHCI-1394 controllers)Configure Pi Boot optionsAt the end of /boot/firmware/config.txt, under [all], add:dtparam=pciex1 dtoverlay=pcie-32bit-dma At the end of the line in /boot/firmware/cmdline.txt, add:pcie_aspm=off Reboot your Pi.Using FireWire on the PiAt this point, you should be able to use FireWire devices connected to the FireWire 400 port. If you want to use the FireWire 800 ports, you&#39;ll have to find a way to connect auxiliary power to the power header on the Mini PCIe card (StarTech provides an adapter for this).All my devices are FireWire 400, so this was not a concern for me.Using dvgrab (which can be installed with sudo apt install -y dvgrab), you can record clips from the camera in either camera or &#39;VCR&#39; mode, for example:$ sudo apt install -y dvgrab</li><li>$ dvgrab Found AV/C device with GUID 0x000085000014e35a libiec61883 error: Failed to get channels available. Waiting for DV... Capture Started ^C&quot;dvgrab-002.dv&quot;: 45.89 MiB 401 frames timecode 00:00:00.00 date 2067.02.15 22:26:25 Capture Stopped You can use dvgrab interactively, too:$ dvgrab -i Found AV/C device with GUID 0x000085000014e35a libiec61883 error: Failed to get channels available. Going interactive. Press &#39;?&#39; for help. q=quit, p=play, c=capture, Esc=stop, h=reverse, j=backward scan, k=pause l=forward scan, a=rewind, z=fast forward, 0-9=trickplay, &lt;space&gt;=play/pause I posted my first sample video recording with this setup over on GitHub.DVgrab is straightforward, and can easily be used in scripts—something which I&#39;ll explore later with a prototype Firehat, and which would be useful for projects like Open MRU, both of which I found on the r/tapeless subreddit...</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mysteria</span>
+        <span class="meta-time">2026/03/27 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 Linux 上使用廉价的火线卡和 dvgrab 归档了所有 MiniDV 磁带，它可以设置为自动将不连续的剪辑分割成不同的文件，以便于查看。它使用起来非常简单，并且可以在无人值守的情况下完成。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I archived all my MiniDV tapes using a cheap firewire card and dvgrab on Linux, it can be set to automatically split noncontinous clips into different files for easy viewing. It's very straightforward to use and can be done unattended.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">geerlingguy</span>
+        <span class="meta-time">2026/03/27 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">回想 10 年前，当我在我父亲的旧 G5 上存储所有 DV 磁带时……我通过 Final Cut Express 手动完成了这一切。如果我当时知道 dvgrab，事情就会容易得多！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just thinking back 10 years ago when I was arching all my DV tapes on my Dad's old G5... I did it all by hand through Final Cut Express. It would've been sooo much easier had I known about dvgrab back then!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mysteria</span>
+        <span class="meta-time">2026/03/27 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我听说过一些关于人们在 Windows 和 Mac 上执行此操作的恐怖故事，兼容性很差，软件也很烦人。使用 dvgrab 就变得超级简单。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd heard a few horror stories about people doing it on Windows and Mac, with bad compatibility and annoying software. With dvgrab it's super simple.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538397" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">arthurfm</span>
+        <span class="meta-time">2026/03/27 12:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">DVIO [0] 和 WinDV [1] 与 Windows 上的 dvgrab 最接近。两者都非常易于使用（尤其是前者）。<p>对于 HD DV 磁带，还有 HDVSplit [2]。</p><p>[0] <a href="https://www.videohelp.com/software/DVIO" target="_blank" rel="noopener noreferrer">https://www.videohelp.com/software/DVIO</a></p><p>[1] <a href="https://www.videohelp.com/software/WinDV" target="_blank" rel="noopener noreferrer">https://www.videohelp.com/software/WinDV</a></p><p>[2] <a href="https://www.videohelp.com/software/HDVSplit" target="_blank" rel="noopener noreferrer">https://www.videohelp.com/software/HDVSplit</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">DVIO [0] and WinDV [1] would be the closest equivalents to dvgrab on Windows. Both are super easy to use (especially the former).<p>For HD DV tapes there's also HDVSplit [2].</p><p>[0] <a href="https://www.videohelp.com/software/DVIO" target="_blank" rel="noopener noreferrer">https://www.videohelp.com/software/DVIO</a></p><p>[1] <a href="https://www.videohelp.com/software/WinDV" target="_blank" rel="noopener noreferrer">https://www.videohelp.com/software/WinDV</a></p><p>[2] <a href="https://www.videohelp.com/software/HDVSplit" target="_blank" rel="noopener noreferrer">https://www.videohelp.com/software/HDVSplit</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539202" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">HoldOnAMinute</span>
+        <span class="meta-time">2026/03/27 07:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Firewire 支持已从 Linux 内核中删除，因此我不得不切换到 Mint Linux 来完成同样的事情</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Firewire support was removed from the Linux kernel so I had to switch to Mint Linux to accomplish the same thing</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537288" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">parl_match</span>
+        <span class="meta-time">2026/03/27 07:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; Firewire 支持已从 Linux 内核中删除<p>这是非常不正确的。也许子系统没有内置到您正在使用的自定义内核中？</p><p>编辑：谷歌表示将在 2026 年之前进行改进，在 2029 年之前提供支持</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Firewire support was removed from the Linux kernel<p>This is very much incorrect. Maybe the subsystem wasn't built into a custom kernel you're using?</p><p>edit: google says improvements through 2026, support through 2029</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537315" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">geerlingguy</span>
+        <span class="meta-time">2026/03/27 08:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">许多发行版（包括 Raspberry Pi OS）不会在内核中启用 `CONFIG_FIREWIRE_OHCI`，因此支持不是内置的，除非您构建自己的内核。<p>但是，是的，它将支持到 2029 年，之后，它可以在内核中保留更长时间，如果我正确读取维护状态，则没有强制删除它： <a href="https://ieee1394.docs.kernel.org/en/latest/#maintenance-schedule" target="_blank" rel="noopener noreferrer">https://ieee1394.docs.kernel.org/en/latest/#maintenance-sche...</a></p><p>&gt; [2029 年之后] 可能随时从 Linux 操作系统中删除</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Many distros (including Raspberry Pi OS) don't enable `CONFIG_FIREWIRE_OHCI` in the kernel, so support isn't built-in, unless you build your own kernel.<p>But yes, it will be supported through 2029, and then after that, it could remain in the kernel longer, there's no mandate to remove it if I'm reading the maintenance status correctly: <a href="https://ieee1394.docs.kernel.org/en/latest/#maintenance-schedule" target="_blank" rel="noopener noreferrer">https://ieee1394.docs.kernel.org/en/latest/#maintenance-sche...</a></p><p>&gt; [After 2029, it] would be possibly removed from Linux operating system any day</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MomsAVoxell</span>
+        <span class="meta-time">2026/03/27 06:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个很棒的项目。<p>我在我的工作室中对 Fireware 音频设备 (Presonus) 进行了长期投资 - 具有 10 个 I/O 的 19 英寸机架接口，以及具有 20 个左右的 StudioMix 混音器。我一直保留一台老化的 iMac 来使用所有这些设备，它仍然可以正常工作，但是可以选择用 rPi 替换它确实很有吸引力。该系统主要用于跟踪，因此在 rPi 上连接 REAPER，连接对于所有 FireWire 设备来说，这似乎是个好主意……</p><p>我想知道负载会是什么样的？  我想知道带有 PCI 帽和 Firwire 接口的最新 rPi 能否通过 FireWire 处理 40 通道音频？  我知道问题主要是 SD 卡写入速度等等.. 也许这会取消 rPi 的资格 - 但当然还有其他基于 ARM 的 SBC，可以将相同的技术应用于..</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is an awesome project.<p>I have a long-in-the-tooth investment in Fireware audio devices (Presonus) in my studio - 19” rack interfaces with 10 I/O’s, as well as the StudioMix mixer with 20 or so .. I’ve been keeping an aging iMac around to use all of this with and it still just plain works, but having the option to replace it with an rPi is really appealing.  The system is mostly used for tracking, so having REAPER on the rPi, connected to all that FireWire gear, just seems such a nice idea…</p><p>I wonder what the load will be like, though?  Can the latest rPi with PCI hat and Firwire interface handle 40 channels of audio over FireWire, I wonder?  I know the issue would mostly be SD-card write speeds and so on .. maybe this disqualifies the rPi - but certainly there are other ARM-based SBC’s that this same technique could be applied to ..</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536653" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">joerick</span>
+        <span class="meta-time">2026/03/27 07:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有一台 Focusrite Saffire，它有很多漂亮、安静的前置放大器和 ADC 通道。我设法让一台旧 Mac 通过 FireWire 连接，并使用 Focusrite Control 应用程序，配置路由以将所有模拟输入映射到 ADAT。效果很好，但采样率总是错误，如果不把旧 Mac 拿出来，我就无法改变这一点。也许我也会研究一下这些 rPi 防护罩之一。有人有控制协议的逆向工程技巧吗？！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have a Focusrite Saffire that has lots of nice, quiet preamps and ADC channels. I managed to get an old Mac to connect over FireWire and using the Focusrite Control app, I configured the routing to map all the analog inputs to ADAT. That works great but it's always at the wrong sample rate, and I can't change that without getting the old Mac out. Maybe I'll look into one of these rPi shields too. Anyone got any reverse engineering tips for the control protocol?!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537197" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">geerlingguy</span>
+        <span class="meta-time">2026/03/27 07:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">音频对于 Pi 来说不应该是一个大问题，除非你将它通过大量的重型过滤器。 Pi 5 的 CPU 可以与 2010-2015 年时代的 iMac 相媲美，一张好的 microSD 卡可以轻松容纳 40-50 MB/秒的写入速度。<p>为了获得更好的性能，我会插入 USB SSD（USB 3.0 可以传输 300 MB/秒或更高），甚至使用内置以太网，适合以 100 MB/秒的速度写入 NAS 或其他联网计算机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Audio shouldn't be a big problem for the Pi unless you're pumping it through tons of heavy filters. The Pi 5's CPU can hold its own against 2010-2015 era iMacs, and a good microSD card easily holds 40-50 MB/sec writes.<p>For better performance, I'd plug in a USB SSD (USB 3.0 can put through 300 MB/sec or more), or even use built in Ethernet, good for writing 100 MB/sec out to a NAS or another networked computer.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">QuantumNomad_</span>
+        <span class="meta-time">2026/03/27 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您有首选的 SD 卡品牌和型号吗？适用于 RPi 的快速且耐用的卡</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you have any preferred SD card brands and models? Speedy and durable cards suitable for RPi</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">geerlingguy</span>
+        <span class="meta-time">2026/03/27 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我曾经购买 SanDisk Ultra（如果我不需要速度）、Samsung Pro+（如果我需要）或 SanDisk Industrial（如果我需要更高的可靠性……不确定它会产生多大的差异，但我从来没有失败过）。<p>但自从 Raspberry Pi 推出了自己的 microSD 卡后，我就一直在购买它们。他们还没有让我失望，而且速度相当快。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I used to buy SanDisk Ultra (if I didn't need speed), Samsung Pro+ (if I did), or SanDisk Industrial (if I needed more reliability... not sure how big a difference it makes but I've never had one fail).<p>But since Raspberry Pi launched their own microSD cards, I've been buying them. They haven't failed me yet and are pretty fast.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aboardRat4</span>
+        <span class="meta-time">2026/03/27 11:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Fwiw，也可以从 USB 制作 Pi 启动。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fwiw, it is also possible to make a Pi boot from usb.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538668" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dylan604</span>
+        <span class="meta-time">2026/03/27 06:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">出于好奇，iMac 运行的是哪个版本的操作系统？对我来说，将它用作本质上专用的音频设备而不是日常驱动程序就可以了。我已经使用 2012 年运行 10.6 版本的奶酪刨丝器 MacPro 完成了这项工作，本质上是作为专用的视频捕获设备。它只是看起来像一台计算机，但它仍然用于一个单一的目的。没有更多更新。没有 WAN 访问。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Out of curiosity, what version of the OS is that iMac running? Using it as essentially dedicated piece of audio equipment instead of a daily driver would be fine by me. I've done it with the 2012 cheese grater MacPros running 10.6 for eternity essentially as a dedicated video capture device. It just happens to look like a computer, but it remains in use for one singular purpose. No more updates. No WAN access.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536728" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Aurornis</span>
+        <span class="meta-time">2026/03/27 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人高兴的是这仍然有效。浏览内核树并查看 Firewire 相关代码的维护量会很有趣。除了从旧设备中提取数据之外，我想知道还有多少人仍在使用 Firewire。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Delightful that this still works. It would be interesting to go through the kernel tree and see how much maintenance goes into Firewire related code. Other than pulling data off of old devices, I wonder how many people are out there still using Firewire.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jasinjames</span>
+        <span class="meta-time">2026/03/27 07:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">F-35 使用火线 [0]。<p>[0]<a href="https://ntrs.nasa.gov/api/citations/20060009084/downloads/20060009084.pdf" target="_blank" rel="noopener noreferrer">https://ntrs.nasa.gov/api/citations/20060009084/downloads/20...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The F-35 uses firewire [0].<p>[0]<a href="https://ntrs.nasa.gov/api/citations/20060009084/downloads/20060009084.pdf" target="_blank" rel="noopener noreferrer">https://ntrs.nasa.gov/api/citations/20060009084/downloads/20...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dylan604</span>
+        <span class="meta-time">2026/03/27 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有一个将旧磁带格式捕获为数字文件的行业。我所在的一个地方有各种格式的磁带卡座，从 3/4" U-matic 一直到 HDCAM-SR，中间有一切。DV 类型的卡座是有 SDI 输出的录音室，但有时，我们会遇到一个人的磁带无法在我们拥有的任何设备上使用，除了员工的一台私人摄像机。我们将它连接到 Mac 前面的火线端口，然后继续运行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is an industry of capturing old tape formats to digital files. One place I was at had tape decks of every format form 3/4" U-matic all the way to HDCAM-SR with everything in between. The DV type decks were studio that had SDI outs, but from time to time, we'd have someone with a tape that just would not work in anything we had, except one of the employee's personal camera. We'd connect it to a firewire port on the front of a Mac, and keep on truckin'</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536775" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">geerlingguy</span>
+        <span class="meta-time">2026/03/27 06:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仍然有一个蓬勃发展的（尽管很小）社区，其中包括滑板爱好者、复古爱好者，甚至还有一些积极使用 FireWire 设备的 AV 专业人士。<p>在内核中，IEEE 1394 区域的最后一次提交是在一个月左右之前——这不是“主动”维护，但它肯定正在维护，并且在我的测试中相当稳定。 （非常感谢当前的维护者，他将经历 3 年的过程来取消完整的内核支持，并与外部项目进行协调！）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's still a thriving (albeit small) community of skateboarders, retro enthusiasts, and even some AV pros who have FireWire equipment in active use.<p>In the kernel, the last commit in the IEEE 1394 area was a month or so ago—it's not 'active' maintenance, but its definitely being maintained, and is quite stable in my testing. (Thanks a ton to the current maintainer, who's going to go through the 3 year process of sunsetting full kernel support, and coordinating that with external projects!)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536562" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jonhohle</span>
+        <span class="meta-time">2026/03/27 09:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但为什么要日落呢？仍然有软盘、atapi 和 zip 支持。<p>从 20 世纪 90 年代末到 2012 年，每台 Apple 设备都配备了 FireWire。大多数索尼 PC 都是从 90 年代末到 2009 年生产的。Google 估计，有超过 1 亿台系统配备 FireWire。相比之下，Zip 驱动器数量为 5000 万个。</p><p>我知道我可能应该继续前进，但我有很多 FireWire 块设备和视频设备。磁盘/光盘驱动器可以移动到 USB，但视频设备不能。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why sunset it, though? There’s still floppy, atapi, and zip support.<p>Every Apple device from the late 90s to 2012 had FireWire. Most Sony PCs from the late 90s to 2009. Google estimates that at over 100M systems with FireWire. There were 50M Zip drives, in comparison.</p><p>I know I should probably move on, but I have a lot of FireWire block devices and video equipment. The disk/disc drives can be moved to USB, but the video equipment cannot.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538203" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">justsomehnguy</span>
+        <span class="meta-time">2026/03/27 13:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人们从“拥有就好”转变为“最好把它扔掉，因为它没有维护，所以不安全”。<p>而且cloud-init需要软盘支持，呵呵。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">People moved from "good to have" to "better to throw it out because it's unmaintained so it's not secure".<p>And floppy support is needed for cloud-init, heh.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539400" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">argsnd</span>
+        <span class="meta-time">2026/03/27 08:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这实际上很酷，我很惊讶有些滑板手仍然使用 VX1000 或其他设备，而不是转向 GoPro 等</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That’s actually pretty cool, I’m surprised there’s skateboarders that still use VX1000s or whatever instead of moving on to GoPros etc</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537472" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">maccard</span>
+        <span class="meta-time">2026/03/27 06:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">火线用户在这里！我有一台旧的但非常实用的机架式调音台（Presonus），更换它需要花费 700 多英镑，而且我必须配置和设置新的。我有一台 2007 年款的 Macbook Pro，我随身携带它只是为了与它进行交互。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Firewire user here! I have an old-but-very-functional rack mixer (Presonus) that will cost £700+ to replace, _plus_ I have to configure and set up the new one. I have a 2007 Macbook Pro that I keep around just for interfacing with it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536577" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">MomsAVoxell</span>
+        <span class="meta-time">2026/03/27 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相同：一个 StudioMix 调音台，机架上有 2 个 FP10。  这个设置是如此可爱和实用，我真的不想升级它，它只是简单的工作。  我有一个旧的 iMac 作为这项工作的 DAW，但是用基于 ARM 的系统替换它的想法（如果它有效的话）非常有吸引力......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Same: a single StudioMix mixer with 2x FP10’s in the racks.  This setup is just so lovely and functional I don’t want to upgrade it really, it just plain works.  I have an old iMac as the DAW for the job, but the idea of replacing it with an ARM-based system, if it works, is so very appealing…</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536682" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">drmpeg</span>
+        <span class="meta-time">2026/03/27 08:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它由 Takashi Sakamoto 积极维护。这是 Linux 7.0-rc1 的提交。<p><a href="https://github.com/torvalds/linux/commit/0d6dd4738dbcc32b60c0c0c1388d41e171b76845" target="_blank" rel="noopener noreferrer">https://github.com/torvalds/linux/commit/0d6dd4738dbcc32b60c...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's actively being maintained by Takashi Sakamoto. Here's the commit for Linux 7.0-rc1.<p><a href="https://github.com/torvalds/linux/commit/0d6dd4738dbcc32b60c0c0c1388d41e171b76845" target="_blank" rel="noopener noreferrer">https://github.com/torvalds/linux/commit/0d6dd4738dbcc32b60c...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537626" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bsimpson</span>
+        <span class="meta-time">2026/03/27 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">TIL Linux 最终放弃了对旧硬件的支持。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">TIL Linux does eventually drop support for old hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536878" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">crote</span>
+        <span class="meta-time">2026/03/27 07:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更重要的是可维护性而不是年龄。<p>一些仍在积极使用且有大量维护者愿意保持最新状态的古老硬件将继续存在。</p><p>一个只有几年年龄的司机，几乎为零的司机，没有维护人员，这对其他工作造成了障碍吗？那将会消失 <i>非常</i> 迅速地。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's more about maintainability than age.<p>Some ancient hardware which is still actively being used and which has plenty of maintainers willing to keep it up-to-date will stick around.</p><p>A driver of only a few years old with roughly zero drivers, no maintainers, and which forms an obstacle for other work? That'll be gone <i>very</i> quickly.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537066" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">shasheene</span>
+        <span class="meta-time">2026/03/27 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我仍然对 Linux 放弃对 i486 和早期 i586 CPU 的支持感到难过。<p>更令人失望的是，发行版尤其是 Debian 这个“通用操作系统”已经放弃了对 i586 的支持（并且正在放弃对 i686 的支持）</p><p>开源软件没有来自苹果或微软的商业软件那样的压力。我真的很喜欢这种痴迷的完美主义方法的想法，即为模糊的旧硬件（尤其是曾经流行的旧硬件）提供无限期的硬件支持，并使用足够的自动化测试套件来测试旧硬件。</p><p>也许通过代理人工智能编码，我们将能够扩展支持窗口，甚至恢复对旧硬件的硬件支持。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm still sad that Linux dropped support for i486 and early-i586 CPUs.<p>And more disappointed that distributions especially Debian the "universal operating system" has dropped support for i586 already (and is dropping support for i686)</p><p>Open-source doesn't have the same pressures of commercial software from Apple or Microsoft. I really love the idea of obsessive, perfectionism approach of providing indefinite hardware support to obscure old hardware (but especially once-popular old hardware), with adequate automated testing suites to test ancient hardware.</p><p>Maybe with agentic AI coding we'll be able to expand support windows, and even bring back hardware support for older hardware.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537249" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/03/27 08:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>开源软件没有来自苹果或微软的商业软件那样的压力。</i><p>开源面临着往往更难以克服的压力：志愿者维护人员的业余时间有限。  志愿者通常是从用户池中抽取的。  i586 用户所剩无几，因此志愿者人数太少，以至于没有人能够或愿意为其维护 Debian。</p><p>如果您感到失望，请继续维护 i586 端口！  如果您无法或不愿意这样做，那么您就会得到适用于所有 i586 爱好者的答案，了解他们为何放弃支持。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>Open-source doesn't have the same pressures of commercial software from Apple or Microsoft.</i><p>Open source has a pressure that's often even more difficult to overcome: limited spare time from volunteer maintainers.  Volunteers are usually drawn from the pool of users.  There aren't many i586 users left, so the pool of volunteers is small enough that there's no one able or willing to maintain Debian for it.</p><p>If you're that disappointed, step up to maintain the i586 port!  If you're unable or unwilling to do so, then you have your answer, generalized across all i586 enthusiasts, as to why they dropped support.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537748" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bsimpson</span>
+        <span class="meta-time">2026/03/27 07:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但真正的问题是：谁来运营旧硬件的 CI 农场？  这听起来并不便宜，而且在商业上站不住脚。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Real question though: who's gonna run a CI farm of old hardware?  That sounds not-cheap and commercially untenable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537386" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/03/27 08:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想你不需要；您可以在 x86_64 上模拟 i586，并且它可能具有足够的性能。<p>但我怀疑这并不是真正的障碍：现有的 Debian 开发人员都没有足够关心它来维护它，也没有一个足够关心它的人愿意维护它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I imagine you don't need to; you can emulate i586 on x86_64, and it would probably be performant enough.<p>But I suspect that's not really the hurdle: none of the existing Debian developers care enough about it to maintain it, and no one who cares about it enough about it is willing to maintain it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537762" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MisterTea</span>
+        <span class="meta-time">2026/03/27 06:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">前几天发帖： <a href="https://news.ycombinator.com/item?id=47509902" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47509902</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Posted a few days ago: <a href="https://news.ycombinator.com/item?id=47509902" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47509902</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536720" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

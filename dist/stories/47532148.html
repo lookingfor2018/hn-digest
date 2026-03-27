@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stripe 项目：从 CLI 提供和管理服务 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-27-1343/">返回本批次</a>
+      <h1>Stripe 项目：从 CLI 提供和管理服务</h1>
+      <p class="subtitle">Stripe Projects: Provision and manage services from the CLI</p>
+      <div class="meta-line">
+        <span>projects.dev</span>
+        <span>作者 piinbinary</span>
+        <span>分数 122</span>
+        <span>评论 28</span>
+        <span>2026/03/27 00:00</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47532148" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://projects.dev/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>开发者预览版Stripe 项目允许您或您的代理从 CLI 提供多种服务、生成和存储凭证以及管理使用和计费。通过几个命令即可设置托管、数据库、身份验证、AI、分析等。支持的提供商 + 即将推出更多代码生成速度加快。配置却没有。配置应用程序堆栈仍然过于手动：注册多个服务、管理帐户、保护 API 密钥、在仪表板之间跳转以及单击配置页面。 Stripe Projects 允许您（或您的代理）从命令行创建和管理您的软件堆栈。提示配置从 CLI 添加您的应用程序所需的服务，或者让您的代理执行此操作。资源在您拥有的帐户中配置，凭据同步回您的环境，并且更改是可审核和可重复的。快速、安全且可移植的基础设施配置以程序化的工作流程来配置服务、管理凭据和升级计划，而不是为每个提供商提供不同的工具和工作流程。计费一次设置您的账单详细信息，并与您的 SaaS 堆栈安全地共享它们。升级和降级层、监控使用情况并管理来自 CLI 的订阅。PortableKeep 环境变量可在本地设置、计算机、团队成员和代理之间移植。安全为开发人员和代理生成、存储和返回服务凭证。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Developer PreviewStripe Projects lets you or your agents provision multiple services, generate and store credentials, and manage usage and billing from the CLI. Set up hosting, databases, auth, AI, analytics, and more in a few commands.Supported providers + More soonCode generation got fast.Provisioning didn’t.Provisioning your app stack is still too manual: signing up for multiple services, managing accounts, securing API keys, jumping between dashboards, and clicking configuration pages. Stripe Projects lets you (or your agents) create and manage your software stack from the command line.Prompt to provisionAdd the services your app needs from the CLI—or let your agent do it. Resources are provisioned in accounts you own, credentials sync back to your environment, and changes are auditable and repeatable.Fast, secure, and portable infrastructure provisioningProgrammaticOne workflow to provision services, manage credentials, and upgrade plans, instead of different tools and workflows for every provider.BillingSet up your billing details once and securely share them with your SaaS stack. Upgrade and downgrade tiers, monitor usage, and manage subscriptions from the CLI.PortableKeep environment variables portable across local setups, machines, teammates, and agents.SecureGenerate, store, and return service credentials for both developers and agents.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">philip1209</span>
+        <span class="meta-time">2026/03/27 01:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我为 Stripe 项目构建了 Chroma 集成。花了两三天时间才将其集成并上线。<p>作为开发者工具，集成 Stripe 项目感觉很像添加“使用 Google 登录”——Stripe 充当受信任的身份和计费提供商，但针对的是代理而不是人类。核心见解是代理商务是一个信任问题：代理无法（不应该？）输入信用卡或验证电子邮件，因此您需要一个值得信赖的第三方来进行双方的 KYC。 Stripe 已经与开发者和客户建立了这种关系。</p><p>总体来说这是一次流畅的体验 - 尝试一下。</p><p>我在这里写了更多关于代理经验的文章： <a href="https://www.philipithomas.com/agent-experience" target="_blank" rel="noopener noreferrer">https://www.philipithomas.com/agent-experience</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I built Chroma's integration for Stripe Projects. Took two or three days to get it integrated and live.<p>As a developer tool, integrating Stripe Projects felt a lot like adding "Sign in with Google" - Stripe acts as a trusted identity and billing provider, but for agents instead of humans. The core insight is that agent commerce is a trust problem: an agent can't (shouldn't?) enter a credit card or verify an email, so you need a trusted third party to KYC both sides. Stripe already has that relationship with both developers and customers.</p><p>It's a smooth experience overall - try it out.</p><p>I wrote more about agent experience here: <a href="https://www.philipithomas.com/agent-experience" target="_blank" rel="noopener noreferrer">https://www.philipithomas.com/agent-experience</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47533520" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gonzalovargas</span>
+        <span class="meta-time">2026/03/27 01:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">跨多个平台创建帐户和管理计费确实是一件痛苦的事情。这是一个很好的解决方案，但我想知道这是否应该更像是平台实施的开放标准，Stripe 为平台提供了一种收费方式，并可选择让用户付款（除了信用卡、Tempo 等钱包等）<p>使用案例：创建帐户、设置计费、管理机密、管理资源、获取发票/收据</p><p>最后，我不知道使用 CLI 命令式方法或 IaC 等更具声明性的方法是否更好</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Creating accounts and managing billing across multiple platforms is a real pain. This is a good solution, but I’m wondering if this should be more like an open standard that platforms implement, with Stripe providing a way for platforms to charge and optionally for users to pay (in addition to credit cards, wallets like Tempo, etc)<p>Use cases: create accounts, set up billing, manage secrets, manage resources, get invoices/receipts</p><p>Finally, I don’t know if it’s better to use a CLI imperative approach or a more declarative one like IaC</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47533083" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aledevv</span>
+        <span class="meta-time">2026/03/27 05:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">主要优点是能够编写 bash 脚本来自动执行所有配置操作并跟踪所有必要的命令。<p>我的脚本通常也充当特定功能的技术文档，它们是一种“独特的事实来源”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The main advantage is being able to write bash scripts that automate all provisioning operations and keep track of all the necessary commands.<p>My scripts typically also serve as technical documentation for specific features and they are a sort of "unique source of truth".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535691" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">steve_adams_86</span>
+        <span class="meta-time">2026/03/27 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最后一部分也让我印象深刻。我不想要一个强制性的解决方案，但是......我不确定这是否只是我的情况。<p>声明式解决方案非常快速且功能强大。他们可以在幕后使用所有相同的工具。为什么选择命令式？至少我可以记录、验证和版本控制声明性解决方案。命令式流程对于探索和一次性需求很有好处，但是......我不知道什么时候我真正需要它，或者什么时候这对我来说是一个瓶颈。</p><p>我知道这可能更像是代理而不是人类的工具，尽管代理只是被顺便提及。但这在某种程度上更令人担忧。我还不太愿意给他们这样的工具。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That last part struck me as well. I don't want an imperative solution, but... I'm not sure if that's just me.<p>Declarative solutions are perfectly fast and capable as well. They can use all the same tooling under the hood. Why choose imperative? At least I can record, validate, and version control a declarative solution. And imperative process is nice for exploration and one-off needs, but... I don't know when I'd really need that or when that's a bottleneck for me.</p><p>And I get that this is probably more of a tool for agents than humans, despite that agents are only mentioned in passing. But that's even more concerning in a way. I'm not yet comfortable with giving them tools like this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47533371" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">suhputt</span>
+        <span class="meta-time">2026/03/27 03:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534559" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">skybrian</span>
+        <span class="meta-time">2026/03/27 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">遗憾的是，它似乎没有采取任何创新措施来保护您的 api 密钥不被欺骗人工智能而泄露。看起来它们存储在一个普通的配置文件中：<p><a href="https://docs.stripe.com/stripe-cli/keys" target="_blank" rel="noopener noreferrer">https://docs.stripe.com/stripe-cli/keys</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sadly it doesn’t seem to do anything innovative to protect your api keys from getting exfiltrated by tricking the AI. Looks like they are stored in an ordinary config file:<p><a href="https://docs.stripe.com/stripe-cli/keys" target="_blank" rel="noopener noreferrer">https://docs.stripe.com/stripe-cli/keys</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47533345" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hkpatel3</span>
+        <span class="meta-time">2026/03/27 06:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为还有空间，因为据我了解，我不希望编码代理使用我最终使用的相同帐户。我知道有些用户可能不关心，但我认为代理商应该拥有自己的帐户，并且能够创建自己的帐户并使用 Vercel、Supabase 等服务。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think there is still room, since, as I understand it, I do not want coding agents to use the same account that I end up using. I understand that some users may not care, but I think agents should have their own accounts and the ability to create their own accounts and use services like Vercel, Supabase, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">joshstrange</span>
+        <span class="meta-time">2026/03/27 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这是一个非常酷的想法，但我希望它不会成功。我同意这个线程中其他人的观点，即应该基于开放协议，而不是绑定在 Stripe 中。<p>这是我的直觉反应，可能会改变，但是......</p><p>我这么说是因为一个经常使用 Stripe 的人，并且 100% 将它们用作我的“财务提供者”（或者你在这个系统中所说的任何资金来源），但归他们所有？呃，感觉太危险了，无法在上面构建。我不会相信任何人是它的唯一所有者，我也不想在它之上建立我的业务。</p><p>是的，我目前在 Stripe 之上进行构建，并认为它们是迄今为止最好的开发人员体验，并且我发现它们的成本对于它们允许我构建的内容来说是可以接受的，而无需担心财务方面。但是，如果他们阻止我或者我找到了更好的选择，我可以远离他们。让我的整个生意都依赖他们？那更可怕。这也是我没有使用 Atlas 的原因，尽管它会让事情变得更简单。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think this is a really cool idea that I hope doesn't work out. I agree with others in this thread that is should be based on an open protocol, not bound up in Stripe.<p>This is my gut reaction and subject to change but...</p><p>I say this as someone who uses Stripe heavily and would 100% use them as my "financial provider" (or whatever you'd call the funding source in this system), but owned by them? Ehh, feels way too dangerous to build on top of. I wouldn't trust anyone to be the sole owner of it, I wouldn't want to build my business on top it.</p><p>Yes, I build on top of Stripe currently and think they are the best developer experience by far and I've found their costs acceptable for what they've allowed me to build without worrying about the financial side. But, I could switch away from them if they blocked me or I found a better alternative. Making my whole business dependent on them? That's a lot scarier. It's the same reason I didn't use Atlas, even though it would have made things simpler.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536302" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SmellTheGlove</span>
+        <span class="meta-time">2026/03/27 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看来他们并不拥有它。更像是他们向您的项目添加基础设施脚手架，并为您提供 CLI 来部署它。据我所知，如果删除 CLI ，不会有任何问题，并且您可以自行将其部署到相同的提供程序或迁移它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It doesn't appear that they own it. More like they're adding infrastructure scaffolding to your project and giving you a CLI to deploy it. From what I can see, nothing breaks if you delete the CLI, and you're fine to deploy it to the same providers on your own or migrate it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536619" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hmokiguess</span>
+        <span class="meta-time">2026/03/27 03:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我个人认为这样的事情应该作为协议制定并公开完成</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I personally think stuff like this should be made as protocols and done in the open instead</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">toomuchtodo</span>
+        <span class="meta-time">2026/03/27 03:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Stripe 的估值取决于这种实施机制，将平台视为经济中介，而不是支持开放协议。<p><a href="https://www.forbes.com/sites/jeffkauflin/2026/03/17/why-an-unsustainable-bubble-is-growing-inside-fintech/" target="_blank" rel="noopener noreferrer">https://www.forbes.com/sites/jeffkauflin/2026/03/17/why-an-u...</a></p><p>（TLDR Stripe 的估值 [$159B] 大约是 Adyen 估值的 5 倍（Adyen 是公开的，允许用作比较），支付量有些相似 [分别为 $1.9T vs $1.6T]，因此 Stripe 正试图增长到当前基本面不支持的估值）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Stripe's valuation depends on this implementation mechanism, capturing the platform as an economic intermediary versus championing open protocols.<p><a href="https://www.forbes.com/sites/jeffkauflin/2026/03/17/why-an-unsustainable-bubble-is-growing-inside-fintech/" target="_blank" rel="noopener noreferrer">https://www.forbes.com/sites/jeffkauflin/2026/03/17/why-an-u...</a></p><p>(TLDR Stripe's valuation [$159B] is ~5x Adyen's [which is public, allowing for use as a comp] for somewhat similar payment volumes [$1.9T vs $1.6T, respectively], so Stripe is trying to grow into the valuation current fundamentals do not support)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534850" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">echelon</span>
+        <span class="meta-time">2026/03/27 07:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Stripe 想要拥有你。所有超大规模企业都这样做。<p>避免。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Stripe wants to own you. All of the hyperscalers do.<p>Avoid.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537440" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">raulb_</span>
+        <span class="meta-time">2026/03/27 02:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你好呀！ Supabase 的开发人员在这里。我很高兴终于能现场看到我过去两个月所做的工作。我很高兴看到 Stripe 用户终于可以无缝地使用 Supabase 服务。对于新的 Supabase 用户，无需保留 CLI。只需一个命令，您将拥有一个全新的 Supabase 帐户，其中包括专为您配置的新 Supabase 资源。这意味着您不仅可以从一开始就使用 PG 数据库，而且还可以免费使用存储和身份验证。我真的很高兴终于看到这个项目曝光。更多即将推出！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hi there! Developer at Supabase here. I'm happy to finally see live what I've been working on for the last two months. I'm excited to see that Stripe users can finally use Supabase services in a seamless way. For new Supabase users, there is no need to leave the CLI. One command, and you'll have a brand new Supabase account, including a new Supabase resource provisioned just for you. This means that you'll be able to not only use a PG database from the get-go, but it also comes with Storage and Authentication for free. I'm really excited to finally see this project come to light. More to come!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47533952" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cjbarber</span>
+        <span class="meta-time">2026/03/27 03:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这很聪明，也很有趣。我认为它就像一个聚合市场。处于一个强有力的位置。<p>Cloudflare、GitHub（如果他们发货量更多）、Anthropic 和 OpenAI 也有能力做到这一点。</p><p>我之前对此写过注释[1]。如果您相信代理将成为大消费者，那么现在让代理用户能够通过 API 轻松发现和购买服务会很有帮助。</p><p>[1]： <a href="https://x.com/chrisbarber/status/2026331038994321898" target="_blank" rel="noopener noreferrer">https://x.com/chrisbarber/status/2026331038994321898</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think this is smart and very interesting. I see it like an aggregator marketplace. A powerful position to be in.<p>Cloudflare, GitHub (if they shipped more), Anthropic and OpenAI are also in decent positions to do this.</p><p>I wrote notes on this previously [1]. If you believe agents are going to be big consumers, it's helpful to make things that today allow users of agents to easily discover and purchase services via apis.</p><p>[1]: <a href="https://x.com/chrisbarber/status/2026331038994321898" target="_blank" rel="noopener noreferrer">https://x.com/chrisbarber/status/2026331038994321898</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534454" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">_pdp_</span>
+        <span class="meta-time">2026/03/27 06:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有人可以告诉我，在开户时，人工智能代理如何在不经过标准 KYC 流程的情况下注册像 Stripe 这样的服务？<p>我是否误解了这个的作用？</p><p>也许。我在问懒惰的网络。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can someone enlighten me how exactly an AI agent will signup for a service like Stripe without going through the standard KYC process when opening an account?<p>Am I misunderstanding what this does?</p><p>Perhaps. I am asking the lazy web.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536501" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SmellTheGlove</span>
+        <span class="meta-time">2026/03/27 06:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我猜想注册 stripe 是使用它的先决条件。我稍后会尝试并确认。我想我刚刚获得访问权限。<p>编辑：他们的博客文章中的链接文档指向安装后的登录步骤。所以是的，注册 stripe 是一个先决条件。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm going to guess that signing up for stripe is a prerequisite to use this. I will try it out later and confirm. I think I just got access.<p>EDIT: The linked docs from their blog post point to a login step after you install it. So yeah, signing up for stripe is a prereq.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536521" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">_pdp_</span>
+        <span class="meta-time">2026/03/27 06:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么您将对 stripe 的访问权限移交给 AI 代理吗？这是这样的吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So you handover access to stripe to your AI agent? Is this how this works?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536738" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tom1337</span>
+        <span class="meta-time">2026/03/27 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好主意，但我希望有一种更开放的方法（或对 OpenTofu / Terraform 的更多支持）。这只是另一种供应商锁定方式，可能仅适用于选定的平台。<p>Stripe 有动力添加使用 Stripe 作为支付处理器的平台，以便他们可以兑现支付费用，但他们实际上没有任何动力添加不会给他们带来金钱的平台（除非附属机构可以这样做）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice idea, but I'd love a more open approach to this (or more support for OpenTofu / Terraform). This is just another vendor-locked-in way and might only work with selected platforms.<p>Stripe has the incentive to add platforms that use Stripe as a payment processor so they can cash on the payment fees, they don't really have any incentive to add a platform that doesn't bring money to them (except affiliates are possible with this)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47533340" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TheNewsIsHere</span>
+        <span class="meta-time">2026/03/27 04:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确切地。营销使得这看起来像是部署云堆栈的通用方法。<p>但这似乎只是一种将资源部署到使用 Stripe 向您收费的平台提供商的快速方法？</p><p>或者也许营销只是令人困惑？</p><p>但我认为这不适合我。我使用的是 AWS、Azure 以及租赁专用服务器的公司的专用服务器。对于我的公司来说，Stripe 无非是一个支付处理器。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly. The marketing makes this look like something general for deploying cloud stacks.<p>But what it seems to be is just a fast way to deploy resources to platform providers that use Stripe to bill you?</p><p>Or maybe the marketing is just confusing?</p><p>I don’t think this is for me though. I’m using things like AWS, Azure, and dedicated servers from companies that lease out dedicated servers. For my company Stripe is nothing more than a payment processor.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535149" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SmellTheGlove</span>
+        <span class="meta-time">2026/03/27 06:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你知道谁完全错过了解决这个问题的机会吗？赫罗库。我想我应该说 Salesforce。不过，这真是太神奇了——它们曾经是默认的“部署我刚刚写的东西”的选择。<p>我很高兴尝试 Stripe 项目，但我有点担心的是需要多个提供商。例如，如果我想要身份验证、数据库和前端，我会使用 Supabase 和 Vercel。我不会为此责怪 Stripe——这正是我们现在所处的境地，在过去的十年里每个人都在分拆平台。我认为平台很快就会回归流行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You know who is completely missing the boat on solving this problem? Heroku. I guess I should say Salesforce. It's pretty amazing though - they used to be the default "deploy this shit I just wrote" choice.<p>I'm excited to try Stripe Projects, but the thing I'm kind of dreading is the need for multiple providers. If I want auth, a database, and a front end, I'm using Supabase and Vercel, for instance. I don't blame Stripe for this - that's just where we're at right now, with everyone unbundling platforms over the past decade. I think platforms will be back in style soon enough.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536581" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">colesantiago</span>
+        <span class="meta-time">2026/03/27 03:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么这需要是 CLI？<p>我不想使用终端，我们应该远离它。</p><p>我真的希望这只是一个按钮或移动应用程序，而不必一直使用终端。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why does this need to be a CLI?<p>I don't want to use a terminal, we should be moving away from this.</p><p>I really hope this becomes just a button or a mobile app instead and not have to keep using terminals all the time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">steve_adams_86</span>
+        <span class="meta-time">2026/03/27 06:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大概是因为代理很好地使用 CLI，因为它们严格基于文本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Presumably because agents use CLIs well, since they're strictly text-based.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536784" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/27 03:58</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534950" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ChrisArchitect</span>
+        <span class="meta-time">2026/03/27 03:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相关博客文章： <a href="https://stripe.dev/blog/production-ready-dev-stack-from-terminal" target="_blank" rel="noopener noreferrer">https://stripe.dev/blog/production-ready-dev-stack-from-term...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Associated blog post: <a href="https://stripe.dev/blog/production-ready-dev-stack-from-terminal" target="_blank" rel="noopener noreferrer">https://stripe.dev/blog/production-ready-dev-stack-from-term...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534804" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">stephenr</span>
+        <span class="meta-time">2026/03/27 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 enshittification 时代，我无法真正看到将一堆基础设施/服务与条纹之类的东西联系起来的逻辑。<p>话又说回来，我也看不出要求辛辣的自动完成功能为您编写代码或提供服务的逻辑。</p><p>也许我只是不是目标市场。我想，如果您每周开发 5 个新的玩具待办事项列表应用程序来展示您与预测文本引擎对话的能力，也许这实际上很有用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the era of enshittification I can't really see the logic in tying a bunch of your infrastructure/services to the likes of stripe.<p>Then again I also don't see the logic in asking spicy autocomplete to write code or provision services for you either.</p><p>Maybe I'm just not the target market. I guess if you're spinning up 5 new toy todo list apps a week to show off how well you can talk to a predictive text engine maybe this is actually useful.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534395" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TheNewsIsHere</span>
+        <span class="meta-time">2026/03/27 04:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“辣味自动完成”绝对让我很开心。谢谢。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">“Spicy autocomplete” absolutely made my day. Thank you.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535173" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stephenr</span>
+        <span class="meta-time">2026/03/27 03:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这对我来说可能也没有多大意义，因为我将外部服务视为我们必须使用的东西，而不是默认选择。<p>当您的应用程序在您控制的虚拟机上运行并且仅使用支付网关和电子邮件网关时，设置服务几乎不成问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It probably also doesn't make much sense to me because I see external services as something to use when we have to, not as  default choice.<p>When your application runs on VMs you control and just uses a payment gateway and an email gateway it's hardly a challenge to get the services setup.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ChrisArchitect</span>
+        <span class="meta-time">2026/03/27 02:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">旁白：他们真的需要使用通用的projects.dev 域吗？也许是时候建立自己的 .stripe TLD 之类的了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Aside: did they really need to use that generic projects.dev domain? Maybe time for their own .stripe TLD or something</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534000" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">embedding-shape</span>
+        <span class="meta-time">2026/03/27 03:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我觉得这是不必要的吹牛和浪费； “看，这是我们可以在虚荣领域上花多少钱来展示我们可能会在 2-3 年内失去兴趣的项目”。<p>&gt; 也许是时候建立自己的 .stripe TLD 或其他什么了</p><p>子域怎么样？免费且已得到广泛支持，也不会令任何人感到困惑。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, strikes me as unnecessarily braggy and wasteful; "Look, here's how much we can spend on vanity domains to showcase projects that probably we'll lose interest in within 2-3 years".<p>&gt; Maybe time for their own .stripe TLD or something</p><p>How about subdomains? Free and widely supported already, won't confuse anyone either.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simlevesque</span>
+        <span class="meta-time">2026/03/27 02:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我讨厌这种趋势。 AWS 也通过 CDK 做到了这一点： <a href="https://constructs.dev/" target="_blank" rel="noopener noreferrer">https://constructs.dev/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, I hate this trend. AWS did it too with CDK: <a href="https://constructs.dev/" target="_blank" rel="noopener noreferrer">https://constructs.dev/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534153" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

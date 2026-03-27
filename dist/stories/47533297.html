@@ -1,0 +1,1294 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>$500 GPU 在编码基准测试中优于 Claude Sonnet | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-27-1343/">返回本批次</a>
+      <h1>$500 GPU 在编码基准测试中优于 Claude Sonnet</h1>
+      <p class="subtitle">$500 GPU outperforms Claude Sonnet on coding benchmarks</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 yogthos</span>
+        <span>分数 134</span>
+        <span>评论 52</span>
+        <span>2026/03/27 01:31</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47533297" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/itigges22/ATLAS" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>A.T.L.A.S 自适应测试时学习和自主专业化 A.T.L.A.S 通过约束驱动生成和自我验证迭代细化，在单个消费者 GPU 上使用冻结的 14B 模型实现了 74.6% LiveCodeBench pass@1-v(k=3)，高于 V2 中的 36-41%。前提是：将一个冻结的较小模型包裹在智能基础设施中——结构化生成、基于能量的验证、自我验证修复——并且它可以以一小部分成本与前沿 API 模型竞争。无需微调，无需 API 调用，无需云。完全自托管——没有数据离开机器，不需要 API 密钥，没有使用计量。一个 GPU，一盒。</li><li>基准测试结果</li><li>硬件：RTX 5060 Ti 16GB |型号：Qwen3-14B-Q4_K_M（冰冻）</li><li>基准分数任务法</li><li>LiveCodeBench v5 74.6% pass@1-v(k=3)* 599 V3 管道：PlanSearch + 自我验证的 PR-CoT 修复，V3 分数</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>A.T.L.A.S Adaptive Test-time Learning and Autonomous Specialization A.T.L.A.S achieves 74.6% LiveCodeBench pass@1-v(k=3) with a frozen 14B model on a single consumer GPU -- up from 36-41% in V2 -- through constraint-driven generation and self-verified iterative refinement. The premise: wrap a frozen smaller model in intelligent infrastructure -- structured generation, energy-based verification, self-verified repair -- and it can compete with frontier API models at a fraction of the cost. No fine-tuning, no API calls, no cloud. Fully self-hosted -- no data leaves the machine, no API keys required, no usage metering. One GPU, one box.</li><li>Benchmark Results</li><li>Hardware: RTX 5060 Ti 16GB | Model: Qwen3-14B-Q4_K_M (frozen)</li><li>Benchmark Score Tasks Method</li><li>LiveCodeBench v5 74.6% pass@1-v(k=3)* 599 V3 pipeline: PlanSearch + self-verified PR-CoT repair, V3 Score</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mmaunder</span>
+        <span class="meta-time">2026/03/27 09:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我鼓励开发人员使用 MiniMax、Kimi 等来完成需要智能的现实世界任务。缺点很快就会显现出来：推理代币的使用量要高得多，输出速度要慢，并且性能下降是显而易见的。可悲的是，你现在确实得到了你付出的代价。然而，这并不妨碍您通过智能模型路由、明智地推理预算以及明智地使用最大输出令牌来节省大量成本。并优化您的应用程序和提示以减少输出令牌。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’d encourage devs to use MiniMax, Kimi, etc for real world tasks that require intelligence. The down sides emerge pretty fast: much higher reasoning token use, slower outputs, and degradation that is palpable. Sadly, you do get what you pay for right now. However that doesn’t prevent you from saving tons through smart model routing, being smart about reasoning budgets, and using max output tokens wisely. And optimize your apps and prompts to reduce output tokens.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">thefourthchime</span>
+        <span class="meta-time">2026/03/27 11:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不会使用低于 SOTA 的任何东西。它尝试使用 Opus 4.6 介质，但立即后悔了。高的已经够混乱的了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I won’t use anything less than the SOTA. It tried using Opus 4.6 medium and immediately regretted it. High messes up enough.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538808" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">XCSme</span>
+        <span class="meta-time">2026/03/27 09:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，他们在随机非编码任务上表现得很差：<p><a href="https://aibenchy.com/compare/minimax-minimax-m2-7-medium/moonshotai-kimi-k2-5-medium/z-ai-glm-5-medium/google-gemini-3-1-flash-lite-preview-medium/" target="_blank" rel="noopener noreferrer">https://aibenchy.com/compare/minimax-minimax-m2-7-medium/moo...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yup, they do quite poorly on random non-coding tasks:<p><a href="https://aibenchy.com/compare/minimax-minimax-m2-7-medium/moonshotai-kimi-k2-5-medium/z-ai-glm-5-medium/google-gemini-3-1-flash-lite-preview-medium/" target="_blank" rel="noopener noreferrer">https://aibenchy.com/compare/minimax-minimax-m2-7-medium/moo...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538122" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">usagisushi</span>
+        <span class="meta-time">2026/03/27 12:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的基准。值得注意的是，Gemini-3-Flash 的性能优于 3.1 Pro。我过去一个月通过 Opencode 使用 Flash 的经验表明它被严重低估了。<p>不用说，基准是有限的，而且印象因问题领域、工具、书面语言和个人偏好（简单与细节、语气等）而有很大差异。如果个人经验是唯一真正的衡量标准，就像葡萄酒一样，那么解决这一发现差距就是一个有趣的挑战（法学硕士侍酒师！），即使模型进化最终使选择变得微不足道。 （我更喜欢 Gemini 3，因为它知识面广，Sonnet 4.6 更平衡，GLM-5 更简单。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting benchmark. It is notable that Gemini-3-Flash outperforms 3.1 Pro. My experience using Flash via Opencode over the past month suggests it is quite underrated.<p>Needless to say, benchmarks are limited and impressions vary widely by problem domain, harness, written language, and personal preference (simplicity vs detail, tone, etc.). If personal experience is the only true measure, as with wine, solving this discovery gap is an interesting challenge (LLM sommelier!), even if model evolution eventually makes the choice trivial. (I prefer Gemini 3 for its wide knowledge, Sonnet 4.6 for balance, and GLM-5 for simplicity.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539153" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wizee</span>
+        <span class="meta-time">2026/03/27 11:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Qwen 3.5 也值得比较，它是一个非常强大的型号。不同的基准测试会得出不同的结果，但总的来说，Qwen 3.5、GLM 5 和 Kimi K2.5 都是优秀的模型，在能力/智能方面与当前的 SOTA 模型相差不远。在我自己的非编码测试中，它们比 Gemini 3.1 闪存更好。她们可与 6 个月前最好的美国模特相媲美。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s worth also comparing Qwen 3.5, it’s a very strong model. Different benchmarks give different results, but in general Qwen 3.5, GLM 5, and Kimi K2.5 are all excellent models, and not too far from current SOTA models in capability/intelligence. In my own non-coding tests, they were better than Gemini 3.1 flash. They’re comparable to the best American models from 6 months ago.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538824" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/27 12:19</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539066" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">XCSme</span>
+        <span class="meta-time">2026/03/27 12:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在生产中使用了 qwen 3.5 plus，它非常擅长指令跟踪和工具调用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I used qwen 3.5 plus in production, it was really good at instruction following and tool calling.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">paulddraper</span>
+        <span class="meta-time">2026/03/27 13:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意。<p>它们相当于 8 个多月前的前沿模型。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed.<p>They are equivalent of frontier models 8+ months ago.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539393" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mkw2000</span>
+        <span class="meta-time">2026/03/27 13:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现 kimi 非常非常好，minimax 则不太好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i find kimi to be very very good, minimax not so much</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">AbanoubRodolf</span>
+        <span class="meta-time">2026/03/27 11:55</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538980" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">selcuka</span>
+        <span class="meta-time">2026/03/27 09:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一场逐底竞争。 DeepSeek 击败了所有其他产品（单次），并且比仅当地电力成本便宜约 50%。<p>&gt; DeepSeek V3.2 推理 86.2% ~$0.002 API，单次</p><p>&gt; ATLAS V3 (pass@1-v(k=3)) 74.6% ~$0.004 仅本地电力，三局三胜 + 修复管道</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a race to the bottom. DeepSeek beats all others (single-shot), and it is ~50% cheaper than the cost of local electricity only.<p>&gt; DeepSeek V3.2 Reasoning  86.2%  ~$0.002  API, single-shot</p><p>&gt; ATLAS V3 (pass@1-v(k=3))  74.6%  ~$0.004  Local electricity only, best-of-3 + repair pipeline</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537903" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sourcecodeplz</span>
+        <span class="meta-time">2026/03/27 12:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我测试过很多开放模型，Deepseek 3.2 是唯一类似的 SOTA。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've tested many open models, Deepseek 3.2 is the only SOTA similar.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539013" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mikestorrent</span>
+        <span class="meta-time">2026/03/27 09:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 仅比当地电费便宜。<p>你能解释一下这是什么意思吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;  cheaper than the cost of local electricity only.<p>Can you explain what that means?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537968" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/03/27 09:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为他们的意思是 DeepSeek API 的费用低于运行本地模型的电力成本。<p>本地模型爱好者通常认为本地运行比在数据中心运行更节能，但没有考虑规模经济。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think they mean that the DeepSeek API charges are less than it would cost for the electricity to run a local model.<p>Local model enthusiasts often assume that running locally is more energy efficient than running in a data center, but fail to take the economies of scale into account.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538067" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">croes</span>
+        <span class="meta-time">2026/03/27 13:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本地爱好者不必担心帐户被封。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Local enthusiasts don’t have to fear account banning.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539351" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jacquesm</span>
+        <span class="meta-time">2026/03/27 11:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一些当地的模型爱好者实际上买得起太阳能电池板。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Some of those local model enthusiasts can actually afford solar panels.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538954" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jLaForest</span>
+        <span class="meta-time">2026/03/27 12:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您使用电力而不是将其卖回电网，您仍然会产生费用</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You are still incurring a cost if you use the electricity instead of selling it back to the grid</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539063" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Kodiack</span>
+        <span class="meta-time">2026/03/27 12:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其程度很大程度上取决于您所在的位置。我住在新西兰，电网出口率非常低，而进口率非常高。<p>我们的峰值进口率比太阳能出口率高出 3 倍。换句话说，我们需要出售 3 kWh 小时的能源来抵消高峰时使用 1 kWh 的成本。</p><p>我们目前正在接受家用电池的报价。这里的费率极大地激励了最大化自用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The extent of that heavily depends on where you are. Where I live in NZ, the grid export rates are very low while the import rates are very high.<p>Our peak import rate is 3x higher than our solar export rate. In other words, we’d need to sell 3 kWh hours of energy to offset the cost of using 1 kWh at peak.</p><p>We’re currently in the process of accepting a quote for home batteries. The rates here highly incentivise maximising self-use.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539102" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dmichulke</span>
+        <span class="meta-time">2026/03/27 12:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">卢森堡：购买价格 = 2 x 销售价格，主要是由于电网成本。<p>这还不包括所售电力的所得税或增值税。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Luxembourg: Purchase price = 2 x sales price, mostly due to grid costs.<p>And this is with no income tax or VAT on sold electricity.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">littlestymaar</span>
+        <span class="meta-time">2026/03/27 11:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想这主要来自于在本地使用批量大小 = 1 的模型，而不是在 DC 中使用高批量大小，因为 GPU 消耗不会随着批量大小而增长那么多。<p>请注意，虽然本地聊天机器人用户主要使用批量大小 = 1，但如果他们运行代理框架，情况就不会如此，因此差距将会缩小甚至逆转。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I guess it mostly comes from using the model with batch-size = 1 locally, vs high batch size in a DC, since GPU consumption don't grow that much with batch size.<p>Note that while a local chatbot user will mostly be using batch-size = 1, it's not going to be true if they are running an agentic framework, so the gap is going to narrow or even reverse.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538759" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">atoav</span>
+        <span class="meta-time">2026/03/27 10:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这意味着，如果您自己进行计算，则需要支付的电费将比付钱给他们进行计算更昂贵。部分原因在于中国拥有廉价的电力，同时也得益于中国大力发展可再生能源。其中一部分只是规模经济。大型服务器场的平均运行效率比您的 PC 更高。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It means that the electricity you would have to pay if you did the computations yourself would be more expensive than paying them to do it. Part of thst has to do with the fact that China has cheap electricity, also due to their massive push into renewables. Part of that is just economies of scale. A big server farm can run more efficiently than your PC on average.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538426" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AuthAuth</span>
+        <span class="meta-time">2026/03/27 11:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于大力推动不可再生能源，电力价格便宜。在可再生能源转型期间，电价没有变化。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">cheap electric due to their massive push on non renewables. There has been no change in the price of electricity during the renewable shift.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jojobas</span>
+        <span class="meta-time">2026/03/27 09:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">中国有廉价的电力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">China has cheap electricity.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538080" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ericd</span>
+        <span class="meta-time">2026/03/27 09:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另外，LLM 服务器在请求队列深度 &gt;1 时变得更加高效 - 每个 GPU 每秒的令牌数在 100 个并发数时比 vllm 上的 1 个并发数要高得多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, also, LLM servers get much more efficient with request queue depth &gt;1 - tokens per second per gpu are massively higher with 100 concurrents than 1 on eg vllm.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538142" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yogthos</span>
+        <span class="meta-time">2026/03/27 10:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您也可以将此方法与 DeepSeek 结合使用。这里的创新在于，您可以生成一堆解决方案，使用一个小模型来选择有前途的候选方案，然后对其进行测试。然后将错误反馈给生成器模型并进行迭代。在某种程度上，它有点像收敛于解决方案的遗传算法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You could use this approach with DeepSeek as well. The innovation here is that you can generate a bunch of solutions, use a small model to pick promising candidates and then test them. Then you feed errors back to the generator model and iterate. In a way, it's sort of like a genetic algorithm that converges on a solution.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hu3</span>
+        <span class="meta-time">2026/03/27 11:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实但是：<p>1）这是相对非常慢的。</p><p>2) 也可以使用 API 上的 SoTA 模型来完成，甚至更简单。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Indeed but:<p>1) That is relatively very slow.</p><p>2) Can also be done, simpler even, with SoTA models over API.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538760" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yogthos</span>
+        <span class="meta-time">2026/03/27 11:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这适用于任何型号。对我来说，最有趣的部分是您可以使用可以在本地运行的较小模型来获得与 SoTA 模型相当的结果。最终，我更喜欢在本地运行，即使速度较慢，原因很简单，对我的数据拥有主权。<p>依赖服务意味着您必须与该服务共享您正在做的任何事情，并且服务提供商决定您可以做什么，并随心所欲地更改他们的服务条款。</p><p>如果本地运行的模型能够达到可以用作日常驱动程序的程度，那就解决了问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Right, this works with any models. To me, the most interesting part is that you can use a smaller model that you could run locally to get results comparable to SoTA models. Ultimately, I'd far prefer running local, even if slower, for the simple reason of having sovereignty over my data.<p>Being reliant on a service means you have to share whatever you're working on with the service, and the service provider decides what you can do, and make changes to their terms of service on a whim.</p><p>If locally running models can get to the point where they can be used as a daily driver, that solves the problem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538870" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">memothon</span>
+        <span class="meta-time">2026/03/27 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我总是持怀疑态度，因为你可以让它通过基准测试，然后你使用它，但与极其通用的模型不同，它实际上没有用处。<p>虽然工作很酷，但我对瘦身模型的潜力感到非常兴奋。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm always skeptical because you can make it pass the benchmarks, then you use it and it is not practically useful unlike an extremely general model.<p>Cool work though, really excited for the potential of slimming down models.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535640" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kimixa</span>
+        <span class="meta-time">2026/03/27 11:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现经常有 <i>非常</i> 取决于语言和部门。我仍然看到一个 <i>大量的</i> 我尝试过的任何开放模型和十四行诗 4.5（没有真正尝试过 4.6）之间的系统编程（通常是 c++ 和 rust）之间的差异。老实说，即使是大型模型（如 Opus 4.6）在很多情况下也会遇到困难。<p>也许这些东西在这些开放模型的训练数据中没有得到很好的体现？我尝试过的每个本地模型（minimax2.5、GLM-4.7、Quen3、3.5 和 -coder 变体）都花费了大量时间试图获得语法上合理并被编译器接受的东西，当它们完成时，它们似乎几乎没有任何“动力”来实际解决问题，因为除了最微不足道的更改之外的几乎所有东西都最终陷入了实际尝试获得它的另一个循环中 <i>在职的</i> 再次，常常在过程中失去改变的意图。</p><p>我担心的是，这里的解决方案，让多个实例都进行相同的更改以供以后比较，将花费 <i>巨大的</i> 在它到达“逻辑”之前，要花大量的时间来应对编译器错误、类型、内存分配（不要只是在一些更原始的“新”关键字该死的）中花费时间。</p><p>拥有足够的本地 GPU 能力，我希望能够实际使用它，并且我已经对一些训练数据的使用及其与我“发送”到云模型的代码许可证的交互持谨慎态度......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find it's often <i>very</i> language and sector dependent. I still see a <i>massive</i> difference in systems programming (normally c++ and rust) between any open model I've tried and something like sonnet 4.5 (not really tried 4.6). And honestly, even the big models (like Opus 4.6) struggle in many cases.<p>Perhaps these things aren't well represented in the training data for these open models? Every local model I've tried (minimax2.5, GLM-4.7, Quen3, 3.5 and -coder variants) spend so much time trying to get something syntactically sensible and accepted by the compiler that when they've finished they barely seem to have any "momentum" left to actually solve the problems, as pretty much anything but the most trivial change ends up in another loop of actually trying to get it <i>working</i> again, often losing the intent of that change in the process.</p><p>My fear is that the solution here, having multiple instances all making the same changes for later comparison, would spend a <i>huge</i> amount of time beating it's head against compiler errors, types, memory allocation (NO DON'T JUST SPRINKLE IN A FEW MORE RAW "new" KEYWORDS DAMMIT) before it even gets to the "logic".</p><p>Having plenty of local GPU power I'd love to be able to actually use that, and I'm already wary about some of the training data use and it's interactions with the license of the code I'm "sending" to the cloud models...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538805" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yogthos</span>
+        <span class="meta-time">2026/03/27 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然你必须尝试一下才能知道它对你有用，但他们使用的技巧非常聪明。当你要求人工智能编写代码时，它并不总是能写对。有时代码有错误，有时它完全误解了问题。解决这个问题的一种简单方法是生成一些解决方案并测试每个解决方案。至少有一项作品成功的可能性大大增加。 ATLAS 生成多次尝试，并通过测试套件运行每次尝试。每次重试都会被告知前一次尝试出了什么问题，因此它可以尽力避免同样的错误。<p>但这可能会非常慢，因为您必须在隔离的环境中运行代码，检查输出，等待它完成。为每个候选人做这件事很快就会增加。所以ATLAS还有另一个避免不必要测试的捷径。它不是简单地生成解决方案并测试所有解决方案，而是尝试在运行任何测试之前预测哪一个最有可能是正确的。</p><p>ATLAS 还要求模型嵌入它刚刚编写的内容，作为指纹。两段相似的代码将产生相似的指纹。一个写得好的、自信的解决方案会产生与混乱的、有问题的解决方案不同的指纹。</p><p>这些指纹被输入一个单独的、更小的神经网络，称为成本场。这个小网络提前接受了示例训练，他们已经知道哪些解决方案是正确的，哪些是错误的。它学会了为每个指纹分配一个分数。正确的解决方案得分低，错误的解决方案得分高。</p><p>因此，这个过程就是生成多个解决方案，获取他们的指纹，对每个解决方案进行评分，然后选择最低的。只有那一个接受测试。根据存储库，成本字段的选择正确率约为 88%。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You obviously have to try it out to see how it works for you, but the trick they use is pretty clever. When you ask an AI to write code, it doesn’t always get it right. Sometimes the code has bugs, sometimes it misunderstands the problem entirely. A naive way to address that is to generate a few solutions and test each one. The odds that at least one works go way up. ATLAS generates multiple attempts, running each through a test suite. Each retry also gets told what went wrong with the previous attempt, so it can try to avoid the same mistake.<p>But this can be pretty slow since you have to run the code in an isolated environment, check the outputs, wait for it to finish. Doing that for every candidate quickly adds up. So ATLAS has another shortcut for avoiding unnecessary testing. Instead of simply generating solutions and testing all of them, it tries to predict which one is most likely correct before running any tests.</p><p>ATLAS also asks the model for an embedding of what it just wrote which acts as a fingerprint. Two similar pieces of code will produce similar fingerprints. A well-written, confident solution will produce a different fingerprint than a confused, buggy one.</p><p>These fingerprints get fed into a separate, much smaller neural network called the Cost Field. This little network was trained ahead of time on examples where they already knew which solutions were correct and which were wrong. It learned to assign a score to each fingerprint. Correct solutions get a low score and incorrect ones get a high one.</p><p>So the process is to generate multiple solutions, get their fingerprints, score each one, and pick the lowest. Only that one gets tested. The Cost Field picks correctly about 88% of the time according to the repo.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536815" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zar1048576</span>
+        <span class="meta-time">2026/03/27 07:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一组非常有趣的技术，可以通过生成多个解决方案来提高准确性。即使进行了预测最有可能的解决方案的工作，根据描述，我也不清楚如何有效地完成这一切。如果它在现实世界的用例中得到了成功，那肯定会令人印象深刻。如果我能有时间的话，我会尝试一下。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Really intriguing set of techniques to improve accuracy by generating multiple solutions. Even with the work to predict the most likely solutions, it's not clear to me based on the description how this could all be done efficiently. Would definitely be really impressive if it pans out on real-world use cases. Will look to kick the tires on this if I can get some time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537207" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yogthos</span>
+        <span class="meta-time">2026/03/27 07:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎关键的见解是训练一个小模型，该模型充当类似于质量代码的嵌入的启发式。我想很大程度上取决于这个模型的训练程度。您可能可以为不同的语言和领域创建专门的版本。<p>另一种有趣的方法可能是将这种设置与 Clojure 或 Common Lisp 等语言一起使用，以促进交互式开发。如果您可以将代理直接连接到正在运行的程序中的 REPL，那么它可以以更少的开销运行测试。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems like the key insight is to train a small model that acts as a heuristic for embeddings that resemble quality code. I imagine a lot depends on how well this model is trained. And you could probably create specialized versions for different languages and domains.<p>Another interesting approach could be to use this set up with a language like Clojure or Common Lisp which facilitates interactive development. If you could hook up the agent directly to a REPL in a running program, then it could run tests with a lot less overhead.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537290" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xyzzy123</span>
+        <span class="meta-time">2026/03/27 09:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我超级困惑。小模型“成本字段”`rag-api/geometric_lens/cost_field.py` 在 PASS_TASKS 上进行训练，例如“编写一个计算字符串中元音的函数”。和 FAIL_TASKS 类似“编写一个函数，使用 Thompson 的构造将正则表达式字符串转换为 NFA，然后将 NFA 转换为 DFA。”。<p>所以它看起来像是用英语编写的任务描述的难度分类器。</p><p>然后用它来对 Python 代码的嵌入进行评分，这是一个完全不同的分布。</p><p>据推测，它会寻找一个简单的解决方案，找出它与嵌入空间中的简单问题有点接近并通过它。</p><p>但这些都无法帮助您解决更困难的问题，或者区分错误的简单解决方案和正确的更复杂的解决方案。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm super confused. The small model "cost field" `rag-api/geometric_lens/cost_field.py` was trained on PASS_TASKS like "Write a function that counts vowels in a string." and FAIL_TASKS like "Write a function that converts a regular expression string to an NFA using Thompson's construction, then converts the NFA to a DFA.".<p>So it seems like it's a difficulty classifier for task descriptions written in English.</p><p>This is then used to score embeddings of Python code, which is a completely different distribution.</p><p>Presumably it's going to look at a simple solution, figure out it lands kinda close to simple problems in embedding space and pass it.</p><p>But none of this helps you solve harder problems, or distinguish between a simple solution which is wrong, and a more complex solution which is correct.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538066" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yogthos</span>
+        <span class="meta-time">2026/03/27 09:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为我们的目标是提供一种轻松的启发式方法，帮助找到似乎有用的解决方案。下一步他们仍将经历测试阶段，因此这只是一个非常简单的过滤器，用于决定什么值得测试。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think the goal is to have a light heuristic that helps find plausibly useful solutions. They're still going to go through a testing phase as a next step, so this is just a very simple filter to decide what's even worth testing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538272" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">electroglyph</span>
+        <span class="meta-time">2026/03/27 13:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">奇怪的“几何镜头路由”是怎么回事？听起来像是编造的 GPT 主义</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what's with the weird "Geometric Lens routing" ?? sounds like a made up GPTism</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539318" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">b3ing</span>
+        <span class="meta-time">2026/03/27 12:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">开源或本地 llms 最终会杀死大型人工智能提供商吗？如果是的话什么时候？我可以看到基本的聊天，但不确定编码和图像</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Will open source or local llms kill the big AI providers eventually? If so when? I can see maybe basic chat, not sure about coding and images yet</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539064" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">qingcharles</span>
+        <span class="meta-time">2026/03/27 13:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除非在推理中找到一些非常非常重要的捷径，否则在本地运行一个非常好的模型总是很困难。与 20 美元/月的 Claude sub 相比，PC + 电动的成本通常会高得惊人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unless there are some really, really major shortcuts found in inference, then it's always going to be hard to run a really great model locally. The costs of the PC + electric will usually be crazy compared to a $20/mo Claude sub.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539319" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">throwaway85825</span>
+        <span class="meta-time">2026/03/27 12:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当回报不符合预期时，金融引力就会杀死他们。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Financial gravity will kill them when returns don't match stratospheric expectations.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539122" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bluefirebrand</span>
+        <span class="meta-time">2026/03/27 13:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也希望如此，但我认为这是一厢情愿的想法。为世界各国政府的所有金融救助做好准备，以确保这种情况不会发生</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I hope so too, but I think it's wishful thinking. Be prepared for the mother of all financial bailouts from the world governments to make sure that doesn't happen</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539334" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hollerith</span>
+        <span class="meta-time">2026/03/27 13:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以理解为什么银行在 2008 年得到美国政府的救助，但为什么政府会觉得有必要救助人工智能实验室呢？<p>我希望你不会说“避免人工智能泡沫破灭导致的全球衰退或萧条”。这是不必要的，也是有害的（就其二阶效应而言），而且政府确实有足够擅长经济学的顾问来提供建议 <i>反对</i> 这样的举动。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can understand why banks got bailed out by the US gov in 2008, but why would a government feel the need to bail out AI labs?<p>I hope you are not going to say, "to avoid a global recession or depression caused by the popping of the AI bubble". That would be unnecessary and harmful (in its second-order effects), and governments do have advisors who are competent enough in economics to advise <i>against</i> such a move.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">0xbadcafebee</span>
+        <span class="meta-time">2026/03/27 11:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个专门使用烧蚀和多次通过来改善最终结果的实验​​。已经发现其他技术可以做到这一点（例如多次穿过同一层）。但这种技术（对于这个特定模型）似乎性能更高，但也需要更长的时间，并且需要更多的复杂性。大多数人不太可能使用这种技术，但它很有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is specifically an experiment using ablation and multiple passes to improve the end result. Other techniques have been found that do this (like multiple passes through the same layers). But this technique - for this one specific model - seems to be both more performant, but also takes much longer, and requires more complexity. It's unlikely most people would use this technique, but it's interesting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538894" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">emp17344</span>
+        <span class="meta-time">2026/03/27 10:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更多证据表明，线束比模型更重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yet more evidence that the harness matters more than the model.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538587" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">riidom</span>
+        <span class="meta-time">2026/03/27 08:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不幸的是，没有提到 tok/sec。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not a word about the tok/sec, unfortunately.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537479" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arjie</span>
+        <span class="meta-time">2026/03/27 09:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到架构，它没有任何意义：它是围绕模型的工具，使用测试来测量合规性并修复损坏的解决方案，在多次传递中生成多个解决方案。生成的节目不会流式传输给您，因为它在整个周期中已经存在了几分钟。它更适合异步用例。<p>我也很感兴趣，因为我总是渴望在我的爪子中使用本地模型。看起来这对于线束的异步部分很有用，但在交互式上下文中不起作用。</p><p>非常酷的技术组合，特别是因为它们非常容易理解。我想我将使用此表单来实现我的个人代理中网页浏览功能的可重用部分。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It won’t be meaningful considering the architecture: it’s a harness around the model that generated multiple solutions in multiple passes using the test to measure compliance and repair broken solutions. The resulting program won’t be streamed to you because it has existed for minutes as it goes through the cycle. It’s more for an asynchronous use-case.<p>I, too, was interested because I am always eager to use local models in my claw-like. It looks like this could be useful for an async portion of the harness but it wouldn’t work in interactive contexts.</p><p>Very cool ensemble of techniques, particularly because they’re so accessible. I think I will use this form for reusable portions of web browsing functionality in my personal agent.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538158" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Octoth0rpe</span>
+        <span class="meta-time">2026/03/27 11:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 单个修补的 llama-server 在 K3s 上运行，为两代产品提供推测解码（~100 tok/s）<p>关于这一点似乎至少有一些细节。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; A single patched llama-server runs on K3s, providing both generation with speculative decoding (~100 tok/s)<p>There seems to be at least some detail on that point.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538695" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/27 10:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">negativegate</span>
+        <span class="meta-time">2026/03/27 07:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当谈到这些东西时，我对 AMD (9070 XT) 还满意吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Am I still SOL on AMD (9070 XT) when it comes to this stuff?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">0xbadcafebee</span>
+        <span class="meta-time">2026/03/27 11:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不？您可以运行适合其 VRAM 的任何模型，并且可以通过层/MoE 卸载运行更大的模型。询问人工智能可以在该卡上运行的最佳模型是什么，然后询问它比该模型更新的模型。询问要传递给 llama.cpp 的调整选项以及自动调整选项是什么。使用 ROCm 构建。<p>您的卡似乎有 16GB VRAM？从 Qwen 3.5 9B Unsloth GGUF (UD-Q6_K_XL) 开始，并从那里开始分支。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No? You can run any model that fits in its VRAM, and you can run larger models with layer/MoE offloading. Ask an AI what the best models you can run on that card are, then ask it for newer models than that. Ask what tuning options to pass to llama.cpp, and what the auto-tuning options are. Use ROCm builds.<p>It looks like your card has 16GB VRAM? Start with Qwen 3.5 9B Unsloth GGUFs (UD-Q6_K_XL) and branch out from there.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538943" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">patshead</span>
+        <span class="meta-time">2026/03/27 09:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，但是是吗？  Q6 的 OmniCoder 9B 适合我的 9070 XT，具有 200k+ 上下文标记，并且它与 OpenCode 配合得很好。  它肯定是我设法挤进 GPU 的最佳本地模型，它甚至可以在第三季度的 8GB RX 580 GPU 上以 120k 环境运行。<p>我无法想象尝试在 GPU 上使用此模型进行实际工作。  我可以通过 3 美元的 Chutes 订阅或 10 美元的 OpenCode Go 订阅使用更大、更快的模型。</p><p>即便如此，我仍然很兴奋。  我觉得 6 到 9 个月前甚至没有一个模型值得与 OpenCode 这样的工具一起使用。  我喜欢事情的发展方向，我期待在接下来的 6 到 9 个月内看到这种规模的编码模型的能力如何！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, but yes?  OmniCoder 9B at Q6 fits on my 9070 XT with 200k+ tokens of context, and it works pretty well with OpenCode.  It is for sure the best local model that I've managed to squeeze onto my GPU, and it even works at 120k context at Q3 on an 8GB RX 580 GPU.<p>I can't imagine trying to using this model on either GPU for real work.  I can use much bigger and faster models on the $3 Chutes subscription or $10 OpenCode Go subscription.</p><p>Even so, I am still excited.  I don't feel like there was even a model worth using  with a tool like OpenCode 6 to 9 months ago.  I like the way things are heading, and I am looking forward to seeing how capable coding models of this size are in another 6 to 9 months!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538121" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dangus</span>
+        <span class="meta-time">2026/03/27 07:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，这个特定的解决方案仅在特定的硬件上设置，并且依赖于 Nvidia，正如自述文件所指出的那样。<p>这并不意味着 9070XT 不能做人工智能的事情，恰恰相反。 ROCm 一直在变得更好。您可以在 AMD 卡上执行许多 AI 工作负载。</p><p>如果我主要从事人工智能工作，我会选择这张卡吗？绝对不是。但这是我拥有的卡，对于游戏来说它具有很大的价值。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, this specific solution was only set up on specific hardware, and is Nvidia dependent, as the readme stares.<p>That doesn’t mean the 9070XT can’t do AI stuff, quite the opposite. ROCm gets better all the time. There are many AI workloads you can do on AMD cards.</p><p>Is it a card I would choose if I was primarily working on AI? Absolutely not. But it is the card I own and it’s been a great value for gaming.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537323" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dannyw</span>
+        <span class="meta-time">2026/03/27 09:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不幸的是，AMD 在老一代硬件上支持 FSR4 等 AI 功能方面表现更差，尽管有能力和泄露的 INT8 模型。完全不同于英伟达。<p>我必须使用开源程序来获得 INT8 FSR4 支持，这很荒谬。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unfortunately AMD is much worse with supporting AI features like FSR4 on older hardware generations, despite the capability and leaked INT8 models being there. Totally unlike NVIDIA.<p>It’s absurd I have to use open source programs to get INT8 FSR4 support.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538212" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">limoce</span>
+        <span class="meta-time">2026/03/27 09:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">标题应该是“自适应测试时间学习和自主专业化”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The title should be "Adaptive Test-time Learning and Autonomous Specialization".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538189" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">superkuh</span>
+        <span class="meta-time">2026/03/27 09:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果其他人希望它在内部使用 Q8 并转换为 Q4，它可以适合 12GB VRAM：不幸的是，它已经在 Q4_K_M（~9GB），并且 16GB 要求来自其他部分，而不是您可能猜到的 14B@8bit+kv 缓存/等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If anyone else was hoping this was using Q8 internally and that converted to Q4 it could fit in 12GB VRAM: unfortunately it's already at Q4_K_M (~9GB) and the the 16GB requirement is from other parts not a 14B@8bit+kv cache/etc you might guess.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537902" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">itigges22</span>
+        <span class="meta-time">2026/03/27 11:54</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">eddie-wang</span>
+        <span class="meta-time">2026/03/27 11:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538899" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">wiradikusuma</span>
+        <span class="meta-time">2026/03/27 11:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538779" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">felixagentai</span>
+        <span class="meta-time">2026/03/27 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538393" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dang</span>
+        <span class="meta-time">2026/03/27 11:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们已禁止该帐户。请不要向 HN 发布自动评论。<p><a href="https://news.ycombinator.com/newsguidelines.html#generated" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/newsguidelines.html#generated</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We've banned this account. Please don't post automated comments to HN.<p><a href="https://news.ycombinator.com/newsguidelines.html#generated" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/newsguidelines.html#generated</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538783" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sayYayToLife</span>
+        <span class="meta-time">2026/03/27 09:22</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538002" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bustah</span>
+        <span class="meta-time">2026/03/27 10:58</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538648" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ozgurozkan</span>
+        <span class="meta-time">2026/03/27 09:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538075" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

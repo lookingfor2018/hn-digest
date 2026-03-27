@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：Turbolite – 一个 SQLite VFS，提供来自 S3 的 250 毫秒以下冷 JOIN 查询 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-27-1343/">返回本批次</a>
+      <h1>显示 HN：Turbolite – 一个 SQLite VFS，提供来自 S3 的 250 毫秒以下冷 JOIN 查询</h1>
+      <p class="subtitle">Show HN: Turbolite – a SQLite VFS serving sub-250ms cold JOIN queries from S3</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 russellthehippo</span>
+        <span>分数 129</span>
+        <span>评论 32</span>
+        <span>2026/03/27 02:58</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47534283" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/russellromney/turbolite" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>Turbolite 是 Rust 中的 SQLite VFS，提供点查找并直接从 S3 加入，冷延迟低于 250 毫秒。它还提供页面级压缩 (zstd) 和加密 (AES-256)，以提高静态时的效率和安全性，可以与 S3 分开使用。</li><li>涡轮沸石是实验性的。它是新的并且包含错​​误。它可能会损坏您的数据。请小心。</li><li>对象存储变得越来越快。 S3 Express One Zone 提供个位数毫秒的 GET，Tigris 的速度也非常快。本地磁盘和云存储之间的差距正在缩小，而 Turbolite 正是利用了这一点。设计和名称的灵感来自turbopuffer围绕云存储限制进行无情构建的方法。该项目的最初目标是击败 Neon 500 毫秒以上的冷启动。目标实现了。如果每台服务器只有一个数据库，请使用卷。 Turbolite 探索如何拥有数百或数千个数据库（每个租户一个，每个工作区一个，每个设备一个），不需要每个数据库都有一个卷，并且您可以使用单个写入源。 Turbolite 作为 Rust 库、SQLite 可加载扩展 (.so/.dylib) 以及 Python 和 Node.js 语言包以及 Go 的 Github deps 提供。任何与 S3 兼容的存储都可以（AWS S3、Tigris、R2、MinIO 等）。它是在页面级别运行的标准 SQLite VFS，因此大多数 SQLite 功能都应该可以工作：FTS、R-tree、JSON、WAL 模式等。如果您想为 Turbolite 做出贡献或查找错误，请创建拉取请求或打开问题。表现</li><li>查询类型 冷 (S3 Express) 冷 (Tigris)</li><li>发布+用户点查找+加入 77ms 259ms</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>turbolite is a SQLite VFS in Rust that serves point lookups and joins directly from S3 with sub-250ms cold latency. It also offers page-level compression (zstd) and encryption (AES-256) for efficiency and security at rests, which can be used separately from S3.</li><li>turbolite is experimental. It is new and contains bugs. It may corrupt your data. Please be careful.</li><li>Object storage is getting fast. S3 Express One Zone delivers single-digit millisecond GETs and Tigris is also extremely fast. The gap between local disk and cloud storage is shrinking, and turbolite exploits that. The design and name are inspired by turbopuffer&#39;s approach of ruthlessly architecting around cloud storage constraints. The project&#39;s initial goal was to beat Neon&#39;s 500ms+ cold starts. Goal achieved. If you have one database per server, use a volume. turbolite explores how to have hundreds or thousands of databases (one per tenant, one per workspace, one per device), don&#39;t want a volume for each one, and you&#39;re okay with a single write source. turbolite ships as a Rust library, a SQLite loadable extension (.so/.dylib), and language packages for Python and Node.js, plus Github deps for Go. Any S3-compatible storage works (AWS S3, Tigris, R2, MinIO, etc.). It&#39;s a standard SQLite VFS operating at the page level, so most SQLite features should work: FTS, R-tree, JSON, WAL mode, etc. If you want to contribute to turbolite or find bugs, please create a pull request or open an issue. Performance</li><li>Query Type Cold (S3 Express) Cold (Tigris)</li><li>Post + user point lookup + join 77ms 259ms</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">carlsverre</span>
+        <span class="meta-time">2026/03/27 03:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能有兴趣看看 Graft (<a href="https://graft.rs/" target="_blank" rel="noopener noreferrer">https://graft.rs/</a>）。去年我一直在这个领域进行迭代，并且学到了很多东西。 Graft 有一组略有不同的目标，其中一个是保持写入速度快且小，并针对部分复制进行优化。也就是说，Graft 共享多个设计决策，包括使用框架 ZStd 压缩来存储页面。<p>我确实喜欢 B 树感知分组的想法。对于较大的扫描式工作负载来说，这似乎是一个有用的优化。它有助于消除尽可能多的吸尘需求。</p><p>您是否考虑过进行其他类型的优化？空页、空闲页等</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You might be interested in taking a look at Graft (<a href="https://graft.rs/" target="_blank" rel="noopener noreferrer">https://graft.rs/</a>). I have been iterating in this space for the last year, and have learned a lot about it. Graft has a slightly different set of goals, one of which is to keep writes fast and small and optimize for partial replication. That said, Graft shares several design decisions, including the use of framed ZStd compression to store pages.<p>I do like the B-tree aware grouping idea. This seems like a useful optimization for larger scan-style workloads. It helps eliminate the need to vacuum as much.</p><p>Have you considered doing other kinds of optimizations? Empty pages, free pages, etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534846" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 04:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷，谢谢。我以前没见过《Graft》，但这在很多有趣的方面听起来都很相似。我查看了存储库，看看我可以应用什么。<p>我已经尝试了各种优化 - 对于空闲页面，我考虑在每个 S3 对象中留下空白空间并将它们作为空闲页面提供，以获得高效的写入而不需要过多地打乱页面。我目前的偏见是，如果可以使读取路径更简单，就过度存储一点，因为到目前为止的主要目标是使冷读取合理，而不是最大化空间效率。特别是因为免费页面压缩得很好。</p><p>我有两个相关的路线图项目：打孔和类似 LSM 的写作。对于非 HDD 本地存储，我们可以通过将空页空间释放回操作系统来自动驱逐空页。对于写入，LSM 是最好的，因为它将相关的事物组合在一起，这正是我们所需要的。但这意味着在检查点上进行大量重写。因此，与其他事情相比，这两个方面的优化都有点为时过早。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool, thanks. I hadn’t seen Graft before, but that sounds pretty adjacent in a lot of interesting ways. I looked at the repo and see what I can apply.<p>I've tried out all sorts of optimizations - for free pages, I've considered leaving empty space in each S3 object and serving those as free pages to get efficient writes without shuffling pages too much. My current bias has been to over-store a little if it keeps the read path simpler, since the main goal so far has been making cold reads plausible rather than maximizing space efficiency. Especially because free pages compress well.</p><p>I have two related roadmap item: hole-punching and LSM-like writing. For local on non-HDD storage, we can evict empty pages automatically by releasing empty page space back to the OS. For writes, LSM is best because it groups related things together, which is what we need. but that would mean doing a lot of rewriting on checkpoint. So both of these feel a little premature to optimize for vs other things.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535056" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">carlsverre</span>
+        <span class="meta-time">2026/03/27 05:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这两个路线图项目都很有意义！很高兴看到您如何发展这个项目！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Both of those roadmap items make sense! Excited to see how you evolve this project!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535817" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 06:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！我认为打孔是关键，因为它对于“删除已经发生但我们需要在没有真空的情况下释放空间”很重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! I think the hole punching is the key one, as it is important for "this delete has happened but we need to free the space without a vacuum".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">edinetdb</span>
+        <span class="meta-time">2026/03/27 09:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每个租户的数据库角度产生了共鸣。我也遇到了类似的权衡
+财务数据 API — 访问模式高度不均匀，大多数实体很少访问
+被询问，但有几百人不断受到打击。<p>我们走了不同的方向：BigQuery 用于持久存储，但用于内存中
+预加载“黄金”聚合表（约 26MB 的预计算数据）的层
+约 4,000 家公司）在启动时。冷查询直接回落到 BigQuery；
+热查询完全跳过它。将我们的查询成本降低了约 88%，尽管这是
+部分是因为表大小足够小以适合内存。</p><p>您提到的扫描速度慢的限制是我们仍然会遇到 BigQuery 的地方
+无论如何直接 - 跨 9M+ 文档部分的全文搜索无法缓存
+那样。因此，可能存在一种混合方法来存储热结构化数据
+内存中的文本和原始文本保留在仓库中。</p><p>对于超出内存预算的表，您的策略是什么？
+当您无法容纳整个表格时，页组布局是否仍然有帮助？
+看到一种通过访问频率进行部分预加载的方法吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The database-per-tenant angle resonates. I hit a similar tradeoff building a
+financial data API—highly uneven access patterns where most entities are rarely
+queried but a few hundred get hit constantly.<p>We went a different direction: BigQuery for durable storage, but an in-memory
+layer that pre-loads the "gold" aggregated tables (~26MB of pre-computed data
+for ~4,000 companies) at startup. Cold queries fall back to BigQuery directly;
+warm queries skip it entirely. Reduced our query costs by ~88%, though that's
+partly a function of table size being small enough to fit in memory.</p><p>The scans-are-slow limitation you mention is where we'd still hit BigQuery
+directly anyway—full text search across 9M+ document sections can't be cached
+that way. So there's probably a hybrid approach where hot structured data lives
+in-memory and raw text stays in the warehouse.</p><p>What's your strategy for tables that grow beyond what fits in a memory budget?
+Does the page-group layout still help when you can't fit the whole table—do you
+see a way to do partial pre-loading by access frequency?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538112" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得构建这个有趣的东西有更多的色彩：<p>对我来说，激励我的问题不是“SQLite 可以通过网络读取吗？”以及更多“一旦存储层是对象存储而不是文件系统，什么假设就会被打破？”</p><p>最大的概念转变是围绕“布局”。</p><p>在幼稚的设计中，感觉最错误的是 SQLite 页码的布局方式与您想要远程获取数据的方式不匹配。如果索引分散在许多不相关的页面范围中，那么“预取附近的页面”就是一种虚假的优化。文件中附近的内容与查询相关的内容不同。</p><p>这促使我转向 B 树感知分组。一旦存储层开始了解页面属于哪个表或索引，许多其他事情就会变得更清晰：更有针对性的预取、更好的扫描行为、更少的随机获取以及更明智的请求经济性。</p><p>另一件比我预期重要得多的事情是“不同的页面类型非常重要”。内部 B 树页面占用空间很小，但非常重要，因为基本上每个查询都会遍历它们。这改变了我对系统的看法：与其说是“数据库文件”，不如说是“在关键路径上具有不同价值的不同类别的页面”。</p><p>查询计划感知的“抢先”部分也来自同样的本能。反应式预取很好，但 SQLite 通常已经知道很多它要接触的内容。如果存储层能够尽早看到足够的信息，它就可以在第一个未命中完全级联之前开始加热正确的结构。这仍然是相当实验性的，但它是该项目中更有趣的部分之一。</p><p>我在构建这个过程中学到了一些东西：</p><p>1. *冷点读取和小连接似乎比我预期的更合理。*
+   显然，速度不如本地磁盘快，但对于“许多冷数据库”利基市场来说似乎是合理的。</p><p>2. *真正的敌人是请求计数超过原始字节。*
+   一旦我更努力地按树分组和预取，设计就变得更加连贯。</p><p>3. *扫描仍然是现实所咬的地方。*
+   它们的糟糕程度要低得多，但它们仍然是远程对象存储最清楚地提醒您它不是本地 SSD 的地方。</p><p>4. *存储后端非常重要。*
+   不同的存储后端（S3、S3 Express、Tigris）具有不同的往返延迟，这是确定如何调整预取的最重要的事情。</p><p>不管怎样，很高兴谈论架构、基准测试设置、什么问题，或者为什么我选择这种形状而不是原始文件范围 GET/复制优先方法/等等。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A bit more color on what I found interesting building this:<p>The motivating question for me was less “can SQLite read over the network?” and more “what assumptions break once the storage layer is object storage instead of a filesystem?”</p><p>The biggest conceptual shift was around *layout*.</p><p>What felt most wrong in naive designs was that SQLite page numbers are not laid out in a way that matches how you want to fetch data remotely. If an index is scattered across many unrelated page ranges, then “prefetch nearby pages” is kind of a fake optimization. Nearby in the file is not the same thing as relevant to the query.</p><p>That pushed me toward B-tree-aware grouping. Once the storage layer starts understanding which table or index a page belongs to, a lot of other things get cleaner: more targeted prefetch, better scan behavior, less random fetching, and much saner request economics.</p><p>Another thing that became much more important than I expected is that *different page types matter a lot*. Interior B-tree pages are tiny in footprint but disproportionately important, because basically every query traverses them. That changed how I thought about the system: much less as “a database file” and much more as “different classes of pages with very different value on the critical path.”</p><p>The query-plan-aware “frontrun” part came from the same instinct. Reactive prefetch is fine, but SQLite often already knows a lot about what it is about to touch. If the storage layer can see enough of that early, it can start warming the right structures before the first miss fully cascades. That’s still pretty experimental, but it was one of the more fun parts of the project.</p><p>A few things I learned building this:</p><p>1. *Cold point reads and small joins seem more plausible than I expected.*
+   Not local-disk fast, obviously, but plausible for the “many mostly-cold DBs” niche.</p><p>2. *The real enemy is request count more than raw bytes.*
+   Once I leaned harder into grouping and prefetch by tree, the design got much more coherent.</p><p>3. *Scans are still where reality bites.*
+   They got much less bad, but they are still the place where remote object storage most clearly reminds you that it is not a local SSD.</p><p>4. *The storage backend is super important.*
+   Different storage backends (S3, S3 Express, Tigris) have verg different round trip latencies and it's the single most important thing in determining how to tune prefetching.</p><p>Anyway, happy to talk about the architecture, the benchmark setup, what broke, or why I chose this shape instead of raw-file range GETs / replication-first approaches / etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534387" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hgo</span>
+        <span class="meta-time">2026/03/27 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的很欣赏这篇文章。自由而谦虚地分享来自有趣项目的真实见解。我几乎觉得，仅仅通过阅读，我就获得了您对这个项目的投资的很大一部分回报。<p>谢谢您的分享。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really appreciate this post. Freely and humbly sharing real insights from an interesting project. I almost feel like I got a significant chunk of the reward for your investment into this project just by reading.<p>Thank you for sharing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 04:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你的客气话！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for your kind words!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535218" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">swaminarayan</span>
+        <span class="meta-time">2026/03/27 11:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷的方法。我正在做一个相关的KV存储项目（snkv - <a href="https://github.com/hash-anu/snkv" target="_blank" rel="noopener noreferrer">https://github.com/hash-anu/snkv</a>）<p>您如何处理明显的一致性和更新——仅附加或大量重写？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool approach. I’m working on a related KV storage project (snkv - <a href="https://github.com/hash-anu/snkv" target="_blank" rel="noopener noreferrer">https://github.com/hash-anu/snkv</a>)<p>How do you handle manifest consistency and updates—append-only or rewrite-heavy?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538973" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ovaistariq</span>
+        <span class="meta-time">2026/03/27 12:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ovais - Tigris 的联合创始人。<p>这非常酷。我一直在考虑在 Tigris 上运行的嵌入式数据库。特别是从代理的角度来看，代理可以暂停和继续他们的会话。很乐意合作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ovais - co-founder of Tigris here.<p>This is very cool. I have been thinking about embedded databases running on Tigris. Specially from an agent perspective, agents can suspend and continue their sessions. Would love to collaborate.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">agosta</span>
+        <span class="meta-time">2026/03/27 04:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太棒了！随着所有项目/团队都致力于改进 sqlite，对于严肃的项目来说，它成为比 postgres 更好的默认值只是时间问题。<p>我确实想知道 - 对于最终强制执行单写入器 sqlite 设置的项目 - 我仍然觉得将 sqlite 数据库保留在本地总是更好（然后将 rsync/stream 备份到人们喜欢的任何 S3 存储）。</p><p>我还没有看到任何人破解这种设置的关键是找出一种实现零停机部署的方法。例如，在渲染上向虚拟机添加永久磁盘可防止零停机部署（请参阅 <a href="https://render.com/docs/disks#disk-limitations-and-considerations" target="_blank" rel="noopener noreferrer">https://render.com/docs/disks#disk-limitations-and-considera...</a>）这是一个真正不幸的副作用。据我所知，这样做的原因是因为虚拟机实例已附加到该卷，并且需要与该实例的新版本进行交换...</p><p>在许多应用程序中，随着产品的增长，仅扩展单个虚拟机就可以极大地简化开发运营/产品维护，因此与管理集群/单独的数据库服务器相比，这是一个非常引人注目的选择。但在很多情况下，通过在发布之间强制停机来实现这一目标是不可接受的。</p><p>不确定这是否真的是一个可以廉价解决的问题。一种可能的选择是使用 Turbolite 等工具作为并行数据存储，并且仅在部署期间使用它来使应用程序在发布交换期间保持运行 10 到 60 秒。在此期间，对数据库的写入比平时慢，但完全在线。然后，当您的新版本上线时，它可以将写入 s3 的数据差异同步回本地数据库。通过这种方式，在常规操作期间，我们可以获得本地 IO 的性能，并在升级期间回退到 s3 支持的 sqlite，以获得持久的正常运行时间。</p><p>听起来像是一件令人担忧的事情。但是，伙计，要超越本地读取的速度确实很难/不可能！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is awesome! With all of the projects/teams working on improving sqlite, it feels like it's just a matter of time before it becomes a better default than postgres for serious projects.<p>I do wonder - for projects that do ultimately enforce single writer sqlite setups - it still feels to me as if it would always be better to keep the sqlite db local (and then rsync/stream backups to whatever S3 storage one prefers).</p><p>The nut I've yet to see anyone crack on such setup is to figure out a way to achieve zero downtime deploys. For instance, adding a persistent disk to VMs on Render prevents zero downtime deploys (see <a href="https://render.com/docs/disks#disk-limitations-and-considerations" target="_blank" rel="noopener noreferrer">https://render.com/docs/disks#disk-limitations-and-considera...</a>) which is a real unfortunate side effect. I understand that the reason for this is because a VM instance is attached to the volume and needs to be swapped with the new version of said instance...</p><p>There are so many applications where merely scaling up a single VM as your product grows simplifies devops / product maintenance so much that it's a very compelling choice vs managing a cluster/separate db server. But getting forced downtime between releases to achieve that isn't acceptable in a lot of cases.</p><p>Not sure if it's truly a cheaply solvable problem. One potential option is to use a tool like turbolite as a parallel data store and, only during deployments,    use it to keep the application running for the 10 to 60 seconds during a release swap. During this time, writes to the db are slower than usual but entirely online. And then, when your new release is live, it can sync the difference of data written to s3 back to the local db. In this way, during regular operation, we get the performance of local IO and fallback onto s3 backed sqlite during upgrades for persistent uptime.</p><p>Sounds like a fraught thing to build. But man it really is hard/impossible to beat the speed of local reads!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535455" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 06:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我基本上同意，另一个评论提出了这个想法。如果您可以将 SQLite 保留在本地，这通常是更好的答案。本地读取非常难以击败，而 Litestream 是典型的“保持 SQLite 本地化并在其他地方提供持久性”模型。<p>这实际上是我开始另一个项目 haqlite 的一个重要原因： <a href="https://github.com/russellromney/haqlite" target="_blank" rel="noopener noreferrer">https://github.com/russellromney/haqlite</a> 这更多的是“保持 SQLite 本地化”：通过 S3 条件 PUT 进行领导者选举、WAL 复制到 S3、追随者追赶、向领导者写入转发以及优雅的领导者切换。因此，它可以非常接近 2 个以上节点的零停机部署。</p><p>但单台服务器上并不是真正的零停机——如果没有另一个热情的追随者活着，那么领导层就无处可去。所以在我的脑海里：</p><p>- Litestream：本地SQLite为主；对象存储用于持久性/复制/故障转移</p><p>- haqlite：一种 Litestream，但重点是将其嵌入到任何应用程序中。</p><p>- Turbolite：对象存储是实际的后备存储，问题是冷读的可信度如何。没有HA想法</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah I mostly agree, and another comment brought up this idea kind of. If you can keep SQLite local, that’s usually the better answer. Local reads are insanely hard to beat, and Litestream is the canonical “keep SQLite local and ship durability elsewhere” model.<p>That’s actually a big part of why I started another project, haqlite: <a href="https://github.com/russellromney/haqlite" target="_blank" rel="noopener noreferrer">https://github.com/russellromney/haqlite</a> which is much more on the “keep SQLite local” side: leader election via S3 conditional PUTs, WAL replication to S3, follower catchup, write forwarding to the leader, and graceful leader handoff. So it can get pretty close to zero-downtime deploys with 2+ nodes.</p><p>But not true zero downtime on a single server — if there isn’t already another warm follower alive, there is nowhere for leadership to go. So in my head:</p><p>- Litestream: local SQLite is primary; object storage is for durability / replication / failover</p><p>- haqlite: kind of a Litestream but with a focus on embedding it into any application.</p><p>- turbolite: object storage is the actual backing store, and the question is how plausible cold reads can get. No HA ideas</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536751" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hrmtst93837</span>
+        <span class="meta-time">2026/03/27 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">将数据库保持在本地可以减少最严重的延迟峰值，但随后你就放弃了短暂计算和即时扩展的全部内容，因此你最终会变相地粘在老式基础设施模式上，再加上节点亲和力和热缓存保姆，这些看起来很像 SQLite 应该让你避开的东西。在不稳定的节点上添加一些读取器，它会很快变得丑陋。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Keeping the DB local cuts the worst latency spikes, but then you trade away the whole pitch of ephemeral compute and just-in-time scaling, so you end up glued to old-school infra patterns in disguise, plus node affinity and warm-cache babysitting that look a lot like the stuff SQLite was supposed to let you dodge. Add a few readers on volatile nodes and it get ugly fast.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536176" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AlexeyBelov</span>
+        <span class="meta-time">2026/03/27 13:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是LLM的说法。难道只有我一个人注意到了？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is LLM-speak. Am I the only one who notices?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539413" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AbanoubRodolf</span>
+        <span class="meta-time">2026/03/27 11:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这种权衡是真实的，但它是特定于工作负载的。 Turbolite 用于对真正的临时计算进行以读取为主的分析 - Lambda 或 Spot 实例命中每天刷新一次的数据集。没有要固定的持久节点，因此本地复制不适用。您正在将苹果与完全不同的水果进行比较。<p>实现 250 毫秒的原因不仅仅是范围请求。这是 B 树感知页面分组。标准 S3 VFS 每次随机页面获取需要 15-20 毫秒。将查询实际涉及的页面分组为连续的段，然后将数十次往返转换为几次顺序读取。对于中小型表的冷 JOIN 查询，这就是 4 秒和可用时间之间的差异。</p><p>对于 OLTP 或具有有意义的写入吞吐量的任何事物，本地 WAL 复制（LiteFS、haqlite、Litestream）显然是正确的。这是使用 SQLite 时发生的两个不同问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The tradeoff is real, but it's workload-specific. Turbolite is for read-mostly analytics on truly ephemeral compute -- Lambda or spot instances hitting a dataset that refreshes once a day. There's no persistent node to pin, so local-with-replication doesn't apply. You're comparing apples to a different fruit entirely.<p>What makes 250ms achievable isn't just range requests. It's the B-tree-aware page grouping. Standard S3 VFS pays 15-20ms per random page fetch. Group the pages a query actually touches into contiguous segments and you turn dozens of round trips into a few sequential reads. For cold JOIN queries on small-to-medium tables, that's the difference between 4 seconds and usable.</p><p>For OLTP or anything with meaningful write throughput, local WAL replication (LiteFS, haqlite, Litestream) is clearly right. These are two different problems that happen to both use SQLite.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538819" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 12:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不。Turbolite 是显式读写的，并且确实很难平衡可用性和本地查询速度。这些权衡是真实的。我认为你的回答并没有非常准确地描述这个项目。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No. Turbolite is explicitly read-write, and it’s genuinely hard to balance availability against local query speed. Those tradeoffs are real. I don’t think your response is describing this project very accurately.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539092" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 06:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我自己说得再好不过了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Couldn't have said it better myself.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另外，我想感谢这个领域相邻部分的其他项目——原始 SQLite 范围请求 VFS、Litestream/LiteFS 式复制方法、libSQL/Turso、Neon、mvsqlite 等。我从他们那里得到了很多灵感，谢谢！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also I want to acknowledge the other projects in adjacent parts of this space — raw SQLite range-request VFSes, Litestream/LiteFS-style replication approaches, libSQL/Turso, Neon, mvsqlite, etc. I took a lot of inspiration from them, thanks!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534400" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pdyc</span>
+        <span class="meta-time">2026/03/27 11:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个很棒的项目，它支持 wasm 吗？我想在浏览器中使用 sqlite wasm 。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this is a great project, does it support wasm? i want to use it in browser with sqlite wasm.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bob1029</span>
+        <span class="meta-time">2026/03/27 04:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否考虑过使用条件 PUT 等技术来启用多个写入器？<p><a href="https://aws.amazon.com/about-aws/whats-new/2024/08/amazon-s3-conditional-writes/" target="_blank" rel="noopener noreferrer">https://aws.amazon.com/about-aws/whats-new/2024/08/amazon-s3...</a></p><p><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-requests.html" target="_blank" rel="noopener noreferrer">https://docs.aws.amazon.com/AmazonS3/latest/userguide/condit...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you considered using techniques like conditional PUT to enable multiple writers?<p><a href="https://aws.amazon.com/about-aws/whats-new/2024/08/amazon-s3-conditional-writes/" target="_blank" rel="noopener noreferrer">https://aws.amazon.com/about-aws/whats-new/2024/08/amazon-s3...</a></p><p><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-requests.html" target="_blank" rel="noopener noreferrer">https://docs.aws.amazon.com/AmazonS3/latest/userguide/condit...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535505" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，我确实考虑过这一点并投入了一些工作。我把这项工作转移到了另一个项目中， <a href="https://github.com/russellromney/haqlite" target="_blank" rel="noopener noreferrer">https://github.com/russellromney/haqlite</a> 专注于高可用性 SQLite。与 Litestream 类似，但专注于嵌入到您的应用程序中。它使用条件 PUT 进行领导者选举，将 WAL 发送到 S3，并将写入（以及为了一致性而读取）转发给领导者 - 因此它仍然是单写入者，但当领导者未能再次声明领导者租约时，会自动发生故障转移。数据窗口是租约超时+检查点间隔。也许我会探索如何一起使用 haqlite + Turbolite。<p>简短的回答：分布式的条件 PUT 让我对多作者感到害怕。问题不在于进行写入，而在于确保写入器正在针对最新数据进行写入。对于具有更新插入的 OLTP 工作负载，这非常困难！如果您有不可变的数据，没有任何更新插入，并且您的写入不依赖于读取，那么实际上效果非常好。但在任何其他情况下都是危险的。作者需要确保其他作者首先已设置检查点，但没有一个很好的方法可以做到这一点。</p><p>可以在 Turbolite 中实现此功能的一件事是具有事务和锁定超时的快速分布式锁定系统。例如。使用Redis作为锁租约持有者，分布式编写者获取它，从s3获取最新的清单，同步他们需要的任何数据，执行写入，检查点，更新要释放的锁并记下新的清单版本，然后将成功返回给用户。然后在进行任何读取之前，他们简单地检查 Redis 中的新清单（或检查 S3 以确保清单更新/锁定释放不会失败）。所有写入都有 N 秒超时，并且写入锁有 N 秒 + T 超时，因此只要读取者首先检查清单，就可以保证在下一次读取中使用成功的检查点。</p><p>这可能行得通，但它是&lt;仍然&gt;单身作家哈哈。但你只需要不频繁的写入。读取需要花费 S3 GET。所以我想它最适合与 Wasabi（不收取操作费用）或自托管 MinIO 配合使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's funny, I did consider that and put some work into doing it. I moved that work into a different project, <a href="https://github.com/russellromney/haqlite" target="_blank" rel="noopener noreferrer">https://github.com/russellromney/haqlite</a> that focuses on high-availability SQLite. Like Litestream but focused on embedding in your application. It uses conditional PUTs for leader election, ships WAL to S3, and writes (and reads for consistency) are forwarded to the leader - so it's still single writer, but failover happens automatically when the leader fails to claim the leader lease again. Data window is the lease timeout + checkpoint interval. Maybe I'll explore how to use haqlite + turbolite together.<p>Short answer: conditional PUTs for distributed scare me for multiwriter. The issue isn't doing the writes, it's ensuring that the writer is writing against the most current data. For OLTP workloads with upserts, this is very hard! If you have immutable data without any upserts and your writes don't depend on reads, that actually works really well. But in any other scenario it's dangerous. The writer needs to ensure that the other writers have checkpointed first, and there's not a great way to do that.</p><p>One thing that could make this work in turbolite is a fast distributed lock system with transaction and lock timeouts. E.g. use Redis as the lock lease holder, and distributed writers acquire it, fetch the latest manifest from s3, sync any data they need, do the write, checkpoint, update the lock to be released and note the new manifest version, and return success to the user. then before any reads, they simple check Redis for the new manifest (or S3 for guarantee that the manifest update/lock release didn't fail). All writes have an N second timeout, and the write lock has N second + T timeout, so it's guaranteed that successful checkpoints are used in the next read, as long as readers check the manifest first.</p><p>This could work, but it's &lt;still&gt; single writer lol. But you'd only want it with infrequent writes. And reads cost an S3 GET. So I guess it would work best with Wasabi, which doesn't charge for operations, or self-hosted MinIO.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536272" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 06:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">rqlite 做得很好，但它仍然是基于服务器的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">rqlite does this well but it’s still server based</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536884" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">manudaro</span>
+        <span class="meta-time">2026/03/27 04:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">来自 S3 的冷查询低于 250 毫秒令人印象深刻，但对这些数字的一致性感到好奇。您是否正在预取表模式或统计信息？对于地理数据集，我们经常会看到 S3 延迟存在巨大差异，具体取决于对象大小和区域 - 10Mb 空间索引文件可能需要 400 毫秒才能获取，而较小的查找表则保持在 100 毫秒以下。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sub 250ms for cold queries from S3 is impressive, but curious about the consistency of those numbers. Are you doing any prefetching of table schemas or statistics? With geographic datasets we often see huge variance in S3 latency depending on object size and region - a 10Mb spatial index file might take 400ms to fetch while smaller lookup tables stay under 100ms.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535606" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alex_hirner</span>
+        <span class="meta-time">2026/03/27 03:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您对驱逐有何看法？添加一些基本政策有多容易？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What are your thoughts on eviction, re how easy to add some basic policy?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534811" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 03:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很好的问题。我在 Rust 库中有一些驱逐函数；我还没有通过扩展/VFS 公开它们。悬而未决的问题不再是“我可以驱逐吗？”以及更多“什么时候应该驱逐？”通过用户操作、通过策略或两者兼而有之。<p>明显的策略驱动版本是这样的：</p><p>- 当缓存大小超过限制时</p><p>- 在检查站</p><p>- 每 N 次写入（有点像自动检查点）</p><p>- 经过一定的闲置/年龄阈值后</p><p>我的直觉是，对于我关心的工作负载，最好的答案可能是混合。 VFS 应该在内部有一个分层感知策略，用户可以为内部/索引/数据页面配置单独的策略。但用户/应用程序可能仍然最有可能说“这个租户/会话数据库现在很冷，请积极驱逐”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great question. I have some eviction functions in the Rust library; I don’t expose them through the extension/VFS yet. The open question is less “can I evict?” and more “when should eviction fire?” via user action, via policy, or both.<p>The obvious policy-driven versions are things like:</p><p>- when cache size crosses a limit</p><p>- on checkpoint</p><p>- every N writes (kind of like autocheckpoint)</p><p>- after some idle / age threshold</p><p>My instinct is that for the workload I care about, the best answer is probably hybrid. The VFS should have a tier-aware policy internally that users can configure with separate policies for interior/index/data pages. But the user/application may still be in the best position to say “this tenant/session DB is cold now, evict aggressively.”</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534960" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 04:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">添加它们也非常容易，它肯定在路线图上。清单在本地跟踪数据，并可以快速驱逐任何访问它的操作。经过检查站后非常安全</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also it’s super easy to add them, it’s definitely on the roadmap. The manifest tracks the data locally and could quickly evict on any operation that accesses it. Very safe post-checkpoint</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jijji</span>
+        <span class="meta-time">2026/03/27 04:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道运行任何正常负载每小时需要多少钱？与使用 mysql（或任何类似的 RDBMS）进行查询相比，这有什么好处？ mysql/pgsql/etc 是免费的，记住，所以使用 S3 显然是按请求收费的，还是我错了？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i wonder how much that costs per hour to run any normal load? what benefit does this have versuss using mysql (or any similar rdbms) for the queries? mysql/pgsql/etc is free remember, so using S3 obviously charges by the request, or am i wrong?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535552" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">russellthehippo</span>
+        <span class="meta-time">2026/03/27 06:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">成本实际上取决于您的工作流程、持久性需求、预取攻击（本地需要所有数据的速度）以及缓存的积极程度。存储就是这样，而且很便宜。差异在于交易数量。<p>如果您在每次读/写时逐出缓存，则所有读和写都会执行 S3 GET。 PUT 通常比 GET 贵 10-100 倍。检查 benchmark/README.md 的 GET 计数，但每次冷读通常为 5-50 个（磁盘上有内部 B 树页面）。</p><p>S3 GET 为 0.0004 美元/1000 美元，S3 Express 为 0.00003 美元。因此，全天每分钟 10 次查询，平均 20 次 GET 操作，每个请求完全驱逐，每月将是 20*10*$0.0004*60*24/1000*30 = $3.45。使用 S3 Express One Zone 的价格为 0.26 美元/月。两者加上存储成本，这可能会更低。</p><p>在 Wasabi 上，这只是存储成本（但他们的最低 1TB 要求为 6.99 美元/月）。</p><p>如果您在每次写入后检查点并每分钟写入 10 次，则每次写入都会命中例如5个页面组（S3对象）加上清单文件，分析如下：6*10*$0.005*60*24/1000*30=$12.96。这又是基准 1.5GB 数据库的最坏情况。在 S3 Express 上，价格为 2.92 美元。</p><p>重点是——这还不算太糟糕，这是最坏的情况，你每 6 秒就驱逐一次每个请求，这是不现实的。如果您每小时清除缓存，则成本为 1/600 - 每月不到 0.01 美元。</p><p>摘要：使用 S3 Express One Zone，不要太频繁地逐出缓存，每分钟检查一次 S3（turbolite 允许您在本地（磁盘持久性）或本地+S3 单独进行检查点），并且您每个月都会运行相当不错的工作负载。</p><p>[对纯文本电子表格数学表示歉意]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cost really depends on your workflow, your durability needs, prefetch aggression (how quickly you need all the data locally), and how aggressively you cache. The storage is what it is, and it's cheap. The variation comes in transaction counts.<p>If you evict the cache on every read/write, then all reads and writes do S3 GET. PUTs are 10-100x more expensive than GETs usually. Check the benchmark/README.md for GET counts, but it's usually 5-50 per cold read (with interior B-tree pages on disk).</p><p>S3 GETs are $0.0004/1000, S3 Express is $0.00003. So 10 queries per minute all day long averaging 20 GET operations, with full eviction on each request, would be  20*10*$0.0004*60*24/1000*30 = $3.45 per month. With S3 Express One Zone that's $0.26/mo. Both plus storage costs, which would probably be lower.</p><p>On Wasabi, that would be just the cost of storage (but they have minimum 1TB requirements at $6.99/mo).</p><p>If you checkpoint after every write and write 10 times per minute, each write hitting e.g. 5 page groups (S3 objects) plus the manifest file, the analysis looks like: 6*10*$0.005*60*24/1000*30=$12.96. Again that's worst case for the benchmark 1.5GB database. On S3 Express that' $2.92.</p><p>Point is - it's not too bad, and that's kind of worst-case scenario where you evict on every request every 6 seconds which isn't really realistic. If you evict the cache hourly, that cost goes is 1/600th - less than a $0.01 per month.</p><p>Summary: use S3 Express One Zone, don't evict the cache too often, checkpoint to S3 once a minute (turbolite lets you checkpoint either locally (disk-durability) or locally+S3 separately), and you're running a decent workload for pennies every month.</p><p>[Apologies for the spreadsheet math in plaintext]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536540" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nthypes</span>
+        <span class="meta-time">2026/03/27 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也很好奇。 GCS 还按 GET 请求收费</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">im also curious. GCS also charges per GET request</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">inferense</span>
+        <span class="meta-time">2026/03/27 04:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">very cool!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">michaeljelly</span>
+        <span class="meta-time">2026/03/27 03:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真的很酷</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Really cool</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534780" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ryanjso</span>
+        <span class="meta-time">2026/03/27 05:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">病得很厉害</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">super sick</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yalvhe2009</span>
+        <span class="meta-time">2026/03/27 09:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538072" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yalvhe2009</span>
+        <span class="meta-time">2026/03/27 09:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

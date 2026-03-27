@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>使用 Elixir 和 Phoenix 构建博客 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-03-27-1343/">返回本批次</a>
+      <h1>使用 Elixir 和 Phoenix 构建博客</h1>
+      <p class="subtitle">Building a Blog with Elixir and Phoenix</p>
+      <div class="meta-line">
+        <span>jola.dev</span>
+        <span>作者 shintoist</span>
+        <span>分数 84</span>
+        <span>评论 8</span>
+        <span>2026/03/27 01:16</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47533090" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://jola.dev/posts/building-a-blog-with-elixir-and-phoenix" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>TL;DR：这是一个 Elixir 应用程序，使用 Phoenix 服务器端渲染页面，并使用 NimblePublisher 从 Markdown 生成博客文章页面。它运行在 Hetzner 上运行的自托管 Dokploy 实例上，bunny.net 作为 CDN 位于其前面。</li><li>这是一篇关于这个博客是如何组合起来的非常迟来的文章！这里没有什么非常原创的东西，但我认为它可以为外面的人作为参考派上用场。世界需要更多 Elixir 内容。</li><li>为什么选择凤凰城</li><li>我之前曾使用静态站点生成器来为我的博客提供支持（向 Hakyll 致敬），但我想为自己打开一扇门，以便在这个站点上进行一些小实验，这些实验需要比静态站点允许的更多交互性。另外，我就是喜欢用Phoenix。虽然我的大部分 Phoenix 项目都使用 LiveView，但感觉这是一个使用 DeadViews 做老式事情的好地方。</li><li>这也意味着我可以完全控制我正在构建的东西。使用别人创建的工具意味着免费获得很多东西，但是当你超出预期时，你就必须弄清楚如何让事情适合他们的工具。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>TL;DR: it’s an Elixir app using Phoenix server side rendered pages, with the blog post pages generated from Markdown using NimblePublisher. It’s running on a self-hosted Dokploy instance running on Hetzner, with bunny.net as a CDN sitting in front of it.</li><li>This is a very belated write up of how this blog was put together! There’s nothing terribly original here, but I figure it could come in handy for someone out there as a reference. And the world needs more Elixir content.</li><li>Why Phoenix</li><li>I have used static site generators before to power my blog (shoutout to Hakyll), but I wanted to open the door for myself to also have little experiments on this site, ones that would require more interactivity than a static site allows. Besides, I just like using Phoenix. Although most of my Phoenix projects use LiveView, this felt like a good place to do things old-school with DeadViews.</li><li>It also means I get full control of what I’m building. Using a tool someone else created means getting a lot for free, but the moment you step outside of the expected you’re having to figure out how to make things work for their tool.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mikhmha</span>
+        <span class="meta-time">2026/03/27 05:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇。我很高兴看到这篇文章，因为我今天确实计划这样做。我一直在使用 Elixir 作为后端构建一个 MMO，目前主网站是一个朋友使用 Vue.js 为我制作的静态网站。大多数情况下，它只是作为显示游戏新更新的博客文章的一种方式。它包含一个用于“启动”游戏浏览器客户端的按钮，该按钮只是重定向到托管在包含游戏文件的 cloudflare 存储桶上的页面。<p>但我认为现在是更新网站的时候了。我对 Vue.js 的了解还不够，而且我更像是一个后端程序员。我已经推迟了这么久了。我一直认为该网站将是暂时的，直到我花时间学习一些 Pheonix。在 Elixir 世界中从事一个与 Phoenix 没有任何关系的项目有点奇怪。对我来说，它就像是一种我认为自己“熟练”的语言的全新领域。而对其他人来说，Elixir = Pheonix。因此，这篇文章确实有助于消除我开始时的压倒性感觉，因为我不需要实时查看或 ecto 或所有其他东西，但大多数学习资源都集中于此。</p><p>我很兴奋现在就开始。最终，它将成为一个不太静态的网站，可能会与主游戏服务器上运行的一些公开端点进行交互，这样我就可以在主站点上显示游戏的“实时玩家”或“实时地图”等统计数据。但目前它将与游戏服务器完全隔离。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow. I am so glad for this post because I am literally planning to do this today. I've been building an MMO using Elixir as the backend, and currently the main website is a static site a friend made for me using Vue.js. Mostly it just functions as a way to display blog posts that show new updates to the game. And it contains a button to "launch" the browser client for the game which is just a redirect to a page hosted on a cloudflare bucket that contains the game files.<p>But I figure now is the time to update the site. I don't know enough about Vue.js and I'm more of a backend programmer anyways. I've been putting it off for so long. I always figured the site would be temporary until I put in the time to learn some Pheonix. Its a bit strange being in the Elixir world working on a project that doesn't touch Phoenix in any way. To me its like an entirely new domain for a language that I consider myself "skilled" in. Whereas for others Elixir = Pheonix. So this write-up really helps remove the overwhelming feeling I've had about starting, because I don't need liveview or ecto or all the other stuff but most of the learning resources focus on that.</p><p>I'm kind of excited to start now. Eventually it will be a not-so static website that will maybe interface with some exposed endpoints running on the main game server so I can show stats like "live players" or a "live map" of the game on the main site. But for now it will remain completely isolated from the game server.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536195" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Joel_Mckay</span>
+        <span class="meta-time">2026/03/27 06:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Phoenix 框架很棒，我希望它更受欢迎。<p>具体来说，通道如何轻松解决几个常见问题：</p><p><a href="https://hexdocs.pm/phoenix/channels.html" target="_blank" rel="noopener noreferrer">https://hexdocs.pm/phoenix/channels.html</a></p><p>Phoenix 部署中的最小有线流量通常首先会让人们感到惊讶。  祝你好运=3</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Phoenix framework is great, and I wish it was more popular.<p>Specifically how Channels trivially solve several common problems:</p><p><a href="https://hexdocs.pm/phoenix/channels.html" target="_blank" rel="noopener noreferrer">https://hexdocs.pm/phoenix/channels.html</a></p><p>The minimal wire traffic on a Phoenix deployment usually surprises people at first.  Best of luck =3</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47536905" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thibaut_barrere</span>
+        <span class="meta-time">2026/03/27 02:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在考虑做类似的事情，但嵌入“livebook”位，以便我将来可以在我的帖子中间运行代码和实时视图。<p>很想知道是否有人已经走过这条路线（或类似的路线）！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am considering doing something similar, but embedding “livebook” bits so that I can run code &amp; liveviews right in the middle of my posts in the future.<p>Curious to know if anyone went that route (or something similar) already!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534035" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fouc</span>
+        <span class="meta-time">2026/03/27 12:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">经过快速搜索后，似乎对嵌入 livebook 的支持是有限的，livebook 开发人员对此没有任何兴趣，最好的是它可以在 iframe 中工作，同时可能在不同的端口上运行。  iframe 支持于 2023 年左右添加。可能需要一些 JS 来转发一些事件，例如 cmd+c/v/x。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">After a quick search it seems like support for embedding livebook is limited, the livebook devs didn't have any interest in working on that, the best you've got is that it can work in iframes while running off a different port perhaps.  iframe support was added ~2023. Some JS might be needed to forward some events like cmd+c/v/x.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47539076" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/03/27 03:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534321" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arikrahman</span>
+        <span class="meta-time">2026/03/27 02:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经做到了这一点，但对于 Clojure，我需要使用具有负责任的状态管理（通过重新框架）的动态语言，但也有一个很好的 REPL。 REPL 与语言本身的无缝集成使其变得更加容易，因为我需要的大多数工具都是预先存在的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have done this but with Clojure, I needed to use a dynamic language with responsible state management (via Re-frame), but also had a good REPL. Seamless REPL integration with the language itself made it easier as most of the tools I needed were pre-existing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47534288" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jamauro</span>
+        <span class="meta-time">2026/03/27 04:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能对此感兴趣 <a href="https://popcorn.swmansion.com" target="_blank" rel="noopener noreferrer">https://popcorn.swmansion.com</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this might be of interest to you <a href="https://popcorn.swmansion.com" target="_blank" rel="noopener noreferrer">https://popcorn.swmansion.com</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47535124" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dottjt</span>
+        <span class="meta-time">2026/03/27 07:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我年轻得多时，我用 Phoenix 构建了一个非常大且复杂的平台。尽管这是一个技术奇迹，但就我所使用的技术堆栈而言，这是我最大的遗憾之一，因为十年后它对我的实际工作毫无用处。<p>回想起来，我希望我是用 C#/.NET 构建它的</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When I was a lot younger I built a very big and complex platform with Phoenix. Although it was a technical marvel, it's one of my big regrets as far as the tech stack I went with, because it's now useless for my actual work now a decade later.<p>In retrospect, I wish I had built it with C#/.NET</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47537384" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">boundlessdreamz</span>
+        <span class="meta-time">2026/03/27 11:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么没用呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why is it useless?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47538775" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
