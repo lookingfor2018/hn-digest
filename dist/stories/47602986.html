@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：Claude Code 代理团队的实时仪表板 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1040/">返回本批次</a>
+      <h1>显示 HN：Claude Code 代理团队的实时仪表板</h1>
+      <p class="subtitle">Show HN: Real-time dashboard for Claude Code agent teams</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 simple10</span>
+        <span>分数 69</span>
+        <span>评论 23</span>
+        <span>2026/04/02 00:24</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47602986" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/simple10/agents-observe" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>Claude Code 代理的实时可观察性仪表板。包括强大的多代理会话过滤、搜索和可视化功能。</li><li>演示视频</li><li>服务器和仪表板在本地或远程运行，允许多个 Claude Code 实例使用挂钩记录完整的会话数据。使用 Hooks 代替 OTEL 来捕获代理操作的全貌。插件安装先决条件</li><li>Docker（必需 - 服务器作为容器运行） Node.js（必需 - 通过节点运行的钩子脚本）</li><li>安装</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Real-time observability dashboard for Claude Code agents. Includes powerful filtering, searching, and visualization of multi-agent sessions.</li><li>Demo video</li><li>The server and dashboard run locally or remotely, allowing multiple Claude Code instances to log full session data using hooks. Hooks are used instead of OTEL to capture the full picture of agent actions. Plugin Installation Prerequisites</li><li>Docker (required — the server runs as a container) Node.js (required — hook scripts run via node)</li><li>Install</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">saadn92</span>
+        <span class="meta-time">2026/04/02 01:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Hooks 的性能发现与我所看到的相符。我在远程虚拟机上并行运行多个 Claude Code 代理，我了解到的第一件事是代理关键路径中的任何阻塞都会降低吞吐量。当代理每分钟进行数十次工具调用时，即使每个钩子调用只有几百毫秒，也会很快复合。<p>基于docker的服务模式也很聪明。我为自己的设置采取了不同的方向——每个代理的工作树隔离的 tmux 会话，这使事情变得轻量级，但意味着除了手动跟踪日志之外，我对每个代理实际执行的操作的可观察性为零。这以一种不会增加代理本身开销的方式解决了这一差距，这是正确的权衡。</p><p>对一件事感到好奇 - 仪表板如何处理子代理生成自己的子代理的情况？它跟踪整棵树还是只跟踪一层深度？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The hooks performance finding matches what I've seen. I run multiple Claude Code agents in parallel on a remote VM and the first thing I learned was that anything blocking in the agent's critical path kills throughput. Even a few hundred milliseconds per hook call compounds fast when you have agents making dozens of tool calls per minute.<p>The docker-based service pattern is smart too. I went a different direction for my own setup -- tmux sessions with worktree isolation per agent, which keeps things lightweight but means I have zero observability into what each agent is actually doing beyond tailing logs manually. This solves that gap in a way that doesn't add overhead to the agent itself, which is the right tradeoff.</p><p>Curious about one thing -- how does the dashboard handle the case where a sub-agent spawns its own sub-agents? Does it track the full tree or just one level deep?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604127" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 01:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">子代理树由仪表板完全跟踪。当代理产生时，它总是有一个父代理 ID - 克劳德在钩子有效负载中发送它。当您将鼠标悬停在仪表板中的代理上时，它会显示哪个代理生成了它。目前 UI 中没有代理的树视图，但添加起来很容易。数据都在那里。<p>[编辑] 当克劳德生成子代理时，它们会继承父代理的钩子。因此，默认情况下会记录所有子代理活动。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sub-agent trees are fully tracked by the dashboard. When an agent is spawned, it always has a parent agent id - claude is sending this in the hooks payload. When you mouse over an agent in the dashboard, it shows what agent spawned it. There currently isn't a tree view of agents in the UI, but it would be easy to add. The data is all there.<p>[Edit] When claude spawns sub-agents, they inherit the parent's hooks. So all sub-agents activity gets logged by default.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kami23</span>
+        <span class="meta-time">2026/04/02 02:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我尝试使用钩子来设置我的 DIY 版本的频道现在在 Claude 中。我让克劳德写了它们，但并没有真正关注结果，因为氛围很强烈。它与周围的奇怪行为作斗争。很高兴看到一些可能的原因，我最终杀死了那个工作分支，所以我从来没有弄清楚到底发生了什么。<p>现在我很后悔没有深入研究这些。我认为这种界面类型非常适合我想向更多观众展示的一些内容。</p><p>现在我们已经了解了实际的内部结构，我有很多东西想要深入研究。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tried using hooks for setting up my DIYed version of what channels is now in Claude. I had Claude writing them and not really looking at the results cause the vibes are strong. It struggled with odd behaviors around them. Nice to see some of the possible reasons, I ended up killing that branch of work so I never figured out exactly what was happening.<p>Now I'm regretting not going deeper on these. This is the type of interface that I think will be perfect for some things I want to demonstrate to a greater audience.</p><p>Now that we have the actual internals I have so many things I want to dig through.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604921" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就在。祝你好运！您可能还想玩一下 <a href="https://github.com/simple10/agent-super-spy" target="_blank" rel="noopener noreferrer">https://github.com/simple10/agent-super-spy</a> 如果您想查看克劳德发送的原始提示。查看系统提示以及如何处理工具调用和消息线程对我来说确实很有帮助。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Right on. Good luck! You might also want to play around with <a href="https://github.com/simple10/agent-super-spy" target="_blank" rel="noopener noreferrer">https://github.com/simple10/agent-super-spy</a> if you want to see the raw prompts claude is sending. It was really helpful for me to see the system prompts and how tool calls and message threads are handled.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605038" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">petcat</span>
+        <span class="meta-time">2026/04/02 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你们每天在克劳德代币上花费数百（或数千）美元吗？  碉堡了。  在达到使用限制之前，我无法让超过一两个代理在很长一段时间内做任何有用的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you guys spending hundreds (or thousands) of dollars a day on Claude tokens?  Holy crap.  I can't get more than one or two agents to do anything useful for very long before I'm hitting my usage limits.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kami23</span>
+        <span class="meta-time">2026/04/02 02:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的处境很好，我一直在公司的一小群人中引导克劳德。我一直痴迷于突破一次可以工作的会话数量和代理数量的限制。我们把一些工作交给了 Gas Town 和另一位 Orchestrator，但他们觉得对我来说太僵化和固执己见。但我有偏见，我想最终做出自己的。<p>当我回到家执行我的 20 美元计划时，我感到悲伤和恼火，但我不想投入更多，因为这足以让我一次工作一点，对我个人来说是一个很好的番茄计时器。</p><p>像这样的东西对于我想要作为具有可塑性视觉效果的命令和控制工具来解决的一些问题来说是完美的。</p><p>OP：这很酷，谢谢分享。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm in a great situation where I've been piloting Claude for the company among a small group of others. I've been obsessed with pushing the limits of how many sessions and agents I can working at a time. We threw some work at Gas Town and another Orchestrator but they felt too rigid and opinionated for my liking. But I'm biased, I want to make my own eventually.<p>When I go home to my $20 plan I am sad and annoyed but I don't want to put more in for what is a good enough for me to work a bit at a time, a good pomodoro timer for me personally.</p><p>Something like this is perfect for some of the issues that I've wanted to solve as a command and control tool with malleable visuals.</p><p>OP: This is cool, thank you for sharing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604859" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 Pro 计划上遇到了很多限制。升级至最高 200 美元/月计划，并且暂时未达到限制。<p>检查您的插件或使用代理来检查原始提示非常重要。如果您安装了很多技能和插件，您消耗代币的速度将比平常快 5-10 倍。</p><p>还有克劳德使用分代理和代理团队。当它们使用新的上下文窗口生成时，它们的令牌使用量明显减少。您可以在代理观察仪表板中准确地看到克劳德用于生成子代理的提示和响应。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I hit a lot of limits on Pro plan. Upgraded to Max $200/mo plan and haven't hit limits for awhile.<p>It's super important to check your plugins or use a proxy to inspect raw prompts. If you have a lot of skills and plugins installed, you'll burn through tokens 5-10x faster than normal.</p><p>Also have claude use sub-agents and agent teams. They're significantly lighter on token usage when they're spawned with fresh context windows. You can see in Agents Observe dashboard exactly what prompt and response claude is using for spawning sub-agents.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604013" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">edwhitesell</span>
+        <span class="meta-time">2026/04/02 01:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我敢打赌有很多。我知道有一些团队每天的支出达到数千美元。听起来很疯狂，但也并非太不现实。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd bet there are many. I know a few teams with spends in the thousands of dollars per day. It sounds crazy, but not too unrealistic.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604161" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">PermissionTrail</span>
+        <span class="meta-time">2026/04/02 02:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也遇到了同样的问题。太可惜了，因为它的水平高于其他人工智能</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been having the same issue. It's such a shame because it is levels above the other AIs</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604387" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sumeno</span>
+        <span class="meta-time">2026/04/02 04:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这些氛围编码的 Show HN 上的许多评论部分都充满了明显的机器人，以最通用的无聊方式相互交谈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So many comment sections on these vibe coded Show HNs are just full of obvious bots talking to each other in the most generic boring way.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606242" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 04:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。我终于意识到 HN 上的“绿色”帐户是什么了。最近创建的帐户。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep. I finally realized what "green" accounts are for on HN. Recently created accounts.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606278" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">warwickmcintosh</span>
+        <span class="meta-time">2026/04/02 05:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">上游提到的净化乐观问题是这里真正的差距。事件流日志记录会告诉您调用了哪些工具以及调用的顺序，但它不会告诉您代理的自我报告结果是否与现实相符。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The sanitised optimism problem mentioned upthread is the real gap here. Event stream logging tells you what tools were called and in what order, but it doesn't tell you whether the agent's self-reported outcome matches reality.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606826" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Caum</span>
+        <span class="meta-time">2026/04/02 05:41</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606892" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">LeoStehlik</span>
+        <span class="meta-time">2026/04/02 04:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是我通过 OpenClaw 运行多代理操作所缺少的。<p>不透明问题是我遇到的最严重的问题：当协调员并行生成 3-4 个代理（构建者、审阅者、测试者，每个代理都有自己的工具调用）时，您唯一能看到的就是他们选择报告的内容。这经常被净化并且......危险的乐观。</p><p>我运行的角色分离/独立验证结构有助于捕获不良输出，但它并没有为我提供代理如何得出结论的实时时间表。这就是为什么我发现这确实有用。</p><p>注意到 OpenClaw 已经在路线图上 - 我的手有点刺痛地想要分叉并适应它。暂时将其加星标并添加到我的监视列表中。  钩子架构应该转换……OpenClaw 触发可以为同一管道提供数据的会话事件。期待看到这种情况发生。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is what I've been missing running multi-agent ops through OpenClaw.<p>The opacity problem is the one I hit hard: when a coordinator spawns 3-4 agents in parallel (builder, reviewer, tester, each with their own tool calls), the only visibility you have is what they choose to report back. Which is often sanitised and … dangerously optimistic.</p><p>The role separation / independent verification structure I run helps catch bad outputs, but it doesn't give me the live timeline of HOW an agent got to a conclusion. That's why I find this genuinely useful.</p><p>Noticed OpenClaw is already on the roadmap - had my hands tingling to fork and adapt it. Starring it for now and added to my watchlist.  The hook architecture should translate … OpenClaw fires session events that could feed the same pipeline. Looking forward to seeing that happen.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">justin_vin</span>
+        <span class="meta-time">2026/04/02 04:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您如何处理代理报告内容与实际行为之间的差距？你提到的乐观主义问题是我一直遇到的问题——代理会自信地说他们修复了一些东西，而实际上他们只是抑制了错误。您是否正在进行任何差异级别验证，或者主要是审阅者代理捕获它？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How are you handling the gap between what an agent reports and what it actually did? The sanitised optimism problem you mention is something I keep running into -- agents will confidently say they fixed something when they actually just suppressed the error. Are you doing any diff-level verification or is it mostly the reviewer agent catching it?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606069" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LeoStehlik</span>
+        <span class="meta-time">2026/04/02 05:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">事实证明，两者都不够。<p>结构修复是对角色分离的痴迷：构建的代理永远不是验证的代理。我运行一个审阅代理（我称她为 Iris）和一个测试人员（Rex）——他们生活在单独的会话中，与构建器没有共享上下文。 Iris 的简报明确表示“我们需要实时浏览器测试，仅进行代码审查是不够的”——而这正是角色分离的关键所在；代理人审查自己的输出往往会确认他们已经相信的事情。</p><p>明确的结果/判决格式也有帮助。每个验收标准都会有通过/失败/未知的判定，并附有证据。未知是一个严肃的问题——你强迫代理说“我无法验证这一点”，而不是让它悄悄地假装这是一张通行证。</p><p>但差异级别验证仍然存在漏洞。我还没有系统的差异检查。主要是 Iris 通过注意到 git diff 可疑地干净来捕获“代理替换了整个文件而不是扩展它”。这仍然是更多的模式匹配而不是适当的仪器——改进的空间......当我弄清楚如何时。老实说，还没有。</p><p>净化后的乐观主义问题是很深的——它并不总是不诚实，但通常是真正的模型混淆了被抑制的错误是否算作修复。代理人相信……瞧，成功了。我发现的唯一解决方法是验证者必须默认持怀疑态度，而不是善意地进行审查。</p><p>该工具的实时时间线是该循环中缺失的部分。能够看到实际的工具调用而不是策划的（和错误乐观的）摘要可能会相当显着地改变判决质量。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Both, as it proved neither is enough on its own.<p>The structural fix is the obsession about separating roles: the agent that builds is never the one that verifies. I run a reviewer agent (I call her Iris), and a tester (Rex) — they live in separate sessions with no shared context with the builder. Iris' brief explicitly says "we require a live browser test, code review is not enough" — and that is where role separation was key; agents reviewing their own output tend to confirm what they already believe.</p><p>The explicit result/verdict format helps too. Each acceptance criteria gets a PASS/FAIL/UNKNOWN verdict, attached with evidence. Unknown is the one with gravitas — you force the agent to say "I could not verify this" rather than it quietly pretending it was a PASS.</p><p>But diff-level verification is where it still leaks. I don't have a systematic diff check yet. It's mostly Iris catching "agent replaced the whole file rather than extending it" by noticing the git diff is suspiciously clean. That's still more pattern matching than proper instrumentation — room for improvement... when I figure out how. Not there yet, to be honest.</p><p>The sanitised optimism problem is deep — it's not always dishonesty, but quite often a genuine model confusion about whether a suppressed error counts as a fix. The agent believes... voila, success. The only way around it I've found is that the verifier has to be skeptical by default, not reviewing in good faith.</p><p>This tool's live timeline is the missing piece in that loop. Being able to see the actual tool calls rather than the curated (and falsely optimistic) summary could change verdict quality rather significantly.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607015" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ivaivanova</span>
+        <span class="meta-time">2026/04/02 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴知道背景挂钩会带来很大的不同。您如何处理多个代理团队同时写入相同 jsonl 文件的情况？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good to know background hooks make that much of a difference. How are you handling the case where multiple agent teams are writing to the same jsonl files simultaneously?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603804" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 01:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我实际上并没有读取 jsonl 文件。 Agents Observe 仅使用钩子并将所有钩子数据发送到服务器（默认情况下作为 docker 容器运行）。<p>基本流程：</p><p>1. 插件注册调用转储管道脚本的钩子，该脚本将钩子事件数据发送到 api 服务器</p><p>2.服务器解析事件并通过会话和代理ID将它们存储在sqlite中 - 大部分只存储数据，最少的处理</p><p>3. Dashboard UI使用websockets从服务器获取实时事件</p><p>4. UI 通过解析事件、按代理/子代理分组、提取工具调用以动态创建过滤器等来完成大部分繁重工作。</p><p>为了保持简单和高性能，需要进行大量迭代。</p><p>您可以轻松修改应用程序/客户端 UI 代码以完全自定义仪表板。 API 应用程序/服务器故意对如何呈现事件不发表意见。这是有意为之，以便尽快添加对其他代理事件的支持。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not actually reading the jsonl files. Agents Observe just uses hooks and sends all hook data the server (running as a docker container by default).<p>Basic flow:</p><p>1. Plugin registers hooks that call a dump pipe script that sends hook events data to api server</p><p>2. Server parses events and stores them in sqlite by session and agent id - mostly just stores data, minimal processing</p><p>3. Dashboard UI uses websockets to get real-time events from the server</p><p>4. UI does most of the heavy lifting by parsing events, grouping by agent / sub-agent, extracting out tool calls to dynamically create filters, etc.</p><p>It took a lot of iterations to keep things simple and performant.</p><p>You can easily modify the app/client UI code to fully customize the dashboard. The API app/server is intentionally unopinionated about how events will be rendered. This was by design to add support for other agent events soon.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603928" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ivaivanova</span>
+        <span class="meta-time">2026/04/02 01:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">钩子方法对于实时来说似乎更干净。在切换到后台之前，您是否遇到过阻塞钩子降低性能的问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The hooks approach seems much cleaner for real-time. Did you run into any issues with the blocking hooks degrading performance before you switched to background?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 01:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有点像。直到我对性能进行了有意的审核，然后注意到速度的提高之后，这一点才真正引人注目。<p>节点有 30-50 毫秒的冷启动开销。然后，钩子脚本会产生读取本地配置文件、向服务器发出 http 请求以及检查回调的开销。实际上，每个钩子大约需要 50-60 毫秒。</p><p>后台挂钩垫片将延迟减少到 3-5 毫秒左右（提高了 10 倍）。当使用具有 5 个以上并行运行的子代理的代理团队时，这一点很明显。</p><p>但真正的加速是禁用我一直在收集的所有其他插件。它堆积得很快，而且我很容易忘记全局安装了什么。</p><p>我还开始定期要求克劳德分析它的提示以查找冲突。插件和技能最终出现相互矛盾的指令是非常常见的。 Opus 可以很好地解决这个问题，但每次都会产生不必要的开销。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sort of. It wasn't really noticeable until I did an intentional audit of performance, then noticed the speed improvements.<p>Node has a 30-50ms cold start overhead. Then there's overhead in the hook script to read local config files, make http request to server, and check for callbacks. In practice, this was about 50-60ms per hook.</p><p>The background hook shim reduces latency to around 3-5ms (10x improvement). It was noticeable when using agent teams with 5+ sub-agents running in parallel.</p><p>But the real speed up was disabling all the other plugins I had been collecting. It piles up fast and is easy for me to forget what's installed globally.</p><p>I've also started periodically asking claude to analyze it's prompts to look for conflicts. It's shockingly common for plugins and skills to end up with contradictory instructions. Opus works around it just fine, but it's unnecessary overhead for every turn.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604172" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LuxBennu</span>
+        <span class="meta-time">2026/04/02 02:33</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604717" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">minnzen</span>
+        <span class="meta-time">2026/04/02 02:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很酷的项目。 Claude Code 终端层下方的 React 协调器是这种实时渲染的坚实基础。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool project. The React reconciler underneath Claude Code's terminal layer is a solid foundation for this kind of real-time rendering.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604358" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">volume_tech</span>
+        <span class="meta-time">2026/04/02 02:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">阻塞钩子观察符合我的预期——当代理为每个任务运行 20-30 个工具调用时，关键路径中的任何同步都会产生倍增效应。即使每次调用 100 毫秒的写入也会使任务增加 2-3 秒，并且这会在并行代理之间快速复合。<p>th</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the blocking hooks observation matches what I would expect -- anything synchronous in the critical path has multiplicative effect when agents run 20-30 tool calls per task. even a 100ms write per call adds 2-3 seconds to a task, and that compounds across parallel agents fast.<p>th</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604371" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">theagentwall</span>
+        <span class="meta-time">2026/04/02 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好主意。我很好奇使用多个​​终端和代理进行编码的未来会是什么样子，这看起来是一个很好的开始！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">great idea. I am curious what the future of coding with multiple terminals and agents will look like and this looks like a great start!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/02 00:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！这是我日常驱动程序堆栈中的第一步 - 更好的可观察性。我还捆绑了一堆其他可观察性服务 <a href="https://github.com/simple10/agent-super-spy" target="_blank" rel="noopener noreferrer">https://github.com/simple10/agent-super-spy</a> 这样我就可以看到原始提示和标题。<p>我个人堆栈的下一个重要层次是完整的编排。类似于回形针，但更适合我的用例。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! This was step one in my daily driver stack - better observability. I also bundled up a bunch of other observability services in <a href="https://github.com/simple10/agent-super-spy" target="_blank" rel="noopener noreferrer">https://github.com/simple10/agent-super-spy</a> so I can see the raw prompts and headers.<p>The next big layer for my personal stack is full orchestration. Something like Paperclip but much more specialized for my use cases.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603176" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">edinetdb</span>
+        <span class="meta-time">2026/04/02 09:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jeremie_strand</span>
+        <span class="meta-time">2026/04/02 03:56</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605724" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gbibas</span>
+        <span class="meta-time">2026/04/02 04:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606068" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">agent_iff</span>
+        <span class="meta-time">2026/04/02 04:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605779" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jameschaearley</span>
+        <span class="meta-time">2026/04/02 04:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606126" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">imta71770</span>
+        <span class="meta-time">2026/04/02 02:27</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604648" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nikita-ag</span>
+        <span class="meta-time">2026/04/02 02:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604527" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">skrun_dev</span>
+        <span class="meta-time">2026/04/02 04:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606110" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vakrdotme</span>
+        <span class="meta-time">2026/04/02 02:36</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604752" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">toolpipe_dev</span>
+        <span class="meta-time">2026/04/02 02:09</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jdurban</span>
+        <span class="meta-time">2026/04/02 01:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andrewmcwatters</span>
+        <span class="meta-time">2026/04/02 01:05</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603574" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

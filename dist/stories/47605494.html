@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jax 的真正使命：WebGL 上的光线行进渲染器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1040/">返回本批次</a>
+      <h1>Jax 的真正使命：WebGL 上的光线行进渲染器</h1>
+      <p class="subtitle">Jax&#39;s true calling: Ray-Marching renderers on WebGL</p>
+      <div class="meta-line">
+        <span>benoit.paris</span>
+        <span>作者 BenoitP</span>
+        <span>分数 58</span>
+        <span>评论 8</span>
+        <span>2026/04/02 03:36</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47605494" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://benoit.paris/posts/jax-ray-marcher/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>演示（在图像上移动鼠标/拇指）</li><li>但为什么呢？好吧，我一直对酷孩子们使用的这个工具垂涎欲滴，并且想知道如何才能加入这个帮派。它的名字叫JAX。它在 n 维数组上有 GPU 加速函数。以及这些内置的编译时可微分性！？自动矢量化？你只需要像 numpy 那样做。有什么不喜欢的？阿普回家吧！所以我一直在做显而易见的事情，JAX 真正的用途是：图形渲染器。你问为什么？好吧，上面的动画图像是一个用于初学者的 3 维 [512 像素][512 像素][3 颜色]数组（或者张量，如果你喜欢）。我们可以根据函数的输出来定义其内容。从鼠标位置和时间输入开始，插入一些数学，在其中硬编码一个球体和一个立方体，瞧，像素被绘制了！我们的第一个技巧是代码，大约只有 100 行 Python 代码。是的，Python 用于浏览器代码，因为 JAX 也可以导出并在浏览器上运行。在 WebGL 上。以下是使用的一些技术以及 JAX 的亮点： 距离 我们不会在这里绘制多边形。我们将使用有符号距离函数 (SDF)。这些对他们来说有很多好处：</li><li>它们很漂亮。球体除了到点的距离之外是什么？圆柱体除了到一条线的距离之外是什么？只需定义一个函数，在对象内部为负值，在对象外部为正值。</li><li>它们是可组合的。想要两个对象的并集？你取他们的 SDF 的最小值。想要十字路口吗？ max() 就是这样。以下是您可以执行的操作的非详尽列表。在这里，我们将使用联合的平滑版本，因为我们希望保留可微性。如果我们想要交集，我们可以使用类似于 softmax 的东西（我听说这是目前流行的函数）。</li><li>它们有助于在空间中移动而不与它们所代表的形状发生碰撞。根据定义，如果距离物体最近的点距离您的长度为 L，那么您可以向任意方向移动长度 L，而不会碰到该物体。这就是光线行进/球体追踪算法。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Demo (move your mouse/thumb across the image)</li><li>Why, though? Well, I’ve been drooling over this tool the cool kids use, and wondering how I can join the gang. It’s called JAX. It’s got GPU accelerated functions over n-dimensional arrays. And built-in compile-time differentiability of these!? Auto-vectorization?? And you just have to do like with numpy. What’s not to like? Go home APL! So I’ve been doing the obvious, the thing JAX was truly meant for: a graphics renderer. Why, do you ask? Well, the animated image above is a 3-dimensional [512 pixels][512 pixels][3 colors] array for starters (or tensor, if you like). And we can define its content from the output of a function. Start from mouse position and time input, plug in some maths, hard-code a sphere and a cube in there, and voilà, pixels are painted! And for our first trick here is the code, at about just 100 lines of Python. Yes, Python for browser code, because JAX can also be exported and run on the browser. On WebGL. Below are some of the techniques used and where JAX shines: Distances We won’t be drawing polygons here. We’ll be using Signed Distance Functions (SDF). These have a lot going for them:</li><li>They’re just beautiful. What’s a sphere but a distance to a point? What’s a cylinder but a distance to a line? Just define a function to be negative when inside an object, positive outside.</li><li>They’re composable. Want the union of two objects? You take the minimum of their SDF. Want the intersection? max() it is. Here is a non-exhaustive list of what you can do. Here, we’ll be using smooth version of a union, as we want to preserve differentiability. If we had wanted the intersection, we could have used something akin to a softmax (I’m told this is a trendy function at the moment).</li><li>They contain help for moving in space without colliding with the shape they represent. By definition if the closest point to an object is a length L away from you, then you can move by length L in any direction you like without hitting it. That’s the raymarching / sphere tracing algorithm.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">heisenzombie</span>
+        <span class="meta-time">2026/04/02 09:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Jax 在机器学习之外使用非常有趣！<p>最近，我很高兴重新实现加速器光学器件的旧（但仍然可用！）代码。它涉及 6D 相空间到二阶的传递矩阵。大多数 FORTRAN77 源代码只是一页又一页手工微分的 6x6x6 矩阵（具有相当重要的元素）以及煞费苦心地传播这些雅可比矩阵以进行拟合的管道……所有这些都被对 jax.grad() 的单个神奇调用所取代。感觉像是作弊！</p><p>我也对其在建模中的应用非常感兴趣，例如项目如 <a href="https://github.com/deepmodeling/jax-fem" target="_blank" rel="noopener noreferrer">https://github.com/deepmodeling/jax-fem</a> ——特别是用于将不同类型的模拟和分析链接在一起并获得整个批次的梯度。还蛮神奇的！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Jax is super fun to use outside of ml!<p>Recently I had fun reimplementing an old (but still usable!) code for accelerator optics. It involved transfer matrices for a 6D phase space to second order. Most of the FORTRAN77 source code was just pages and pages of hand-differentiated 6x6x6 matrices (with quite non-trivial elements) and the plumbing to painstakingly propagate those jacobians around for fitting... all replaced with a single, magic, call to jax.grad(). Felt like cheating!</p><p>I'm also super interested in its application to modelling, e.g. projects like <a href="https://github.com/deepmodeling/jax-fem" target="_blank" rel="noopener noreferrer">https://github.com/deepmodeling/jax-fem</a> -- particularly for chaining different sorts of simulations and analysis together and getting gradients through the lot. Also quite magic!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608883" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">corndoge</span>
+        <span class="meta-time">2026/04/02 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在图像上移动拇指会导致球和立方体图形消失为黑色，然后滚动页面。 iOS 版火狐浏览器</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Moving my thumb across the image causes the ball and cube graphic to disappear to black and then scrolls the page. Firefox on iOS</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">akoboldfrying</span>
+        <span class="meta-time">2026/04/02 06:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也是，Android 版 Chrome。<p>我喜欢将 Jax 应用于 SDF 球体追踪的概念:)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Me too, Chrome on Android.<p>I like the concept of applying Jax to SDF sphere tracing :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607478" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">VHRanger</span>
+        <span class="meta-time">2026/04/02 05:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Pytorch 是一个令人抓狂的混乱，在 Heisen 弃用的状态下实现了一半的研究功能，而 Jax 对我来说变得越来越有吸引力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Pytorch is such a maddening mess of half implemented research features in a state of Heisen-deprecation, Jax becomes more appealing to me by the day.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606533" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vatsachak</span>
+        <span class="meta-time">2026/04/02 06:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，GPU 编译器将用于比 AI 更多的事情，因为并行 = 好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah GPU compilers will be used for way more things than AI because parallel = good</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607282" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jedbrooke</span>
+        <span class="meta-time">2026/04/02 08:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们回到原处，再次开始使用图形处理单元来处理图形</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We’ve come full circle and started using Graphics Processing Units to process graphics again</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dvt</span>
+        <span class="meta-time">2026/04/02 06:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; JAX 真正的用途：图形渲染器<p>我的意思是，就像光线追踪一样，SDF（光线行进）很简洁，但基本上所有有用的东西都很昂贵或很难做到（碰撞、网格、纹理等）。我的意思是数学的东西更容易（旋转、并集/交集、函数组合等），但 3D 通常用于建模软件或视频游戏，它们更关心前者而不是后者。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; the thing JAX was truly meant for: a graphics renderer<p>I mean, just like ray-tracing, SDF (ray-marching) is neat, but basically everything useful is expensive or hard to do (collisions, meshes, texturing etc.). I mean mathy stuff is easier (rotations, unions/intersections, function composition, etc.) but 3D is usually used in either modeling software or video games, which care more about the former than they do the latter.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607264" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Archit3ch</span>
+        <span class="meta-time">2026/04/02 07:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">游戏和模拟通常是有状态的，我不确定 JAX 的功能纯度是否合适。<p>另外，在针对硬件加速光线追踪时，JAX + WebGL 的情况如何？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Games and simulations are typically stateful, I'm not sure the functional purity of JAX is a good fit.<p>Also, what's the story for JAX + WebGL when it comes to targeting hardware-accelerated ray tracing?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607859" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

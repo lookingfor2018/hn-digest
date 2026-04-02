@@ -1,0 +1,2338 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude 使用 root shell 编写了完整的 FreeBSD 远程内核 RCE | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1040/">返回本批次</a>
+      <h1>Claude 使用 root shell 编写了完整的 FreeBSD 远程内核 RCE</h1>
+      <p class="subtitle">Claude wrote a full FreeBSD remote kernel RCE with root shell</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 ishqdehlvi</span>
+        <span>分数 255</span>
+        <span>评论 100</span>
+        <span>2026/04/01 13:21</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47597119" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/califio/publications/blob/main/MADBugs/CVE-2026-4747/write-up.md" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>CVE-2026-4747 — FreeBSD kgssapi.ko RPCSEC_GSS 堆栈缓冲区溢出完全远程内核 RCE → uid 0 反向 Shell 建议：FreeBSD-SA-26:08.rpcsec_gss CVE：CVE-2026-4747 受影响：FreeBSD 13.5 (&lt;p11)、14.3 (&lt;p10)、 14.4 (&lt;p1)、15.0 (&lt;p5) 测试环境：FreeBSD 14.4-RELEASE amd64（GENERIC 内核，无 KASLR） 攻击面：加载了 kgssapi.ko 的 NFS 服务器（端口 2049/TCP）</li><li>1. 漏洞根源 在sys/rpc/rpcsec_gss/svc_rpcsec_gss.c中，函数svc_rpc_gss_validate()将RPC头重建为128字节堆栈缓冲区（rpchdr[]），用于GSS-API签名验证。它首先写入 32 字节的固定 RPC 标头字段，然后将整个 RPCSEC_GSS 凭证正文（oa_length 字节）复制到剩余空间中，而不检查 oa_length 是否合适。静态 bool_t svc_rpc_gss_validate(struct svc_rpc_gss_client *client, struct rpc_msg *msg, gss_qop_t *qop, rpc_gss_proc_t gcproc) { int32_t rpchdr[128 / sizeof(int32_t)]; // 堆栈上有 128 个字节 int32_t *buf;</li><li>memset(rpchdr, 0, sizeof(rpchdr));</li><li>// 写入8个固定大小的RPC头字段（总共32字节） buf = rpchdr; IXDR_PUT_LONG(buf, msg-&gt;rm_xid); IXDR_PUT_ENUM(buf, msg-&gt;rm_direction); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_rpcvers); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_prog); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_vers); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_proc); oa = &amp;msg-&gt;rm_call.cb_cred; IXDR_PUT_ENUM(buf, oa-&gt;oa_flavor); IXDR_PUT_LONG(buf, oa-&gt;oa_length);</li><li>if (oa-&gt;oa_length) { // BUG: 没有对 oa_length 进行边界检查！ // 32 个字节的 header 后，rpchdr 中只剩下 96 个字节。 // 如果 oa_length &gt; 96，则会溢出 rpchdr 进入： // 局部变量 → 保存的被调用者保存的寄存器 → 返回地址 memcpy((caddr_t)buf, oa-&gt;oa_base, oa-&gt;oa_length); buf += RNDUP(oa-&gt;oa_length) / sizeof(int32_t); }</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>CVE-2026-4747 — FreeBSD kgssapi.ko RPCSEC_GSS Stack Buffer Overflow Full Remote Kernel RCE → uid 0 Reverse Shell Advisory: FreeBSD-SA-26:08.rpcsec_gss CVE: CVE-2026-4747 Affected: FreeBSD 13.5 (&lt;p11), 14.3 (&lt;p10), 14.4 (&lt;p1), 15.0 (&lt;p5) Tested on: FreeBSD 14.4-RELEASE amd64 (GENERIC kernel, no KASLR) Attack surface: NFS server with kgssapi.ko loaded (port 2049/TCP)</li><li>1. The Vulnerability Root Cause In sys/rpc/rpcsec_gss/svc_rpcsec_gss.c, the function svc_rpc_gss_validate() reconstructs an RPC header into a 128-byte stack buffer (rpchdr[]) for GSS-API signature verification. It first writes 32 bytes of fixed RPC header fields, then copies the entire RPCSEC_GSS credential body (oa_length bytes) into the remaining space — without checking that oa_length fits. static bool_t svc_rpc_gss_validate(struct svc_rpc_gss_client *client, struct rpc_msg *msg, gss_qop_t *qop, rpc_gss_proc_t gcproc) { int32_t rpchdr[128 / sizeof(int32_t)]; // 128 bytes on stack int32_t *buf;</li><li>memset(rpchdr, 0, sizeof(rpchdr));</li><li>// Write 8 fixed-size RPC header fields (32 bytes total) buf = rpchdr; IXDR_PUT_LONG(buf, msg-&gt;rm_xid); IXDR_PUT_ENUM(buf, msg-&gt;rm_direction); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_rpcvers); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_prog); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_vers); IXDR_PUT_LONG(buf, msg-&gt;rm_call.cb_proc); oa = &amp;msg-&gt;rm_call.cb_cred; IXDR_PUT_ENUM(buf, oa-&gt;oa_flavor); IXDR_PUT_LONG(buf, oa-&gt;oa_length);</li><li>if (oa-&gt;oa_length) { // BUG: No bounds check on oa_length! // After 32 bytes of header, only 96 bytes remain in rpchdr. // If oa_length &gt; 96, this overflows past rpchdr into: // local variables → saved callee-saved registers → return address memcpy((caddr_t)buf, oa-&gt;oa_base, oa-&gt;oa_length); buf += RNDUP(oa-&gt;oa_length) / sizeof(int32_t); }</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">magicalhippo</span>
+        <span class="meta-time">2026/04/01 17:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">关键是克劳德没有 <i>寻找</i> 它利用的错误。它获得了 CVE 编写[1]，并被要求编写一个可以利用该错误的程序。<p>也就是说，考虑到事情的实际情况，如果您可以让 Claude 或类似人员尝试内核或核心服务的源代码，配备一些用于尝试失败迭代的虚拟机，并让它输出 CVE，我不会感到惊讶。</p><p>如果不是现在，那么在遥远的将来也肯定不会。</p><p>[1]： <a href="https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08.rpcsec_gss.asc" target="_blank" rel="noopener noreferrer">https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Key point is that Claude did not <i>find</i> the bug it exploits. It was given the CVE writeup[1] and was asked to write a program that could exploit the bug.<p>That said, given how things are I wouldn't be surprised if you could let Claude or similar have a go at the source code of the kernel or core services, armed with some VMs for the try-fail iteration, and get it pumping out CVEs.</p><p>If not now, then surely not in a too distant future.</p><p>[1]: <a href="https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08.rpcsec_gss.asc" target="_blank" rel="noopener noreferrer">https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598870" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/02 01:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>让它输出 CVE。</i><p>这是好事还是坏事？</p><p>我认为这是一件非常好的事情。因为您现在可以廉价地找到这些 CVE 并修复它们。</p><p>以前，查找 CVE 的成本非常昂贵。这意味着只有坏人才有动力去寻找他们，因为他们是可以从这种努力中获利的人。现在，发现 CVE 的成本要低得多，没有盈利动机的人也可以发现它们，从而可以在不良行为者发现漏洞之前修复漏洞。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>get it pumping out CVEs.</i><p>Is that a good thing or bad?</p><p>I see that as a very good thing. Because you can now inexpensively find those CVEs and fix them.</p><p>Previously, finding CVEs was very expensive. That meant only bad actors had the incentive to look for them, since they were the ones who could profit from the effort. Now that CVEs can be found much more cheaply, people without a profit motive can discover them as well--allowing vulnerabilities to be fixed before bad actors find them.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603533" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/04/02 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这有好有坏。<p>并非所有 CVE 都相同，有些 CVE 并不重要。  因此，这实际上取决于 CVE 的认定。  糟糕的是，您可能会冒着洪水泛滥的风险，而这些 CVE 并不重要（或已经被报告过）。</p><p>&gt; 这意味着只有坏人才有动力去寻找他们</p><p>不。  很多人都会寻找 CVE。  这是很好的简历素材。  事实上，人们会在无关紧要的事情上寻找并报告 CVE，只是为了在简历中得到“我发现并报告了 CVE xyz”，这已经是一个问题了。</p><p>这样做的目的是暴露 CVE 评分系统中一些已经存在的缺陷。并非所有“9”都是一样的。  希望这会带来更好的结果，而不是冷漠。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's good and bad.<p>Not all CVEs are the same, some aren't important.  So it really depends on what gets founds as a CVE.  The bad part is you risk a flood a CVEs that don't matter (or have already been reported).</p><p>&gt; That meant only bad actors had the incentive to look for them</p><p>Nah.  Lot's of people look for CVEs.  It's good resume fodder.  In fact, it's already somewhat of a problem that people will look for and report CVEs on things that don't matter just so they can get the "I found and reported CVE xyz" on their resume.</p><p>What this will do is expose some already present flaws in the CVE scoring system. Not all "9"s are created equal.  Hopefully that leads to something better and not towards apathy.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603630" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">evanmoran</span>
+        <span class="meta-time">2026/04/02 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它还取决于 CVE 是否也可以由 LLM 修复。如果他们能够找到并修复它们，那就非常好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It also depends on if the CVEs can be fixed by LLMs too. If they can find and fix them, then it's very good.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603991" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/04/02 01:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 CVE 来说，修复通常不是问题。  困难的部分几乎总是首先找到 CVE。<p>在某些极端情况下，可能需要进行大量代码更改，而这些情况将从法学硕士中受益。  但很多问题都是诸如指针的一对一问题之类的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fixing isn't often a problem for CVEs.  The hard part is almost always finding the CVE in the first place.<p>There are some extreme cases that might require extensive code changes, and those would benefit from LLMs.  But a lot of the issues are things like off by one issues with pointers.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604122" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wepple</span>
+        <span class="meta-time">2026/04/02 08:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">修复现在是瓶颈。<p>大多数补丁都很重要，每个项目/维护者都有自己喜欢的编码风格，而且他们已经被 PR 淹没了，不要轻易放弃。</p><p>LLM 可以发现 CVE 完全零交互，因此它的扩展性微不足道。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fixing is now the bottleneck.<p>Most patches are non-trivial and then each project/maintainer has a preferred coding style, and they’re being inundated with PRs already, and don’t take kindly to slop.</p><p>LLMs can find the CVE fully zero interaction, so it scales trivially.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608658" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rtkwe</span>
+        <span class="meta-time">2026/04/02 02:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最大的问题是您是否也可以有意义地使用 Claude 进行防御，例如，是否可以信任它可以在保持兼容性的同时找到并修复漏洞利用的来源。查找 CVE 有助于直接应对攻击，同时仅帮助防御者检测潜在的攻击，而无需创建补丁的第二步。如果不是，您就会遇到潜在的 CVE 浪潮，仍然需要人们来解决。攻击者也可以使用 CVE-Claude，因此这有点像一场军备竞赛，你必须找到有能力并且愿意花所有钱来发现这些漏洞（并希望修复）的人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The biggest question is can you meaningfully use Claude on defense as well, eg can it be trusted to find and fix the source of the exploit while maintaining compatibility. Finding the CVEs helps directly with attacks while only helping defenders detect potential attacks without the second step where the patch can also be created. If not you've got a situation where you've got a potential tidal wave of CVEs that still have to be addressed by people. Attackers can use CVE-Claude too so it becomes a bit of an arms race where you have to find people able and willing to spend all the money to have those exploits found (and hopefully fixed).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604927" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ogig</span>
+        <span class="meta-time">2026/04/01 20:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">设置模糊测试曾经很困难。我还没有尝试过，但我打赌今天有 Claude Code，分析代码库并建议在哪里以及如何对其进行模糊测试，并让它检查崩溃和迭代，将产生 CVE。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Setting up fuzzing used to be hard. I haven't tried yet, but my bet is having Claude Code, today, analyze a codebase and suggest where and how to fuzztest it and having it review the crashes and iterate, will produce CVEs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599832" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xfalcox</span>
+        <span class="meta-time">2026/04/02 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们公司的首席执行官就是这样做的，并发现了 33 个 CVE。 Rails 也这样做了，并发现了 7 或 8 个。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Our CEO did that at our company and found 33 CVEs. Rails also did that and found 7 or 8.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606119" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AugSun</span>
+        <span class="meta-time">2026/04/02 06:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">...尽快为 RIF 做好准备。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">... get ready for RIF soon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607617" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zer00eyz</span>
+        <span class="meta-time">2026/04/02 00:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它可以访问比我见过的更多的测试数据。让它从知识图谱中提取出来会给你带来好的结果！我刚刚将这种（思维类型）的一部分构建到我的（现在正在发展的）测试工具中。<p>1. 单元测试（在某种程度上）是死的，模拟万岁。测试零件只能让你到目前为止。这些测试是更加持久、独立的工件（请阅读，如果您从 JS 转到 Rust，您的测试将保留多少）</p><p>2. 测试必须是“独立的”。我希望能够从命令行运行它，我希望输出是包装器，这样我就可以将输出推到网页上，或者将其转储到 API （对于 AI）</p><p>3. 消息（针对失败）很重要。这些不仅仅是简单的损坏，而且必须包含足够的上下文信息。</p><p>4.“失败”的测试应该包含日志。您有足够的面包屑用于生产吗？如果没有，这个问题以后就会困扰你。</p><p>5. 任何情况都应该是状态和行为的累积——这在模拟中确实很重要。</p><p>如果您已正确完成上述所有操作，并且您的工具可以返回所有数据，则将输出转储到您能找到的最便宜的模型中，并使其“编写包含修复建议的提示（不是实际代码，只是“修复此问题”之外应该做什么）已经很有启发性。</p><p>最终我意识到我对测试的看法是错误的。它的输出应该非常简单，或者具有足够的信息，以便零知识的人可以在进入代码库的第一天就进行修复。我的测试从来没有这么好，因为“这样做的成本”总是太高......现在不再是这样了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It has access to more testing data than I will ever look at. Letting it pull from that knowledge graph is going to give you good results! I just built a chunk of this (type of thinking) into my (now evolving) test harness.<p>1. Unit testing is (somewhat) dead, long live simulation. Testing the parts only gets you so far. These tests are far more durable, independent artifacts (read, if you went from JS to rust, how much of your testing would carry over)</p><p>2. Testing has to be "stand alone". I want to be able to run it from the command line, I want the output to be wrapper so I can shove the output on a web page, or dump it into an API (for AI)</p><p>3. Messages (for failures) matter. These are not just simple what's broken, but must contain enough info for context.</p><p>4. Your "failed" tests should include logs. Do you have enough breadcrumbs for production? If not, this is a problem that will bite you later.</p><p>5. Any case should be an accumulation of state and behavior - this really matters in simulation.</p><p>If you have done all the above right and your tool can return all the data, dumping the output into the cheapest model you can find and having it "Write a prompt with recommendations on a fix (not actual code, just what should be done beyond "fix this") has been illuminating.</p><p>Ultimately I realized that how I thought about testing was wrong. Its output should be either dead simple, or have enough information that someone with zero knowledge could ramp up into a fix on their first day in the code base. My testing was never this good because the "cost of doing it that way" was always too high... this is no longer the case.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603458" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rsync</span>
+        <span class="meta-time">2026/04/02 03:07</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605123" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ogig</span>
+        <span class="meta-time">2026/04/02 03:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在这次演讲中，Anthropic 的 Nicholas Carlini 被问到了这个问题： <a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a><p>答案很复杂，值得一看视频。但主要是，他们不知道该把线放在哪里。防御者和攻击者一样需要工具。攻击者会越狱模型，防御者可能不会，在这种情况下这是积极的保护措施吗？卡里尼积极向观众和社区寻求“帮助”，以决定基本上如何进行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This very question was asked to Nicholas Carlini from Anthropic at this talk: <a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a><p>The answer is complex, worth watching the video. But mainly, they don't know where to place the line. Defenders need tools, as good as attackers. Attackers will jailbreak models, defender might not, it's the safeguard positive in that case? Carlini actively asks the audience and community for "help" in determining how to proceed basically.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605205" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gbibas</span>
+        <span class="meta-time">2026/04/02 04:50</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606384" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/01 18:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 致谢：尼古拉斯·卡利尼 (Nicholas Carlini) 使用克劳德 (Claude)，《人类》<p>克劳德习惯了 <i>寻找</i> 但首先这个错误。 CVE 的撰写是因为 Claude，所以虽然有一些非常有才华的人参与其中，但 Claude 参与了整个过程。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Credits:        Nicholas Carlini using Claude, Anthropic<p>Claude was used to <i>find</i> the bug in the first place though. That CVE write-up happened because of Claude, so while there are some very talented humans in the loop, Claude is quite involved with the whole process.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">magicalhippo</span>
+        <span class="meta-time">2026/04/01 18:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 不过，克劳德首先被用来发现这个错误。 CVE 报道的发生是因为 Claude<p>你有那个链接吗？一个相当重要的背景。</p><p>我并不是想淡化这个提交的方式，要点仍然是：</p><p><i>但发现错误和利用它是非常不同的事情。漏洞利用开发需要了解操作系统内部结构、精心设计 ROP 链、管理内存布局、调试崩溃以及在出现问题时进行调整。长期以来，这一直被认为是只有人类才能跨越的边界。</i></p><p><i>每一项新的人工智能能力通常都会遇到“人工智能可以做 Y，但只有人类可以做 X”。好吧，对于 X = 漏洞利用开发，这条线刚刚移动了。</i></p><p></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Claude was used to find the bug in the first place though. That CVE write-up happened because of Claude<p>Do you have a link to that? A rather important piece of context.</p><p>Wasn't trying to downplay this submission the way, the main point still stands:</p><p><i>But finding a bug and exploiting it are very different things. Exploit development requires understanding OS internals, crafting ROP chains, managing memory layouts, debugging crashes, and adapting when things go wrong. This has long been considered the frontier that only humans can cross.<p>Each new AI capability is usually met with “AI can do Y, but only humans can do X.” Well, for X = exploit development, that line just moved.</p></i></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599010" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jsnell</span>
+        <span class="meta-time">2026/04/01 19:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 你有那个链接吗？一个相当重要的背景。<p>这是您在最初的帖子中自己的链接中的引用吗？</p><p><a href="https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08.rpcsec_gss.asc" target="_blank" rel="noopener noreferrer">https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08...</a></p><p>&gt; 致谢：尼古拉斯·卡利尼 (Nicholas Carlini) 使用克劳德 (Claude)，《人类》</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Do you have a link to that? A rather important piece of context.<p>It was a quote from your own link from the initial post?</p><p><a href="https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08.rpcsec_gss.asc" target="_blank" rel="noopener noreferrer">https://www.freebsd.org/security/advisories/FreeBSD-SA-26:08...</a></p><p>&gt; Credits:        Nicholas Carlini using Claude, Anthropic</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599593" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">magicalhippo</span>
+        <span class="meta-time">2026/04/01 20:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，哇，瞎得像只蝙蝠。<p>如果能写一篇文章来看看克劳德的用途，那会很有趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh wow, blind as a bat.<p>Would have been interesting with a write-up of that, to see just what Claude was used for.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jsnell</span>
+        <span class="meta-time">2026/04/01 22:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然不能保证这正是本例中所做的，但他最近在一次会议上谈到了他的一般流程，并在播客中更深入地谈到了：<p><a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a></p><p><a href="https://securitycryptographywhatever.com/2026/03/25/ai-bug-finding/" target="_blank" rel="noopener noreferrer">https://securitycryptographywhatever.com/2026/03/25/ai-bug-f...</a></p><p>这几乎只是“Claude 为我找到一个可利用的 0-day”循环。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Obviously no guarantees that it's exactly what was done in this case, but he talked about his general process recently at a conference and more in depth in a podcast:<p><a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a></p><p><a href="https://securitycryptographywhatever.com/2026/03/25/ai-bug-finding/" target="_blank" rel="noopener noreferrer">https://securitycryptographywhatever.com/2026/03/25/ai-bug-f...</a></p><p>It pretty much is just "Claude find me an exploitable 0-day" in a loop.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600990" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xorgun</span>
+        <span class="meta-time">2026/04/01 19:35</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599483" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bayindirh</span>
+        <span class="meta-time">2026/04/01 19:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这个说法需要一个来源。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, that claim needs a source.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599496" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Cloudef</span>
+        <span class="meta-time">2026/04/01 19:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您有某种已知的目标，您可以让代理在无人看管的情况下流失。编写一个不应该通过的测试，然后告诉代理想出一些可以通过测试的东西，而不改变测试本身。<p>对于这种模糊测试来说，LLMS 还不错。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can let agent churn unattended if you have some sort of known goal. Write a test that should not pass and then tell the agent to come up with something that passes the test without changing the test itself.<p>For this kind of fuzzing llms are not bad.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599662" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vinnymac</span>
+        <span class="meta-time">2026/04/01 21:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当执行此操作时，会删除测试文件的写入权限，这样可以更好地长期保持进程。我这样做已经一年多了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When doing this remove write permissions on the test file, it will do a much better job of staying the course over long periods. I've been doing this for over a year now.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muskstinks</span>
+        <span class="meta-time">2026/04/01 22:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你可能想看这个：<p><a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a></p><p>Claude 已经能够找到专家级别的 CVE。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You might want to watch this:<p><a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a></p><p>Claude is already able to find CVEs on expert level.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601003" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">shimman</span>
+        <span class="meta-time">2026/04/01 22:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一位有望通过 Anthropic 上市赚取数百万美元的员工发表的演讲，绝对不存在个人利益冲突。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A talk given by an employee that stands to make millions from Anthropic going public, definitely not a conflict of interest by the individual.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601535" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pama</span>
+        <span class="meta-time">2026/04/01 22:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正是由个人（以及克劳德）发现了此漏洞利用中使用的特定漏洞。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is by the individual who (also with Claude) found the specific vulnerability used in this exploit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">muskstinks</span>
+        <span class="meta-time">2026/04/01 22:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我没有说“不带批判性思维地观看这个”。<p>尽管这完全是捏造的可能性非常低，但对于许多其他人来说，这是一个非常有趣的信号。</p><p>就在4个月前的39c3黑客大会上，还有一场非常精彩的AI CTF Talk。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I didn't say "watch this without critical thinking".<p>The chance this is completly fabricated though is very low and its an highly interesting signal to many others.</p><p>There was also a really good AI CTF Talk at 39c3 hacker conference just 4 month ago.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ale</span>
+        <span class="meta-time">2026/04/01 23:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但您确实说过“Claude 已经能够找到专家级别的 CVE。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But you did say “Claude is already able to find CVEs on expert level.”</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">muskstinks</span>
+        <span class="meta-time">2026/04/01 23:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另请以批判性思维阅读我的评论，并将我的评论及其内容添加到您自己的信任信号列表中：P</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please also read my comments with critical thinking and add my comment and its content to your own list of signals you trust :P</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602394" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ale</span>
+        <span class="meta-time">2026/04/02 03:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈 好的 好点</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Haha alright good point</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605529" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dloss</span>
+        <span class="meta-time">2026/04/02 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Carlini 在 tptacek &amp; co 的采访中提供了有关他与 Claude 进行漏洞研究的更多背景信息。 <a href="https://securitycryptographywhatever.com/2026/03/25/ai-bug-finding/" target="_blank" rel="noopener noreferrer">https://securitycryptographywhatever.com/2026/03/25/ai-bug-f...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Carlini gives some more background about his vulnerability research with Claude in this interview by tptacek &amp; co. <a href="https://securitycryptographywhatever.com/2026/03/25/ai-bug-finding/" target="_blank" rel="noopener noreferrer">https://securitycryptographywhatever.com/2026/03/25/ai-bug-f...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/01 22:33</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601504" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Bender</span>
+        <span class="meta-time">2026/04/01 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>Claude 已经能够找到专家级别的 CVE。</i><p>它能像发现它们一样快地修复它们吗？  <i>如果它添加了尖锐的代码注释，那就更好了</i></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>Claude is already able to find CVEs on expert level.</i><p>Does it fix them as fast as it finds them?  <i>Bonus if it adds snarky code comments</i></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601724" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">snovv_crash</span>
+        <span class="meta-time">2026/04/02 00:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我更感兴趣的是它修复 CVE 的速度是否比引入 CVE 的速度快。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm more interested if it fixes CVEs faster than it introduces them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602777" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Bender</span>
+        <span class="meta-time">2026/04/02 02:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那也是。  老实说，我期望，如果人工智能是如此神奇，人们表现得像它一样，它应该能够发现需要多种服务的复杂后门，这些服务在红队时看起来是良性的，但在结合使用时提供最低的 CPU 环访问以及所有模糊的未记录的 CPU 指令，当然还有所有固件的所有 JTAG 调试功能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That too.  Honestly I am expecting that if AI is such the wonder-miracle that people act like it is that it should be able to spot complex back-doors that require multiple services that look benign when red teamed but when used in conjunction provide the lowest CPU ring access along with all the obfuscated undocumented CPU instructions and of course all the JTAG debugging functions of all the firmware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604932" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Foobar8568</span>
+        <span class="meta-time">2026/04/01 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看看 Xbow，它催生了一些“开源”竞争对手。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Look at Xbow which spawned a few "open source" competitors.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602152" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wslh</span>
+        <span class="meta-time">2026/04/02 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然澄清这一点很重要，但法学硕士实际上是在寻找错误并编写漏洞利用程序 [1][2]。不过还有更多的例子。<p>[1] <a href="https://news.ycombinator.com/item?id=47589227" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47589227</a></p><p>[2] <a href="https://xbow.com/" target="_blank" rel="noopener noreferrer">https://xbow.com/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While it's great to clarify, LLMs are actually finding bugs and writing exploits [1][2]. There are more example though.<p>[1] <a href="https://news.ycombinator.com/item?id=47589227" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47589227</a></p><p>[2] <a href="https://xbow.com/" target="_blank" rel="noopener noreferrer">https://xbow.com/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603371" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">giancarlostoro</span>
+        <span class="meta-time">2026/04/02 00:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一个很好的例子是 Claude 如何在一年多的时间里帮助 Mozilla 在 Firefox 中发现数百个从轻微到 CVE 级别的零日漏洞：<p><a href="https://blog.mozilla.org/en/firefox/hardening-firefox-anthropic-red-team/" target="_blank" rel="noopener noreferrer">https://blog.mozilla.org/en/firefox/hardening-firefox-anthro...</a></p><p>我认为 Mozilla 的例子是一个很好的例子，因为它有一个很大的代码库，很多人一直在问“它如何处理一个很大的代码库”，好吧，你就知道了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Another great example is how Claude is helping Mozilla find zero day exploits in Firefox, by the hundreds, and ranging from minor to CVE level, for over a year:<p><a href="https://blog.mozilla.org/en/firefox/hardening-firefox-anthropic-red-team/" target="_blank" rel="noopener noreferrer">https://blog.mozilla.org/en/firefox/hardening-firefox-anthro...</a></p><p>I think the Mozilla example is a good one because its a large codebase, lots of people keep asking "how does it do with a large codebase" well there you go.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603403" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wslh</span>
+        <span class="meta-time">2026/04/02 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以查看 Anthropic 红队发现的错误列表： <a href="https://red.anthropic.com/" target="_blank" rel="noopener noreferrer">https://red.anthropic.com/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And you can check the list of bugs being discovered by Anthropic's Red Team: <a href="https://red.anthropic.com/" target="_blank" rel="noopener noreferrer">https://red.anthropic.com/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606578" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cryptbe</span>
+        <span class="meta-time">2026/04/02 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;关键点是Claude并没有发现它利用的bug。<p>它找到了虫子人。你甚至没有阅读该建议。它被认为是“尼古拉斯·卡利尼使用克劳德，人类”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Key point is that Claude did not find the bug it exploits.<p>It found the bug man. You didn't even read the advisory. It was credited to "Nicholas Carlini using Claude, Anthropic".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602991" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">magicalhippo</span>
+        <span class="meta-time">2026/04/02 03:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605432" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/02 02:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们尝试过。  它的效果不太好：<p><a href="https://red.anthropic.com/2026/zero-days/" target="_blank" rel="noopener noreferrer">https://red.anthropic.com/2026/zero-days/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They tried.  It didn't work that well:<p><a href="https://red.anthropic.com/2026/zero-days/" target="_blank" rel="noopener noreferrer">https://red.anthropic.com/2026/zero-days/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/04/02 03:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，您能澄清一下您在这里所说的内容吗？是什么效果不太好？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry, can you clarify what you're saying here? What didn't work that well?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605076" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/02 03:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让 Claude 获取源代码以尝试查找 CVE。  我发现特别有趣的是，在找不到任何内容后，它只是转而使用 grep 来表示“strcat”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Letting Claude get at the source code to try to find CVEs.  I found it particularly entertaining that after finding none it just devolved to a grep for "strcat."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605692" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/04/02 04:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我懂了。不，你错了。这绝对不是它所做的，也不是总结其发现的准确方法。<p>这并不是对你的论点的完全反驳，但我要讽刺的是，我们正在评论一个关于 FreeBSD 内核远程的线程，Claude 发现了该线程并为其编写了一个可靠的漏洞利用程序（尽管人们会突然说，对 FreeBSD 内核远程程序的可靠利用并不是什么灵活性）。</p><p>在这里，从您所说的确切漏洞部分来看，这只是“grep for strcat”，是 Firefox 的发现：</p><p><a href="https://www.mozilla.org/en-US/security/advisories/mfsa2026-13/" target="_blank" rel="noopener noreferrer">https://www.mozilla.org/en-US/security/advisories/mfsa2026-1...</a></p><p>我们已经到了这样一个地步，就像我们去年对编码代理所做的那样，你可以说“我相信我撒谎的眼睛”。查看存储库并执行 Carlini 的“foreach FILE in $(sourcefiles); &lt;运行 claude -p 并仅要求从该文件开始零日&gt;”。我昨晚就这么做了，我目前的困境是我有多大义务报告调查结果。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, I see. No, you're wrong. That's absolutely not what it did and not at all an accurate way to sum up what it found.<p>This isn't a complete rebuttal to your argument but I'll note with irony that we're commenting on a thread about a FreeBSD kernel remote that Claude both found and wrote a reliable exploit for (though people will come out of the woodwork to say that reliable exploitation of FreeBSD kernel remotes isn't much of a flex).</p><p>Here, from the exact tranche of vulnerabilities you're saying was just a "grep for strcat", are the Firefox findings:</p><p><a href="https://www.mozilla.org/en-US/security/advisories/mfsa2026-13/" target="_blank" rel="noopener noreferrer">https://www.mozilla.org/en-US/security/advisories/mfsa2026-1...</a></p><p>We're getting to a point, like we did with coding agents last year, where you can just say "I believe my lying eyes". Check out a repository and do Carlini's "foreach FILE in $(sourcefiles); &lt;run claude -p and just ask for zero days starting from that file&gt;". I did last night, and my current dilemma is how obligated I am to report findings.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606194" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/02 04:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是来自我发布的链接。  克劳德自己的团队在一月份试图完全按照您的建议去做，但结果却不尽如人意。  这是他们的博客。  我认为它代表了他们研究的顶峰。<p>我们发现，人们用轶事来代替理性。  我想你想问“人类与人工智能助理获得了多少漏洞赏金？”  如果发现 0day 可以赚钱，那么难道不应该有充分的证据吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's from the link I posted.  Claude's own team in January trying to do exactly what you suggested and ending with results that are less than promising.  It's their blog.  I assumed it represented the pinnacle of their research.<p>We're getting a point where anecdotes are being used in place of reason.  I'd think you want to ask "how many bug bounties are earned by humans vs AI assistants?"  If there's money to be made in finding 0-days then shouldn't there be ample evidence of this?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606410" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/04/02 04:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在您可以看到您的假设是错误的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can see now that you assumed wrong.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606444" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/02 07:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，我不能。  这就是重点。  你还没有透露你做了什么，你提供的链接包含我无法访问的锁定披露，但这些内容似乎都是由人类提交的，而且文章本身包含一个巨大的问题，它没有发现任何东西，它只是根据现有的 CVE 制作了一个 POC。<p>这就是为什么我很困惑。  少数人表示发生了巨大的变化。  我找不到任何确实的证据。</p><p>如果人类博客试图向我推销他们的服务，他们就会惨败。  所以我想我的假设至少可以安全地是，他们不知道如何营销自己的产品。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No.  I can't.  That's the point.  You've not disclosed what you've done,  the link you provided contains locked disclosures I can't access but which appear all to be submitted by humans,  and the article itself contains a giant problem,  it didn't discover anything,  it merely crafted a POC from an existing CVE.<p>Which is why I'm confused.  A limited number of particular people say there's this giant sea change.  I cannot find any hard evidence that's true.</p><p>If anthropic blog was trying to _sell me_ on their service they failed miserably.  So I guess my assumption can,  at least,  safely be,  they have no idea how to market their own product.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/04/02 07:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Firefox 团队已经承认了这些漏洞，这显然不是您声称的“greps for strcat”。我的意思是，你已经被驳斥了；我真的不明白此时的争论应该是什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Firefox team has acknowledged the vulnerabilities, which are obviously not "greps for strcat" as you claimed. I mean, you've been refuted; I don't really understand what the argument is supposed to be at this point.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">joe_mamba</span>
+        <span class="meta-time">2026/04/02 03:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你是如何让它做到这一点的？当我指示它使用 Ghidra MCP 查找本地计算机上的 Windows 驱动程序中的漏洞时，它拒绝说即使沙箱到您自己的设备，也不允许进行渗透测试活动。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How did you managed to get it to do that? When I gave it instructions to use Ghidra MCP to look for vulnerabilities in a windows driver on my local machine it refused saying it's not allowed to do pentest activities even if sandboxed to your own device.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605051" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tonyarkles</span>
+        <span class="meta-time">2026/04/02 03:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是你问的人，也没有明确寻找漏洞...我从让 Claude 使用 Ghidra 和 Radare2 对固件和应用程序进行逆向工程中取得了很多进展。我通常的提示开头是“这是我遇到的问题[插入问题]。@foo.exe 是_最新固件更新的安装程序_。提取固件并确定是否存在可能导致此问题的合理路径。在@this-markdown-file.md 中记录您如何提取固件、如何进行分析以及最终结论”<p>我从中得到了绝对令人难以置信的结果。我有过一些幻觉/不正确的分析（很难说是哪一种），但总的来说，结果非常棒。</p><p>我最接近的安全漏洞是蓝牙 OBD-II 读取器。我给了 Claude APK，并要求它对 BLE 协议进行逆向工程，以便我可以通过 Python 使用该设备。 APK 中显然存在大量混淆，实际的 BLE 逻辑隐藏在混淆的本机代码库中，而不是 Java 代码中。 Claude 最终要求我安装 Android 模拟器，以便它可以使用 <a href="https://frida.re" target="_blank" rel="noopener noreferrer">https://frida.re</a> 进行动态检测，而不是完全依赖静态分析。输出令人印象深刻。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not who you were asking and not explicitly looking for vulnerabilities... I have gotten a ton of mileage from getting Claude to reverse engineer both firmware and applications with Ghidra and radare2. My usual prompt starts with "Here's the problem I'm having [insert problem]. @foo.exe is the _installer for the latest firmware update_. Extract the firmware and determine if there's a plausible path that could cause this problem. Document how you've extracted the firmware, how you've done the analysis, and the ultimate conclusions in @this-markdown-file.md"<p>I have gotten absolutely incredible results out of it. I have had a few hallucinations/incorrect analyses (hard to tell which it was), but in general the results have been fantastic.</p><p>The closest I've come to security vulnerabilities was a Bluetooth OBD-II reader. I gave Claude the APK and asked it to reverse engineer the BLE protocol so that I could use the device from Python. There was apparently a ton of obfuscation in the APK, with the actual BLE logic buried inside an obfuscated native code library instead of Java code. Claude eventually asked me to install the Android emulator so that it could use <a href="https://frida.re" target="_blank" rel="noopener noreferrer">https://frida.re</a> to do dynamic instrumentation instead of relying entirely on static analysis. The output was impressive.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mentalgear</span>
+        <span class="meta-time">2026/04/02 00:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603240" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Isamu</span>
+        <span class="meta-time">2026/04/02 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">法学硕士风格的人工智能的一切都是蛮力。我认为人们并不关心，除非隔壁有一个新的数据中心，资源效率极其低下。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Everything with LLM-style AI is brute force. I don’t think people care, unless there’s a new data center going in next door that’s incredibly resource inefficient .</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">margalabargala</span>
+        <span class="meta-time">2026/04/02 00:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">蛮力可能会被认为“不优雅”而被忽视，但它非常有效。 <i>尤其</i> 用于绕过安全性。<p>如果您需要访问某人的帐户或解密他们的硬盘驱动器，暴力破解是一种有效的方法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Brute force might be dismissed as "not elegant" but it's highly effective. <i>Especially</i> for bypassing security.<p>If you need to access someone's account or decrypt their hard drive, brute force is an effective way to do it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">petcat</span>
+        <span class="meta-time">2026/04/01 18:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 尝试一下内核或核心服务的源代码，配备一些用于尝试失败迭代的虚拟机，并让它生成 CVE。<p>FreeBSD内核是用C写的吧？</p><p>AI 机器人很容易找到 CVE。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; have a go at the source code of the kernel or core services, armed with some VMs for the try-fail iteration, and get it pumping out CVEs.<p>FreeBSD kernel is  written in C right?</p><p>AI bots will trivially find CVEs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/01 18:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">莫里斯蠕虫病毒的教训尚未得到认真对待。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Morris worm lesson is yet to be taken seriously.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599154" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pitched</span>
+        <span class="meta-time">2026/04/01 19:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们现在正在这里查看 CVE。这也算进步吧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We’re here right now looking at a CVE. That has to count as progress?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599242" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tptacek</span>
+        <span class="meta-time">2026/04/02 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Calif（Thai Duong 的公司）就此写了一篇文章，可能应该是此处的链接；它包括他们使用的提示：<p><a href="https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd" target="_blank" rel="noopener noreferrer">https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd</a></p><p>提醒一下：这个错误也 <i>成立</i> 作者：Claude（特别是 Anthropic 的 Nicholas Carlini）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Calif (Thai Duong's firm) did a writeup on this, which should probably be the link here; it includes the prompts they used:<p><a href="https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd" target="_blank" rel="noopener noreferrer">https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd</a></p><p>A reminder: this bug was also <i>found</i> by Claude (specifically, by Nicholas Carlini at Anthropic).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yumiatlead</span>
+        <span class="meta-time">2026/04/02 10:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这展示了代理人的巨大权力和自主权，这也是企业恐惧的根源。它凸显了治理和安全的迫切需要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This showcases the immense power and autonomy of agents, which is the root of enterprise fear. It highlights the urgent need for governance and safety.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609221" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ptx</span>
+        <span class="meta-time">2026/04/01 18:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>值得注意的是，FreeBSD 使这比在现代 Linux 内核上更容易：FreeBSD 14.x 没有 KASLR（内核地址是固定且可预测的），也没有用于整数数组的堆栈金丝雀（溢出的缓冲区是 int32_t[]）。</i><p>那么 FreeBSD 15.x 又如何呢？我在发行说明或 Mitigations(7) 手册页中没有看到任何有关 KASLR 的内容。正在处理中吗？</p><p>NetBSD 显然有它： <a href="https://wiki.netbsd.org/security/kaslr/" target="_blank" rel="noopener noreferrer">https://wiki.netbsd.org/security/kaslr/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>It's worth noting that FreeBSD made this easier than it would be on a modern Linux kernel: FreeBSD 14.x has no KASLR (kernel addresses are fixed and predictable) and no stack canaries for integer arrays (the overflowed buffer is int32_t[]).</i><p>What about FreeBSD 15.x then? I didn't see anything in the release notes or the mitigations(7) man page about KASLR. Is it being worked on?</p><p>NetBSD apparently has it: <a href="https://wiki.netbsd.org/security/kaslr/" target="_blank" rel="noopener noreferrer">https://wiki.netbsd.org/security/kaslr/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ktm5j</span>
+        <span class="meta-time">2026/04/01 21:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白这一点，因为从 13.2 开始 KASLR 在 FreeBSD 中已经默认：<p>[kmiles@peter ~]$ cat /etc/os-release</p><p>名称=FreeBSD</p><p>版本=“13.3-RELEASE-p4”</p><p>版本_ID =“13.3”</p><p>ID=freebsd</p><p>ANSI_COLOR=“0;31”</p><p>PRETTY_NAME="FreeBSD 13.3-RELEASE-p4"</p><p>CPE_NAME="cpe://o:freebsd:freebsd:13.3"</p><p>主页_URL=“<a href="https://FreeBSD.org/" target="_blank" rel="noopener noreferrer">https://FreeBSD.org/</a>”</p><p>BUG_REPORT_URL="<a href="https://bugs.FreeBSD.org/" target="_blank" rel="noopener noreferrer">https://bugs.FreeBSD.org/</a>”</p><p>[kmiles@peter ~]$ sysctl kern.elf64.aslr.enable</p><p>kern.elf64.aslr.启用：1</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't understand this, because KASLR has been default in FreeBSD since 13.2:<p>[kmiles@peter ~]$ cat /etc/os-release</p><p>NAME=FreeBSD</p><p>VERSION="13.3-RELEASE-p4"</p><p>VERSION_ID="13.3"</p><p>ID=freebsd</p><p>ANSI_COLOR="0;31"</p><p>PRETTY_NAME="FreeBSD 13.3-RELEASE-p4"</p><p>CPE_NAME="cpe:/o:freebsd:freebsd:13.3"</p><p>HOME_URL="<a href="https://FreeBSD.org/" target="_blank" rel="noopener noreferrer">https://FreeBSD.org/</a>"</p><p>BUG_REPORT_URL="<a href="https://bugs.FreeBSD.org/" target="_blank" rel="noopener noreferrer">https://bugs.FreeBSD.org/</a>"</p><p>[kmiles@peter ~]$ sysctl kern.elf64.aslr.enable</p><p>kern.elf64.aslr.enable: 1</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600548" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">savant2</span>
+        <span class="meta-time">2026/04/01 21:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个旋钮不是 KASLR，它只是为 ELF 二进制文件启用 ASLR。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This knob isn't KASLR, it just enables ASLR for ELF binaries.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600710" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">keysersoze33</span>
+        <span class="meta-time">2026/04/01 19:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这更多的是 Linux 内核对 KASLR 的批评，但也许这与为什么它没有成为 FreeBSD 的优先事项有关（即它给人一种错误的安全感，而是专注于“适当的”安全强化）： <a href="https://forums.freebsd.org/threads/truth-about-linux-4-6-security-from-grsecurity-member.56298/" target="_blank" rel="noopener noreferrer">https://forums.freebsd.org/threads/truth-about-linux-4-6-sec...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is more of a Linux kernel criticism of KASLR, but perhaps it's related as to why it's not been a priority in FreeBSD (i.e. it gives a false sense of safety and rather focus on 'proper' security hardening): <a href="https://forums.freebsd.org/threads/truth-about-linux-4-6-security-from-grsecurity-member.56298/" target="_blank" rel="noopener noreferrer">https://forums.freebsd.org/threads/truth-about-linux-4-6-sec...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599646" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pixl97</span>
+        <span class="meta-time">2026/04/01 23:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">安全性就像洋葱，老实说，您希望这两层都尽可能地坚硬。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Security is an onion, honestly you want both layers to be as hard as possible.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">panstromek</span>
+        <span class="meta-time">2026/04/01 18:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几天前刚刚发表了“Black-Hat LLMs”演讲：<p><a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a></p><p>看起来法学硕士越来越擅长发现和利用这些。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The talk "Black-Hat LLMs" just came out a few days ago:<p><a href="https://www.youtube.com/watch?v=1sd26pWhfmg" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=1sd26pWhfmg</a></p><p>Looks like LLMs are getting good at finding and exploiting these.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">baq</span>
+        <span class="meta-time">2026/04/01 19:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每个人都表现得如此惊讶，就好像没有人（这里的所有地方！）读过他在 12 月雇用准备主管的推文。<p><a href="https://xcancel.com/sama/status/2004939524216910323" target="_blank" rel="noopener noreferrer">https://xcancel.com/sama/status/2004939524216910323</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Everybody is acts so surprised  as if nobody (around here of all places!) read the sama tweet in which he was hiring the Head of Preparedness... in December.<p><a href="https://xcancel.com/sama/status/2004939524216910323" target="_blank" rel="noopener noreferrer">https://xcancel.com/sama/status/2004939524216910323</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599237" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">muskstinks</span>
+        <span class="meta-time">2026/04/01 22:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除此之外，我没有读x，这条任意的随机推文与antropic有什么关系，yt谈论Opus质量跳转以找到迄今为止没有人能够找到的漏洞？<p>理论上的随机推文和清晰的演示是两件不同的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Besides that i'm not reading x, what has this arbitary random tweet todo with antrophic, the yt talk about Opus quality Jump to find exploits no one else was able to find so far?<p>A theoretical random tweet and a clear demonstration are two different things.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601073" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eru</span>
+        <span class="meta-time">2026/04/01 19:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从来没有读过任何推特。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I never read any Twitter.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599503" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">baq</span>
+        <span class="meta-time">2026/04/01 20:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">X是主要消息来源，此后新闻中不断报道。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">X was the primary source, it's been since reported all over the news.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599714" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">stephc_int13</span>
+        <span class="meta-time">2026/04/01 23:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最困难的部分始终是找到漏洞，而不是修复它。大多数花费大量时间寻找这些信息的人都不愿意透露。<p>自动发现可以带来巨大的好处，即使过渡期很可怕。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The most difficult part is always to find the vulnerability, not to fix it. And most people who are spending their days finding them are heavily incentivized to not disclose.<p>Automatic discovery can be a huge benefit, even if the transition period is scary.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602317" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">spookie</span>
+        <span class="meta-time">2026/04/01 23:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">希望这种自动化也能解决修复问题，而不是让开源开发人员感到头疼，就像 90 年代一些晦涩难懂的编解码器那样<i>。<p>然而，与防御不同，攻击是有针对性的努力。一般来说，修复在理论上更加困难。</p><p>* 参考过去的 google 和 ffmpeg 事件</p></i></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hopefully such automation also covers fixing instead of giving open source devs headaches, like the one over some obscure codec from the 90's<i>.<p>Nevertheless, attacking is a targeted endeavour, unlike defense. Fixing is, in _general_, more difficult in theory.</p><p>* reference to past google and ffmpeg incident</p></i></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602439" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dnw</span>
+        <span class="meta-time">2026/04/01 20:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢分享提示： <a href="https://github.com/califio/publications/blob/main/MADBugs/CVE-2026-4747/claude-prompts.txt" target="_blank" rel="noopener noreferrer">https://github.com/califio/publications/blob/main/MADBugs/CV...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for sharing the prompts: <a href="https://github.com/califio/publications/blob/main/MADBugs/CVE-2026-4747/claude-prompts.txt" target="_blank" rel="noopener noreferrer">https://github.com/califio/publications/blob/main/MADBugs/CV...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599945" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stek29</span>
+        <span class="meta-time">2026/04/02 00:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">提示显示这是如何来回进行大量的推动、中断和指导：这并不是克劳德仅根据漏洞描述编写完整的漏洞利用程序。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the prompts show how this was a back-and-forth with a lot of nudging, interruptions and steering: it's not Claude writing a full exploit just from a vulnerability description.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602818" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">decidu0us9034</span>
+        <span class="meta-time">2026/04/02 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以看到这是一个增量时间节省（除了开发团队之外，也许不值得花费代币，而不是一个高价值的错误）。但没有人“手动”发现这种错误，而且已经很长时间没有发现了。这里的人们真的关心内核安全或测试自动化吗？他们只是在谈论这件事，因为克劳德？ HN 上的所有内容都是人们为 Anthropic 做无偿促销工作，只是谈论 Claude 的所有承诺以及您可以在 Claude 上花更多钱的各种方式。无聊漫无目的的氛围。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I could see that being an incremental time save (perhaps not worth the token spend except for the dev team, not a high-value bug). But nbody finds this kind of bug "by hand" and hasn't for a long time now. Do people here really care about kernel security or testing automation? They're just talking about it because Claude? Everything on HN is people doing unpaid promotional work for Anthropic, just talking about all the promise Claude holds and all the various ways you could be spending more money on Claude. bored aimless vibes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604773" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">neonstatic</span>
+        <span class="meta-time">2026/04/01 23:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;“克劳德写道”<p>我希望很快我们就能普遍接受“克劳德可以编写代码”这一事实，并且我们将把焦点转向代码的好坏。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; "Claude wrote"<p>I am hoping that quite soon we will have general acceptance of the fact that "Claude can write code" and we will switch focus to how good / not good that code is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602380" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">abcde666777</span>
+        <span class="meta-time">2026/04/02 06:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">读懂我的想法。我想看看它的正确和错误，无论它是绝对混乱还是实际上可以随着时间的推移进行维护，等等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Read my mind. I want to see what it got right and wrong, whether it's an absolute mess or actually maintainable over time, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607532" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">m132</span>
+        <span class="meta-time">2026/04/01 18:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">欣赏完整的提示历史记录</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Appreciate the full prompt history</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ptx</span>
+        <span class="meta-time">2026/04/01 18:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，它以“你能把我在本次会话中输入的所有提示还给我吗”结尾，所以它可能部分是实际的提示历史，部分是幻觉。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, it ends with "can you give me back all the prompts i entered in this session", so it may be partially the actual prompt history and partially hallucination.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dboreham</span>
+        <span class="meta-time">2026/04/01 22:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">fwiw，您可以使用此工具以适合发布在网络上的格式转储实际会话： <a href="https://simonwillison.net/2025/Dec/25/claude-code-transcripts/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2025/Dec/25/claude-code-transcript...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">fwiw you can dump the actual session in a format suitable to be posted on the web with this tool: <a href="https://simonwillison.net/2025/Dec/25/claude-code-transcripts/" target="_blank" rel="noopener noreferrer">https://simonwillison.net/2025/Dec/25/claude-code-transcript...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dark-star</span>
+        <span class="meta-time">2026/04/01 19:04</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599264" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">m132</span>
+        <span class="meta-time">2026/04/01 19:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们确实这么做了，整个语气以及对 Docker、内核线程和其他相关内容缺乏了解，一开始听起来很搞笑。但后来你意识到，这都是人类输入最终导致了有效的利用......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They do, the whole tone and the lack of understanding of Docker, kernel threads, and everything else involved make it sound hilarious at first. But then you realize that this is all the human input that led to a working exploit in the end...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599521" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bluGill</span>
+        <span class="meta-time">2026/04/01 19:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Freebsd 没有 docker。它的监狱可以起到类似的作用，但在重要方面并不相同</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Freebsd doesn't have docker. It has jails which can serve a similar purpose but are not the same in important ways</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599624" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">m132</span>
+        <span class="meta-time">2026/04/01 20:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在尝试纠正我之前，请至少阅读上下文......<p>这就是我所指的： <a href="https://github.com/califio/publications/blob/7ed77d11b21db800955e37dea42292a2627e0573/MADBugs/CVE-2026-4747/claude-prompts.txt" target="_blank" rel="noopener noreferrer">https://github.com/califio/publications/blob/7ed77d11b21db80...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please at least read the context before attempting to correct me...<p>Here's what I'm referring to: <a href="https://github.com/califio/publications/blob/7ed77d11b21db800955e37dea42292a2627e0573/MADBugs/CVE-2026-4747/claude-prompts.txt" target="_blank" rel="noopener noreferrer">https://github.com/califio/publications/blob/7ed77d11b21db80...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599674" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nozzlegear</span>
+        <span class="meta-time">2026/04/01 22:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该死的，当我可以只写没有标点符号或语法的半形式句子时，我在斯金纳框里写完整的段落浪费了多少时间？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">God damn, how much time am I wasting by writing full paragraphs to the Skinner box when I could just write half-formed sentences with no punctuation or grammar?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601140" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">thwarted</span>
+        <span class="meta-time">2026/04/01 22:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>我们能以某种方式阻止非特权非 root 用户吗</i><p>“恶魔海峡”。这是语音转文字吗？这可能可以解释标点符号和语法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>can we demon strait somehow a unpriv non root user</i><p>"demon strait". Was this speech to text? That might explain the punctuation and grammar.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601691" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">johnisgood</span>
+        <span class="meta-time">2026/04/01 22:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在给在 FreeBSD 上大力推动 docker 找个借口吧。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now give an excuse for pushing so hard for docker on FreeBSD.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601796" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Daishiman</span>
+        <span class="meta-time">2026/04/01 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人惊奇的是，一个拥有无限耐心的智力能够理解几乎无法理解的胡言乱语。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's amazing what an intelligence that has infinite patience can do to understand barely comprehensible gibberish.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601728" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bluGill</span>
+        <span class="meta-time">2026/04/01 23:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不是在纠正你，我只是为不太了解 freebsd 的人添加上下文。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not correcting you, I'm adding context for people who don't know much about freebsd.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601969" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">addandsubtract</span>
+        <span class="meta-time">2026/04/01 19:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">欢迎来到氛围编码。如果您曾经潜伏在各种人工智能子版块中，您很快就会意识到大多数用户的平均提示和沟通技巧有多么糟糕。具有讽刺意味的是，模型现在正在接受这些五年级水平提示的培训，并以此提高他们的成功率。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Welcome to vibe coding. If you ever lurk around the various AI subreddits, you'll soon realize just how bad the average prompts and communication skills of most users are. Ironically, models are now being trained on these 5th-grade-level prompts and improving their success with them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599517" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">_alternator_</span>
+        <span class="meta-time">2026/04/01 22:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">想想你小时候你的父母是如何使用谷歌的。什么更快地获得更好的结果？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just think about how your parents used google when you were a kid. What got better results faster?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601800" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nunez</span>
+        <span class="meta-time">2026/04/02 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">2002 年左右，当我上高中时，我们的图书管理员教我们谷歌搜索查询语法。所以...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">we were taught google search query syntax by our librarian when I was in high school in 2002-ish. so...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607505" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/01 18:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://github.com/califio/publications/tree/main/MADBugs/CVE-2026-4747" target="_blank" rel="noopener noreferrer">https://github.com/califio/publications/tree/main/MADBugs/CV...</a> 本来是一个更好的链接</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://github.com/califio/publications/tree/main/MADBugs/CVE-2026-4747" target="_blank" rel="noopener noreferrer">https://github.com/califio/publications/tree/main/MADBugs/CV...</a> would have been a better link</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598883" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tln</span>
+        <span class="meta-time">2026/04/01 23:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者更好的是，博客文章。<p><a href="https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd" target="_blank" rel="noopener noreferrer">https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd</a></p><p>但我发现漏洞利用记录非常有趣</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Or even better, the blog post.<p><a href="https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd" target="_blank" rel="noopener noreferrer">https://blog.calif.io/p/mad-bugs-claude-wrote-a-full-freebsd</a></p><p>But I found the exploit writeup pretty interesting</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601979" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sheepscreek</span>
+        <span class="meta-time">2026/04/01 20:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现更令人担忧的是，这仍然被认为具有新闻价值。任何愿意学习并有决心的人手中的前沿法学硕士可能是福是祸。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find it more concerning that this is still considered newsworthy. Frontier LLMs in the hands of anyone willing to learn and determined can be a blessing or curse.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599765" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andrewstuart</span>
+        <span class="meta-time">2026/04/02 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呃，标题听起来像是一件坏事。<p>这就是克劳德应该能够做到的。</p><p>阻止它这样做只是安全剧场。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Errrr the headline makes it sound like a bad thing.<p>This is what Claude is meant to be able to do.</p><p>Preventing it doing so is just security theater.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602917" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">EGreg</span>
+        <span class="meta-time">2026/04/01 22:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这需要 SSH 才能使用吗？<p>是否可以在没有 SSH 监听的情况下进行 pwn？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This requires an SSH to be available?<p>Is it possible to pwn without SSH listening?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601812" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/01 23:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">*网络文件系统</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">*NFS</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602489" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bink</span>
+        <span class="meta-time">2026/04/02 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其中一项漏洞将公钥写入authorized_keys 文件，因此它也需要打开SSH。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One of the exploits writes a public key to the authorized_keys file, so it does require SSH be open as well.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603343" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeremie_strand</span>
+        <span class="meta-time">2026/04/02 00:36</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603183" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">imta71770</span>
+        <span class="meta-time">2026/04/02 02:27</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47604649" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jeremie_strand</span>
+        <span class="meta-time">2026/04/01 20:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599993" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/04/02 01:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603930" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Adam_cipher</span>
+        <span class="meta-time">2026/04/01 19:42</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599542" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">imta71770</span>
+        <span class="meta-time">2026/04/01 22:20</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601321" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bustah</span>
+        <span class="meta-time">2026/04/01 20:48</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600134" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MYEUHD</span>
+        <span class="meta-time">2026/04/01 20:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是人工智能生成的评论。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is an AI-generated comment.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600230" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">volume_tech</span>
+        <span class="meta-time">2026/04/01 21:15</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600431" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">htx80nerd</span>
+        <span class="meta-time">2026/04/01 22:49</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47601709" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alcor-z</span>
+        <span class="meta-time">2026/04/01 21:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">MADBugs 的工作很扎实，但让我印象深刻的是自治角度——不仅仅是找到一个漏洞，而是将多个错误链接到一个有效的远程漏洞利用中，而无需人工参与。 FreeBSD 内核安全研究一直比 Linux 薄弱，这让人感觉更令人印象深刻，但更难以结合实际情况进行研究。这里的实际爆炸半径是多少——这实际上可以在任何具有默认配置的情况下利用，还是需要非常具体的条件？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The MADBugs work is solid, but what's sticking with me is the autonomy angle — not just finding a vuln but chaining multiple bugs into a working remote exploit without a human in the loop. FreeBSD kernel security research has always been thinner on the ground than Linux, which makes this feel both more impressive and harder to put in context. What's the actual blast radius here — is this realistically exploitable on anything with default configs, or does it need very specific conditions?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600349" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Fnoord</span>
+        <span class="meta-time">2026/04/01 21:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自由贸易协定，顶部：<p>&gt; 攻击面：加载了 kgssapi.ko 的 NFS 服务器（端口 2049/TCP）</p><p>不确定谁会运行暴露在互联网上的 NFS 服务器。肖丹会知道的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FTA, top:<p>&gt; Attack surface: NFS server with kgssapi.ko loaded (port 2049/TCP)</p><p>Not sure who would run an internet exposed NFS server. Shodan would know.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47600649" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sitkack</span>
+        <span class="meta-time">2026/04/02 00:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您还需要有效的 Kerberos 票证才能进行利用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You also need a valid Kerberos ticket to get to the point where you can exploit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47602686" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">astrange</span>
+        <span class="meta-time">2026/04/02 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章是AI废话。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This post is AI slop.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603581" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jdurban</span>
+        <span class="meta-time">2026/04/02 00:53</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603426" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">samtheprogram</span>
+        <span class="meta-time">2026/04/02 01:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正如其他地方提到的，虽然这篇文章是关于利用 RCE 的，但 Claude 是单独用来查找和记录这个特定的 RCE 的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As mentioned elsewhere, while this writeup is about exploiting the RCE, Claude was separately used to find and document this specific RCE.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603539" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jdurban</span>
+        <span class="meta-time">2026/04/02 01:16</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47603728" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dheerajmp</span>
+        <span class="meta-time">2026/04/01 20:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您不需要 Claude 来查找 FreeBSD 漏洞。只是一双平淡的眼睛。选择一个您可以找到的文件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You do not need Claude for finding FreeBSD vulns. Just plain eyes. Pick a file you can find one.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PunchyHamster</span>
+        <span class="meta-time">2026/04/01 17:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只是假设它被要求修复一些错误并且它编写了漏洞利用程序</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm just gonna assume it was asked to fix some bug and it wrote exploit instead</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598830" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">xorgun</span>
+        <span class="meta-time">2026/04/01 19:36</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47599491" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rithdmc</span>
+        <span class="meta-time">2026/04/01 17:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正在开会，所以暂时无法回顾这一点，但令人兴奋。我想知道它的代币成本是多少，以及提示/验证器/迭代循环是什么样的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Running into a meeting, so won't be able to review this for a while, but exciting. I wonder how much it cost in tokens, and what the prompt/validator/iteration loop looked like.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47598871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

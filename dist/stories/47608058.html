@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ocamlc 的新 C++ 后端 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1040/">返回本批次</a>
+      <h1>ocamlc 的新 C++ 后端</h1>
+      <p class="subtitle">A new C++ back end for ocamlc</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 glittershark</span>
+        <span>分数 99</span>
+        <span>评论 6</span>
+        <span>2026/04/02 07:35</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47608058" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/ocaml/ocaml/pull/14701" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>此补丁向 ocamlc 添加了新的 C++ 后端，改进了运行时和 FFI 当前使用的非增量 C。作为一个例子，下面是一个简单的程序，它计算素数达到用户指定的限制： module List = struct let rec filter p = function | [] -&gt; [] | x :: l -&gt; if p x then x :: 过滤 p l else 过滤 p l</li><li>let rec init i last f = if i &gt; last then [] else f i :: init (i+1) last f end</li><li>让素数n =让rec筛选候选者=将候选者与|匹配[] -&gt; [] | p :: ps -&gt; p :: sieve (List.filter (fun n -&gt; n mod p &lt;&gt; 0) ps) in sieve (List.init 2 n (fun i -&gt; i))</li><li>let main ~limit = primes limit 您可以使用以下命令将此程序编译为 C++： ocamlc -incr-c primes.ml</li><li>它会生成 primes.cpp，其中包含翻译为惯用的、可读的 C++ 代码的程序：</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>This patch adds a new C++ backend to ocamlc, improving on the unincremented C currently in use by the runtime and FFI. As an example, here&#39;s a simple program that computes the prime numbers up to a user-specified limit: module List = struct let rec filter p = function | [] -&gt; [] | x :: l -&gt; if p x then x :: filter p l else filter p l</li><li>let rec init i last f = if i &gt; last then [] else f i :: init (i+1) last f end</li><li>let primes n = let rec sieve candidates = match candidates with | [] -&gt; [] | p :: ps -&gt; p :: sieve (List.filter (fun n -&gt; n mod p &lt;&gt; 0) ps) in sieve (List.init 2 n (fun i -&gt; i))</li><li>let main ~limit = primes limit You can compile this program to C++ using: ocamlc -incr-c primes.ml</li><li>which produces primes.cpp, containing your program translated to idiomatic, readable C++ code:</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">QuadmasterXLII</span>
+        <span class="meta-time">2026/04/02 07:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很棒的东西。编写长时间运行的 C++ 的技巧：奇怪的是，C++ 解释器完全缺乏尾部调用优化。因此，大多数惯用的 C++ 代码都会实现并使用反向、映射、范围、过滤器等，如果您像这样实现它们，则不会破坏堆栈（请原谅伪代码）<p></p><pre><code>  (defun fibreverse (i ret acc)
+    (if acc
+        (if (&gt; i 0)
+            (progn
+              (setv call1 (fibreverse (- i 1) (cons (head acc) ret) (tail acc)))
+              (setv ret1 (head call1))
+              (setv acc1 (head (tail call1)))
+              (if acc1
+                  (fibreverse (- i 2) (cons (head acc1) ret1) (tail acc1))
+                  (pair ret1 acc1)))
+            (pair ret acc))
+        (pair ret acc)))
+
+  (defun reverse (list) (head (fibreverse 30 nil list)))
+</code></pre>
+无论您离开后谁必须维护您的代码，都会意识到您使用了惯用的、可移植的方法，而不是依赖命令行标志。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Brilliant stuff. A tip for writing long-running C++: bizzarely, the C++ interpreter completely lacks tail call optimization. As a result, most idiomatic C++ code implements and uses reverse, map, range, filter etc, which don’t blow the stack if you implement them like (forgive the pseudo-code)<p></p><pre><code>  (defun fibreverse (i ret acc)
+    (if acc
+        (if (&gt; i 0)
+            (progn
+              (setv call1 (fibreverse (- i 1) (cons (head acc) ret) (tail acc)))
+              (setv ret1 (head call1))
+              (setv acc1 (head (tail call1)))
+              (if acc1
+                  (fibreverse (- i 2) (cons (head acc1) ret1) (tail acc1))
+                  (pair ret1 acc1)))
+            (pair ret acc))
+        (pair ret acc)))
+
+  (defun reverse (list) (head (fibreverse 30 nil list)))
+</code></pre>
+Whoever has to maintain your code after you are gone will apprrciate that you used the idiomatic, portable approach instrad of relying on command line flags.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608258" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zorobo</span>
+        <span class="meta-time">2026/04/02 09:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这使得 <i>我的一天</i>， 谢谢你！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This made <i>my day</i>, thank you!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609015" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dnmc</span>
+        <span class="meta-time">2026/04/02 08:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是“mov is Turing Complete”名声大噪的史蒂芬·多兰吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is this the Stephen Dolan of "mov is Turing Complete" fame?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608632" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">loeg</span>
+        <span class="meta-time">2026/04/02 10:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信是这样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I believe so.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609363" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 08:01</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608301" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hudsonhs</span>
+        <span class="meta-time">2026/04/02 09:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">她（简·街）不会注意到你的，兄弟</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">She (Jane Street) is not gonna notice you, bro</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608814" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">shorsher</span>
+        <span class="meta-time">2026/04/02 10:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信他们已经为简街工作了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I believe they already work for Jane Street.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609299" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
