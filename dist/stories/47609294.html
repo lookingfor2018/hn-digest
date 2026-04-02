@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>克劳德代码泄露 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1343/">返回本批次</a>
+      <h1>克劳德代码泄露</h1>
+      <p class="subtitle">The Claude Code Leak</p>
+      <div class="meta-line">
+        <span>build.ms</span>
+        <span>作者 mergesort</span>
+        <span>分数 72</span>
+        <span>评论 23</span>
+        <span>2026/04/02 10:26</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47609294" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://build.ms/2026/4/1/the-claude-code-leak/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026 年 4 月 1 日 | 6 分钟阅读 昨天，科技界的许多人都在谈论 Claude Code 源代码的意外泄露，但出于不同的原因，我觉得这很有趣。我开始记下我的想法，并提出了五个不同的观察结果，这些观察结果与泄密本身无关，更多的是它告诉我们的内容。 1. 代码是垃圾累了：天啊，克劳德代码泄漏是一堆振动编码垃圾连线：如果产品市场适合的话，振动编码垃圾可以在一年内为您带来 25 亿美元的年度经常性收入 - Joe Fabisevich (@mergesort.me) 2026 年 4 月 1 日上午 10:25 克劳德代码是一款深受喜爱的产品，以至于开发人员、设计师、产品经理、营销人员，甚至连首席执行官都对其着迷！然而，为 Claude Code 提供支持的代码却是一种垃圾。所以当然，人们做的第一件事就是指指点点并大笑。但退一步想一想，这告诉我们代码的实际价值是什么？我在《AI 代理正在开始吃掉 SaaS（真的）》一书中指出，创建产品的进入壁垒正在下降。这看起来像是关于待办事项列表和习惯跟踪器等玩具应用程序的声明，但它适用于所有软件。 Claude Code 和 Cursor 在高端市场的成功表明，即使是对软件最挑剔的人（开发人员）也会使用您的软件，无论代码有多好。许多软件开发人员认为，像一群鬣狗一样工作，每天在不阅读代码的情况下提交数百个提交，是构建有价值软件的不可持续的方式，但这次泄露表明也许事实并非如此——糟糕的代码可以构建广受好评的产品。 2. 与代码无关它应该向开发人员发出警告：即使在为开发人员构建的产品中，代码似乎并不重要。这次对 Boris Cherny（Claude Code 的创建者）的采访让我大开眼界。他描述了他们如何在 Anthropic 构建软件，并解释了代码为何重要——只是与开发人员通常假设的方式不同。重要的是代码的作用，而不是它在逐个字符级别上如何执行。 Anthropic 不仅构建更好的系统来编写更好的代码，他们还构建更好的可观察性系统来监控代码更改的影响。想象一下您已经构建了一个功能，现在是时候对其进行质量检查了。您注意到电子邮件文本字段对 @ 字符的响应不佳，因此您返回代码，阅读它，并通过足够的调试找到解决方案。但这的扩展性不如一个系统，它会对你大喊“用户现在无法登录”，然后返回自动更改或恢复破坏你的身份验证流程的代码。如果你能建立一个良好的自我修复系统，并愿意承担一点点崩溃的风险，那么你的行动就会快得多，而不仅仅是一点点。 3.关于产品市场契合度一如既往，产品市场契合度是用户唯一关心的事情。如果产品有效，很少有人关心它在幕后是如何工作的。哎呀，大多数人甚至不知道幕后到底发生了什么。 Claude 总是有可能会出问题（或者每天都宕机，因为 Anthropic 的服务器由于需求预测不佳而供应不足）。如果发生这种情况，OpenAI 可以使用同样优秀（如果不是更好）的模型介入，并利用他们拥有的大量服务器来满足潜在需求。或者也许谷歌最终会弄清楚如何发布一个好的编码产品。这里有很多机会，但最终我们在满足消费者需求方面受到供应限制。 4. 版权仍然是一个敏感话题整个版权问题对我来说很有趣，感觉有点像 Anthropic 正在尝到自己的苦果。但我认为，这不仅仅是水到渠成的事情。当 Anthropic 的代码泄露时，他们做的第一件事就是在 Github 上发送一堆 DMCA 通知，要求删除代码库。 Anthropic 恪守对 vibing 的承诺，最终将 DMCA 通知发送到他们自己的 claude 代码存储库的分支，该存储库托管了他们的技能、教程和示例代码。但随后洁净室的实施开始出现。人们获取了 Anthropic 的源代码，并用 Python 和 Rust 等其他语言从头开始重写了 Claude 代码。整个人工智能行业（包括 Anthropic）一直认为，使用人工智能重写某些东西不是衍生作品，也不侵犯版权，因为这就是他们自己训练模型的方式。现在这部分确实感觉 Anthropic 正在尝到自己的苦果。但我的更高层次的解读是，这进一步巩固了代码应该免费的理念，只是比自由软件基金会预期的更加自由主义倾向。 5. 这一切都不重要所有这一切都很有趣，但我认为 Claude Code 的源代码被泄露并不像人们想象的那么重要。真正的价值人工智能生态系统中的关键不是模型或工具，而是两者无缝协作的集成。 Anthropic 明天可以开源 Claude Code，但这不会改变任何事情，因为人们支付的是伟大的结果，而不是底层代码。 Codex 自发布以来一直是开源的，Gemini 也是如此。尽管许多人更喜欢 Codex，但两者都没有抓住 Claude Code 的注意力——因为 Anthropic 销售的是完整的服务。最近我经常使用 pi 编码代理，我很喜欢它。 Pi 是一个编码代理，只有四个工具：读取、写入、编辑和 bash。它与每个主要模型提供商（包括 Claude）合作，而且效果非常好。原因是它针对开发人员解决问题的方式（通过编写代码）进行了优化。这是与 Claude 丰富的工具不同的方法，这表明有多种方法可以跨模型和线束创建集成体验。那么……我们该怎么办？在过去的几年里，我不得不多次质疑代码的价值，而这次泄露继续强化了我在整个职业生涯中大大高估了代码的观念。重要的是整合。无论是产品市场契合度还是模型和线束协同工作的效果如何，用户始终关心他们的问题得到解决——真正得到很好的解决。你可以通过简单或复杂、开放或专有来构建伟大的东西，但它必须无缝运行。干净的代码库只有在为用户提供更好的结果时才重要。这次泄密事件改变了对克劳德·代码的看法，而不是改变任何有形的东西，但看法就是现实。事实是，代码从来都不是 Claude Code 的价值所在——围绕代码发生的一切都更重要。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Apr 1, 2026 | 6 min read Much of the tech world is gushing about the accidental leak of Claude Code’s source code yesterday, but for different reasons than I find it interesting. I began jotting down my thoughts and came up with five distinct observations that had little to do with the leak itself, and more about what it tells us. 1. The Code Is Garbage Tired: Omg the Claude Code leak is a bunch of vibe coded garbage Wired: Vibe coded garbage can get you to $2.5 billion annualized recurring revenue in under a year if the product market fit is there— Joe Fabisevich (@mergesort.me) April 1, 2026 at 10:25 AM Claude Code is a beloved product, to the point where developers, designers, product managers, marketers, and even CEOs are obsessed with it! And yet the code that powers Claude Code is kind of garbage. So of course the first thing people did was point and laugh. But step back for a second and think, what does that tell us about the actual value of code? I argued in AI Agents Are Starting To Eat SaaS (Really) that the barrier to entry for creating a product is going down. That seems like a statement about toy apps like todo lists and habit trackers — but it applies to all software. The success of Claude Code and Cursor at the higher end of the market shows that even the people pickiest about their software (developers) will use your software regardless of how good the code is. Many software developers have argued that working like a pack of hyenas and shipping hundreds of commits a day without reading your code is an unsustainable way to build valuable software, but this leak suggests that maybe this isn’t true — bad code can build well-regarded products. 2. It’s Not About The Code It should serve as a warning to developers that the code doesn’t seem to matter, even in a product built for developers. This interview with Boris Cherny (the creator of Claude Code) was eye-opening for me. He describes how they build software at Anthropic and explains why the code matters — just not in the way developers typically assume. What matters is what the code does, not how it does it at the character-by-character level. Anthropic isn’t only building better systems to write better code, they’re building better observability systems to monitor the effects of code changes. Imagine you’ve built a feature and now it’s time to QA it. You notice that an email textfield doesn’t respond well to the @ character, so you go back to the code, read it, and with enough debugging you figure out a fix. But that doesn’t scale as well as a system that yells at you to say “users can’t log in right now”, and then goes back to automatically change or revert the code that broke your auth flow. If you can build a good self-healing system and are willing to take on a little risk of things breaking as you go, you can move a whole lot faster — not just a bit. 3. It’s About Product Market Fit As always, product market fit is the only thing users care about. If the product works, very few people care how it works under the hood. Heck, most people don’t even have an inkling of what’s actually happening behind the scenes. There’s always a chance that Claude goes to shit (or just goes down every day because Anthropic’s servers are under-provisioned due to poor demand prediction). If that happens, OpenAI can jump in with their equally good (if not better) model and leverage the ridiculous amount of servers they have to serve the latent demand. Or maybe Google will eventually figure out how to ship a good coding product. There’s plenty of opportunity here, and ultimately we’re supply-constrained in meeting consumer demand. 4. Copyright Is Still A Touchy Subject The whole copyright situation is very funny to me, and feels a bit like Anthropic is getting a taste of their own medicine. But I think there’s more to it than just what comes around goes around. The first thing Anthropic did when their code leaked was send a bunch of DMCA notices on Github to have the repos taken down. True to their committment to vibing, Anthropic ended up sending DMCA notices to forks of their own claude-code repo that hosts their skills, tutorials, and example code. But then the clean room implementations started showing up. People had taken Anthropic’s source code and rewritten Claude Code from scratch in other languages like Python and Rust. The whole AI industry — Anthropic included — has been arguing that using AI to rewrite something is not derivative work and doesn’t violate copyright, because that is how they themselves train their models. Now this part really does feel like Anthropic’s getting a taste of their own medicine. But my higher-level reading is that this further entrenches the idea that code should be free, just with a more libertarian bent than the Free Software Foundation expected. 5. This All Doesn’t Matter All of this is interesting, but I think Claude Code’s source code being leaked won’t matter as much as people seem to think it will. The real value in the AI ecosystem isn’t the model or the harness — it’s the integration of both working seamlessly together. Anthropic could open source Claude Code tomorrow and it wouldn’t change a thing, because what people are paying for is the great results, not the underlying code. Codex has been open source since launch, and Gemini is too. Neither has captured Claude Code’s mindshare even though many people prefer Codex — because what Anthropic is selling is a complete service. Lately I’ve been using the pi coding agent a lot, and I love it. Pi is a coding agent with just four tools: read, write, edit, and bash. It works with every major model provider — including Claude — and it works brilliantly. The reason is that it’s optimized for working through problems the way a developer would solve them — by writing code. This is a different approach to Claude’s abundance of tools, which goes to show there’s a diversity of ways to create an integrated experience across model and harness. So… Where Does That Leave Us? I’ve had to question the value of code a lot over the last couple of years, and this leak continues to reinforce the notion that I’ve vastly overestimated it my entire career. What matters is integration. Whether that’s product market fit or how well a model and harness work together, users have always cared about having their problems solved — solved well, really. You can build something great by making it simple or complex, open or proprietary, but it has to work seamlessly. A clean codebase only matters if it delivers better results for users. This leak changes the perception of Claude Code more than it changes anything tangible, but perception is reality. And the reality is that the code was never what made Claude Code valuable in the first place — everything happening around the code matters more.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kstenerud</span>
+        <span class="meta-time">2026/04/02 13:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 它应该向开发人员发出警告：即使在为开发人员构建的产品中，代码似乎并不重要。<p>代码在早期并不重要。</p><p>这与我在该行业 25 年来观察到的情况类似。在初创公司中，代码并不重要；重要的是。市场契合度确实如此。</p><p>但随着时间的推移，你的代码库必须成熟，否则你最终会在维护而不是创新上使用越来越多的资源。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; It should serve as a warning to developers that the code doesn’t seem to matter, even in a product built for developers.<p>Code doesn't matter IN THE EARLY DAYS.</p><p>This is similar to what I've observed over 25 years in the industry. In a startup, the code doesn't really matter; the market fit does.</p><p>But as time goes on your codebase has to mature, or else you end up using more and more resources on maintenance rather than innovation.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610389" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thaumaturgy</span>
+        <span class="meta-time">2026/04/02 12:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道写“编码作为创造性表达”的人发生了什么（<a href="https://build.ms/2022/5/21/coding-as-creative-expression/" target="_blank" rel="noopener noreferrer">https://build.ms/2022/5/21/coding-as-creative-expression/</a>）？<p>我并不是（只是）油嘴滑舌。之前的那篇文章展示了对一场古老辩论的一些内省和深思熟虑。写作风格显然是个人的、人性化的。</p><p>今天的帖子就不多说了。它上面有LLM指纹。字比较长，字也比较多。但我并不觉得其中有同样深思熟虑的考虑。我大胆猜测，作者试图对克劳德代码泄露的消息提出一些新的角度，因为这是一个热门话题，并写下了一些笔记，然后让一个法学硕士充实它。</p><p>写作风格当然会随着时间的推移而改变，但并排看这两篇文章，差异是显而易见的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder what happened to the person that wrote "Coding as Creative Expression" (<a href="https://build.ms/2022/5/21/coding-as-creative-expression/" target="_blank" rel="noopener noreferrer">https://build.ms/2022/5/21/coding-as-creative-expression/</a>)?<p>I'm not (just) being glib. That earlier article displays some introspection and thoughtful consideration of an old debate. The writing style is clearly personal, human.</p><p>Today's post is not so much. It has LLM fingerprints on it. It's longer, there are more words. But it doesn't strike me as having the same thoughtful consideration in it. I would venture to guess that the author tried to come up with some new angles on the news of the Claude Code leak, because it's a hot topic, and jotted some notes, and then let an LLM flesh it out.</p><p>Writing styles of course change over time, but looking at these two posts side by side, the difference is stark.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mergesort</span>
+        <span class="meta-time">2026/04/02 12:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嘿，这里是这篇文章的作者！实际上，今天早上我出去散步时，我自己在手机上写了这篇文章。它最初的目的是作为一个简短的笔记，而不是一篇完整的博客文章——而《编码作为一种创造性的表达》花了我几天的时间来写。<p>我承诺今年要写更多的文章，并且比以前更快地表达我的想法，所以这可能是它不像您引用的文章那么深入的主要原因。但我确实想指出，这篇文章不是用人工智能编写的，它只是不想写得那么丰富。</p><p>它之所以发布得更久，是因为我老实说已经思考这些想法有一段时间了，而且关于这个主题有很多话要说。我并没有任何特别想要跳上新闻周期的意图，但一旦我开始写作，我就开始心潮澎湃，我发现自己围绕这个故事提出了五个独立但相互关联的想法，我认为这些想法值得分享。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hey there, author of the post here! I actually wrote this piece myself on my phone while I was out for a walk this morning. It was initially meant to be a quick note more than a full blog post —- whereas Coding As A Creative Expression took me a couple of days to write.<p>I made a commitment to write more this year and put my thoughts out quicker than I used to, so that’s likely the primary reason it’s not as deep of a piece of writing as the post you’re referencing. But I do want to note that this wasn’t written using AI, it just wasn’t intended to be as rich of a post.</p><p>The reason it came out longer is that I’ve honestly been thinking about these ideas for a while, and there is so much to say about this subject. I didn’t have any particular intention of hopping on a news cycle, but once I started writing the juices were flowing and I found myself coming up with five separate but interrelated thoughts around this story that I thought were worth sharing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609919" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">grey-area</span>
+        <span class="meta-time">2026/04/02 12:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它读起来确实像是在手机上写的，但对我来说它不像法学硕士文本。<p>有趣的是，作者对法学硕士的大量使用可能导致了其争论的简单化的要点标题风格，中间有填充物。读起来确实像是他们写了 5 个要点，然后（手工）添加了其他文本。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It does read as if were written on a phone but it doesn’t read like LLM text to me.<p>What is interesting and has possibly bled over from heavy LLM use by the author is the style of simplistic bullet point titles for the argument with filler in between. It does read like they wrote the 5 bullet points then added the other text (by hand).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610099" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 13:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610295" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stbev</span>
+        <span class="meta-time">2026/04/02 13:19</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610262" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">himata4113</span>
+        <span class="meta-time">2026/04/02 12:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我个人觉得他们如何将法律系统武器化到 DMCA 所有克劳德代码源代码存储库，这真的很有趣。纳入模型的代码不受版权保护，但生成的代码显然是根据法律定义计算机生成的代码不能受版权保护的，这是他们在法律案件中的主要论点之一。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I personally found it really amusing how they weaponized the legal system to DMCA all the claude code source code repositories. Code ingested into the model is not copyrightable, but produced code apparently is when by legal definition computer generated code can not be copyrighted and that's one of their primary arguments in legal cases.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610102" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">leduyquang753</span>
+        <span class="meta-time">2026/04/02 11:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 许多软件开发人员认为，像一群鬣狗一样工作，每天在不阅读代码的情况下提交数百个提交，是构建有价值软件的不可持续的方式，但这次泄漏表明也许这不是真的——糟糕的代码可以构建广受好评的产品。<p>该产品问世的时间还不够长，无法确定这种方法是否“可持续”。它目前处于炒作状态，需要更多时间让炒作平息，真正的价值显现出来，以及看看它是否成为第九层地狱以保持正常运转。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Many software developers have argued that working like a pack of hyenas and shipping hundreds of commits a day without reading your code is an unsustainable way to build valuable software, but this leak suggests that maybe this isn’t true — bad code can build well-regarded products.<p>The product hasn't been around long enough to decide whether such an approach is "sustainable". It is currently in a hype state and needs more time for that hype to die down and the true value to show up, as well as to see whether it becomes the 9th circle of hell to keep in working order.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609821" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mergesort</span>
+        <span class="meta-time">2026/04/02 12:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嘿，这里是这篇文章的作者。我其实很同意这一点！事实上这就是我使用这个词的原因 <i>或许</i> ——我的评论实际上是推测性的，而不是确定性的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hey there, author of the post here. I actually agree with this! That is in fact why I used the word <i>maybe</i> — my comment really was meant to be more  speculative than definitive.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">59nadir</span>
+        <span class="meta-time">2026/04/02 13:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为没有提及的一件事是，也许代码质量对于琐碎的事情来说实际上并不那么重要，因为如果需要的话，它们可以被简单地复制。我认为 Claude Code 正是这样一个项目；编码代理非常简单，重写 CC 也不是什么大问题。<p>根据我的经验，重要的事情往往对代码质量更加敏感，并且必然会保留更长时间，因此对维护问题更加敏感。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think one thing that goes unmentioned is that maybe code quality is really not that important for trivial things, because they can be trivially reproduced if need be. I would argue Claude Code is exactly such a project; coding agents are incredibly simple and rewriting CC wouldn't be much of a problem.<p>Non-trivial things tend to be much more sensitive to code quality in my experience, and will by necessity be kept around for longer and thus be much more sensitive to maintenance issues.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610274" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anematode</span>
+        <span class="meta-time">2026/04/02 11:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但随后洁净室实施开始出现。人们获取了 Anthropic 的源代码，并用 Python 和 Rust 等其他语言从头开始重写了 Claude 代码。<p>似乎短语“洁净室”是新的“困惑”......这有什么意义？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; But then the clean room implementations started showing up. People had taken Anthropic’s source code and rewritten Claude Code from scratch in other languages like Python and Rust.<p>Seems like the phrase "clean room" is the new "nonplussed"... how does this make any sense?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609734" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aeternum</span>
+        <span class="meta-time">2026/04/02 13:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最合适的方法是在 Claude Code 源代码（以及其他数据）上训练法学硕士。<p>然后使用 Anthropic 自己的论点，即 LLM 输出是原创作品，因此不受版权保护。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The most fitting method would be to be to train an LLM on the Claude Code source-code (among other data).<p>Then use Anthropic's own argument that LLM output is original work and thus not subject to copyright.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610192" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mergesort</span>
+        <span class="meta-time">2026/04/02 12:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嘿，作者在这里发帖。我认为我的这个说法是错误的。在我写完这篇文章后，我在 Bluesky[^1] 上与一位版权律师进行了讨论，并合理地确信这不是洁净室实施的有效示例。<p>[^1]： <a href="https://bsky.app/profile/mergesort.me/post/3mihhaliils2y" target="_blank" rel="noopener noreferrer">https://bsky.app/profile/mergesort.me/post/3mihhaliils2y</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heya, post author here. I think I was just wrong about this assertion. I got into a discussion with a copyright lawyer over on Bluesky[^1] after I wrote this and came away reasonably convinced that this wouldn’t be a valid example of a clean room implementation.<p>[^1]: <a href="https://bsky.app/profile/mergesort.me/post/3mihhaliils2y" target="_blank" rel="noopener noreferrer">https://bsky.app/profile/mergesort.me/post/3mihhaliils2y</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609946" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">recursive</span>
+        <span class="meta-time">2026/04/02 11:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这意味着您从实现中编写了规范。  然后根据规范编写一个新的实现。  您甚至可以在“干净”的房间中完成第二部分。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it means you write a spec from the implementation.  Then you write a new implementation from the spec.  You might go so far as to do the second part in a "clean" room.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609767" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">m132</span>
+        <span class="meta-time">2026/04/02 12:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呵呵，最初的完全振动让我想到了一个有趣的问题：如果您使用相同的模型来生成规范，然后重置状态并将该规范传递回它以进行实现，则生成的代码在设计上将非常接近原始代码。如果运气足够好（或工程），在某些情况下您甚至可以获得完全相同的文件。<p>这还算是洁净室吗？或者，如果模型不是完全相同的模型，而是在相同的输入材料上以相同的方式进行训练，而 Anthropic 从未拥有过该模型，该怎么办？</p><p>这将是一个非常有趣、而且可能常常是虚伪诉讼的十年。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heh, the original being entirely vibed had me thinking of an interesting problem: if you used the same model to generate a specification, then reset the state and passed that specification back to it for implementation, the resulting code would by design be very close to the original. With enough luck (or engineering), you could even get the same exact files in some cases.<p>Does this still count as clean-room? Or what if the model wasn't the same exact one, but one trained the same way on the same input material, which Anthropic never owned?</p><p>This is going to be a decade of very interesting, and probably often hypocritical lawsuits.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">roywiggins</span>
+        <span class="meta-time">2026/04/02 11:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正确的。但这根本不是人们在这里做的事</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">right. that's not what people are doing here though, at all</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609785" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">john_strinlai</span>
+        <span class="meta-time">2026/04/02 11:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在典型的洁净室设计中，编写新实现的人不应该对原始实现有任何了解，他们应该 <i>仅有的</i> 了解规范。<p>如果一个人从实现中编写规范，然后还编写新的实现，那么它就不是洁净室设计。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">in a typical clean-room design, the person writing the new implementation is not supposed to have any knowledge of the original, they should <i>only</i> have knowledge of the specification.<p>if one person writes the spec from the implementation, and then also writes the new implementation, it is not clean-room design.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609795" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">post_below</span>
+        <span class="meta-time">2026/04/02 11:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为争论的焦点是法学硕士是无国籍的。因此，如果编写代码的会话与编写规范的会话不同，那么它实际上是一个干净的房间实现。<p>当然还有其他细节（训练数据中是否是旧代码？），但我并不想以某种方式权衡这一论点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I believe the argument is that LLMs are stateless. So if the session writing the code isn't the same session that wrote the spec, it's effectively a clean room implementation.<p>There are other details of course (is the old code in the training data?) but I'm not trying to weigh in on the argument one way or the other.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609828" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">twelfthnight</span>
+        <span class="meta-time">2026/04/02 11:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎同样有效的是，代码质量确实很重要，因为糟糕的编码实践是导致泄漏的原因。<p>当然，权重才是真正价值所在，但如果质量如此松懈，他们会泄露整个代码库，也许他们只是幸运，没有泄露客户数据或模型权重？如果这种情况真的发生，整个业务可能会在一夜之间蒸发。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems equally valid to come out of this with the takeaway that code quality _does_ matter, because poor coding practices are what led to the leak.<p>Sure, the weights are where the real value lives, but if the quality is so lax they leak their whole codebase, maybe they are just lucky they didn’t leak customer data or the model weights? If that did happen, the entire business might evaporate overnight.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609816" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">komali2</span>
+        <span class="meta-time">2026/04/02 13:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 糟糕的代码可以构建出广受好评的产品。<p>是的，完全正确。 <i>产品</i>。</p><p>似乎我和我认识的所有工程师都存在这种既定的二分法：工程师想要编写好的代码并充分考虑用户需求，而项目经理/主管/销售人员则想要使会计凭证上的非负数更大。</p><p>事实是，要编写“好软件”，您确实需要小心，审查代码，而不是单次振动代码，并且不要让法学硕士猖獗。另一个事实是，好的软件不一定是好的产品；好的软件不一定是好的产品。反之亦然：糟糕的产品并不一定意味着糟糕的软件。然而，正如本文指出的那样，两者之间并没有真正的相关性：糟糕的软件也可以是伟大的产品！事实上，如果编写糟糕的软件可以让您更快地推出更多功能，那么您可能会比那些精心编写优秀软件但发布速度较慢的人在商业世界中取得领先。这是因为商业世界的优先事项和激励措施常常与人类世界的优先事项和激励措施相矛盾。</p><p>我认为对于我们这些一生都被教导金钱是质量和功效的良好记分员的人来说，这是很难理解的。事实上绝对不是。金钱就是迪士尼的钱，记录谁以最优化的方式经营迪士尼世界。在迪士尼世界之外，您在公园内的最佳行为通常无法满足公园外的需求。</p><p>&gt; 劳动生产的物品在面对它时就像是某种陌生的东西，一种独立于生产者的力量。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; bad code can build well-regarded products.<p>Yes, exactly. <i>Products</i>.</p><p>It seems like me and all the engineers I've known always have this established dichotomy: engineers, who want to write good code and to think a lot about user needs, and project managers/ executives/sales people, who want to make the non-negative numbers on accounting documents larger.</p><p>The truth is that to write "good software," you do need to take care, review code, not single-shot vibe code and not let LLMs run rampant. The other truth is that good software is not necessary good product; the converse is also true: bad product doesn't necessarily mean bad software. However there's not really a correlation, as this article points out: terrible software can be great product! In fact if writing terrible software lets you shit out more features, more quickly, you'll probably come ahead in business world than someone carefully writing good software but releasing more slowly. That's because the priorities and incentives in business world are often in contradiction to priorities and incentives in human world.</p><p>I think this is hard to grasp for those of us who have been taught our whole lives that money is a good scorekeeper for quality and efficacy. In reality it's absolutely not. Money is Disney bucks recording who's doing Disney World in the most optimal way. Outside of Disney World, your optimal in-park behavior is often suboptimal for out-of-park needs.</p><p>&gt; The object which labor produces confronts it as something alien, as a power independent of the producer.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610381" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">grey-area</span>
+        <span class="meta-time">2026/04/02 12:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">文章中的要点。<p>1. 代码是垃圾，这意味着软件的终结。</p><p>现在尝试维护它。</p><p>2. 代码并不重要（同一点重申）。</p><p>不，我们不应该接受破坏的垃圾代码，例如登录作为可接受的业务成本。</p><p>3. 与产品市场契合度有关。</p><p>好的，但是当你的代码是没人理解的热门垃圾时，产品市场适应后会发生什么？</p><p>4. Anthropic 无法捍卫其泄露代码的版权。</p><p>我同意这一点，但他们却自食其果。有人想要垃圾吗？</p><p>5.这次泄漏并不重要</p><p>我同意作者的观点，但出于不同的原因——价值在于模型，训练起来非常昂贵，而不是围绕它的写得很糟糕的脚手架。</p><p>我们也不应该将当前的市场价值误认为是使用价值。</p><p>与似乎完全参加了 LLM 炒作列车的作者不同，我并不认为这意味着代码已死，它说明了完全依赖生成式 AI 将带你去往何处 - 一个无法维护的垃圾堆，这对于人类或 LLM 来说肯定是一场噩梦。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Points from the article.<p>1. The code is garbage and this means the end of software.</p><p>Now try maintaining it.</p><p>2. Code doesn’t matter (the same point restated).</p><p>No, we shouldn’t accept garbage code that breaks e.g. login as an acceptable cost of business.</p><p>3. It’s about product market fit.</p><p>OK, but what happens after product market fit when your code is hot garbage that nobody understands?</p><p>4. Anthropic can’t defend the copyright of their leaked code.</p><p>This I agree with and they are hoist by their own petard. Would anyone want the garbage though?</p><p>5. This leak doesn’t matter</p><p>I agree with the author but for different reasons - the value is the models, which are incredibly expensive to train, not the badly written scaffold surrounding it.</p><p>We also should not mistake current market value for use value.</p><p>Unlike the author who seems to have fully signed up for the LLM hype train I don’t see this as meaning code is dead, it’s an illustration of where fully relying on generative AI will take you - to a garbage unmaintainable mess which must be a nightmare to work with for humans or LLMs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610072" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">slopinthebag</span>
+        <span class="meta-time">2026/04/02 13:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Claude Code 只是证明你不需要高质量的代码——你只需要数千亿美元来产生一流的法学硕士，然后利用你的法律团队通过你自己的代理工具强制使用它。或者换句话说，垃圾软件+巨大的护城河=用户。<p>说真的，如果 Anthropic 像 oAI 一样，让你在任何代理工具上使用他们的订阅计划，有多少用户会立即开始流血？他们在终端工作台上排名第 39，但他们被提供单一工具 tmux 的安全带击败。通过使用 Opus 4.6，您实际上可以获得更好的结果 <i>仅有的</i> 一个 tmux 会话并让它运行 bash 命令。</p><p>现在对代码质量做出全面的声明似乎还为时过早，特别是因为需要一个架构良好的代码库的主要原因是为了长期开发。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Claude Code just proves you don't need quality code — you just need hundreds of billions of dollars to produce a best-in-class LLM and then use your legal team to force the extreamly subsidised usage of it through your own agent harness. Or in other words, shitty software + massive moat = users.<p>Seriously, if Anthropic were like oAI and let you use their subscription plans with any agent harness, how many users would CC instantly start bleeding? They're #39 in terminal bench and they get beaten by a harness that provides a single tool: tmux. You can literally get better results by giving Opus 4.6 <i>only</i> a tmux session and having it run bash commands.</p><p>It seems premature to make sweeping claims about code quality, especially since the main reason to desire a well architected codebase is for development over the long haul.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610284" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 12:43</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610079" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jeremie_strand</span>
+        <span class="meta-time">2026/04/02 12:51</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610118" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">panavm</span>
+        <span class="meta-time">2026/04/02 12:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609931" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">michaelashley29</span>
+        <span class="meta-time">2026/04/02 13:15</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610240" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pregseahorses</span>
+        <span class="meta-time">2026/04/02 12:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们只是说这是愚人节玩笑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They just said this was an April Fools joke.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dodu_</span>
+        <span class="meta-time">2026/04/02 13:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">笑话sonthemiwasonlypretending.png</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">jokesonthemiwasonlypretending.png</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610332" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gfosco</span>
+        <span class="meta-time">2026/04/02 12:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，你被别人的笑话所迷惑了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No you fell for someone elses joke.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610031" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -121,13 +121,13 @@
 <body data-page="story">
   <main class="page story-page">
     <header class="hero">
-      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1040/">返回本批次</a>
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-02-1343/">返回本批次</a>
       <h1>以错误的方式签署数据结构</h1>
       <p class="subtitle">Signing data structures the wrong way</p>
       <div class="meta-line">
         <span>blog.foks.pub</span>
         <span>作者 malgorithms</span>
-        <span>分数 76</span>
+        <span>分数 92</span>
         <span>评论 41</span>
         <span>2026/04/02 03:52</span>
       </div>
@@ -137,8 +137,8 @@
       </div>
     </header>
     
-      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
-      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>How do you package data before feeding it into a cryptographic algorithm, like Sign, Encrypt, MAC or Hash? This question has lingered for decades without a sufficient solution. There are at least two important problems to solve. First, the encoding ought to produce canonical outputs, as systems like Bitcoin have struggled when two different encodings decode to the same in-memory data. But more important, the encoding system ought to weigh in on the important problem of domain separation. To get a sense for this issue, let’s look at a simple example, using a well-known IDL like protobufs. Imagine a distributed system that has two types of messages (among others): TreeRoots that encapsulate the root of a transparency tree, and KeyRevokes that signify a key being revoked: message TreeRoot { int64 timestamp = 1; bytes hash = 2; } message KeyRevoke { int64 timestamp = 1; publicKeyFingerprint hash = 2; } By a stroke of bad luck, these two data structures line up field-for-field, even though as far as the program and programmer are concerned, they mean totally different things. If a node in this system signs a TreeRoot and injects the signature into the network, an attacker might try to forge a KeyRevoke message that serializes byte-for-byte into the same message as the signed tree root, then staple the TreeRoot signature onto the KeyRevoke data structure. Now it looks like the signer signed a KeyRevoke when it never did, it only signed a TreeRoot. A verifier might be fooled into “verifying” a statement that the signer never intended. This is not a theoretical attack. It has a long historical record of success, in the contexts of Bitcoin, DEXs in Ethereum, TLS, JWTs, and AWS, among others. And though our small example concerns signing, the same idea is in play for MAC’ing (via HMAC or SHA-3), hashing, or even encryption, as most encryption these days is authenticated. In general, the cryptography should guarantee that the sender and receiver agree not only on the contents of the payload, but also the “type” of the data. The systems that have taken stabs at domain separation use ad-hoc techniques, such as hashing the local name of surrounding program methods in Solana, best practices in Ethereum or “context strings” in TLS v1.3. Given the rich variety of serious bugs possible here, a more systematic approach is warranted. When building FOKS, we invented one. The Idea: Domain Separators in the IDL The main idea behind FOKS’s plan for serializing cryptographic data (called Snowpack) is to put random, immutable domain separators directly into the IDL: struct TreeRoot @0x92880d38b74de9fb { timestamp @0 : Uint; hash @1 : Blob; } A simple compiler transpiles the IDL to a target language. In the target language, a runtime library provides a method to sign such an object: it makes a concatenation of the domain separator (@0x92880d38b74de9fb) and the serialization of the object, and then feeds the byte stream into the signing primitive. Similarly, verification of an object verifies this same reconstructed concatenation against the supplied signature. Note that the domain separator does not appear in the eventual serialization (which would waste bytes), since both signer and receiver agree on it via this shared protocol specification. Encrypt, HMAC, and hash work the same way. In Go (as well as TypeScript and other languages), the type system enforces the security guarantees. The compiler outputs a method: func (t TreeRoot) GetUniqueTypeID() uint64 { return 0x92880d38b74de9fb } And the Sign and Verify methods look like: func Sign(key Key, obj VerifiableObjecter) ([]byte, error) func Verify(key Key, sig []byte, obj VerifiableObjecter) error VerifiableObjecter is an interface that requires the GetUniqueTypeID() method, in addition to other methods like EncodeToBytes. These 64-bit domain separators are not required for all structs, and many don’t need them. However, these untagged structs do not get GetUniqueTypeID() methods, and therefore cannot be fed into Sign or Verify without type errors. Same goes for encryption, MAC’ing, prefixed hashing, etc. As long as the random domain separators are unique (which they will be, globally, with high probability), there is no chance of the signer and verifier misaligning on what data types they are dealing with. Any substitution like the one we discussed earlier will fail verification. Developers should use simple tooling, either in the IDE or CLI, to generate these random domain separators and insert them into their protocol specifications. The logic behind random generation of domain separators is reminiscent of generating p(x) randomly in Rabin Fingerprinting. In the base case, if Bob sits down to write a new project today, and generates all domain separators randomly, with very good probability, he knows the verifiers in his project will never verify signatures generated by another existing project. Random generation saves him the effort of thinking about mistaken collisions. As an inductive step, imagine Mallory builds a new project after Bob publishes his protocol specification. She might deliberately reuse his domain separators. If Bob gives her project access to his private keys, she might confuse verifiers in his project into verifying signatures generated by hers. We claim there is nothing to be done here. Mallory’s attack against domain separators is possible in any system, and since her project is malicious, it was a mistake to trust it with his private keys in the first place. If on the other hand, Mallory generates domain separators randomly, she and Bob get the same desirable guarantees as in the base case. Another risk is that AI coding or auto-completion agents might copy-paste existing domain separators, or generate them sequentially. The snowpack compiler and runtime ensure that all domain separators are unique within the same project, and error or panic (respectively) otherwise. Though developers are free to change the struct name TreeRoot however they please, they should keep the domain separator fixed over the lifetime of the protocol, even if they add or remove fields. As in protobufs and Cap’n Proto, the system supports removal and addition of fields, so long as the positions of remaining fields (as given by @0 and @1 above) never change, and as long as retired fields are never repurposed. The Snowpack IDL: Domain Separation + Canonical Encodings + More! Built-in domain separation is the novel idea in Snowpack. But overall, it’s proven to be a simple and effective forwards- and backwards-compatible system for both RPCs and serialization of inputs to cryptographic functions. We insist that the same system should serve both purposes well. Protobufs, for example, make no guarantees regarding canonical encodings. JSON encodings, though often used in cryptographic settings, are deficient in that they lack binary buffers (as output by most cryptographic primitives!), and therefore invite confusion between strings and base64-encoded binary data. Snowpack, however, checks all the boxes for us. The simple idea is to encode structures of the form TreeRoot above as JSON-like positional arrays: [ 1234567890, \xdeadbeef ] The @1 in the protocol specification above instructs encoders and decoders to look for the hash : Blob field in the 1st position of the array. Skipped and retired fields get encoded as nils. If the TreeRoot message upgrades to something that looks more like: struct TreeRoot @0x92880d38b74de9fb { hash @1 : Blob; timestampMsec @2 : Uint; } the intermediate encoding becomes: [ nil, \xdeadbeef, 1234567890123 ] Old decoders can still decode the new encoding, but see 0-values for the timestamp they were expecting. New decoders can decode old encodings, but see 0-values for the timestampMsec field they were expecting. It’s of course up to the application developer to decide if these conditions will break the program or not and consequently whether or not this protocol evolution makes sense, but they can rest assured that decoding will not fail at the protocol level. From this intermediate encoding, Snowpack arrives at a flat byte-stream via Msgpack encoding, but with important limitations. First, all integer encodings must use the minimum-size encoding possible. And second, dictionaries with more than one key-value pair are never sent into the encoder, so we can sidestep the whole thorny issue of canonical key ordering. As a result, we wind up with canonical encodings every time. Thus the overall flow is:</li><li>Go Structs Snowpack 类 JSON 中间对象 自描述字节 自描述 类 JSON 中间对象 Snowpack Go Structs</li><li>与外部转换不同，内部转换（与字节之间）是自描述的，不需要 Snowpack 协议定义即可完成。这种设计选择实现了向前兼容性：旧的解码器可以解码来自未来的消息。它还可以方便地调试和检查字节流。我们已经了解了结构体如何编码和解码。此外，Snowpack 提供的复杂性足以涵盖我们在 FOKS 中看到的每种情况。其他重要功能包括：列表、选项和变体。前两个可以直接表达为基于数组的编码。变体或标记联合编码为单个键值对字典，允许现有的 Msgpack 库通过类型安全对其进行解码。总结 域分离错误已经反复困扰着真实的系统。现有的缓解措施是临时的：上下文字符串、方法名称哈希和手工滚动的前缀，这些都容易忘记且难以审核。 Snowpack 采用了一种不同的方法：随机、不可变的 64 位域分隔符存在于 IDL 本身中，并且类型系统确保您无法对缺少分隔符的对象进行签名、加密或 MAC。我们认为这个核心思想比任何一个系统都重要，我们希望看到其他序列化方案采用它。与此同时，可以在 GitHub 上开源的 Snowpack 中获取它，目前针对 Go 和 TypeScript，未来还会有更多语言。 ✌️️ Max 🔑 PS：欢迎评论和讨论，请在 Hacker News Credits 上发表此讨论。感谢 Jack O’Connor 对本文草稿的反馈，以及构建影响 Snowpack 的相关系统。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>How do you package data before feeding it into a cryptographic algorithm, like Sign, Encrypt, MAC or Hash? This question has lingered for decades without a sufficient solution. There are at least two important problems to solve. First, the encoding ought to produce canonical outputs, as systems like Bitcoin have struggled when two different encodings decode to the same in-memory data. But more important, the encoding system ought to weigh in on the important problem of domain separation. To get a sense for this issue, let’s look at a simple example, using a well-known IDL like protobufs. Imagine a distributed system that has two types of messages (among others): TreeRoots that encapsulate the root of a transparency tree, and KeyRevokes that signify a key being revoked: message TreeRoot { int64 timestamp = 1; bytes hash = 2; } message KeyRevoke { int64 timestamp = 1; publicKeyFingerprint hash = 2; } By a stroke of bad luck, these two data structures line up field-for-field, even though as far as the program and programmer are concerned, they mean totally different things. If a node in this system signs a TreeRoot and injects the signature into the network, an attacker might try to forge a KeyRevoke message that serializes byte-for-byte into the same message as the signed tree root, then staple the TreeRoot signature onto the KeyRevoke data structure. Now it looks like the signer signed a KeyRevoke when it never did, it only signed a TreeRoot. A verifier might be fooled into “verifying” a statement that the signer never intended. This is not a theoretical attack. It has a long historical record of success, in the contexts of Bitcoin, DEXs in Ethereum, TLS, JWTs, and AWS, among others. And though our small example concerns signing, the same idea is in play for MAC’ing (via HMAC or SHA-3), hashing, or even encryption, as most encryption these days is authenticated. In general, the cryptography should guarantee that the sender and receiver agree not only on the contents of the payload, but also the “type” of the data. The systems that have taken stabs at domain separation use ad-hoc techniques, such as hashing the local name of surrounding program methods in Solana, best practices in Ethereum or “context strings” in TLS v1.3. Given the rich variety of serious bugs possible here, a more systematic approach is warranted. When building FOKS, we invented one. The Idea: Domain Separators in the IDL The main idea behind FOKS’s plan for serializing cryptographic data (called Snowpack) is to put random, immutable domain separators directly into the IDL: struct TreeRoot @0x92880d38b74de9fb { timestamp @0 : Uint; hash @1 : Blob; } A simple compiler transpiles the IDL to a target language. In the target language, a runtime library provides a method to sign such an object: it makes a concatenation of the domain separator (@0x92880d38b74de9fb) and the serialization of the object, and then feeds the byte stream into the signing primitive. Similarly, verification of an object verifies this same reconstructed concatenation against the supplied signature. Note that the domain separator does not appear in the eventual serialization (which would waste bytes), since both signer and receiver agree on it via this shared protocol specification. Encrypt, HMAC, and hash work the same way. In Go (as well as TypeScript and other languages), the type system enforces the security guarantees. The compiler outputs a method: func (t TreeRoot) GetUniqueTypeID() uint64 { return 0x92880d38b74de9fb } And the Sign and Verify methods look like: func Sign(key Key, obj VerifiableObjecter) ([]byte, error) func Verify(key Key, sig []byte, obj VerifiableObjecter) error VerifiableObjecter is an interface that requires the GetUniqueTypeID() method, in addition to other methods like EncodeToBytes. These 64-bit domain separators are not required for all structs, and many don’t need them. However, these untagged structs do not get GetUniqueTypeID() methods, and therefore cannot be fed into Sign or Verify without type errors. Same goes for encryption, MAC’ing, prefixed hashing, etc. As long as the random domain separators are unique (which they will be, globally, with high probability), there is no chance of the signer and verifier misaligning on what data types they are dealing with. Any substitution like the one we discussed earlier will fail verification. Developers should use simple tooling, either in the IDE or CLI, to generate these random domain separators and insert them into their protocol specifications. The logic behind random generation of domain separators is reminiscent of generating p(x) randomly in Rabin Fingerprinting. In the base case, if Bob sits down to write a new project today, and generates all domain separators randomly, with very good probability, he knows the verifiers in his project will never verify signatures generated by another existing project. Random generation saves him the effort of thinking about mistaken collisions. As an inductive step, imagine Mallory builds a new project after Bob publishes his protocol specification. She might deliberately reuse his domain separators. If Bob gives her project access to his private keys, she might confuse verifiers in his project into verifying signatures generated by hers. We claim there is nothing to be done here. Mallory’s attack against domain separators is possible in any system, and since her project is malicious, it was a mistake to trust it with his private keys in the first place. If on the other hand, Mallory generates domain separators randomly, she and Bob get the same desirable guarantees as in the base case. Another risk is that AI coding or auto-completion agents might copy-paste existing domain separators, or generate them sequentially. The snowpack compiler and runtime ensure that all domain separators are unique within the same project, and error or panic (respectively) otherwise. Though developers are free to change the struct name TreeRoot however they please, they should keep the domain separator fixed over the lifetime of the protocol, even if they add or remove fields. As in protobufs and Cap’n Proto, the system supports removal and addition of fields, so long as the positions of remaining fields (as given by @0 and @1 above) never change, and as long as retired fields are never repurposed. The Snowpack IDL: Domain Separation + Canonical Encodings + More! Built-in domain separation is the novel idea in Snowpack. But overall, it’s proven to be a simple and effective forwards- and backwards-compatible system for both RPCs and serialization of inputs to cryptographic functions. We insist that the same system should serve both purposes well. Protobufs, for example, make no guarantees regarding canonical encodings. JSON encodings, though often used in cryptographic settings, are deficient in that they lack binary buffers (as output by most cryptographic primitives!), and therefore invite confusion between strings and base64-encoded binary data. Snowpack, however, checks all the boxes for us. The simple idea is to encode structures of the form TreeRoot above as JSON-like positional arrays: [ 1234567890, \xdeadbeef ] The @1 in the protocol specification above instructs encoders and decoders to look for the hash : Blob field in the 1st position of the array. Skipped and retired fields get encoded as nils. If the TreeRoot message upgrades to something that looks more like: struct TreeRoot @0x92880d38b74de9fb { hash @1 : Blob; timestampMsec @2 : Uint; } the intermediate encoding becomes: [ nil, \xdeadbeef, 1234567890123 ] Old decoders can still decode the new encoding, but see 0-values for the timestamp they were expecting. New decoders can decode old encodings, but see 0-values for the timestampMsec field they were expecting. It’s of course up to the application developer to decide if these conditions will break the program or not and consequently whether or not this protocol evolution makes sense, but they can rest assured that decoding will not fail at the protocol level. From this intermediate encoding, Snowpack arrives at a flat byte-stream via Msgpack encoding, but with important limitations. First, all integer encodings must use the minimum-size encoding possible. And second, dictionaries with more than one key-value pair are never sent into the encoder, so we can sidestep the whole thorny issue of canonical key ordering. As a result, we wind up with canonical encodings every time. Thus the overall flow is:</li><li>Go Structs Snowpack Intermediate JSON-like Objects self-describing bytes self-describing Intermediate JSON-like Objects Snowpack Go Structs</li><li>Unlike the outer conversions, the inner conversions (to and from bytes) are self-describing and do not need a Snowpack protocol definition to complete. This design choice enables forwards compatibility: old decoders can decode messages from the future. It also allows for convenient debugging and inspection of the byte stream. We have seen how structs encode and decode. In addition, Snowpack offers just enough complexity to cover every situation we have seen in FOKS. Other important features are: Lists, Options and variants. The first two find straightforward expression as array-based encodings. Variants, or tagged unions, encode as single key-value-pair dictionaries, allowing existing Msgpack libraries to decode them with type safety. Summary Domain separation bugs have bitten real systems repeatedly. Existing mitigations are ad-hoc: context strings, method-name hashes, and hand-rolled prefixes that are easy to forget and hard to audit. Snowpack takes a different approach: random, immutable 64-bit domain separators live in the IDL itself, and the type system ensures you cannot sign, encrypt, or MAC an object that lacks one. We think this core idea is bigger than any one system, and we’d love to see other serialization schemes adopt it. In the meantime, get it in Snowpack, open-sourced on GitHub, currently targeting Go and TypeScript with more languages to come. ✌️️ Max 🔑 PS: Comments and discussion are welcome, please post to this discussion on Hacker News Credits Thanks to Jack O’Connor for his feedback on a draft of this post, and for building related systems that influenced Snowpack.</li></ol></section>
     
     <section class="block comments">
       <h3>评论（默认中文）</h3>
@@ -176,24 +176,6 @@
         <div class="comment-children">
     <details class="comment-node depth-3">
       <summary>
-        <span class="meta-author">Retr0id</span>
-        <span class="meta-time">2026/04/02 05:08</span>
-        
-      </summary>
-      <article class="comment-card">
-        <div class="comment-text is-clamped" data-role="comment-zh">多重集哈希与域分离问题无关，但与更广泛的“签名数据结构”问题相关。<p>（我意识到我的评论读起来有点不清楚，它基本上是两个单独的评论，在第一段之后分开）</p></div>
-        <div class="comment-text is-hidden" data-role="comment-raw">Multiset hashing is not related to the domain separation problem, but it is related to the broader "signing data structures" problem.<p>(I realise my comment reads a bit unclearly, it's basically two separate comments, split after the first paragraph)</p></div>
-        <div class="comment-actions">
-          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
-          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
-          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606589" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
-        </div>
-        
-      </article>
-    </details>
-  
-    <details class="comment-node depth-3">
-      <summary>
         <span class="meta-author">kccqzy</span>
         <span class="meta-time">2026/04/02 05:56</span>
         
@@ -227,6 +209,24 @@
   </div>
       </article>
     </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/04/02 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多重集哈希与域分离问题无关，但与更广泛的“签名数据结构”问题相关。<p>（我意识到我的评论读起来有点不清楚，它基本上是两个单独的评论，在第一段之后分开）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Multiset hashing is not related to the domain separation problem, but it is related to the broader "signing data structures" problem.<p>(I realise my comment reads a bit unclearly, it's basically two separate comments, split after the first paragraph)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606589" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
   </div>
       </article>
     </details>
@@ -241,8 +241,8 @@
         
       </summary>
       <article class="comment-card">
-        <div class="comment-text is-clamped" data-role="comment-zh">加密开发社区有一个奇怪的想法，即使用二进制文件更优越。对于许多算法来说，事实并非如此。它只是混淆了正在发生的事情，并且性能优势可以忽略不计......特别是在系统中使用更多资源的所有其他逻辑的上下文中。<p>我不知道 Protobuf 不是规范的，但即使不知道这一点，还有许多其他因素使其成为不如 JSON 的格式。</p><p>基本上每个人使用的所有加密原语通常都作为编译的二进制文件分发，这似乎是不明智的。我想不出还有什么比这更与安全对立的了。</p><p>我使用 utf8 作为基本格式并使用 HMAC-SHA256 进行密钥派生，从头开始为我的区块链项目实现了自己的有状态签名算法。它使得理解和正确实施变得更加容易。它使用 Lamport OTS 和 Merkel MSS。包括所有依赖项在内的整个内容就像 4000 行易于阅读的 JavaScript 代码。 MSS 大约有 300 行代码，Lamport OTS 大约有 300 行代码。</p><p>选择使用流行的分发二进制文件的加密库基本上是在实施错误的风险与供应链攻击的风险之间进行权衡……这似乎是一个更大的风险。</p><p>不管怎样，现在读到这篇文章并看到人们终于接受了这种方法，真是有点疯狂。这句话我已经说了很多年了。您可以查看 <a href="https://www.npmjs.com/package/lite-merkle" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/lite-merkle</a> 欢迎反馈。</p></div>
-        <div class="comment-text is-hidden" data-role="comment-raw">The crypto dev community has a strange idea that working with binary is superior. For many algorithms, it's not. It's just obfuscates what's happening and the performance advantage is negligible... Especially in the context of all the other logic in the system which uses far more resources.<p>I didn't know that Protobuf wasn't canonical but even without this knowledge, there are many other factors which make it an inferior format to JSON.</p><p>It seems unwise that essentially all the cryptographic primitives that everyone is using are often distributed as compiled binaries. I cannot think of anything more antithetical to security than that.</p><p>I implemented my own stateful signature algorithm for my blockchain project from scratch using utf8 as the base format and HMAC-SHA256 for key derivation. It makes it so much easier to understand and implement correctly. It uses Lamport OTS with Merkel MSS. The whole thing including all dependencies is like 4000 lines of easy-to-read JavaScript code. About 300 lines of code for MSS and 300 lines for Lamport OTS.</p><p>Choosing to use a popular cryptographic library which distributes binaries is basically trading off the risk of implementation mistake for the risk of supply chain attack... Which seems like a greater risk.</p><p>Anyway it's kind of wild to now be reading this and seeing people finally coming round to this approach. I've been saying this for years. You can check out <a href="https://www.npmjs.com/package/lite-merkle" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/lite-merkle</a> feedback welcome.</p></div>
+        <div class="comment-text is-clamped" data-role="comment-zh">加密开发社区有一个奇怪的想法，即使用二进制文件更优越。对于许多算法来说，事实并非如此。它只是混淆了正在发生的事情，并且性能优势可以忽略不计......特别是在系统中使用更多资源的所有其他逻辑的上下文中。<p>我不知道 Protobuf 不是规范的，但即使不知道这一点，还有许多其他因素使其成为不如 JSON 的格式。</p><p>另外，关于相关主题；基本上每个人使用的所有加密原语通常都以编译的二进制文件的形式分发，这似乎是不明智的。我想不出还有什么比这更与安全对立的了。</p><p>我使用 utf8 作为基本格式并使用 HMAC-SHA256 进行密钥派生，从头开始为我的区块链项目实现了自己的有状态签名算法。它使得理解和正确实施变得更加容易。它使用 Lamport OTS 和 Merkel MSS。包括所有依赖项在内的整个内容就像 4000 行易于阅读的 JavaScript 代码。 MSS 大约有 300 行代码，Lamport OTS 大约有 300 行代码……其余的只是通用实用函数。当逻辑很简单并且您可以自己阅读并验证时，您不需要相信其他人“做对了”！在我看来，代码实现和验证的简单性是一个关键特性。</p><p>如果你的完美密码库非常复杂，世界上只有 10 个人可以理解它，那不是很安全！存在巨大的中心化和供应链风险。您希望这 10 个人中的一些人会定期检查代码和依赖项......他们会吗？你还能相信他们吗？</p><p>选择使用流行的分发二进制文件的加密库基本上是在实施错误的风险与供应链攻击的风险之间进行权衡……这似乎是一个更大的风险。</p><p>不管怎样，现在读到这篇文章并看到人们终于接受了这种方法，真是有点疯狂。这句话我已经说了很多年了。您可以查看 <a href="https://www.npmjs.com/package/lite-merkle" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/lite-merkle</a> 欢迎反馈。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The crypto dev community has a strange idea that working with binary is superior. For many algorithms, it's not. It just obfuscates what's happening and the performance advantage is negligible... Especially in the context of all the other logic in the system which uses far more resources.<p>I didn't know that Protobuf wasn't canonical but even without this knowledge, there are many other factors which make it an inferior format to JSON.</p><p>Also, on a related topic; it seems unwise that essentially all the cryptographic primitives that everyone is using are often distributed as compiled binaries. I cannot think of anything more antithetical to security than that.</p><p>I implemented my own stateful signature algorithm for my blockchain project from scratch using utf8 as the base format and HMAC-SHA256 for key derivation. It makes it so much easier to understand and implement correctly. It uses Lamport OTS with Merkel MSS. The whole thing including all dependencies is like 4000 lines of easy-to-read JavaScript code. About 300 lines of code for MSS and 300 lines for Lamport OTS... The rest are just generic utility functions. You don't need to trust anyone else to "do it right" when the logic is simple and you can read it and verify it yourself! Simplicity of implementation and verification of the code is a critical feature IMO.</p><p>If your perfect crypto library is so complex that only 10 people in the world can understand it, that's not very secure! There is massive centralization and supply chain risk. You're hoping that some of these 10 people will regularly review the code and dependencies... Will they? Can you even trust them?</p><p>Choosing to use a popular cryptographic library which distributes binaries is basically trading off the risk of implementation mistake for the risk of supply chain attack... Which seems like a greater risk.</p><p>Anyway it's kind of wild to now be reading this and seeing people finally coming round to this approach. I've been saying this for years. You can check out <a href="https://www.npmjs.com/package/lite-merkle" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/lite-merkle</a> feedback welcome.</p></div>
         <div class="comment-actions">
           <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
           <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
@@ -405,28 +405,28 @@
           <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
           <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606955" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
         </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">patrakov</span>
+        <span class="meta-time">2026/04/02 13:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里的问题是，从模式派生的摘要只会重新引入编码相同但语义不同的类型混淆的可能性。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The problem here is that a digest derived from the schema would just reintroduce the possibility of confusion of identically encoded but semantically distinct types.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610204" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
         
       </article>
     </details>
   </div>
       </article>
     </details>
-  
-    <details class="comment-node depth-1" open>
-      <summary>
-        <span class="meta-author">colek42</span>
-        <span class="meta-time">2026/04/02 08:22</span>
-        
-      </summary>
-      <article class="comment-card">
-        <div class="comment-text is-clamped" data-role="comment-zh">DSSE 对此非常有用，如果您需要更多模式使用 in-toto</div>
-        <div class="comment-text is-hidden" data-role="comment-raw">DSSE is great for this, if you need more schema use in-toto</div>
-        <div class="comment-actions">
-          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
-          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
-          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
-        </div>
-        
+  </div>
       </article>
     </details>
   
@@ -553,6 +553,42 @@
           <a class="btn ghost" href="https://news.ycombinator.com/item?id=47605968" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
         </div>
         <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tennysont</span>
+        <span class="meta-time">2026/04/02 05:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯嗯。我同意使用 protobuf 进行临时实现可能会出错。但据推测，1 私钥的规范编码构成了霍顿原理？<p>霍顿原理似乎只是说“所有消息都具有 ≤1 的含义”。如果必须使用规范编码来解析由密钥 X 签名的消息，那么我们还没有完成吗？</p><p>仍然存在危险的空间。例如，您发送 `GetUserPermissionLevel(user:"Alice")`，服务器响应 `UserNicknameIs(user:"Alice", value:"admin")`。如果您未能检查消息类型，您可能会被骗。</p><p>如果在数学上不可能在不首先提供您的假设的情况下验证签名，也许会很好。例如，验证消息 `UserNicknameIs(user:"Alice", value:"admin")` 的子例程需要 `ServerKey × ExpectedMessageType`。但“ExpectedMessageType”并不是唯一的假设，不是吗？</p><p>您可能会得到 `UserPermissionLevel(user:"Bob", value:"admin")` 或 `UserPermissionLevel(user:"Alice", value:"admin", timestamp:"&lt;3d old&gt;")`。我们会期望 MAC 以某种方式接受“用户”值吗？那么我们如何处理“时间戳”呢？</p><p>也许我们实现了 `ClientMessage(msgUuid: UUID, requestData:...)` 和 `ServerResponse(clientMsgUuid: UUID, responseData:...)`，但现在 UUID 是一个秘密，很容易受到 MITM 攻击，除非数据被加密。</p><p>看起来您只需要编写验证代码即可确保您不会误解已签名的消息。根本就没有什么灵丹妙药。对字节序列有多种解释是不可能的（在帖子中解决）。但是，一旦您对字节序列有了单一解释，开发人员是否就不能定义支持其用例的模式+验证逻辑？也许有很好的现成模式，但是——再说一次——没有灵丹妙药吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hmmmm. I agree that an ad-hoc implementation with protobufs can go wrong. But presumably, 1 canonical encoding for the private key constitutes the Horton principle?<p>It seems like Horton Principle just says "all messages have ≤1 meaning". If a message signed by key X must be parsed using the canonical encoding, then aren't we done?</p><p>There is still room for danger. e.g., You send `GetUserPermissionLevel(user:"Alice")` and server responds with `UserNicknameIs(user:"Alice", value:"admin")`. If you fail to check the message type, you might get tricked.</p><p>Maybe it's nice if it was mathematically impossible to validate the signature without first providing your assumptions. e.g., The subroutine to validate message `UserNicknameIs(user:"Alice", value:"admin")` requires `ServerKey × ExpectedMessageType`. But "ExpectedMessageType" isn't the only assumption being made, is it?</p><p>You might get back `UserPermissionLevel(user:"Bob", value:"admin")` or `UserPermissionLevel(user:"Alice", value:"admin", timestamp:"&lt;3d old&gt;")`. Will we expect the MAC to somehow accept a "user" value? And then what do we do about "timestamp"?</p><p>Maybe we implement `ClientMessage(msgUuid: UUID, requestData:...)` and `ServerResponse(clientMsgUuid: UUID, responseData:...)`, but now the UUID is a secret, vulnerable to MITM attack unless data is encrypted.</p><p>It seems like you simply must write validation code to ensure that you don't misinterpret the message that is signed. There simply isn't any magic bullet. Having multiple interpretations for a sequence of bytes is a non-starter (addressed in the post). But once you have a single interpretation for a sequence of bytes, isn't it up to the developer to define a schema + validation logic that supports their use case? Maybe there are good off-the-shelf patterns, but--again--no magic bullets?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/02 07:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">生成密钥的成本那么高吗？  您可以为每种数据类型拥有唯一的签名密钥。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are keys that expensive to generate?  You could have a unique signature key for each data type.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
     <details class="comment-node depth-2">
       <summary>
         <span class="meta-author">ahtihn</span>
@@ -707,42 +743,6 @@ and the verifier calls the API:<p></p><pre><code>    func Verify(key Key, sig []
   
     <details class="comment-node depth-2">
       <summary>
-        <span class="meta-author">tennysont</span>
-        <span class="meta-time">2026/04/02 05:23</span>
-        
-      </summary>
-      <article class="comment-card">
-        <div class="comment-text is-clamped" data-role="comment-zh">嗯嗯。我同意使用 protobuf 进行临时实现可能会出错。但据推测，1 私钥的规范编码构成了霍顿原理？<p>霍顿原理似乎只是说“所有消息都具有 ≤1 的含义”。如果必须使用规范编码来解析由密钥 X 签名的消息，那么我们还没有完成吗？</p><p>仍然存在危险的空间。例如，您发送 `GetUserPermissionLevel(user:"Alice")`，服务器响应 `UserNicknameIs(user:"Alice", value:"admin")`。如果您未能检查消息类型，您可能会被骗。</p><p>如果在数学上不可能在不首先提供您的假设的情况下验证签名，也许会很好。例如，验证消息 `UserNicknameIs(user:"Alice", value:"admin")` 的子例程需要 `ServerKey × ExpectedMessageType`。但“ExpectedMessageType”并不是唯一的假设，不是吗？</p><p>您可能会得到 `UserPermissionLevel(user:"Bob", value:"admin")` 或 `UserPermissionLevel(user:"Alice", value:"admin", timestamp:"&lt;3d old&gt;")`。我们会期望 MAC 以某种方式接受“用户”值吗？那么我们如何处理“时间戳”呢？</p><p>也许我们实现了 `ClientMessage(msgUuid: UUID, requestData:...)` 和 `ServerResponse(clientMsgUuid: UUID, responseData:...)`，但现在 UUID 是一个秘密，很容易受到 MITM 攻击，除非数据被加密。</p><p>看起来您只需要编写验证代码即可确保您不会误解已签名的消息。根本就没有什么灵丹妙药。对字节序列有多种解释是不可能的（在帖子中解决）。但是，一旦您对字节序列有了单一解释，开发人员是否就不能定义支持其用例的模式+验证逻辑？也许有很好的现成模式，但是——再说一次——没有灵丹妙药吗？</p></div>
-        <div class="comment-text is-hidden" data-role="comment-raw">Hmmmm. I agree that an ad-hoc implementation with protobufs can go wrong. But presumably, 1 canonical encoding for the private key constitutes the Horton principle?<p>It seems like Horton Principle just says "all messages have ≤1 meaning". If a message signed by key X must be parsed using the canonical encoding, then aren't we done?</p><p>There is still room for danger. e.g., You send `GetUserPermissionLevel(user:"Alice")` and server responds with `UserNicknameIs(user:"Alice", value:"admin")`. If you fail to check the message type, you might get tricked.</p><p>Maybe it's nice if it was mathematically impossible to validate the signature without first providing your assumptions. e.g., The subroutine to validate message `UserNicknameIs(user:"Alice", value:"admin")` requires `ServerKey × ExpectedMessageType`. But "ExpectedMessageType" isn't the only assumption being made, is it?</p><p>You might get back `UserPermissionLevel(user:"Bob", value:"admin")` or `UserPermissionLevel(user:"Alice", value:"admin", timestamp:"&lt;3d old&gt;")`. Will we expect the MAC to somehow accept a "user" value? And then what do we do about "timestamp"?</p><p>Maybe we implement `ClientMessage(msgUuid: UUID, requestData:...)` and `ServerResponse(clientMsgUuid: UUID, responseData:...)`, but now the UUID is a secret, vulnerable to MITM attack unless data is encrypted.</p><p>It seems like you simply must write validation code to ensure that you don't misinterpret the message that is signed. There simply isn't any magic bullet. Having multiple interpretations for a sequence of bytes is a non-starter (addressed in the post). But once you have a single interpretation for a sequence of bytes, isn't it up to the developer to define a schema + validation logic that supports their use case? Maybe there are good off-the-shelf patterns, but--again--no magic bullets?</p></div>
-        <div class="comment-actions">
-          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
-          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
-          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
-        </div>
-        <div class="comment-children">
-    <details class="comment-node depth-3">
-      <summary>
-        <span class="meta-author">themafia</span>
-        <span class="meta-time">2026/04/02 07:07</span>
-        
-      </summary>
-      <article class="comment-card">
-        <div class="comment-text is-clamped" data-role="comment-zh">生成密钥的成本那么高吗？  您可以为每种数据类型拥有唯一的签名密钥。</div>
-        <div class="comment-text is-hidden" data-role="comment-raw">Are keys that expensive to generate?  You could have a unique signature key for each data type.</div>
-        <div class="comment-actions">
-          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
-          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
-          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47607749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
-        </div>
-        
-      </article>
-    </details>
-  </div>
-      </article>
-    </details>
-  
-    <details class="comment-node depth-2">
-      <summary>
         <span class="meta-author">Muromec</span>
         <span class="meta-time">2026/04/02 05:04</span>
         
@@ -818,6 +818,24 @@ and the verifier calls the API:<p></p><pre><code>    func Verify(key Key, sig []
   
     <details class="comment-node depth-1" open>
       <summary>
+        <span class="meta-author">colek42</span>
+        <span class="meta-time">2026/04/02 08:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">DSSE 对此非常有用，如果您需要更多模式使用 in-toto</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">DSSE is great for this, if you need more schema use in-toto</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
         <span class="meta-author">jeffrallen</span>
         <span class="meta-time">2026/04/02 05:11</span>
         
@@ -829,24 +847,6 @@ and the verifier calls the API:<p></p><pre><code>    func Verify(key Key, sig []
           <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
           <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
           <a class="btn ghost" href="https://news.ycombinator.com/item?id=47606629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
-        </div>
-        
-      </article>
-    </details>
-  
-    <details class="comment-node depth-1" open>
-      <summary>
-        <span class="meta-author">volume_tech</span>
-        <span class="meta-time">2026/04/02 08:15</span>
-        
-      </summary>
-      <article class="comment-card">
-        <div class="comment-text is-clamped" data-role="comment-zh">名义与结构打字点是关键。这很容易陷入困境，因为在编写代码时，类型感觉很具体——如果你混淆它们，编译器会大喊大叫——所以你不会想到序列化形式已经失去了这种独特性。</div>
-        <div class="comment-text is-hidden" data-role="comment-raw">the nominal vs structural typing point is the crux. it is easy to fall into because when writing code, types feel concrete -- the compiler yells if you mix them up -- so it does not occur to you that the serialized form has lost that distincti</div>
-        <div class="comment-actions">
-          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
-          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
-          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608412" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
         </div>
         
       </article>
@@ -941,6 +941,24 @@ and the verifier calls the API:<p></p><pre><code>    func Verify(key Key, sig []
       </article>
     </details>
   </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">volume_tech</span>
+        <span class="meta-time">2026/04/02 08:15</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47608412" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
       </article>
     </details>
   
