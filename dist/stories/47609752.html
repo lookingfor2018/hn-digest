@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>代码搜索的未来不是正则表达式——比 ripgrep 快 100 倍 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1042/">返回本批次</a>
+      <h1>代码搜索的未来不是正则表达式——比 ripgrep 快 100 倍</h1>
+      <p class="subtitle">The future of code search is not regex – 100x faster than ripgrep</p>
+      <div class="meta-line">
+        <span>fff.dmtrkovalenko.dev</span>
+        <span>作者 neogoose</span>
+        <span>分数 58</span>
+        <span>评论 43</span>
+        <span>2026/04/02 11:45</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47609752" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://fff.dmtrkovalenko.dev/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kristopolous</span>
+        <span class="meta-time">2026/04/02 13:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几天前，我在研究拥抱脸上的嵌入模型时遇到了这个有趣的工具。<p>广告为“ColGREP
+对您的终端和编码代理进行语义代码搜索”，</p><p>我还没有把它放在任何安全带上，但我可能应该这样做。</p><p><a href="https://github.com/lightonai/next-plaid/tree/main/colgrep" target="_blank" rel="noopener noreferrer">https://github.com/lightonai/next-plaid/tree/main/colgrep</a></p><p>我也尝试过 astgrep （也称为 sg），但 llms 真的把它们弄乱了。我觉得你需要好好调整一下</p><p>如果有人破获了这个案子，我很想听听</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I ran across this fascinating tool a few days ago researching embedding models on hugging face.<p>Advertised as "ColGREP
+Semantic code search for your terminal and your coding agents",</p><p>I haven't put it in any harness yet but I probably should.</p><p><a href="https://github.com/lightonai/next-plaid/tree/main/colgrep" target="_blank" rel="noopener noreferrer">https://github.com/lightonai/next-plaid/tree/main/colgrep</a></p><p>I've also tried astgrep (also known as sg) but llms really mess up on them. I think you'd need to fine tune.</p><p>If anyone has cracked that case I'd love to hear about it</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610177" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">wiseowise</span>
+        <span class="meta-time">2026/04/02 15:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">未来，移动设备上将不再有滚动功能，而且扫描显然会被卡住。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The future is lack of scrolling on mobile, and scanning getting stuck, apparently.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611101" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">narinciye</span>
+        <span class="meta-time">2026/04/02 17:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你不会错过太多，不用担心，它在桌面上看起来也很糟糕。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You don't miss much, don't worry, it also looks horrible on desktop.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">顺便说一句，它看起来绝对华丽，但想法是你可以尝试搜索速度而不是实际使用 lmao</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it looks absolutely gorgeous btw but the idea is that you can try the search speed not actually use lmao</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616499" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">genewitch</span>
+        <span class="meta-time">2026/04/02 14:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到 ripgrep 比仅将文件读取到 /dev/null 具有边际开销，那么这到底是如何实现 100 倍加速的呢？<p>我对可以“立即”搜索 ~1GB 文本的东西有很多用处，但到目前为止，在数据移入 RAM 后，没有什么比 rg/ag 更好的了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">considering that ripgrep has marginal overhead over just reading the files to /dev/null, how exactly does this achieve 100x speedup?<p>I have a lot of use for something that can search ~1GB of text "instantly", but so far nothing beats rg/ag after the data has been moved into RAM.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610586" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anilakar</span>
+        <span class="meta-time">2026/04/02 14:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">优化的秘诀不是“做得更快”，而是“做得更少”。我已经觉得 rg 缺少大量我想看到的结果，因为它默认有一个非常大的忽略列表。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The trick to optimization is not "doing faster" but "doing less". I already feel rg is missing a ton of results I want to see because it has a very large ignore list by default.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610619" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hoherd</span>
+        <span class="meta-time">2026/04/03 08:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">否则 rg="rg -iuu"</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">alias rg="rg -iuu"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622114" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你可以自己尝试一下。 ripgrep 在 chromium 存储库中搜索“MAX_FILE_SIZE”需要 6-7 秒，而 fff 则需要 20 毫秒<p>所以本质上在这个特定的情况下它的速度快了 1000 倍以上，但是 repo 大小很大（66G，500k 文件）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">you can try it yourself. ripgrep search for "MAX_FILE_SIZE" in the chromium repo takes 6-7 seconds, with fff it is 20milliseconds<p>so essentially in this specific case it is over 1000x faster, but the repo size is huge (66G, 500k files)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616542" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Yokohiii</span>
+        <span class="meta-time">2026/04/02 16:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">箱子说它使用 SIMD，但箱子还说内容搜索速度快了 20-50 倍。也许这个人不确定它有多快或者他应该声称获得多少加速才能获得认可。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The crate says it uses SIMD, but the crate also says that content search is 20-50 times faster. Maybe the guy unsure how fast it is or how much speedup he should claim to get recognition.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611691" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很大程度上取决于平台和操作系统<p>例如 ripgrep 在 macos 上不进行任何内存映射，因此速度提高了 2-3 倍</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it very much depends on the platform and the operating system<p>for example ripgrep doesn't do any memory mapping on macos which makes it 2-3x faster just becuase of that</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616491" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/02 11:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经开源了最快的代码搜索实现。全面的 SDK 文件查找器和 grep 文件搜索，比 ripgrep 快 100 倍以上</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have open sourced the fastest code search implementation. Comprehensive SDK for both file finder and grep file search that is over 100x faster than ripgrep</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MaxMonteil</span>
+        <span class="meta-time">2026/04/02 12:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来很酷！<p>您应该添加一个指向项目本身的 GitHub 存储库的链接，起初我什至不确定它叫什么。</p><p>我找到了这个链接
+<a href="https://github.com/dmtrKovalenko/fff.nvim" target="_blank" rel="noopener noreferrer">https://github.com/dmtrKovalenko/fff.nvim</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This looks cool!<p>You should add a link to the GitHub repo for the project itself, at first I wasn't even sure what it was called.</p><p>I found this link
+<a href="https://github.com/dmtrKovalenko/fff.nvim" target="_blank" rel="noopener noreferrer">https://github.com/dmtrKovalenko/fff.nvim</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47609898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">siva7</span>
+        <span class="meta-time">2026/04/02 13:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白这个提交标题。您的工具使用正则表达式，但标题声称未来与正则表达式无关。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't get this submission title. Your tool uses regex but the title claims the future is not about regex.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610395" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">molszanski</span>
+        <span class="meta-time">2026/04/02 14:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这与输入有关。在我必须输入正则表达式之前，现在我只需输入文本并模糊查找更多正则表达式风格。措辞很尴尬，但代码看起来很酷。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it is about input. Before I had to type regex, now I just type text and fuzzy finds more, regex style. Awkward wording, but code seems cool.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610716" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的工具没有使用正则表达式，它可以使用正则表达式，但这不是必需的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">my tool is not using regex, it can use regex but it is not required</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616560" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jcgrillo</span>
+        <span class="meta-time">2026/04/02 17:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">k，但你到底在说什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">k, but what actually are you talking about?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">CodesInChaos</span>
+        <span class="meta-time">2026/04/02 16:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在哪里可以找到文档中“比 ripgrep 快 20-50 倍”声明或 HN 提交标题中“快 100 倍”声明的基准？<p>Ripgrep 已经对不包含任何模式的正则表达式进行了优化（甚至只是包含此类子字符串的正则表达式）。所以“不是正则表达式”不应该是造成差异的原因。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Where can I find the benchmark for the "20-50 times faster than ripgrep" claim from the documentation, or the "100x faster" claim from the HN submission title?<p>Ripgrep already has optimizations for regex which don't contain any patterns (or even just regex which contain such substrings). So "not regex" shouldn't be what makes the difference.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611755" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">austinjp</span>
+        <span class="meta-time">2026/04/02 17:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为了节省人们的挖掘时间，这里是 git 存储库：<p><a href="https://github.com/dmtrKovalenko/fff.nvim" target="_blank" rel="noopener noreferrer">https://github.com/dmtrKovalenko/fff.nvim</a></p><p>“FFF 代表怪异的快速模糊文件查找器（选择 3），它是一个专为您的 AI 代理和 Neovim 设计的模糊文件选择器。仅用于文件搜索，但我们的文件搜索确实做得很好。</p><p>FFF 是一个用于 grep 、模糊文件匹配、通配符和多重 grep 的工具，重点关注性能和有用的搜索结果。对于人类 - 提供令人难以置信的防拼写错误体验，对于人工智能代理 - 实现最快的文件搜索，并具有额外的可用内存，根据频率、git 状态、文件大小、定义匹配等各种因素建议最佳搜索结果。”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To save people the digging, here's the git repo:<p><a href="https://github.com/dmtrKovalenko/fff.nvim" target="_blank" rel="noopener noreferrer">https://github.com/dmtrKovalenko/fff.nvim</a></p><p>"FFF stands for freakin fast fuzzy file finder (pick 3) and it is an opinionated fuzzy file picker for your AI agent and Neovim. Just for file search, but we do the file search really fff well.</p><p>FFF is a tool for grepping, fuzzy file matching, globbing, and multigrepping with a strong focus on performance and useful search results. For humans - provides an unbelievable typo-resistant experience, for AI agents - implements the fastest file search with additional free memory suggesting the best search results based on various factors like frecency, git status, file size, definition matches, and more."</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611988" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adrian17</span>
+        <span class="meta-time">2026/04/02 18:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以回购协议构建：<p>- C 库</p><p>- Neoim 插件</p><p>-MCP服务器</p><p>但不是普通的二进制文件，这是直接使用 ripgrep 的主要方式（......至少对于人类来说），并进行比较。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So the repo builds:<p>- C library</p><p>- neovim plugin</p><p>- MCP server</p><p>But not a plain binary, which is the main way ripgrep is directly used (...at least by humans), and compared with.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为它是供长期运行的 sdk 使用的，而不是一次性搜索（这是所有优化的来源）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">because it is meant to be used by the long running sdk not one shot search (this is where all the optimizations are coming from)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616507" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/02 14:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于我们这些使用 IDE 的人来说，几十年来从未使用过 ripgrep。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It has never been  ripgrep for decades for those of us on IDEs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">e12e</span>
+        <span class="meta-time">2026/04/02 16:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平地说， <i>ripgrep</i> 大约已有十年历史，使用它会很棘手 <i>几十年</i>。<p><a href="http://blog.burntsushi.net/ripgrep/" target="_blank" rel="noopener noreferrer">http://blog.burntsushi.net/ripgrep/</a></p><p><a href="https://news.ycombinator.com/item?id=12564442" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=12564442</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To be fair, <i>ripgrep</i> is approximately one decade old, would be tricky to have used it for <i>decades</i>.<p><a href="http://blog.burntsushi.net/ripgrep/" target="_blank" rel="noopener noreferrer">http://blog.burntsushi.net/ripgrep/</a></p><p><a href="https://news.ycombinator.com/item?id=12564442" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=12564442</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611750" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kzrdude</span>
+        <span class="meta-time">2026/04/02 16:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">然而，vscode 在幕后使用 ripgrep 已经有十年（8 年）了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">However, it's coming up on a decade (8 years) of vscode using ripgrep behind the scenes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611608" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/02 16:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">程序员的编辑。然而，使用正确的插件，您可以获得相同的 IDE 功能，用于 Java、C#、C++ 等中的代码搜索。<p>它基本上运行一个无头 IDE（Eclipse、Netbeans、VS 服务...），运行 IDE + Electron 的乐趣，可以使用这些核心。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A programmer's editor. However with the right plugins, you get the same IDE capabilities for code searching in Java, C#, C++,...<p>Which basically runs an IDE headless (Eclipse, Netbeans, VS services,...), the joy of running an IDE + Electron, get to put those cores to use.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611645" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gzread</span>
+        <span class="meta-time">2026/04/02 16:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过去 15 年里 IDE 是否普遍出现了轻微下降，还是只有我这样？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Has there been a general gentle decline in IDEs over the past 15 years or is it just me?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/02 16:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许对于已经学会使用 IDE 不太支持的语言进行编程的一代人来说。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe for a generation that has learnt to program with IDE poorly supported languages.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611615" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vovavili</span>
+        <span class="meta-time">2026/04/02 17:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">泽德让我重新思考这个观点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Zed has made me rethink this opinion.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611807" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">swiftcoder</span>
+        <span class="meta-time">2026/04/02 14:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有写出基本方法？存储库上的摘要提到了 SIMD，但没有提及太多其他内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a write up of the underlying approach? The summary on the repo mentioned SIMD, but not a whole lot else.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610761" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">JoeDohn</span>
+        <span class="meta-time">2026/04/02 18:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我昨天看到它声称它比 Ripgrep 更快，它使用 regex 和 rg ： <a href="https://github.com/erogol/ngi" target="_blank" rel="noopener noreferrer">https://github.com/erogol/ngi</a>。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I saw this yesterday it claims it's faster than Ripgrep, it uses regex and rg : <a href="https://github.com/erogol/ngi" target="_blank" rel="noopener noreferrer">https://github.com/erogol/ngi</a>.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">asdfadsfaf</span>
+        <span class="meta-time">2026/04/02 14:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白如何搜索除文件名之外的任何内容？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't get it how can I search anything but the file name?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610704" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dig1</span>
+        <span class="meta-time">2026/04/02 14:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ctags、GNU Global 甚至“ugrep -Q”想与您说几句话；）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ctags, GNU Global and even "ugrep -Q" would like to have a few words with you ;)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610732" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hugodan</span>
+        <span class="meta-time">2026/04/02 15:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么所有 vivicoded 网站看起来都一样？霓虹灯氛围和按钮样式相同的黑色</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do all vibecoded sites look the same? Same black on neon vibes and button styles</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">self_awareness</span>
+        <span class="meta-time">2026/04/02 16:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我输入了“bazel”并得到了 `shellPrefix.ts` ，它与 bazel 没有任何关系。<p>如果那是未来，那么我将使用 ripgrep 留在过去。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've entered "bazel" and got `shellPrefix.ts` which doesn't relate to bazel in any way.<p>If that's the future then I'll stay in the past with ripgrep.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611610" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您在 chromium 存储库中搜索，您会看到正确的匹配项 <a href="https://fff.dmtrkovalenko.dev/?repo=2&amp;q=bazel" target="_blank" rel="noopener noreferrer">https://fff.dmtrkovalenko.dev/?repo=2&amp;q=bazel</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">if you would search in the chromium repo you would see the correct match <a href="https://fff.dmtrkovalenko.dev/?repo=2&amp;q=bazel" target="_blank" rel="noopener noreferrer">https://fff.dmtrkovalenko.dev/?repo=2&amp;q=bazel</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">_blk</span>
+        <span class="meta-time">2026/04/02 16:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">时间复杂度为 O(1)，正确性为 O(0)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's O(1) with a correctness of O(0)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611788" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你绝对没有抓住要点</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">you absolutely missed the point</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616569" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">globular-toast</span>
+        <span class="meta-time">2026/04/02 14:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么是“为了 neovim”？这样的东西在许多应用程序中肯定有用吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why is it "for neovim"? Surely such a thing would be useful in many applications?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610523" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ramon156</span>
+        <span class="meta-time">2026/04/02 14:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为它从多个角度来说都是不诚实的。<p>- 它有正则表达式，所以标题很奇怪
+- 它绝对不会比 rg 快 100 倍
+- 它是一个 SDK，所以无论如何它都是苹果和橘子</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because it's being dishonest from multiple angles.<p>- it has regex, so the title is weird
+- it definitely wouldn't be 100x faster than rg
+- its an sdk, so its apples to oranges anyway</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610639" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">schrodinger</span>
+        <span class="meta-time">2026/04/02 13:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">怎么样？嵌入令牌并使用欧几里德距离或其他什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How's it work? Embed tokens and use euclidean distance or something?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610292" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">forrestthewoods</span>
+        <span class="meta-time">2026/04/02 15:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那些不告诉我他们在做什么的网站令人愤怒。我在手机上。这个登陆页面的体验很糟糕。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Websites that don’t tell me what they’re doing are infuriating. I’m on mobile. This landing page experience is awful.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47610946" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stunpix</span>
+        <span class="meta-time">2026/04/02 16:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于台式机来说，情况没有什么不同。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For desktops it's not different.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611492" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neogoose</span>
+        <span class="meta-time">2026/04/03 00:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你们不了解如何使用搜索栏和几个分段控件，那么这在移动设备上绝对是令人惊叹的体验 - 我对此无能为力</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it is absolutely amazing experience on mobile if you guys do not understand how to use a search bar and a couple of segmeneted controls -- there is nothing much I can do about it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616586" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jcgrillo</span>
+        <span class="meta-time">2026/04/02 17:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这到底是什么</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what even is this</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611864" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hyperlambda</span>
+        <span class="meta-time">2026/04/02 16:46</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47611706" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

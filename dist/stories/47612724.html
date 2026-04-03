@@ -1,0 +1,2198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AMD 的 Lemonade：使用 GPU 和 NPU 的快速开源本地 LLM 服务器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1042/">返回本批次</a>
+      <h1>AMD 的 Lemonade：使用 GPU 和 NPU 的快速开源本地 LLM 服务器</h1>
+      <p class="subtitle">Lemonade by AMD: a fast and open source local LLM server using GPU and NPU</p>
+      <div class="meta-line">
+        <span>lemonade-server.ai</span>
+        <span>作者 AbuAssar</span>
+        <span>分数 454</span>
+        <span>评论 98</span>
+        <span>2026/04/02 19:04</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47612724" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://lemonade-server.ai" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>在 GPU 和 NPU 上运行速度快得令人耳目一新 开源。私人的。几分钟内即可在任何 PC 上准备就绪。 128 GB 统一 RAM 可以用来做什么？加载 gpt-oss-120b 或 Qwen-Coder-Next 等模型以供高级工具使用。我应该先调整什么？您可以使用 --no-mmap 来加快加载时间并将上下文大小增加到 64 或更多。图像生成 文艺复兴时期绘画风格的一罐柠檬水 语音 你好，我是你的人工智能助手。今天我能为您做什么？</li><li>由本地 AI 社区为每台 PC 构建的开源代码。 Lemonade 的存在是因为本地人工智能应该是免费、开放、快速和私密的。</li><li>生态系统与出色的应用程序配合使用。由于 OpenAI API 标准，Lemonade 已集成在许多应用程序中，并且可以开箱即用地与数百个应用程序配合使用。</li><li>技术规格专为实际的本地人工智能工作流程而构建。从安装到运行时的所有内容都经过优化，可实现快速设置、广泛的兼容性和本地优先执行。本机 C++ 后端轻量级服务，仅 2MB。一分钟安装 简单的安装程序可自动设置堆栈。 OpenAI API 兼容 可与数百个开箱即用的应用程序配合使用，并在几分钟内完成集成。自动配置您的硬件 配置 GPU 和 NPU 的依赖项。多引擎兼容性可与 llama.cpp、Ryzen AI SW、FastFlowLM 等配合使用。一次运行多个模型 同时运行多个模型。跨平台跨 Windows、Linux 和 macOS（测试版）提供一致的体验。内置应用程序 GUI，可让您快速下载、试用和切换模型。</li><li>统一 API 为每种模式提供一项本地服务。将您的应用程序指向 Lemonade，并使用标准 API 获取聊天、视觉、图像生成、转录、语音生成等功能。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Refreshingly fast on GPUs and NPUs Open source. Private. Ready in minutes on any PC. Chat What can I do with 128 GB of unified RAM? Load up models like gpt-oss-120b or Qwen-Coder-Next for advanced tool use. What should I tune first? You can use --no-mmap to speed up load times and increase context size to 64 or more. Image Generation A pitcher of lemonade in the style of a renaissance painting Speech Hello, I am your AI assistant. What can I do for you today?</li><li>Open Source Built by the local AI community for every PC. Lemonade exists because local AI should be free, open, fast, and private.</li><li>Ecosystem Works with great apps. Lemonade is integrated in many apps and works out-of-box with hundreds more thanks to the OpenAI API standard.</li><li>Tech Specs Built for practical local AI workflows. Everything from install to runtime is optimized for fast setup, broad compatibility, and local-first execution. Native C++ Backend Lightweight service that is only 2MB. One Minute Install Simple installer that sets up the stack automatically. OpenAI API Compatible Works with hundreds of apps out-of-box and integrates in minutes. Auto-configures for your hardware Configures dependencies for your GPU and NPU. Multi-engine compatibility Works with llama.cpp, Ryzen AI SW, FastFlowLM, and more. Multiple Models at Once Run more than one model at the same time. Cross-platform A consistent experience across Windows, Linux, and macOS (beta). Built-in app A GUI that lets you download, try, and switch models quickly.</li><li>Unified API One local service for every modality. Point your app at Lemonade and get chat, vision, image gen, transcription, speech gen, and more with standard APIs.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dennemark</span>
+        <span class="meta-time">2026/04/02 21:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经使用柠檬水近一年了。在 Strix Halo 上我没有使用其他任何东西 - 尽管 kyuz0 的工具箱也很好（<a href="https://kyuz0.github.io/amd-strix-halo-toolboxes/" target="_blank" rel="noopener noreferrer">https://kyuz0.github.io/amd-strix-halo-toolboxes/</a>）<p>现在您可以使用 TTS、STT、文本和图像生成以及图像编辑。除了能够通过 rocm、vulkan 或在 CPU、GPU 和 NPU 上运行。有相当多的选择。他们的发展步伐相当好且务实。强烈推荐 AMD 硬件使用此功能！</p><p>编辑：OpenAI，我认为现在的 ollama 兼容端点允许我在 VSCode Copilot 以及 Open Web UI 中使用它。他们的文档中显示了更多选项。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have been using lemonade for nearly a year already. On Strix Halo I am using nothing else - although kyuz0's toolboxes are also nice (<a href="https://kyuz0.github.io/amd-strix-halo-toolboxes/" target="_blank" rel="noopener noreferrer">https://kyuz0.github.io/amd-strix-halo-toolboxes/</a>)<p>Nowadays you get TTS, STT, text &amp; image generation and image editing should also be possible. Besides being able to run via rocm, vulkan or on CPU, GPU and NPU. Quite a lot of options. They have a quite good and pragmatic pace in development. Really recommend this for AMD hardware!</p><p>Edit: OpenAI and i think nowaday ollama compatible endpoints allow me to use it in VSCode Copilot as well as i.e. Open Web UI. More options are shown in their docs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613997" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">UncleOxidant</span>
+        <span class="meta-time">2026/04/03 02:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">例如，如果我在 Strix Halo 上使用柠檬水运行，而不是使用 vulkan 和 llama.cpp 运行，我可以获得多少加速？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How much of a speedup might I get for, say, Qwen3.5-122B if I were to run with lemonade on my Strix Halo vs running it using vulkan with llama.cpp ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618146" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sawansri</span>
+        <span class="meta-time">2026/04/03 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您会得到类似的性能。 Lemonade 被设计为本地 AI 模型的交钥匙软件（针对 AMD 硬件进行了优化）。该软件可帮助您通过单个实用程序管理不同 GenAI 模式的后端（llama.cpp、flm、whispercpp、stable‑diffusion.cpp 等）。<p>在性能方面，Lemonade 与 ROCm 和 Vulkan 捆绑在一起。这些均来源于 <a href="https://github.com/lemonade-sdk/llamacpp-rocm" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/llamacpp-rocm</a> 和 <a href="https://github.com/ggml-org/llama.cpp/releases" target="_blank" rel="noopener noreferrer">https://github.com/ggml-org/llama.cpp/releases</a> 分别。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You would get similar performance. Lemonade is designed as a turnkey (optimized for AMD Hardware) for local AI models. The software helps you manage backends (llama.cpp, flm, whispercpp, stable‑diffusion.cpp, etc) for different GenAI modalities from a single utility.<p>On the performance side, lemonade comes bundled with ROCm and Vulkan. These are sourced from <a href="https://github.com/lemonade-sdk/llamacpp-rocm" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/llamacpp-rocm</a> and <a href="https://github.com/ggml-org/llama.cpp/releases" target="_blank" rel="noopener noreferrer">https://github.com/ggml-org/llama.cpp/releases</a> respectively.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619320" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">syntaxing</span>
+        <span class="meta-time">2026/04/02 22:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你用过它与任何代理或爪子吗？如果是这样，您运行哪种型号？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you used it with any agents or claw? If so, which model do you run?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615035" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dennemark</span>
+        <span class="meta-time">2026/04/02 23:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我手头有两台 Strix Halo 设备。私人128GB台式机和工作64GB HP笔记本。 64GB 机器可以加载 Qwen3.5 30B-A3B，使用 VSCode，我猜它需要一些初始提示处理来初始化所有这些工具。但该模型正在与我需要的其他资源进行斗争。所以这些天我已经不再使用它了，但我想在我的家用机器上尝试一下。我只是现在不怎么做这方面的工作。<p>Lemonade 有一个 Web UI 来设置上下文大小和 llama.cpp 参数，您需要将上下文设置为适当的数字或仅设置为 0，以便它使用默认值。如果它太低，它将无法与代理编码一起使用。</p><p>我会尝试一些 Claw 应用程序，但首先需要对该领域进行一些研究。但我在 Open Web UI 上使用不同的模型。 GPT 120B 很快，但 Qwen3.5 27B 也不错。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have two Strix Halo devices at hand. Privately a framework desktop with 128gb and at work 64GB HP notebook. The 64GB machine can load Qwen3.5 30B-A3B, with VSCode it needs a bit of initial prompt processing to initialize all those tools I guess. But the model is fighting with the other resources that I need. So I am not really using it anymore these days, but I want to experiment on my home machine with it. I just dont work on it much right now.<p>Lemonade has a Web UI to set the context size and llama.cpp args, you need to set context to proper number or just to 0 so that it uses the default. If its too low, it wont work with agentic coding.</p><p>I will try some Claw app, but first need to research the field a bit. But I am using different models on Open Web UI. GPT 120B is fast, but also Qwen3.5 27B is fine.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615401" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/02 23:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Qwen3-Coder-Next 在我的 128GB 框架桌面上运行良好。它在 Python 编码方面似乎比 Qwen3.5 35B-A3B 更好，而且速度并没有慢太多（43 tg/s 与 Q4 的 55 tg/s 相比）。<p>27B 应该非常好，但它太慢了，我放弃了它（第四季度为 11-12 tg/s）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Qwen3-Coder-Next works well on my 128GB Framework Desktop. It seems better at coding Python than Qwen3.5 35B-A3B, and it's not too much slower (43 tg/s compared to 55 tg/s at Q4).<p>27B is supposed to be really good but it's so slow I gave up on it (11-12 tg/s at Q4).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615598" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">UncleOxidant</span>
+        <span class="meta-time">2026/04/03 02:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意。 Qwen3-coder-next 看起来像是我的 128GB Framework 桌面上的最佳模型。与 27b 相比，除了运行速度更快之外，我似乎还获得了更好的编码结果。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed. Qwen3-coder-next seems like the sweetspot model on my 128GB Framework Desktop. I seem to get better coding results from it vs 27b in addition to it running faster.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618162" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vlowther</span>
+        <span class="meta-time">2026/04/03 04:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">qwen3-coder-next 的 8 位 MLX unsloth Quant 似乎是具有 128GB 内存的 MBB M5 Max 上的局部最佳值。  通过 oMLX 进行提示缓存，我可以相当合理地并行运行两个任务来执行不同的任务。我发现，在上下文中出现大约 170k 个代币后，较低的量化分析师往往会失去情节。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The 8 bit MLX unsloth quant of qwen3-coder-next seems to be a local best on an MBB M5 Max with 128GB memory.  With oMLX doing prompt caching I can run two in parallel doing different tasks pretty reasonably. I found that lower quants tend to lose the plot after about 170k tokens in context.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/03 05:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴知道这一点。我还没有超过 120k 上下文。也许我会硬着头皮尝试一下Q6或Q8。任何大于 UD-Q4_K_XL 的下一个编码器都需要永远加载，尤其是 ROCm。我认为 llama.cpp 中进行了某种自动调整或拟合。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's good to know. I haven't exceeded a 120k context yet. Maybe I'll bite the bullet and try Q6 or Q8. Any of coder-next quants larger than UD-Q4_K_XL take forever to load, especially with ROCm. I think there's some sort of autotuning or fitting going in llama.cpp.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620275" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 01:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为另一个数据点。<p>使用 Vulcan llama.cpp 在 Framework 台式机主板 (Strix Halo 128) 上的内核 7.0.0rc5 上以 35t/s 的速度运行 Qwen3.5 122B 作为日常驱动程序。</p><p>还有一对 AMD AI Pro r9700 卡作为我的 zimageturbo、qwen tts/asr 和其他辅助功能和实验的主力。</p><p>最后有一个 Radeon 6900 XT 以 60+t/s 的速度运行 qwen3.5 32B，成为快速的全能选手。</p><p>如果我购买任何 nvidia 的东西，它只会用于兼容性测试。对于家庭用户来说，AMD 硬件目前 100% 是成本、自由度和安全性的最佳选择。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As another data point.<p>Running Qwen3.5 122B at 35t/s as a daily driver using Vulcan llama.cpp on kernel 7.0.0rc5 on a Framework Desktop board (Strix Halo 128).</p><p>Also a pair of AMD AI Pro r9700 cards as my workhorses for zimageturbo, qwen tts/asr and other accessory functions and experiments.</p><p>Finally have a Radeon 6900 XT running qwen3.5 32B at 60+t/s for a fast all arounder.</p><p>If I buy anything nvidia it will be only for compatibility testing. AMD hardware is 100% the best option now for cost, freedom, and security for home users.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617476" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">plagiarist</span>
+        <span class="meta-time">2026/04/03 03:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">R9700s 上的 Z-Image 性能如何？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How is the performance for Z-Image on the R9700s?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619233" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">syntaxing</span>
+        <span class="meta-time">2026/04/03 03:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">专用 GPU 卡是否在另一台机器上，或者您正在将 eGPU 与框架一起使用？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are the dedicated GPU cards on another machine or you’re using eGPU with the framework?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619222" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Caum</span>
+        <span class="meta-time">2026/04/02 23:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 7900 XTX 上运行本地法学硕士几个月了，ROCm 体验一直......很艰难。 AMD 支持处理驱动程序/依赖项迷宫的官方推理服务器这一事实是巨大的。我最大的问题是 NPU 支持——与仅使用 dGPU 相比，是否有人真正从 Ryzen AI NPU 获得了有意义的吞吐量？在我的测试中，NPU 主要是小型模型之外的任何事物的瓶颈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Been running local LLMs on my 7900 XTX for months and the ROCm experience has been... rough. The fact that AMD is backing an official inference server that handles the driver/dependency maze is huge. My biggest question is NPU support - has anyone actually gotten meaningful throughput from the Ryzen AI NPU vs just using the dGPU? In my testing the NPU was mostly a bottleneck for anything beyond tiny models.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615527" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dlcarrier</span>
+        <span class="meta-time">2026/04/03 08:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NPU 不是只能在小型机型上运行吗？  据我所知，大多数 NPU 不具备与 GPU 或 CPU 共享工作负载的架构，这比 GPU 或 CPU 之间共享工作负载的架构要好得多。  （一种例外是由 CPU 执行的 NPU 指令，例如带有 IME 指令的 RISC-V 内核被称为 NPU，这会加速 CPU 上已经发生的操作。）<p>您可以在 GPU、CPU 和 NPU 之间共享工作负载，但需要提前按比例分配；这不是那种容易实现自动化的事情。  此外，GPU 通常比 CPU 或 NPU 快几个数量级，因此增益很小，或者完全被移动数据的开销所抵消。</p><p>拆分工作负载的最大优势通常是利用专用 RAM，例如在 VRAM 较低但系统 RAM 充足的系统上，稳定的扩散工作负载可能会将潜像从 VRAM 移动到系统 RAM 并在那里执行 VAE，而不是在 GPU 上。  有了统一内存，就不需要了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Aren't NPUs only designed to run on small models?  From whast I've seen, most NPUs don't have the architecture to share workloads with a GPU or CPU any better than a GPU or CPU can share workloads with each other.  (One exemption being NPU instructions that are executed by the CPU, e.g. RISC-V cores with IME instructions being called NPUs, which speed up operations already happening on the CPU.)<p>You can share workloads between a GPU, CPU, and NPU, but it needs to be proportionally parceled out ahead of time; it's not the kind of thing that's easy to automate.  Also, the GPU is generally orders of magnitude faster than the CPU or NPU, so the gains would be minimal, or completely nullified by the overhead of moving data around.</p><p>The largest advantage of splitting workloads is often to take advantage of dedicated RAM, e.g. stable diffusion workloads on a system with low VRAM but plenty of system RAM may move the latent image from VRAM to system RAM and perform VAE there, instead of on the GPU.  With unified memory, that isn't needed.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622122" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mindcrime</span>
+        <span class="meta-time">2026/04/03 03:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在我的 7900 XTX 上运行本地法学硕士几个月了，ROCm 体验一直......很艰难。<p>只是出于好奇……怎么会这样呢？</p><p>我之所以这么问，是因为过去一年半左右我一直在 RX 7900 XTX 上运行本地模型（使用 Ollama），并且没有遇到任何我能想到的 ROCm 特定问题。事实上，除了该卡的 VRAM 被限制为 24GB 之外，我几乎没有遇到任何问题。 :-(</p><p>我有点想花钱购买 Radeon Pro 主板以获得更多 VRAM，但是……还没有咬紧牙关。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Been running local LLMs on my 7900 XTX for months and the ROCm experience has been... rough.<p>Just out of curiosity... how so?</p><p>I only ask because I've been running local models (using Ollama) on my RX 7900 XTX for the last year and a half or so and haven't had a single problem that was ROCm specific that I can think of. Actually, I've barely had any problems at all, other than the card being limited to 24GB of VRAM. :-(</p><p>I'm halfway tempted to splurge on a Radeon Pro board to get more VRAM, but ... haven't bitten the bullet yet.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619164" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skirmish</span>
+        <span class="meta-time">2026/04/03 10:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当超出 VRAM 时，您的硬件是否完全锁定？  我的 7900XTX 上有很多 llama.cpp（Arch Linux，各种驱动程序版本）。  一旦我输入的数量和上下文大小不超过 VRAM，它就稳定了；在此之前我说了很多脏话，并不断地按硬件重置按钮。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Did you have complete hardware lockups when VRAM is exceeded?  I had quite a few on my 7900XTX with llama.cpp (Arch Linux, various driver versions).  Once I dial in the quant and context size that never exceed VRAM, it is stable; before that I swear a lot and keep pressing the hardware reset button.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622609" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 01:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在内核 7.0.0 上使用 Vulcan 获得的性能比 ROCm 更好。他们做出了一些重大改进。对我来说加速了 20% 以上。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have had way better perf with Vulcan than ROCm on kernel 7.0.0. They made some major improvements. 20%+ speedups for me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617507" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cl0ckt0wer</span>
+        <span class="meta-time">2026/04/02 23:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用电池时，NPU 更注重电源效率。我不认为它可以替代 GPU。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the npu is more for power efficiency when on battery. I don't think it's a replacement for gpu.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615547" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">htrp</span>
+        <span class="meta-time">2026/04/03 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NPU 与 GPU 相比，实际的 tps 会降低多少？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what kind of tps slowdown would you realistically on an npu vs gpu?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617396" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dlcarrier</span>
+        <span class="meta-time">2026/04/03 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">微软需要 40 TOPS NPU 来进行 Copilot 联合品牌，RTX 3050 可以击败它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Microsoft requires a 40 TOPS NPU for Copilot co-branding, which a RTX 3050 can beat.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622149" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">moconnor</span>
+        <span class="meta-time">2026/04/02 20:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是……这个名字是因为他们想充分利用柠檬吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is... is this named because they have a lemon they're trying to make the most of?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613847" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">parsimo2010</span>
+        <span class="meta-time">2026/04/02 22:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为说“L-L-M”听起来有点像“柠檬”，所以这是一个法学硕士援助（听起来像柠檬水）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think saying "L-L-M" sounds kind of like "lemon," so this is an LLM-aid (sounds like lemonade).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615161" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">projektfu</span>
+        <span class="meta-time">2026/04/03 05:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">想知道为什么他们不将其称为 LLMonade，这将是独一无二的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wonder why they didn't call it LLMonade, which would be unique.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620352" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">metalliqaz</span>
+        <span class="meta-time">2026/04/02 22:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如此明显，但我却没有把这些点联系起来。  谢谢</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">so obvious and yet I didn't connect the dots.  thank you</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615233" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ProllyInfamous</span>
+        <span class="meta-time">2026/04/03 01:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>等到您发现 LuLuleMonade 连接</i> /秒</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>wait until you discover the LuLuleMonade -connection</i> /s</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617344" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TeMPOraL</span>
+        <span class="meta-time">2026/04/02 21:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果生活不断给予他们，他们应该发明一种可燃的柠檬。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If life keeps giving it them, they should instead invent a combustible lemon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614251" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eddieroger</span>
+        <span class="meta-time">2026/04/02 21:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们知道你是谁吗？他们是要用柠檬炸毁你的房子的人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do they know who you are? They're the guys who are going to blow your house up ... with the lemons.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614266" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LorenDB</span>
+        <span class="meta-time">2026/04/02 22:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">顺便说一句，您认为该软件支持从 CD 运行模型吗？...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On an unrelated note, do you think this software supports running models from a CD?...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614725" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 21:37</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614314" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我专门购买 AMD 硬件用于本地推理。对于消费者来说，在开放驱动程序、能效和成本方面，AMD 轻松击败了 Nvidia。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I exclusively buy AMD hardware for local inference. For open drivers, power efficiency, and cost AMD beats Nvidia easily for consumers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617554" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">suprjami</span>
+        <span class="meta-time">2026/04/03 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你一定是在开玩笑。<p>无论是在空闲状态还是在使用过程中，我的三张 NVIDIA 卡都比我的一张 AMD 卡更加节能。</p><p>官方ROCm就像拔牙一样，对桌面卡的支持很差。 Debian 是一个志愿者主导的项目，拥有比 AMD 更好的 ROCm CI，并且支持更多卡。</p><p>查看任何基准。 NV 中端卡比 AMD 快，至少领先一代。拥有 7900XTX 是令人尴尬的失望。</p><p>我喜欢AMD并希望他们成功，但他们在这方面远远落后于NV。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You have got to be joking.<p>My three NVIDIA cards are more power efficient than my one AMD card, both at idle and during usage.</p><p>Official ROCm is like pulling teeth with poor support for desktop cards. Debian, a volunteer led project, have better ROCm CI than AMD and support more cards.</p><p>Look at any benchmarks. NV midrange cards are faster than AMD and at least a generation in front. Owning a 7900XTX is an embarrassing disappointment.</p><p>I like AMD and want them to succeed, but they are way behind NV in this area.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619989" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">roenxi</span>
+        <span class="meta-time">2026/04/03 08:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 官方ROCm就像拔牙一样，对桌面卡的支持很差......<p>我同意你的大部分帖子，并且由于机器学习的情况，不久前逃离了 AMD 生态系统，但他们的问题似乎更多是计算着色器的固件错误和内存管理，而不是更高级别的库。</p><p>对于这个问题，最明显的解决方案是不使用 ROCm。对于小用户来说，ROCm 一直有点像火车残骸，而且它似乎并没有做任何特别的事情。前进的方向将更像是今天的链接指向的服务器似乎正在使用的 Vulkan。管理不善的软件包的存在并不意味着用户必须使用它，他们可以使用替代方案。</p><p>如果 AMD 能解决好自己的问题就好了。 Linux 上的 NVidia 驱动程序情况很痛苦，如果 AMD 可以在没有硬件锁定的情况下可靠地运行 LLM，那么我宁愿重新使用他们的产品。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Official ROCm is like pulling teeth with poor support for desktop cards...<p>I agree with most of your post and fled the AMD ecosystem some time ago because of the machine learning situation, but their problem seemed to be more the firmware bugs and memory management of compute shaders than the higher level libraries.</p><p>The obvious solution to this one would be not to use ROCm. ROCm has always been a bit of a train wreck for small users and it doesn't seem to do anything special anyway. The way forward would be something more like Vulkan which the server that today's link points to seems to be using. The existence of a badly managed software package doesn't really imply that users have to use it, they can use an alternative.</p><p>It would be nice if AMD sorts themselves out though. The NVidia driver situation on linux is painful and if AMD can reliably run LLMs without the hardware locking then I'd much rather move back to using their products.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621819" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">javchz</span>
+        <span class="meta-time">2026/04/03 03:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">目前市场有什么推荐吗？喜欢 Linux 上的即插即用和驱动程序方面的功能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Any recommendations in the current market? Love how plug and play and is on Linux from the driver side of things.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618768" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/03 00:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616639" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">altmanaltman</span>
+        <span class="meta-time">2026/04/02 23:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Lemonsqueeze 被认为过于暴力</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lemonsqueeze was considered too violent</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615683" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nathan_douglas</span>
+        <span class="meta-time">2026/04/03 00:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你在集群中运行它，它会变成柠檬派对吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you run it in a cluster, does it become a Lemon Party?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616405" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 20:59</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sensitiveCal</span>
+        <span class="meta-time">2026/04/02 20:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感觉它介于 Ollama 和 LM Studio 之间，但更注重成为统一的“运行时”而不仅仅是模型服务。<p>对我来说，有趣的部分不仅仅是本地推理，还有它试图处理多少编排（文本、图像、音频等）。这通常是在本地运行模型时事情变得混乱的地方。</p><p>很好奇其中有多少实际上是抽象，而不是仅仅将多个工具捆绑在一起。还想知道 AMD/NPU 优化最终是否会使其在实践中与 Ollama 之类的东西相比不太便携。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Feels like this is sitting somewhere between Ollama and something like LM Studio, but with a stronger focus on being a unified “runtime” rather than just model serving.<p>The interesting part to me isn’t just local inference, but how much orchestration it’s trying to handle (text, image, audio, etc). That’s usually where things get messy when running models locally.</p><p>Curious how much of this is actually abstraction vs just bundling multiple tools together. Also wondering if the AMD/NPU optimizations end up making it less portable compared to something like Ollama in practice.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613875" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RealFloridaMan</span>
+        <span class="meta-time">2026/04/02 22:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它捆绑了工具、模型选择和整体管理。<p>它是可移植的，因为它可以使用 CPU 或 vulkan 后端安装在任何受支持的操作系统上。但它仅支持开箱即用的 ROCM 构建和 AMD NPU。如果您想在 CUDA 上运行 llama.cpp 版本，可以通过一种方法来覆盖它使用的 llama.cpp 版本，但这会增加更多的管理开销。</p><p>如果您有一台 AMD 机器并且希望以最小的麻烦运行本地模型……这确实是最简单的方法。</p><p>它在我的 NAS 上运行，处理我的家庭助理设置。</p><p>我有一个 strix halo 和另一台运行各种 CUDA 卡的服务器，我通过更新到 llama.cpp 或 vllm 的前沿版本来手动管理。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It bundles tools, model selection, and overall management.<p>It’s portable in the sense it will install on any of the supported OS using CPU or vulkan backends. But it only supports out of the box ROCM builds and AMD NPUs. There is a way to override which llama.cpp version it uses if you want to run it on CUDA, but that adds more overhead to manage.</p><p>If you have an AMD machine and want to run local models with minimal headache…it’s really the easiest method.</p><p>This runs on my NAS, handles my home assistant setup.</p><p>I have a strix halo and another server running various CUDA cards I manage manually by updating to bleeding edge versions of llama.cpp or vllm.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615080" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/02 20:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请注意，此使用的 NPU 模型/内核是专有的，不能作为开源提供。  如果能够为该硬件开发更多开放支持，那就太好了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Note that the NPU models/kernels this uses are proprietary and not available as open source.  It would be nice to develop more open support for this hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613747" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">swiftcoder</span>
+        <span class="meta-time">2026/04/02 20:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们是吗？文档说“您还可以使用高级拉命令选项将任何 Hugging Face 模型注册到 Lemonade 服务器中”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are they? The docs say "You can also register any Hugging Face model into your Lemonade Server with the advanced pull command options"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613778" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/02 21:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不会给你 NPU 支持，它依赖于 <a href="https://github.com/FastFlowLM/FastFlowLM" target="_blank" rel="noopener noreferrer">https://github.com/FastFlowLM/FastFlowLM</a> 。这就是说“NPU 加速内核是专有的二进制文件”，而不是开源的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That won't give you NPU support, which relies on <a href="https://github.com/FastFlowLM/FastFlowLM" target="_blank" rel="noopener noreferrer">https://github.com/FastFlowLM/FastFlowLM</a> . And that says "NPU-accelerated kernels are proprietary binaries", not open source.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613882" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">plagiarist</span>
+        <span class="meta-time">2026/04/02 22:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我买了一台他们的机器来玩，预计我可能永远无法将 NPU 用于模型。但无论如何，读到这篇文章我仍然很生气。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I bought one of their machines to play around with under the expectation that I may never be able to use the NPU for models. But I am still angry to read this anyway.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/02 23:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AMD/Xilinx对NPU的软件支持是完全开放的，只有FFLM的模型是专有的。看 <a href="https://github.com/amd/iron" target="_blank" rel="noopener noreferrer">https://github.com/amd/iron</a> <a href="https://github.com/Xilinx/mlir-aie" target="_blank" rel="noopener noreferrer">https://github.com/Xilinx/mlir-aie</a> <a href="https://github.com/amd/RyzenAI-SW/" target="_blank" rel="noopener noreferrer">https://github.com/amd/RyzenAI-SW/</a> 。探索是否可以使用 Vulkan Compute 简单地为这些 NPU 开发内核并以这种方式驱动它们，这将是一件很好的事情；这将为 GPU 的现有跨平台支持提供最紧密的统一。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AMD/Xilinx's software support for the NPU is fully open, it's only FFLM's models that are proprietary. See <a href="https://github.com/amd/iron" target="_blank" rel="noopener noreferrer">https://github.com/amd/iron</a> <a href="https://github.com/Xilinx/mlir-aie" target="_blank" rel="noopener noreferrer">https://github.com/Xilinx/mlir-aie</a> <a href="https://github.com/amd/RyzenAI-SW/" target="_blank" rel="noopener noreferrer">https://github.com/amd/RyzenAI-SW/</a> . It would be nice to explore whether one can simply develop kernels for these NPU's using Vulkan Compute and drive them that way; that would provide the closest unification with the existing cross-platform support for GPU's.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615754" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">steffs</span>
+        <span class="meta-time">2026/04/03 05:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多模式捆绑是比原始推理速度更突出的部分。如果您正在构建一个需要文本生成、图像生成和语音识别的应用程序，那么现在本地设置是三个独立的服务，具有三个不同的 API 和三个不同的模型管理故事。对于任何在本地进行原型设计的人来说，让一台服务器处理 OpenAI 兼容端点背后的所有工作都是真正的生活质量改善。 NPU 的角度很有趣，但对于大多数用例来说可能被夸大了。线程中的讨论证实了我的预期：NPU 适合小型始终在线模型和预填充卸载，而不适合大多数人关心的聊天机器人工作负载。真正引人注目的地方在于，AMD 能否使 GPU 加上 NPU 调度的组合足够透明，以便开发人员无需考虑哪个硬件正在运行管道的哪个部分。这在任何平台上都还不是一个已解决的问题，如果 Lemonade 能够正确处理一小部分工作负载，那么无论它在纯文本生成方面与 Ollama 进行基准测试如何，它都会成为 AMD 硬件上的默认选择。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The multi-modal bundling is the part that stands out more than the raw inference speed. If you are building an app that needs text generation, image generation, and speech recognition, right now the local setup is three separate services with three different APIs and three different model management stories. Having one server handle all of that behind OpenAI-compatible endpoints is a real quality of life improvement for anyone prototyping locally. The NPU angle is interesting but probably overstated for most use cases. The discussion in the thread confirms what I would expect: NPUs shine for small always-on models and prefill offloading, not for the chatbot workloads most people care about. Where this gets genuinely compelling is if AMD can make the combined GPU plus NPU scheduling transparent enough that developers do not need to think about which hardware is running which part of the pipeline. That is not a solved problem on any platform yet, and if Lemonade gets it right for even a subset of workloads, it becomes the default choice on AMD hardware regardless of how it benchmarks against Ollama on pure text generation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620612" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rpdillon</span>
+        <span class="meta-time">2026/04/02 21:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的 Strix Halo 盒子上放柠檬水已经有一段时间了。它发送到它们包含的其他后端，例如扩散和骆驼。事实上，我不喜欢他们的组合服务器，我使用的是他们为 ROCm 构建的 llama CPP。<p><a href="https://github.com/lemonade-sdk/llamacpp-rocm" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/llamacpp-rocm</a></p><p>但我不会对图像或音频做任何事情。我使用 GPT OSS 120B 每秒获得​​大约 50 个代币。正如其他人指出的那样，NPU 用于“始终开启”的低功耗小型模型，因此对于标准聊天机器人用例而言，这并不是一个巨大的胜利。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Been running lemonade for some time on my Strix Halo box. It dispatches out to other backends that they include, like diffusion and llama. I actually don't like their combined server, and what I use instead is their llama CPP build for ROCm.<p><a href="https://github.com/lemonade-sdk/llamacpp-rocm" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/llamacpp-rocm</a></p><p>But I'm not doing anything with images or audio. I get about 50 tokens a second with GPT OSS 120B. As others have pointed out, the NPU is used for low-powered, small models that are "always on", so it's not a huge win for the standard chatbot use case.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614043" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/02 21:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">即使是小型 NPU 也可以从预填充中卸载一些计算，这在较长的上下文中可能会非常昂贵。  目前尚不清楚它们是否可以在解码过程中直接提供帮助；这取决于它们是否能够以良好的吞吐量访问内存并在内部进行取消量化+计算，就像 GPU 一样。  Apple Neural Engine 仅执行 INT8 或 FP16 MADD 运算，因此这大多没有帮助。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Even small NPUs can offload some compute from prefill which can be quite expensive with longer contexts.  It's less clear whether they can help directly during decode; that depends on whether they can access memory with good throughput and do dequant+compute internally, like GPUs can.  Apple Neural Engine only does INT8 or FP16 MADD ops, so that mostly doesn't help.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614168" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jmillikin</span>
+        <span class="meta-time">2026/04/02 20:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人惊讶的是，服务器组件的 Linux 设置说明不包括 Docker/Podman 作为选项，它的 Ubuntu 的 Snap/PPA 和 Fedora 的 RPM。<p>也许假设是面向容器的用户可以在给定本机包的情况下构建自己的包？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Surprising that the Linux setup instructions for the server component don't include Docker/Podman as an option, its Snap/PPA for Ubuntu and RPM for Fedora.<p>Maybe the assumption is that container-oriented users can build their own if given native packages?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/02 20:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们确实有一些容器选项，但我绝对认为它们应该添加到发布页面：  <a href="https://lemonade-server.ai/install_options.html#docker" target="_blank" rel="noopener noreferrer">https://lemonade-server.ai/install_options.html#docker</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They do have some container options, though I definitely think they should be added to the release page:  <a href="https://lemonade-server.ai/install_options.html#docker" target="_blank" rel="noopener noreferrer">https://lemonade-server.ai/install_options.html#docker</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613758" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zenoprax</span>
+        <span class="meta-time">2026/04/02 21:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么这应该出现在“发布”中？这不应该只用于构建工件吗？预构建的容器属于注册表，不是吗？<p>我想可以包含 Dockerfile，但这似乎也很不传统。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why should this be on the "Releases"? Shouldn't that just be for build artifacts? Pre-built containers belong on a registry, no?<p>I suppose a Dockerfile could be included but that also seems unconventional.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/02 21:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只是指发布页面的说明部分（因为他们已经有一些安装说明），而不是工件本身。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I just meant on the instructions part of the releases page (since they already have some installation instructions), not the artifacts themselves.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">JSR_FDED</span>
+        <span class="meta-time">2026/04/02 20:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我看了网站和新闻公告，还是不明白这是什么。 LM Studio 的替代品？ Mac 上支持 MLX 或 Metal 吗？我假设它会针对 AMD 进行优化，但是使用其他 GPU 是否会处于劣势？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’ve read the website and the news announcement, and I still don’t understand what it is. An alternative to LM Studio? Does it support MLX or metal on Macs? I’m assuming it will optimize things for AMD, but are you at a disadvantage using other GPUs?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613744" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">molticrystal</span>
+        <span class="meta-time">2026/04/02 21:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;Mac 上支持 MLX 或 Metal 吗？<p>Github[0] 上他们的项目路线图回答了这个问题：</p><p>最近完成：macOS（测试版）</p><p>正在开发：MLX 支持</p><p>[0] <a href="https://github.com/lemonade-sdk/lemonade?tab=readme-ov-file#project-roadmap" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/lemonade?tab=readme-ov-file#...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Does it support MLX or metal on Macs?<p>This is answered from their Project Roadmap over on Github[0]:</p><p>Recently Completed: macOS (beta)</p><p>Under Development: MLX support</p><p>[0] <a href="https://github.com/lemonade-sdk/lemonade?tab=readme-ov-file#project-roadmap" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/lemonade?tab=readme-ov-file#...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613969" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RealFloridaMan</span>
+        <span class="meta-time">2026/04/02 22:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是开始和维护专注于 AMD 优化的本地 AI 堆栈的简单方法。它是 sst、tts、图像生成和普通 LLM 端点的一站式安装。它有自己的 webui，用于管理和与端点交互。<p>它还具有与 OpenAI、Ollama 和 Anthropic 兼容的端点，因此您可以使用与这些兼容的任何工具，它就会运行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s an easy way to get started and maintain a local AI stack that concentrates on AMD optimization. It is a one stop install for endpoints for sst, tts, image generation, and normal LLM. It has its own webui for management and interacting with the endpoints.<p>It also has endpoints that are compatible with OpenAI, Ollama, and Anthropic so you can throw any tool that is compatible with those and it will just run.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615167" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">0x457</span>
+        <span class="meta-time">2026/04/03 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是 LM Studio 的替代方案，因为它是多个运行时的抽象。 AMD 的部分是它支持 FastFlowML 运行时，这是在 Linux 上的 Ryzen AI CPU 上利用 NPU 的唯一方法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's alternative to LM Studio in a way that it's an abstraction over multiple runtimes. AMD part is that it supports FastFlowML runtime which is the only way to utilize NPU on Ryzen AI CPUs on linux.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617378" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zelphirkalt</span>
+        <span class="meta-time">2026/04/02 21:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 LM Studio 本身使用其他软件来真正利用 LLM。如果其他软件不支持您的 NPU，那么您将无法从这些软件中获得太多性能。我猜这个 Lemonade 是 LM Studio 可以使用的另一种软件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think LM Studio itself uses other software to actually make use of LLMs. If that other software does not support your NPUs, then you are not going to get much performance out of those. This Lemonade thing I am guessing is one such other software, that LM Studio could be using.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613911" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nijave</span>
+        <span class="meta-time">2026/04/02 20:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有人可以和olma比较吗？几天前，我在 9070 XT 上使用 ROCm 7.4 的最新 ollama 取得了很好的成功</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anyone compare to ollama? I had good success with latest ollama with ROCm 7.4 on 9070 XT a few days ago</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RealFloridaMan</span>
+        <span class="meta-time">2026/04/02 22:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它针对不同 API 之间的兼容性进行了优化，并且具有针对 AMD GPU 和 NPU 的特定硬件构建。它由 AMD 运行。<p>在底层，它们都运行 llama.cpp，但它针对不同的 GPU 有特定的构建。不确定 9070 是否是其中之一，我正在 370 和 395 APU 上运行它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is optimized for compatibility across different APIs as well as has specific hardware builds for AMD GPUs and NPUs. It’s run by AMD.<p>Under the hood they are both running llama.cpp, but this has specific builds for different GPUs. Not sure if the 9070 is one, I am running it on a 370 and 395 APU.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615211" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">martin-adams</span>
+        <span class="meta-time">2026/04/02 23:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我刚刚在我的 Mac book M1 Max 64GB RAM 上将其与以下内容进行了比较：<p>型号：qwen3.59b
+提示：“嘿，给我讲一个关于去太空的故事”</p><p>Ollama 大约用时 1 分 44 秒完成
+柠檬水大约 1 分 14 秒完成</p><p>所以在这个非常有限的测试中它看起来更快。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I just compared this on my Mac book M1 Max 64GB RAM with the following:<p>Model: qwen3.59b
+Prompt: "Hey, tell me a story about going to space"</p><p>Ollama completed in about 1:44
+Lemonade completed in about 1:14</p><p>So it seems faster in this very limited test.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616123" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezhar</span>
+        <span class="meta-time">2026/04/03 02:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也对这个很好奇，我也想把它和vLLM进行比较。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm also curious about this one, also I want to compare this to vLLM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617903" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">iugtmkbdfil834</span>
+        <span class="meta-time">2026/04/02 20:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">借调了。目前在 ollama 上进行本地推理，但我很好奇它如何比较。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seconded. Currently on ollama for local inference, but I am curious how it compares.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613618" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LumielGR</span>
+        <span class="meta-time">2026/04/02 22:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Lemonade 使用 llama.cpp 进行文本和视觉处理，并进行夜间 ROCm 构建。它还可以同时加载和服务多个法学硕士。它还可以创建图像，或使用whisper.cpp，或使用TTS模型，或使用NPU（例如Strix Halo amdxdna2）等等！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lemonade is using llama.cpp for text and vision with a nightly ROCm build. It can also load and serve multiple LLMs at the same time. It can also create images, or use whisper.cpp, or use TTS models, or use NPU (e.g Strix Halo amdxdna2), and more!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614763" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">metalliqaz</span>
+        <span class="meta-time">2026/04/02 22:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">比 Vulkan 更好吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">better than Vulkan?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615245" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/02 22:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据我在 Strix Halo 上使用 llama.cpp（llama 内部使用）的经验，ROCm 或 Vulkan 的性能是否更好实际上取决于模型，通常在 10% 以内。我可以使用 RX 7900 XT，但我应该比较一下。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In my experience using llama.cpp (which ollama uses internally) on a Strix Halo, whether ROCm or Vulkan performs better really depends on the model and it's usually within 10%. I have access to an RX 7900 XT I should compare to though.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615377" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">metalliqaz</span>
+        <span class="meta-time">2026/04/02 23:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许我应该用谷歌搜索它，但我的印象是 llama 在内部使用 llama.cpp，而不是相反。<p>感谢您提供的数据点，我应该尝试 ROCm</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Perhaps I should just google it, but I'm under the impression that ollama uses llama.cpp internally, not the other way around.<p>Thanks for that data point I should experiment with ROCm</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615922" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/03 00:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是 ollama 在内部使用 llama.cpp 。抱歉造成混乱。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I meant ollama uses llama.cpp internally. Sorry for the confusion.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616429" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naasking</span>
+        <span class="meta-time">2026/04/03 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">据我了解，ROCm 有很多 bug，并且在 7.x 系列的许多 GPU 上都有一些性能下降。 LLM 的 Vulkan 表现显然并不落后于 ROCm，而且目前更加稳定和可预测。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From what I understand, ROCm is a lot buggier and has some performance regressions on a lot of GPUs in the 7.x series. Vulkan performance for LLMs is apparently not far behind ROCm and is far more stable and predictable at this time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617530" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">0x457</span>
+        <span class="meta-time">2026/04/03 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说，Vulkan 在集成卡上表现更好，但 ROCm (MIGraphX) 在 7900 XTX 上表现更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For me Vulkan performs better on integrated cards, but ROCm (MIGraphX) on 7900 XTX.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617445" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hrmtst93837</span>
+        <span class="meta-time">2026/04/03 00:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">错误层。 Vulkan 是一个图形和计算 API，而 Lemonade 是一个 LLM 服务器，因此比较它们就像将套接字与 nginx 进行比较一样有意义。如果您的目标是运行本地模型而不自己编写一半的堆栈，请将 Lemonade 与 Ollama 或 vLLM 进行比较。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wrong layer. Vulkan is a graphics and compute API, while Lemonade is an LLM server, so comparing them makes about as much sense as comparing sockets to nginx. If your goal is to run local models without writing half the stack yourself, compare Lemonade to Ollama or vLLM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616309" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">metalliqaz</span>
+        <span class="meta-time">2026/04/03 00:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在谈论 ROCm 与 Vulkan。  在 AMD GPU 上，Vulkan 一段时间以来被普遍认为是速度更快的 API。  由于大多数托管项目完全专注于 Nvidia，因此两者都比 CUDA 慢。  父帖子似乎表明较新的 ROCm 版本更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was talking about ROCm vs Vulkan.  On AMD GPUs, Vulkan has been commonly recognized as the faster API for some time.  Both have been slower than CUDA due to most of the hosting projects focusing entirely on Nvidia.  Parent post seemed to indicate that newer ROCm releases are better.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616804" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naasking</span>
+        <span class="meta-time">2026/04/03 01:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，由于一些 ROCm 回归，Vulkan 目前速度更快： <a href="https://github.com/ROCm/ROCm/issues/5805#issuecomment-4141615579" target="_blank" rel="noopener noreferrer">https://github.com/ROCm/ROCm/issues/5805#issuecomment-414161...</a><p>如果 ROCm 解决了这些问题，最终应该会更快。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, Vulkan is currently faster due to some ROCm regressions: <a href="https://github.com/ROCm/ROCm/issues/5805#issuecomment-4141615579" target="_blank" rel="noopener noreferrer">https://github.com/ROCm/ROCm/issues/5805#issuecomment-414161...</a><p>ROCm should be faster in the end, if they ever fix those issues.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617579" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/02 21:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">以防万一有人不知道。 NPU 功耗低、速度慢，适用于小型模型。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just in case anyone isn't aware. NPUs are low power, slow, and meant for small models.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613943" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jcgrillo</span>
+        <span class="meta-time">2026/04/03 00:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道想象中的用例是什么？说实话，我曾认真考虑过购买框架台式机，但 NPU 让我望而却步。我不明白为什么我必须花钱购买一堆没有任何作用的芯片。现在有了一些软件支持...它仍然没有任何作用？那么它为什么还要存在呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder what was the imagined use case? TBH I was seriously thinking about buying a framework desktop but the NPU put me off.. I don't get why I should have to pay money for a bunch of silicon that doesn't do anything. And now that there's some software support... it still doesn't do anything? Why does it even exist at all then?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616723" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ThatPlayer</span>
+        <span class="meta-time">2026/04/03 06:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">至少部分原因可能是 Microsoft 对 Copilot+ 徽章的 40 TOPS NPU 要求。英特尔在其现代 CPU 中也配备了 NPU。手机 CPU 制造商这样做的时间更长，尽管谷歌称他们为 TPU。<p>我使用在我的家庭实验室中运行的较旧的 Google Coral TPU，Frigate NVR 使用它来检测安全摄像头的对象。与在 GPU 上运行相比，它更高效，但灵活性较差。</p><p>不知道我的日常驾驶计算机是否需要一个 NPU，但我希望为我的下一台家庭服务器配备一个 NPU。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">At least part of it is probably Microsoft's 40 TOPS NPU requirement for their Copilot+ badge. Intel also have NPUs in their modern CPUs. Phones CPU manufacturers have been doing it even longer, though Google calls theirs TPU.<p>I use an older Google Coral TPU running in my home lab being used by Frigate NVR for object detection for security cameras. It's more efficient, but less flexible than running it on the GPU.</p><p>Don't know if I need an NPU for my daily driver computer, but I would want one for my next home server.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621084" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/03 02:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NPU 对于 Framework Desktop 以及所有 Strix Halo 设备来说完全没用。它可能有用的地方是带有 @naasking 提到的示例的手机（音频文本和文本音频处理），​​也许还有物联网。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The NPU is entirely useless for the Framework Desktop, and really all Strix Halo devices. Where it could be useful is cell phones with the examples mentioned by @naasking (audio-text and text-audio processing), and maybe IoT.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618063" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naasking</span>
+        <span class="meta-time">2026/04/03 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">小模型并非完全无用，据我所知，NPU 可以运行高达 8B 参数左右的 LLM。因此，它们可能有用的一种方式是：Qwen3 文本到语音模型均在 2B 参数下，而 Open AI 的耳语小语音到文本模型在 1B 参数下，因此您可以拥有一个可以与之交谈并可以回话的 AI 代理，理论上，您可以将所有音频文本和文本音频处理卸载到低功耗 NPU，并让 GPU 来完成所有 LLM 处理。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Small models aren't entirely useless, and the NPU can run LLMs up to around 8B parameters from what I've seen. So one way they could be useful: Qwen3 text to speech models are all under 2B parameters, and Open AI's whisper-small speech to text model is under 1B parameters, so you could have an AI agent that you could talk to and could talk back, where, in theory, you could offload all audio-text and text-audio processing to the low power NPU and leave the GPU to do all of the LLM processing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617932" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/03 02:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您始终可以将某些层卸载到 NPU 以降低功耗，并将其余层留给 GPU。如果后者是功率节流的（常见于预填充，而不是解码），这将是性能的改进。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You could always offload some layers to the NPU for lower power use and leave the rest to the GPU. If the latter is power throttled (common for prefill, not for decode) that will be a performance improvement.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618105" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jcgrillo</span>
+        <span class="meta-time">2026/04/03 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这似乎是一个非常利基的用例，并且可能不值得表面积？考虑到普通设备处理语音输入的计算时间只占一小部分，因此节省的电量必须非常惊人才能证明其合理性。我敢打赌，90% 的 siri/ok google/whatever 用户每天发出的语音查询次数少于 10 次。他们在普通硬件上运行时可以使用多少电量？这可能有多重要？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That seems like a really niche use case, and probably not worth the surface area? The power savings would have to be truly astonishing to justify it, given what a small fraction of compute time your average device spends processing voice input. I'd wager the 90th percentile siri/ok google/whatever user issues less than 10 voice queries per day. How much power can they use running on normal hardware and how much could it possibly matter?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gnarlouse</span>
+        <span class="meta-time">2026/04/02 22:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许这是一个语言障碍问题，但“by AMD”让我认为它是AMD分发的项目。事实真的是这样吗？我没有看到任何理由相信它是这样的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe it's a language barrier problem, but "by AMD" makes me think its a project distributed by AMD. Is that actually the case? I'm not seeing any reason to believe it is.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615249" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">buildbot</span>
+        <span class="meta-time">2026/04/02 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据 AMD 的 GitHub 信息，这是一个由 AMD 支持和赞助的社区项目； <a href="https://github.com/lemonade-sdk/lemonade" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/lemonade</a><p>AMD 员工致力于此/已经发表了一些关于此的博客文章。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s a community project supported and sponsored by AMD according to their GitHub; <a href="https://github.com/lemonade-sdk/lemonade" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/lemonade</a><p>AMD employees work on it/have been making blog posts about it for a bit.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615275" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hombre_fatal</span>
+        <span class="meta-time">2026/04/02 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 您可以通过发送电子邮件至lemonade@amd.com 提出问题来联系我们<p>在 github 自述文件中找到了这个。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; You can reach us by filing an issue, emailing lemonade@amd.com<p>Found this on the github readme.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615273" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">guipsp</span>
+        <span class="meta-time">2026/04/02 22:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它主要由AMD开发，曾经托管在AMD github iirc上</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is mostly developed by AMD and used to be hosted on the AMD github iirc</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615302" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ilaksh</span>
+        <span class="meta-time">2026/04/02 21:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很酷，但是他们为什么不能只为 vLLM 和 llama.cpp 制作 PR？或者如果合并时间太长，他们有自己的分叉？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool but is there a reason they can't just make PRs for vLLM and llama.cpp? Or have their own forks if they take too long to merge?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RealFloridaMan</span>
+        <span class="meta-time">2026/04/02 22:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们在底层使用最新的 llama.cpp，但专为特定 AMD GPU 硬件而构建。<p>Lemonade 实际上只是一个管理平面/代理。它将 ollama/anthropic API 转换为 llama.cpp 的 OpenAI 格式。它运行不同的后端来进行 sst/tts 和图像生成。让您在一个地方管理这一切。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They use the latest llama.cpp under the hood but built for specific AMD GPU hardware.<p>Lemonade is really just a management plane/proxy. It translates ollama/anthropic APIs to OpenAI format for llama.cpp. It runs different backends for sst/tts and image generation. Lets you manage it all in one place.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615244" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/02 20:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很简单，他们有 rpm、deb 和配套的 AppImage 桌面应用程序 [1]！  令我惊讶的是我之前并不知道这个项目。  肯定会尝试一下。<p>[1]： <a href="https://github.com/lemonade-sdk/lemonade/releases/tag/v10.0.1" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/lemonade/releases/tag/v10.0....</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Neat, they have rpm, deb, and a companion AppImage desktop app[1]!  Surprised I wasn't aware of this project before.  Definitely going to give it a try.<p>[1]: <a href="https://github.com/lemonade-sdk/lemonade/releases/tag/v10.0.1" target="_blank" rel="noopener noreferrer">https://github.com/lemonade-sdk/lemonade/releases/tag/v10.0....</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613741" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/03 01:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617455" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kouunji</span>
+        <span class="meta-time">2026/04/02 21:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很期待尝试一下，如果你运行的是 Linux，目前 Strix halo 的 npu 是无法访问的，以前我认为柠檬水也不能访问。如果这能打开npu那就太棒了！ Resolute raccoon 也添加了 npu 支持。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m looking forward to trying this currently Strix halo’s npu isn’t accessible if you’re running Linux, and previously I don’t think lemonade was either. If this opens up the npu that would be great! Resolute raccoon is adding npu support as well.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613962" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dennemark</span>
+        <span class="meta-time">2026/04/02 21:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许您已经通过 FLM 看到了 NPU 支持： <a href="https://lemonade-server.ai/flm_npu_linux.html" target="_blank" rel="noopener noreferrer">https://lemonade-server.ai/flm_npu_linux.html</a><p>“Lemonade 中的 FastFlowLM (FLM) 支持处于抢先体验阶段。FLM 可免费用于非商业用途，但请注意商业许可条款适用。”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe you have seen NPU support via FLM already: <a href="https://lemonade-server.ai/flm_npu_linux.html" target="_blank" rel="noopener noreferrer">https://lemonade-server.ai/flm_npu_linux.html</a><p>"FastFlowLM (FLM) support in Lemonade is in Early Access. FLM is free for non-commercial use, however note that commercial licensing terms apply. "</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614022" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cpburns2009</span>
+        <span class="meta-time">2026/04/02 22:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NPU 使用 FastFlowLM [1] 在 Strix Halo 上的 Linux（至少是 Arch）上工作。不过，他们的 NPU 内核是专有的（可免费获得合理数量的商业收入）。基本上可以免费运行一些模型（使用 NPU 而不是 CPU/GPU），这很好，但性能却很差劲。 NPU 的目标是真正的低功耗设备，如果您拥有像 Strix Halo 这样的 APU/GPU ，则没有用处。<p>[1]： <a href="https://github.com/FastFlowLM/FastFlowLM" target="_blank" rel="noopener noreferrer">https://github.com/FastFlowLM/FastFlowLM</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The NPU works on Linux (Arch at least) on Strix Halo using FastFlowLM [1]. Their NPU kernels are proprietary though (free up to a reasonable amount of commercial revenue). It's neat you can run some models basically for free (using NPU instead of CPU/GPU), but the performance is underwhelming. The target for NPUs is really low power devices, and not useful if you have an APU/GPU like Strix Halo.<p>[1]: <a href="https://github.com/FastFlowLM/FastFlowLM" target="_blank" rel="noopener noreferrer">https://github.com/FastFlowLM/FastFlowLM</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">boomskats</span>
+        <span class="meta-time">2026/04/02 21:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我以为NPU从6.12开始就已经可用了？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I thought the NPU has been available since something like 6.12?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bravetraveler</span>
+        <span class="meta-time">2026/04/03 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一个有趣的观察：拉动模型会向您的浏览器发送约 200mbit 的进度更新</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A fun observation: pulling models sends ~200mbit of progress updates to your browser</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">spencer9714</span>
+        <span class="meta-time">2026/04/03 02:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我目前正在优化 FLUX 以在消费级 8GB VRAM 卡（RTX 4060s）集群上运行。我注意到 Lemonade 强调 NPU 和 GPU 编排。您是否发现将“审美评分”或“文本编码”卸载到 NPU 可以显着释放用于主要扩散过程的 VRAM，或者在消费类硬件上来回移动张量的开销是否太高？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m currently optimizing FLUX to run on a cluster of consumer 8GB VRAM cards (RTX 4060s). I noticed Lemonade emphasizes NPU and GPU orchestration. Have you found that offloading the 'aesthetic scoring' or 'text encoding' to the NPU significantly frees up VRAM for the main diffusion process, or is the overhead of moving tensors back and forth too high on consumer hardware?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">syntaxing</span>
+        <span class="meta-time">2026/04/02 20:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，这太有趣了。这创建了一个本地“Gemini”前端等等。这或多或少是一个生成人工智能聚合器，它为不同的生成模式安装多个服务。我很高兴能在我的 strix halo 上尝试这个。我遇到的最大问题是图像和音频生成，所以这似乎是一个不错的选择。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow this is super interesting. This creates a local “Gemini” front end and all. This is more or less a generative AI aggregator where it installs multiple services for different gen modes. I’m excited to try this out on my strix halo. The biggest issue I had is image and audio gen so this seems like a great option.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613616" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pantalaimon</span>
+        <span class="meta-time">2026/04/02 23:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常烦人的是，您需要供应商特定的 API 和大型供应商特定的堆栈来使用这些 NPU 执行任何操作。<p>这样软件的采用将非常有限。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's pretty annoying that you need vendor specific APIs and a large vendor specific stack to do anything with those NPUs.<p>This way software adoption will be very limited.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615506" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Sparkyte</span>
+        <span class="meta-time">2026/04/03 04:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以实施此操作的最低流程是什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What is the lowest process I can implement this on?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">LowLevelKernel</span>
+        <span class="meta-time">2026/04/03 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">具体是哪些 NPU？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Which specific NPU’s?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617845" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">robotswantdata</span>
+        <span class="meta-time">2026/04/03 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">忘记所有的振动代码 slop 或 Ollama。柠檬水是货真价实的，非常好，已经使用了大约一年了。<p>AMD 在这里做着神一般的工作</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Forget all the vibe coded slop or Ollama. Lemonade is the real deal and very good, been using about a year now.<p>AMD are doing gods work here</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617374" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">metalliqaz</span>
+        <span class="meta-time">2026/04/02 22:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最强大的系统是 Ryzen+Radeon，所以如果有工具可以完成让 AI 工具在我的硬件上良好运行的所有艰苦工作，我完全支持它。  我发现让法学硕士、扩散等在 AMD 上快速工作非常令人沮丧。  工作量太大了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">my most powerful system is Ryzen+Radeon, so if there are tools that do all the hard work of making AI tools work well on my hardware, I'm all for it.  I find it very frustrating to get LLMs, diffusion, etc. working fast on AMD.  It's way too much work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615216" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">9dc</span>
+        <span class="meta-time">2026/04/02 20:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么...它有什么作用？我不明白，哈哈</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">so... what does it do? i dont get it Lol</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613611" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">iugtmkbdfil834</span>
+        <span class="meta-time">2026/04/02 20:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">初步阅读表明它是一把迷你瑞士军刀，因为它似乎能够做很多事情（无论如何都基于网站声明）。应用程序集成似乎表明他们希望更多地成为一个控制仪表板。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Initial read suggests it is a mini-swiss army knife, because it seems to be able to do a lot ( based on website claims anyway ). The app integration seems to suggest they want to be more of a control dashboard.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613672" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">techpulselab</span>
+        <span class="meta-time">2026/04/03 08:13</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">devnotes77</span>
+        <span class="meta-time">2026/04/03 08:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/04/03 06:04</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620770" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">wei03288</span>
+        <span class="meta-time">2026/04/03 04:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619878" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">philbitt</span>
+        <span class="meta-time">2026/04/02 22:20</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614888" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/04/03 01:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617466" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">avib99</span>
+        <span class="meta-time">2026/04/02 21:20</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">arafeq</span>
+        <span class="meta-time">2026/04/02 22:21</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614904" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shubhamgarg86</span>
+        <span class="meta-time">2026/04/03 01:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">统一的 API 很有趣，但我发现“openai 兼容”可能存在漏洞。当我将 rag 代理从 openai 切换到本地服务器时，即使我的函数调用中断了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the unified api is interesting, but i've found that 'openai compatible' can be leaky. when i switched a rag agent from openai to a local server, my function calling broke even though</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617657" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">silask58</span>
+        <span class="meta-time">2026/04/03 01:14</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617223" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">luxuryballs</span>
+        <span class="meta-time">2026/04/02 22:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣，我现在正在开发一个名为柠檬水的人工智能项目</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this is funny I’m working on building an AI project called lemonade right now</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

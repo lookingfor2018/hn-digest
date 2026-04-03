@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>使 Codex 能够分析二十年的黑客新闻数据 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1042/">返回本批次</a>
+      <h1>使 Codex 能够分析二十年的黑客新闻数据</h1>
+      <p class="subtitle">Enabling Codex to Analyze Two Decades of Hacker News Data</p>
+      <div class="meta-line">
+        <span>modolap.com</span>
+        <span>作者 ronfriedhaber</span>
+        <span>分数 72</span>
+        <span>评论 28</span>
+        <span>2026/04/02 18:42</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47612558" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://modolap.com/publication/hn-analysis-1" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>存储在 parquet 文件中的整个 Hacker News 大小约为 10GB。我对分析数据集很感兴趣，并且以当代时代精神的方式，通过 Codex 进行分析。有了Modolap，Codex就可以很好地分析它。在简单地添加 npx 技能后，第一个感兴趣的主题是提及历史：Rust 的提及是否取代了 Go，以及 MySQL 与 Postgres。只需运行 codex“使用 Modolap，编写一个查询来分析黑客新闻历史中基于关键字的历史主题提及（数据集的主页：https://huggingface.co/datasets/open-index/hacker-news/tree/main). 最初是 Rust 与 Go 的。”，并进行一些最小的来回操作，就可以使用 Modolap 生成一个足够的脚本。Rust vs Golang Codex vs Claude Code Postgres vs MySQL 另一个假设是平均评论是否变短。从最初的外观来看，似乎确实存在长度逐渐下降的情况。 P50 和平均评论长度（字符）</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>The entirety of Hacker News, stored in parquet files, is approximately 10GB in size. I was interested in analyzing the dataset and, in the fashion of the contemporary zeitgeist, in doing so with Codex. With Modolap, Codex can analyze it well. After simply adding the skill with npx, the first topic of interest was mention history: whether mentions of Rust superseded those of Go, and MySQL versus Postgres. Simply running codex &quot;With Modolap, Write a query to analyze historical keyword-based topic mentions over hacker news&#39;s history (Dataset&#39;s homepage: https://huggingface.co/datasets/open-index/hacker-news/tree/main). Initially, of Rust vs Go.&quot; and some minimal back-and-forth yielded an adequate script using Modolap. Rust vs Golang Codex vs Claude Code Postgres vs MySQL An additional hypothesis is whether the average comment got shorter. From an initial look, it seems as if there does exist a gradual decline in length. P50 &amp; Average Comment Length (Chars)</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zeroxfe</span>
+        <span class="meta-time">2026/04/02 21:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经用codex和sqlite做过很多次这样的事情了，而且效果很好。这是一个看起来像这样的提示：<p>- 检查并理解目录 /path/... 中下载的数据，然后提出一个 sqlite 数据模型来进行详细分析，并将所有内容提取到 data.sqlite 中的 sqlite 数据库中，并在 model.md 中记录该模型。</p><p>然后，您可以使用 Codex 提示轻松查询数据库（还可以根据需要生成 PDF 图表。）</p><p>我通常在初始提示中使用最高推理级别，当我深入了解数据时，不断改进模型、索引等，然后让 Codex 处理任何数据迁移。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've done this kind of thing many times with codex and sqlite, and it works very well. It's one prompt that looks something like this:<p>- inspect and understand the downloaded data in directory /path/..., then come up with an sqlite data model for doing detailed analytics and ingest everything into an sqlite db in data.sqlite, and document the model in model.md.</p><p>Then you can query the database adhoc pretty easily with codex prompts (and also generate PDF graphs as needed.)</p><p>I typically use the highest reasoning level for the initial prompt, and as I get deeper into the data, continuously improve on the model, indexes, etc., and just have codex handle any data migration.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614069" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">huflungdung</span>
+        <span class="meta-time">2026/04/02 22:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615024" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Brajeshwar</span>
+        <span class="meta-time">2026/04/02 23:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Hugging Face 上的“黑客新闻 - 完整档案”[1] 最近出现在此处。 “数据存储为按项目 ID 排序的每月 Parquet 文件，因此可以直接使用 DuckDB 进行查询、加载数据集库或使用任何读取 Parquet 的工具进行处理。”<p>出于好奇，我利用克劳德来观察趋势和模式，对它进行了修改（我确实发现了一些关于我的尴尬的事情！）。</p><p>1. <a href="https://huggingface.co/datasets/open-index/hacker-news" target="_blank" rel="noopener noreferrer">https://huggingface.co/datasets/open-index/hacker-news</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The “Hacker News - Complete Archive” on Hugging Face,[1] recently popped up here. “The data is stored as monthly Parquet files sorted by item ID, making it straightforward to query with DuckDB, load with the datasets library, or process with any tool that reads Parquet.”<p>Out of curiosity, I tinkered with it using Claude to see trends and patterns (I did find a few embarrassing things about me!).</p><p>1. <a href="https://huggingface.co/datasets/open-index/hacker-news" target="_blank" rel="noopener noreferrer">https://huggingface.co/datasets/open-index/hacker-news</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615410" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mike_hearn</span>
+        <span class="meta-time">2026/04/02 19:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不太明白 Modolap 与仅仅要求 AI 使用任何其他 OLAP 引擎有何不同？你的网站和 github 自述文件都只是强调它是特殊的和你个人的方法，而没有解释那是什么或为什么有人应该关心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't quite understand how Modolap differs from just asking AI to use any other OLAP engine? Both your website and the github readme just emphasise that it's idiosyncratic and your personal approach, without explaining what that is or why anyone should care.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613249" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ronfriedhaber</span>
+        <span class="meta-time">2026/04/02 20:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的反馈。我一定会修改自述文件；它相当陈旧。<p>&gt;“Modolap 与仅要求 AI 使用任何其他 OLAP 引擎有何不同”</p><p>目前存在两个组件：OLAP 查询引擎和远程基础设施服务。该服务使 Codex 等系统（或开发人员）能够管理数据集，维护查询的版本控制，并将计算负担减轻到专用机器。考虑到当前在微虚拟机内运行代理的趋势，这一点尤其有益。</p><p>此外，它的设计还考虑到了人工智能的使用。协同设计具有重要价值。有人可能会说模型也可以使用 Polars 或 DuckDB，并且没有改进的空间，但我认为事实并非如此。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Appreciate the feedback. I shall certainly revamp the README; it is rather stale.<p>&gt; "how Modolap differs from just asking AI to use any other OLAP engine"</p><p>There presently exist two components, the OLAP query engine and the remote infrastructure service. The service enables systems like Codex (or developers as well) to manage datasets, maintain version control over queries, and offload the computational burden to dedicated machines. This is especially beneficial given the current trend of running agents inside micro-VMs.</p><p>In addition, it is designed with AI usage in mind. There is significant value in co-design. One could argue that models can use Polars or DuckDB just as well, and that there is no room for improvement, but I do not think this is true.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613403" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bastawhiz</span>
+        <span class="meta-time">2026/04/02 21:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有哪些改进的空间？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What room for improvement is there?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614045" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/02 21:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也不明白其价值主张；您的目标网页尚未开发。跟踪查询历史记录很简单。可以使用 Polars Cloud 或 MotherDuck 来完成卸载计算。您可以扩展“管理数据集”部分吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't get the value proposition either; your landing page is underdeveloped. Tracking the query history is trivial. Offloading computation could be done with Polars Cloud or MotherDuck. Can you expand on the "manage datasets" part?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614350" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">RockyMcNuts</span>
+        <span class="meta-time">2026/04/03 03:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">绘制响应质量、对话的毒性/健康状况、一段时间内的情绪、ChatGPT 发布的影响可能会很有趣。<p>（因为人工智能现在可以回答许多可能成为话题的问题；人们可以使用人工智能来参与；如果人工智能可以数据挖掘一切并将其链接回他们，人们可能不愿意参与，等等，类似于Stack Overflow）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could be interesting to chart quality of responses,  toxicity/health of conversations, sentiment over time, impact of release of ChatGPT.<p>(since AI can now answer many questions that might have been topics of conversation; people can use AI to participate; people may be reluctant to participate if AI can data mine everything and link it back to them, etc. similar to Stack Overflow)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618878" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sd9</span>
+        <span class="meta-time">2026/04/02 23:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有点惊讶 postgres 在当时是由 mongodb 主导的。我记得 mongo 热潮，但我一直认为 postgres 拥有合理的市场份额。我猜当时是其他 SQL 数据库，我猜 MySQL 仍然可行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm kind of surprised that postgres was quite that dominated by mongodb back in the day. I remember the mongo fever, but I always thought postgres held reasonable market share. I guess it was other SQL dbs back then, I guess MySQL was still viable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615626" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/04/03 02:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可能是 Postgres 太受欢迎了，以至于人们并没有真正讨论它。<p>双曲线的例子；事实上，每个读到这篇文章的人几乎每时每刻都在消耗氧气，因此没有人谈论呼吸有多么美妙。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It could be that Postgres was so popular that people didn't really discuss it.<p>Hyperbolic example; literally every human reading this consumes oxygen nearly every moment of the day, and as such no one talks about how great breathing is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617977" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hsuduebc2</span>
+        <span class="meta-time">2026/04/03 00:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我做过的很多项目都错误地使用了mongo而不是普通的关系数据库，需要及时返工。这在当时只是炒作而已。就像几年后的微服务架构一样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I worked on many projects that had used wrongly mongo instead of ordinary relation database and they needed rework in time. It was just hyped in it's days. Like micro service architecture in few years.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616555" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">voidUpdate</span>
+        <span class="meta-time">2026/04/02 22:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当搜索 Go 的引用时，它实际上在寻找什么？ “Go”是一个比较常见的词，我几乎没有看到有人将其称为 Golang</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When searching for references to Go, what does it actually look for? "Go" is a relatively common word, and I hardly see anyone referring to it as Golang</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614670" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hakrgrl</span>
+        <span class="meta-time">2026/04/02 23:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最后一张显示平均评论长度的图表显示出明显的负下降趋势，尤其是在最近几个月。我想知道这是为什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That last chart showing the average comment length shows a clear negative downtrend, especially in recent months. I wonder why that is.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615494" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hakrgrl</span>
+        <span class="meta-time">2026/04/02 23:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我注意到一些通常违反 HN 准则的主题和评论不再被标记，并且话语退化为类似 Reddit 的刺痛和回声室。虽然只有一小部分，但仍然比我之前习惯的 0% 多。<p>随着时间的推移，看看有多少评论违反了准则，这将是很有趣的。 <a href="https://news.ycombinator.com/newsguidelines.html" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/newsguidelines.html</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I noticed some topics and comments that were usually in violation of HN guidelines are no longer flagged, and discourse decays into reddit-like jabs and echo chambers. Only a small percent, but still, more than the previous 0% I was accustomed to.<p>Would be interesting to see how many comments violate the guidelines over time. <a href="https://news.ycombinator.com/newsguidelines.html" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/newsguidelines.html</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615499" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">xnorswap</span>
+        <span class="meta-time">2026/04/02 22:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所有评论中有 5% 提到克劳德代码？<p>我读得对吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">5% of all comments mention Claude code?<p>Am I reading that right?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614859" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SyneRyder</span>
+        <span class="meta-time">2026/04/03 00:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不认为这占所有评论的百分比。我认为这要么是发布到网站上的有关 Claude Code 的文章（主题）的百分比，要么是至少有人在评论中提到 Claude Code 的主题的百分比。<p>后者似乎更容易实现。借用另一条互联网经验法则：“随着在线讨论的时间越来越长，有人提到克劳德的可能性就会接近1。”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think it's a percentage of all comments. I think it's either the percent of articles (topics) posted to the site that are about Claude Code, or maybe a percentage of topics where at least one person mentioned Claude Code in the comments.<p>The latter seems easier to achieve. To borrow from another internet rule of thumb: "As an online discussion grows longer, the probability of someone mentioning Claude approaches one."</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616265" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xnorswap</span>
+        <span class="meta-time">2026/04/03 00:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为后一种解释一定是正确的，似乎有可能，如果高的话。<p>原始评论或提交的内容似乎都不可信。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think that latter interpretation must be right, it seems possible, if high.<p>Either raw comments or submissions doesn't seem credible.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616416" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">epaga</span>
+        <span class="meta-time">2026/04/02 22:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在是 5.00001%。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well now it's 5.00001%.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614978" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sam-bee</span>
+        <span class="meta-time">2026/04/03 00:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真正使用该语言编写代码的人从未将其称为“Golang”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nobody who actually codes in that language ever calls it 'Golang'</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616891" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Zambyte</span>
+        <span class="meta-time">2026/04/03 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我为日常工作编写 Go，并且根据上下文我一直将其称为 Golang。你看这个评论想表达什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I write Go for my day job and I refer to it as Golang all the time, depending on context. What are you getting at with this comment?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618684" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hsuduebc2</span>
+        <span class="meta-time">2026/04/03 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的很喜欢法典。至少在我看来，与克劳德代码的价格/价值比较要好得多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really love codex. The price/value comparison to claude code is at least from my opinion much better.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616612" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/03 05:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">毫无疑问，20 美元到 OpenAI 可以让你比 20 美元到 Anthropic，问题是谁更好？与汽车相比，乘坐公共汽车去上班可能是免费的，但在某些情况下，多花点钱是值得的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's no doubt that $20 to OpenAI gets you more than $20 to Anthropic, the question is who's better? The bus to work could be free vs a car but there are cases where spending the extra money is simply just worth it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620546" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hsuduebc2</span>
+        <span class="meta-time">2026/04/03 10:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，当然。毫无疑问。我只是认为大多数人，尤其是非技术人员，氛围编码应用程序只是在用最新的开爪传奇烧钱。<p>您根本不需要克劳德来完成简单的任务或简单的脚本。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well sure. No doubt abouth that. I just think that most people, especially non tech people vibe coding apps are simply just burning money with latest open claw saga.<p>You simply do not need claude for simple tasks or simply scripts.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622625" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">moralestapia</span>
+        <span class="meta-time">2026/04/02 22:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不要估计/绘制 DAU/MAU，这不是一幅漂亮的图画:'(。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do not estimate/plot DAUs/MAUs, it's not a pretty picture :'(.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615129" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hakrgrl</span>
+        <span class="meta-time">2026/04/02 23:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么这么说？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do you say that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">throwaway290</span>
+        <span class="meta-time">2026/04/02 21:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">HN 数据已开放？在什么条件下分发？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">HN data is open? Under what conditions it's distributed?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613927" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bastawhiz</span>
+        <span class="meta-time">2026/04/02 21:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每页底部都有一个 API 链接。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's an API link at the bottom of every page.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hsuduebc2</span>
+        <span class="meta-time">2026/04/03 00:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">甚至还有用户随着时间的推移创建并公开共享的数据集。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are even datasets created by users over time and shared publicly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616604" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">GeoAtreides</span>
+        <span class="meta-time">2026/04/03 01:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有条件！什么，当您创建帐户时，您不知道您的内容对所有人都是免费的吗？而且你不能删除你的评论？而且对所有人免费？好吧，这是你的责任，伙计，不是 HN，绝对不是 HN</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">no conditions! what, you didn't know your content would be free for LITERALLY EVERYONE when you made your account? and that you can't delete your comments? and it's a free for all? well, that's on you buddy, not HN, definitely not HN in any way</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">avib99</span>
+        <span class="meta-time">2026/04/02 21:17</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614096" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">huflungdung</span>
+        <span class="meta-time">2026/04/02 22:29</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615021" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">benreesman</span>
+        <span class="meta-time">2026/04/02 21:13</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614049" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cloudpeaklabs</span>
+        <span class="meta-time">2026/04/03 01:29</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617426" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

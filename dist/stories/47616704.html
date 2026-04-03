@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>现代 SQLite：您不知道的功能 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1042/">返回本批次</a>
+      <h1>现代 SQLite：您不知道的功能</h1>
+      <p class="subtitle">Modern SQLite: Features You Didn&#39;t Know It Had</p>
+      <div class="meta-line">
+        <span>slicker.me</span>
+        <span>作者 thunderbong</span>
+        <span>分数 184</span>
+        <span>评论 57</span>
+        <span>2026/04/03 00:34</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47616704" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://slicker.me/sqlite/features.htm" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>使用 JSON 数据 SQLite 附带了 JSON 扩展，可让您直接在表中存储和查询 JSON 文档。您可以保持架构灵活，同时仍然使用 SQL 对结构化数据进行切片和切块。示例：从 JSON 列中提取字段： CREATE TABLE events ( id INTEGER PRIMARY KEY, Payload TEXT NOT NULL -- JSON );</li><li>SELECT json_extract(payload, &#39;$.user.id&#39;) AS user_id, json_extract(payload, &#39;$.action&#39;) AS action, json_extract(payload, &#39;$.metadata&#39;) AS 元数据 FROM events WHERE json_extract(payload, &#39;$.action&#39;) = &#39;login&#39;;您还可以在 JSON 表达式上创建索引，从而使半结构化数据的查询速度快得惊人。</li><li>使用 FTS5 进行全文搜索 SQLite 的 FTS5 扩展将其变成一个强大的全文搜索引擎。您可以将所有内容保存在单个数据库文件中，而不是依赖外部搜索服务。示例：构建一个简单的搜索索引：CREATE VIRTUAL TABLE docs USING fts5( title, body, tokenize = &quot;porter&quot; );</li><li>INSERT INTO docs (title, body) VALUES (&#39;SQLite 指南&#39;, &#39;了解如何有效使用 SQLite。&#39;), (&#39;本地优先应用程序&#39;, &#39;为什么本地存储和同步很重要。&#39;);</li><li>SELECT rowid, title FROM docs WHERE docs MATCH &#39;本地 NEAR/5 存储&#39;;您无需离开 SQLite 或管理单独的服务即可获得排名、短语查询、前缀搜索等。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Working with JSON data SQLite ships with a JSON extension that lets you store and query JSON documents directly in tables. You can keep your schema flexible while still using SQL to slice and dice structured data. Example: extracting fields from a JSON column: CREATE TABLE events ( id INTEGER PRIMARY KEY, payload TEXT NOT NULL -- JSON );</li><li>SELECT json_extract(payload, &#39;$.user.id&#39;) AS user_id, json_extract(payload, &#39;$.action&#39;) AS action, json_extract(payload, &#39;$.metadata&#39;) AS metadata FROM events WHERE json_extract(payload, &#39;$.action&#39;) = &#39;login&#39;; You can also create indexes on JSON expressions, making queries over semi-structured data surprisingly fast.</li><li>Full-text search with FTS5 SQLite’s FTS5 extension turns it into a capable full-text search engine. Instead of bolting on an external search service, you can keep everything in a single database file. Example: building a simple search index: CREATE VIRTUAL TABLE docs USING fts5( title, body, tokenize = &quot;porter&quot; );</li><li>INSERT INTO docs (title, body) VALUES (&#39;SQLite Guide&#39;, &#39;Learn how to use SQLite effectively.&#39;), (&#39;Local-first Apps&#39;, &#39;Why local storage and sync matter.&#39;);</li><li>SELECT rowid, title FROM docs WHERE docs MATCH &#39;local NEAR/5 storage&#39;; You get ranking, phrase queries, prefix searches, and more—without leaving SQLite or managing a separate service.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aaviator42</span>
+        <span class="meta-time">2026/04/03 04:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SQLite 非常强大。我开发了为数十万日常用户提供服务的网站，其中存储层完全由 SQLite 处理，通过我构建的抽象层为您提供了一个方便的键值接口，因此当我只需要数据存储/检索时，我不必编写查询： <a href="https://github.com/aaviator42/StorX" target="_blank" rel="noopener noreferrer">https://github.com/aaviator42/StorX</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SQLite is insanely robust. I have developed websites serving hundreds of thousands of daily users where the storage layer is entirely handle by SQLite, via an abstraction layer I built that gives you a handy key-value interface so I don't have to craft queries when I just need data storage/retrieval: <a href="https://github.com/aaviator42/StorX" target="_blank" rel="noopener noreferrer">https://github.com/aaviator42/StorX</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619596" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fushihara</span>
+        <span class="meta-time">2026/04/03 09:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望 SQLite 能够添加 bool 类型和正确的日期/时间类型。真的没有计划添加它们吗？<p>对于 bool，它可能只是数字类型的别名。
+相当于数字检查（col = 0 或 col = 1）的东西就很好了。</p><p>日期/时间处理非常弱。
+必须将值存储为 GMT 文本非常不方便。</p><p>在 Node.js 中检索值时，我最终使用了 new Date(val)，这导致了一个经典错误：GMT 存储的值在本地时区中被解释。</p><p>正确的做法是 new Date(val + ".Z")，但我真的不想再处理那种麻烦了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish SQLite would add a bool type and proper date/time types. Is there really no plan to add them?<p>For bool, it could just be an alias of a numeric type.
+Something equivalent to number check(col = 0 or col = 1) would be perfectly fine.</p><p>Date/time handling is pretty weak.
+Having to store values as GMT text is just inconvenient.</p><p>When retrieving values in Node.js, I ended up using new Date(val), which caused the classic bug where a GMT-stored value gets interpreted in the local timezone.</p><p>The correct approach was new Date(val + ".Z"), but I really don’t want to deal with that kind of hassle anymore.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">krylon</span>
+        <span class="meta-time">2026/04/03 02:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很欣赏 STRICT 表格 <i>非常</i>，尽管我不记得遇到过以前可以避免的问题。但拥有所有相同的东西是件好事。<p>我不认为我对 SQLite 的 JSON 函数做过太多事情，但我曾经有一两次使用约束来强制 TEXT 列包含有效的 JSON ，否则的话会非常乏味。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">STRICT tables are something I appreciate <i>very much</i>, even though I cannot recall running into a problem that would have prevented by its presence in the before-time. But it's good to have all the same.<p>I don't think I've ever done much with SQLite's JSON functions, but I have on one or two occasions used a constraint to enforce a TEXT column contains valid JSON, which would have been very tedious to do otherwise.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618197" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">crazygringo</span>
+        <span class="meta-time">2026/04/03 03:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>尽管我不记得遇到过以前可以避免的问题</i><p>我非常非常这么做了。我使用的Python包在内部使用了大量NumPy，有时它的返回值是Python整数，有时它们是NumPy整数。</p><p>Python 整数将作为 SQLite 整数写入 SQLite。 NumPy 整数将作为 SQLite 二进制 blob 写入 SQLite。阻止您做简单的事情，例如比较相同的值。</p><p>每当我的代码尝试将二进制 blob 插入整数列时，设置为 STRICT 都会导致错误，因此我知道在必要时需要在代码中的哪个位置将值显式转换为 Python 整数。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>even though I cannot recall running into a problem that would have prevented by its presence in the before-time</i><p>I very, very much did. I was using a Python package that used a lot of NumPy internally, and sometimes its return values would be Python integers, and sometimes they'd be NumPy integers.</p><p>The Python integers would get written to SQLite as SQLite integers. The NumPy integers would get written to SQLite as SQLite binary blobs. Preventing you from doing simple things like even comparing for equal values.</p><p>Setting to STRICT caused an error whenever my code tried to insert a binary blob into an integer column, so I knew where in the code I needed to explicitly convert the values to Python integers when necessary.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618962" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kherud</span>
+        <span class="meta-time">2026/04/03 03:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SQLite 对于构建 FTS 似乎非常强大（用户输入自由文本，期望高精度/召回结果）。不过，我觉得获得良好的搜索质量并非易事。<p>我认为天真的方法是将输入标记化并附加“*”以进行前缀匹配。我经验不足，这可能可以改进很多。有很多设置，例如不同的分词器、词干等。此外，还可以在上面构建很多设置，例如加权、增强精确匹配等。</p><p>有谁知道可以从中学习和汲取灵感的好资源吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SQLite seems very powerful for building FTS (user enters free text, expects high precision/recall results). Still, I feel like it's non-trivial to get good search quality.<p>I think the naive approach is to tokenize the input and append "*" for prefix matching. I'm not too experienced and this can probably be improved a lot. There are many settings like different tokenizers, stemming, etc. Additionally, a lot can be built on top like weighting, boosting exact matches, etc.</p><p>Does anyone know good resources for this to learn and draw inspiration from?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618967" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fizx</span>
+        <span class="meta-time">2026/04/03 03:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是你可以使用 sqlite 作为索引，然后在其之上重建所有 Lucene。  在实际搜索库之上构建搜索质量也并非易事。<p>O'Reilly 的“相关搜索”并不是最糟糕的，但您需要自己移植/编写一些。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean you can use sqlite as an index and then rebuild all of Lucene on top of it.  It's non-trivial to build search quality on top of actual search libraries too.<p>O'Reilly's "Relevant Search" isn't the worst here, but you'll be porting/writing a bit yourself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619404" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 有谁知道可以从中学习和汲取灵感的好资源吗？<p>为什么像 ParadeDB 社区版这样更定制的东西不能满足您的需求？</p><p>我知道您谈论的是 SQLite，而 ParadeDB 是 PostgreSQL，但如您所知，获得良好的搜索质量并非易事，因此我试图了解您的情况和需求。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Does anyone know good resources for this to learn and draw inspiration from?<p>Is there a reason why something more custom built, like ParadeDB Community edition  won't meet your needs?</p><p>I understand you're speaking about SQLite, while ParadeDB is PostgreSQL but as you know, it's non-trivial to get good search quality, so I'm trying to understand your situation and needs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619497" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">QuadrupleA</span>
+        <span class="meta-time">2026/04/03 04:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">喜欢 SQLite 和其中大部分功能。<p>在 STRICT 模式下，我在其他地方问过这个问题，但从未得到答案：是否有人有一个松散类型的示例应用程序，其中 SQLite 的非严格、每行允许不同类型有很大的好处？我喜欢 SQLite 少量列类型的简单性，但任何地方允许任何类型的设计总是显得有点奇怪。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Love SQLite and most of these features.<p>On the STRICT mode, I've asked this elsewhere and never gotten an answer: does anyone have a loose-typing example application where SQLite's non-strict, different-type-allowed-for-each-row has been a big benefit? I love the simplicity of SQLite's small number of column types, but the any-type-allowed-anywhere design always seemed a little strange.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619545" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SQLite</span>
+        <span class="meta-time">2026/04/03 05:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">灵活类型与 JSON 配合得非常好，它也是灵活类型的。您熟悉从 JSON 对象或数组中提取值的 -&gt;&gt; 运算符吗？  如果 jjj 是保存 JSON 对象的列，则 jjj-&gt;&gt;'xyz' 是该对象的“xyz”字段的值。<p>我从 PostgreSQL 复制了 -&gt;&gt; 运算符的想法。  但在 PostgreSQL 中，-&gt;&gt; 运算符始终返回 JSON 中值的文本呈现，即使该值实际上是整数或浮点数。  PG 是严格类型的，所以它只能做这些。  但 SQLite 是灵活类型的，因此 -&gt;&gt; 运算符可以返回任何内容 - 文本、整数、浮点、NULL - 如果在 JSON 中找到任何值。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Flexible typing works really well with JSON, which is also flexibly typed. Are you familiar with the -&gt;&gt; operator that extracts a value from JSON object or array?  If jjj is a column that holds a JSON object, then jjj-&gt;&gt;'xyz' is the value of the "xyz" field of that object.<p>I copied the idea for the -&gt;&gt; operator from PostgreSQL.  But in PostgreSQL, the -&gt;&gt; operator always returns a text rendering of the value from the JSON, even if the value is really an integer or floating point number.  PG is rigidly typed, so that's all it can do.  But SQLite is flexibly typed, so the -&gt;&gt; operator can return anything - text, integer, floating-point, NULL - whatever value if finds in the JSON.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620531" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">spiffytech</span>
+        <span class="meta-time">2026/04/03 09:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得有一个 ORM 使用假列类型，如 `boolean` 和 `datetime` ，因为 SQLite 不强制执行任何操作。这样 ORM 就知道如何反序列化数据。严格模式通过仅接受 SQLite 识别的列类型来禁止这种情况。<p>我更喜欢 SQLite 实际上支持常见的数据类型。但只要不这样做，我就能看到使用架构来指定要在数据库中存储的数据的吸引力。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I remember an ORM that uses fake column types like `boolean` and `datetime` because SQLite doesn't enforce anything. That way the ORM knows how to deserialize the data. Strict mode prohibits this by only accepting column types SQLite recognizes.<p>My preference would be for SQLite to actually support commonplace data types. But as long as it doesn't, I can see the appeal in using the schema to specify what data you're storing in your database.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622427" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/03 04:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当应用程序的设计发生变化时，您可能需要存储稍微不同类型的数据。传统上，关系数据库需要为此进行显式架构更改，而 NoSQL 数据库允许更灵活、无架构的数据。 SQLite 介于两者之间：它仍然是一个关系数据库，但它的动态类型允许您在列中存储不同类型的值，而无需立即将数据迁移到新表。<p>当只有一个应用程序读取和写入表时，这种灵活性非常方便。但如果多个应用程序访问相同的表，缺乏严格执行的模式就会成为一种负担。使用通用工具处理 SQLite 表中的数据时也是如此，因为此类工具不知道期望的数据类型。列类型可能是 X，但实际数据可能是类型 Y。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When your application's design changes, you may need to store a slightly different type of data. Relational databases traditionally require explicit schema changes for this, whereas NoSQL databases allow more flexible, schema-less data. SQLite sits somewhere in between: it remains a relational database, but its dynamic typing allows you to store different types of values in a column without immediately migrating data to a new table.<p>This flexibility is convenient when only one application reads and writes to the table. But if multiple applications access the same tables, the lack of a strictly enforced schema becomes a liability. The same is true when using generic tools to process data in SQLite tables, because such tools don't know what type of data to expect. The column type may be X but the actual data may be of type Y.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619716" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ncruces</span>
+        <span class="meta-time">2026/04/03 06:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不一定，但能够指定 STRICT 表允许之外的类型很有用。<p>理想情况下，我希望能够指定存储的类型（或者至少是侧步数字亲和力），并为该类型指定一个名称（用于内省、文档）。</p><p>在我看来，指定列是 DATETIME、JSON 或 DECIMAL 很有用。</p><p>遗憾的是，STRICT 表和非STRICT 表都不允许这样做。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not necessarily, but being able to specify types beyond those allowed by STRICT tables is useful.<p>Ideally, I'd like to be able to specify the stored type (or at least, side step numeric affinity), and give the type a name (for introspection, documentation).</p><p>Specifying that a column is a DATETIME, a JSON, or a DECIMAL is useful, IMO.</p><p>Alas, neither STRICT nor non-STRICT tables allow this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620736" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">irq-1</span>
+        <span class="meta-time">2026/04/03 04:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 任何类型允许任何地方的设计总是显得有点奇怪。<p>Sqlite来自TCL，全是字符串。 <a href="https://www.tcl-lang.org/" target="_blank" rel="noopener noreferrer">https://www.tcl-lang.org/</a></p><p>例如，如果您以不同的格式存储日期/时间（随着应用程序的发展而变化），这将是一个好处。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; the any-type-allowed-anywhere design always seemed a little strange.<p>Sqlite came from TCL which is all strings. <a href="https://www.tcl-lang.org/" target="_blank" rel="noopener noreferrer">https://www.tcl-lang.org/</a></p><p>An example of where this would be a benefit is if you stored date/times in different formats (changing as an app evolved.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619954" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nikisweeting</span>
+        <span class="meta-time">2026/04/03 02:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人惊讶的是还没有人提到图尔索！<p>他们最近为 Rust SQLite 重新实现提供了多作者支持，这是我个人在使用 SQLite 进行高并发应用程序时遇到的最大问题。</p><p>`PRAGMA journal_mode = 'mvcc';`</p><p><a href="https://docs.turso.tech/tursodb/concurrent-writes" target="_blank" rel="noopener noreferrer">https://docs.turso.tech/tursodb/concurrent-writes</a></p><p>很高兴看到 SQLite 是否通过添加本机支持来做出响应，我希望这里的竞争能够刺激双方的改进。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Surprised no one has mentioned Turso yet!<p>They recently landed multi-writer support for their rust SQLite re-implementation, which is personally the biggest issue I've had with using SQLite for high concurrency applications.</p><p>`PRAGMA journal_mode = 'mvcc';`</p><p><a href="https://docs.turso.tech/tursodb/concurrent-writes" target="_blank" rel="noopener noreferrer">https://docs.turso.tech/tursodb/concurrent-writes</a></p><p>Very excited to see if SQLite responds by adding native support, I'm hoping competition here will spur improvements on both sides.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618402" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ncruces</span>
+        <span class="meta-time">2026/04/03 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人难以置信的是，数据库公司编写了该页面，却没有记录该功能的隔离级别。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Incredible that a database company writes that page and doesn't document the isolation level of the feature.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620801" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">101008</span>
+        <span class="meta-time">2026/04/03 03:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不确定人们是否感兴趣，但由于我在自己的很多项目中使用 sqlite，因此我正在为生产 SQLite 开发轻量级监控和安全层。
+这个想法非常简单：SQLite 很棒，但是一旦它在生产中运行，你的可观察性基本上为零。如果发生奇怪的事情（意外写入、模式更改、后台作业接触表等），您只能在事后发现。它试图在不触及应用程序代码的情况下解决这个问题。它是一个 Rust 代理，在您的 sqlite 文件旁边运行，并连接到所有内容都已登录的服务器。我当前的挑战主要是加密和信任。<p>很好奇这里的其他人是否在生产中运行 SQLite，以及您是否对这样的事情感兴趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not sure if people interested, but since I use sqlite in a lot of my own projects, I am working on a lightweight monitoring and safety layer for production SQLite.
+The idea is pretty simple: SQLite is amazing, but once it’s running in production you basically have zero observability. If something weird happens (unexpected writes, schema changes, background jobs touching tables, etc.) you only find out after the fact. It tries to solve that without touching application code. It's a Rust agent that runs next to your sqlite file, and connects to the server where everything is logged in. My current challenge right now is encryption and trust, mostly.<p>Curious if others here are running SQLite in production and if you would be interested in something like this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618798" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mandeepj</span>
+        <span class="meta-time">2026/04/03 03:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">查看 <a href="https://newrelic.com/instant-observability/sqlite" target="_blank" rel="noopener noreferrer">https://newrelic.com/instant-observability/sqlite</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">checkout <a href="https://newrelic.com/instant-observability/sqlite" target="_blank" rel="noopener noreferrer">https://newrelic.com/instant-observability/sqlite</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618910" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">captn3m0</span>
+        <span class="meta-time">2026/04/03 06:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以使用 sqlite 中的箭头表示法来缩短 JSON 查询。<p></p><pre><code>    SELECT
+    settings -&gt; '$.languages' languages
+    FROM
+    user_settings
+    WHERE
+    settings -&gt;&gt; '$.languages' LIKE '%"en"%';
+</code></pre>
+我在 jekyll-sqlite 项目中大量使用它们。看 <a href="https://github.com/blr-today/website/blob/main/_config.yml#L82-L86" target="_blank" rel="noopener noreferrer">https://github.com/blr-today/website/blob/main/_config.yml#L...</a> 例如。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can shorten your JSON queries using arrow notation in sqlite.<p></p><pre><code>    SELECT
+    settings -&gt; '$.languages' languages
+    FROM
+    user_settings
+    WHERE
+    settings -&gt;&gt; '$.languages' LIKE '%"en"%';
+</code></pre>
+I use them heavily with my jekyll-sqlite projects. See <a href="https://github.com/blr-today/website/blob/main/_config.yml#L82-L86" target="_blank" rel="noopener noreferrer">https://github.com/blr-today/website/blob/main/_config.yml#L...</a> for example.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621263" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kristianp</span>
+        <span class="meta-time">2026/04/03 04:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正如 [1] 中提到的，还有基于 json 的表值函数。<p><a href="https://sqlite.org/json1.html#table_valued_functions_for_parsing_json_json_each_jsonb_each_json_tree_and_jsonb_tree_" target="_blank" rel="noopener noreferrer">https://sqlite.org/json1.html#table_valued_functions_for_par...</a></p><p>[1] <a href="https://news.ycombinator.com/item?id=47618597" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47618597</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's table valued functions over json as well, as mentioned by [1].<p><a href="https://sqlite.org/json1.html#table_valued_functions_for_parsing_json_json_each_jsonb_each_json_tree_and_jsonb_tree_" target="_blank" rel="noopener noreferrer">https://sqlite.org/json1.html#table_valued_functions_for_par...</a></p><p>[1] <a href="https://news.ycombinator.com/item?id=47618597" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47618597</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620028" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">malkia</span>
+        <span class="meta-time">2026/04/03 10:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一个“隐藏”事实 - Windows 大量使用 sqlite，用于很多表。甚至还有<p></p><pre><code>    "C:\Windows\System32\winsqlite3.dll" 
+</code></pre>
+和<p></p><pre><code>    "C:\Program Files (x86)\Windows Kits\10\Include\10.0.27975.0\um\winsqlite\winsqlite3.h"
+    "C:\Program Files (x86)\Windows Kits\10\Include\10.0.27975.0\um\winsqlite\winsqlite3ext.h"
+
+</code></pre>
+嗯，它是以自己的方式编译的，这可能不符合您的喜好，但它可以使用:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One more "hidden" fact - Windows uses sqlite a lot, for a lot of tables. There is even<p></p><pre><code>    "C:\Windows\System32\winsqlite3.dll" 
+</code></pre>
+and<p></p><pre><code>    "C:\Program Files (x86)\Windows Kits\10\Include\10.0.27975.0\um\winsqlite\winsqlite3.h"
+    "C:\Program Files (x86)\Windows Kits\10\Include\10.0.27975.0\um\winsqlite\winsqlite3ext.h"
+
+</code></pre>
+Well it's compiled in it's own way, which may not be to your liking, but it's there to use :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622524" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">malkia</span>
+        <span class="meta-time">2026/04/03 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过去我使用过备份 API - <a href="https://sqlite.org/backup.html" target="_blank" rel="noopener noreferrer">https://sqlite.org/backup.html</a> - 为了在内存中加载 sqlite 数据库的副本，并拥有另一个活动的副本。我会在某些用户操作后执行此操作，然后通过执行比较，我会知道发生了什么变化...我猜实现 PostgreSQL 事件的糟糕方法...但它有效！<p>假设它是小数据库（几兆字节），我也想避免一一收集更改，我只是想与上次进行比较。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the past I've used the backup API - <a href="https://sqlite.org/backup.html" target="_blank" rel="noopener noreferrer">https://sqlite.org/backup.html</a> - in order to load in memory a copy of sqlite db, and have another live one. I would do this after certain user action, and then by doing a diff, I would know what changed... I guess poor way of implementing PostgreSQL events... but it worked!<p>Granted it was small DB (few megabytes), I also wanted to avoid collecting changes one by one, I simply wanted a diff over last time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">faizshah</span>
+        <span class="meta-time">2026/04/03 01:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">还有pellfix1，它是一个扩展，您可以启用它来获得模糊搜索。<p>ON CONFLICT 可以帮助以简单且高效的方式进行重复数据删除等。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Theres also spellfix1 which is an extension you can enable to get fuzzy search.<p>And ON CONFLICT which can help dedupe among other things in a simple and performant way.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617111" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">somat</span>
+        <span class="meta-time">2026/04/03 02:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我试图将我从 postgres 编写的一个小程序移植到 sqlite 后端（主要是为了更容易安装），并且很高兴地发现 sqlite 支持“冲突”，但我不太高兴地发现，显然我一直滥用 CTE 来插入外键，而 sqlite 并不乐意这样做。<p></p><pre><code>    with thing_key as (
+    insert into item(key, description) values('thing', 'a thing') on conflict do nothing )
+
+    insert into user_note(uid, key, note) values (123, 'thing', 'I like this thing') on conflict (uid, thing) do update set note = 'I like this thing');</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was trying to port a small program I wrote from  postgres to a sqlite backend(mainly to make it easier to install) and was pleased to find out sqlite supported "on conflict" I was less pleased to find out that apperently I abuse CTE's to insert foreign keys all the time and sqlite was not happy doing that.<p></p><pre><code>    with thing_key as (
+    insert into item(key, description) values('thing', 'a thing') on conflict do nothing )
+
+    insert into user_note(uid, key, note) values (123, 'thing', 'I like this thing') on conflict (uid, thing) do update set note = 'I like this thing');</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618159" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/04/03 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很长一段时间，我绝对讨厌 SQLite，因为它在 Emby 中的实现非常糟糕，这使得你无法对 Emby 服务器进行负载平衡，因为它们在数据库上为一个进程保留了全局锁，但此时我对它产生了一种不情愿的尊重，仅仅是因为它是在像 exFAT 这样的糟糕文件系统中硬塞一些东西（大致）像日志这样的最简单的方法。<p>我最近为主要 MiSTer 可执行文件的一个分支做了此操作，因为与 Sorg 运行该项目的方式存在一些分歧，实际上，更改保存文件功能以使用 SQLite 非常容易，而且现在的东西比以前所做的可怕的原始顽强的写作更能抵抗崩溃和突然断电。</p><p>它速度快、文档齐全、易于使用，而且它的功能比人们意识到的要多得多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For a long time I absolutely hated SQLite because of how terribly it was implemented in Emby, which made it so you couldn't load balance an Emby server because they kept a global lock on the database for exactly one process, but at this point I've grown a kind of begrudging respect for it, simply because it is the easiest way to shoehorn something (roughly) like journaling in terrible filesystems like exFAT.<p>I did this recently for a fork of the main MiSTer executable because of a few disagreements with how Sorg runs the project, and it was actually pretty easy to change out the save file features to use SQLite, and now things are a little more resistant to crashes and sudden power loss than you'd get with the terrible raw-dogged writing that it was doing before.</p><p>It's fast, well documented, and easy to use, and yeah it has a lot more features than people realize.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mpyne</span>
+        <span class="meta-time">2026/04/03 04:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际上，本周早些时候我需要那个确切的窗口函数示例，当时我需要弄清楚为什么我们共享的 YNAB 预算在某种程度上与银行失去了平衡。我求助于 SQLite 来加载不同的 CSV，并根据 YNAB 的运行总计来展示银行的世界观。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I actually needed that exact window function example earlier this week when I needed to figure out why our shared YNAB budget somehow got out of balance with the bank. SQLite to load the different CSVs and lay out the bank's view of the world against YNAB's with running totals was what I turned to.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619569" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">momo_dev</span>
+        <span class="meta-time">2026/04/03 03:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">即使对于简单的应用程序，JSON 函数也确实有用。我使用 sqlite 作为开发数据库，​​并且无需预处理步骤即可查询 JSON 列，从而节省了大量时间。 STRICT 表也很棒，遇到了一个错误，我不小心插入了错误的类型，它只是在常规模式下默默工作</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the JSON functions are genuinely useful even for simple apps. i use sqlite as a dev database and being able to query JSON columns without a preprocessing step saves a lot of time. STRICT tables are also great, caught a bug where I was accidentally inserting the wrong type and it just silently worked in regular mode</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619174" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 04:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 发现了一个错误，我不小心插入了错误的类型，它只是默默地在常规模式下工作<p>通常，人们会设计他们的“DTO”来在应用程序层中捕获此类错误，甚至在错误进入数据库之前就捕获这些错误。</p><p>不同的人将此序列化-反序列化层称为不同的名称（我认为 DTO 是最普遍的），但一般来说，人们对序列化-反序列化层进行编程以捕获结构问题（年龄是“O”而不是 0）。</p><p>然后，数据库被授权捕获不变的基本事实和域一致性问题（未来拥有 DOB 的人正在注册，或者当业务需要时根本没有任何电子邮件或地址的人）。</p><p>就您而言，数据库发现应用程序层中的空白是一件好事，但人们会在它到达那里之前就对其进行处理。</p><p>我对数据库类型的看法是：</p><p>1. 意外的差距/错误：“我在应用程序层中遗漏了什么？”</p><p>2.预期的和不变的约束：“我的业务中有哪些不变的基本事实约束？”，“我的数据的绝对物理限制是什么？” - 当我检查 DTO 中的负年龄以向用户提供快速错误时，我将这些约束放入数据库中，因为这是现实中不变的规则。</p><p>至关重要的是，通过将不稳定的业务规则排除在数据库之外并将其仅限于这些基本事实，我可以避免在快速发展的业务中被持续的数据库迁移所拖累</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; caught a bug where I was accidentally inserting the wrong type and it just silently worked in regular mode<p>Typically one would design their "DTO"s to catch such errors right in the application layer, way before it even made it into the DB.</p><p>Different people call this serialization-deserialization layer different names (DTO being the most ubiquitous I think) but in general, one programs the serialization-deserialization layer to catch structural issues (age is "O" instead of 0).</p><p>The DB is then delegated to catch unchanging ground truths and domain consistency issues (people who have a DOB into the future are signing up or humans who don't have any email or address at all when the business needs it).</p><p>In your case, it's great the DB caught gaps in the application layer but one would handle it way before it even made it there.</p><p>The way I think about DB types are:</p><p>1. unexpected gaps/bugs: "What did I miss in my application layer?"</p><p>2. expected and unchanging constraints: "What are some unchanging ground truth constraints in my business?", "What are the absolute physical limits of my data?" - while I check for a negative age in my DTOs to provide fast errors to the user, I put these constraints in the DB because it's an unchanging rule of reality.</p><p>Crucially, by keeping volatile business rules out of the database and restricting it only to these ground truths, I avoid being dragged down by constant DB migrations in a fast-evolving business</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619982" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">FooBarWidget</span>
+        <span class="meta-time">2026/04/03 02:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现 FTSE5 对于严重的模糊或子词全文搜索没有用。例如，我有文件说“DaemonSet”。但如果用户搜索“Daemon”，则不会有结果。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've found FTSE5 not useful for serious fuzzy or subword full text search. For example I have documents saying "DaemonSet". But if the user searches for "Daemon" then there will be no results.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618071" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ers35</span>
+        <span class="meta-time">2026/04/03 04:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用 trigram 分词器： <a href="https://www.sqlite.org/fts5.html#the_trigram_tokenizer" target="_blank" rel="noopener noreferrer">https://www.sqlite.org/fts5.html#the_trigram_tokenizer</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Use the trigram tokenizer: <a href="https://www.sqlite.org/fts5.html#the_trigram_tokenizer" target="_blank" rel="noopener noreferrer">https://www.sqlite.org/fts5.html#the_trigram_tokenizer</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620061" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nikisweeting</span>
+        <span class="meta-time">2026/04/03 02:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也发现了这一点，FTSE5 作为一个选项很方便，但它不像 postgres 或 sonic 或其他全文搜索解决方案那么通用。<p>有没有人有其他最喜欢的基于布隆过滤器的现代搜索解决方案，不需要在搜索数据库中存储所有文档的副本？理想情况下，它也可以在 WASM 中运行，这样我们就可以向浏览器发送一个小型搜索索引。我发现 <a href="https://github.com/tinysearch/tinysearch" target="_blank" rel="noopener noreferrer">https://github.com/tinysearch/tinysearch</a> 但还没有尝试过。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have found this as well, FTSE5 is convenient to have as an option, but it's not as versatile as postgres or sonic or other full-text search solutions.<p>Does anyone have any other favorite modern bloom-filter-based search solutions that dont need to store copies of all the documents in the search db? Ideally something that can run in WASM too so we can ship a tiny search index to the browser. I found <a href="https://github.com/tinysearch/tinysearch" target="_blank" rel="noopener noreferrer">https://github.com/tinysearch/tinysearch</a> but haven't tried it yet.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618429" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yomismoaqui</span>
+        <span class="meta-time">2026/04/03 03:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这还不行吗？<p><a href="https://www.sqlite.org/fts5.html#fts5_prefix_queries" target="_blank" rel="noopener noreferrer">https://www.sqlite.org/fts5.html#fts5_prefix_queries</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn't this work ok?<p><a href="https://www.sqlite.org/fts5.html#fts5_prefix_queries" target="_blank" rel="noopener noreferrer">https://www.sqlite.org/fts5.html#fts5_prefix_queries</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618981" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andrewstuart</span>
+        <span class="meta-time">2026/04/03 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人不安。<p>我不知道 SQLite 允许写入与列类型不匹配的数据。恶心。现在我需要检查我构建的所有内容并修复它。</p><p>我理解他们为什么不这样做，但 STRICT 应该是默认值。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Disturbing.<p>I did not know SQLite allows writing data that does not match the column type. Yuck. Now I need to review anything I built and fix it.</p><p>I understand why they wouldn’t, but STRICT should be the default.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619646" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sgbeal</span>
+        <span class="meta-time">2026/04/03 07:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 严格应该是默认值。<p>有点讽刺的是[^1]，如果突然将 STRICT 设置为默认值，那么今天可以运行的无数应用程序在更新后将无法运行。 SQLite 存在于数十亿台设备上，通常在任何给定设备上都有许多安装，甚至 0.001% 的回归率也会增加很多很多客户端。</p><p>人们信任 SQLite 的原因之一是，作为一项项目策略，它不会通过改变长期保留的默认值来消除人们的不满。</p><p>[^1]：这很讽刺，因为严格表的支持者经常说它提高了应用程序的稳定性和鲁棒性，而在并非旨在处理它的应用程序中激活严格表实际上会使它们变得更加脆弱。剧透警告：大多数 SQLite 应用程序并不是为严格表设计的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; STRICT should be the default.<p>Somewhat ironically[^1], if STRICT were suddenly made the default, countless applications which work today would fail to work right after that update. SQLite is on billions upon billions of devices, frequently with many installations on any given device, and even a 0.001% regression rate adds up to many, many clients.</p><p>One of the reasons people trust SQLite is because, as a project policy, it does not pull the rug out from under them by changing long-held defaults.</p><p>[^1]: it's ironic because proponents of Strict tables frequently say that it improves app stability and robustness, whereas activation of Strict tables in apps not designed to handle it will, in fact, make them more fragile. Spoiler alert: most SQLite apps are not designed for Strict tables.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621576" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/03 04:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">STRICT 有严格的限制，例如它没有日期数据类型。<p>为什么会出现允许与列类型不匹配的数据的问题呢？ SQLite 适用于嵌入式数据库，其中只有您的应用程序从表中读取和写入。在这种情况下，只要写入与列的数据类型匹配的数据，表中的数据就与列类型匹配。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">STRICT has severe limitations, for example it does not have date data type.<p>Why is it a problem that it allows data that does not match the column type? SQLite is intended for embedded databases, where only your application reads and writes from the tables. In this scenario, as long as you write data that matches the column's data type, data in the table does match the column type.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andrewstuart</span>
+        <span class="meta-time">2026/04/03 05:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;&gt; 为什么会出现允许与列类型不匹配的数据的问题？<p>“开发人员应该正确编程”的效果不如确保必须正确完成的系统有效。</p><p>阅读此线程中的评论，了解开发人员描述的细微错误的示例。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;&gt; Why is it a problem that it allows data that does not match the column type?<p>“Developers should program it right” is less effective than a system that ensures it must be done right.</p><p>Read the comments in this thread for examples of subtle bugs described by developers.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620200" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/03 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>“开发人员应该正确编程”的效果不如确保必须正确完成的系统有效。</i><p>当然，你是对的。但这必须与应用程序不断发展的事实相平衡，并且通常需要更改它们存储的数据类型。如果这是一个 iOS 应用程序，您将如何管理？如果 SQLite 不允许您存储与列类型不同的值类型，则您必须创建一个新表并将数据迁移到新表。或者创建一个新列并放弃旧列。您的应用程序更新对于用户来说似乎并不顺利。所以这是一个权衡。 SQLite 所做的选择是务实的，即使它让我们中一些习惯于传统 RDBMS 提供的保证的人感到不安。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>“Developers should program it right” is less effective than a system that ensures it must be done right.</i><p>You're right, of course. But this must be balanced with the fact that applications evolve, and often need to change the type of data they store. How would you manage that if this is an iOS app? If SQLite didn't allow you to store a different type of value than the column type, you would have to create a new table and migrate data to a new table. Or create a new column and abandon the old column. Your app updates will appear to not be smooth to users. So it is a tradeoff. The choice SQLite made is pragmatic, even if it makes some of us that are used to the guarantees offered by traditional RDBMSs queasy.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620420" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 04:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 为什么会出现允许与列类型不匹配的数据的问题？ SQLite 适用于嵌入式数据库<p>我担心人们忘记了 SQLite 是（或者曾经是？）被设计为一个优越的 `open()` 替代品。</p><p>现代 SQLite 拥有所有这些不错的功能真是太好了，但如果 Hipp 博士正在阅读这篇文章，我想他会对人们在这里提到的使用 SQLite 的方式有非常复杂的感受。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Why is it a problem that it allows data that does not match the column type? SQLite is intended for embedded databases<p>I'm afraid people forget that SQLite is (or was?) designed to be a superior `open()` replacement.</p><p>It's great that modern SQLite has all these nice features, but if Dr. Hipp was reading this thread, I would assume he would be having very mixed feelings about the ways people mention using SQLite here.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620082" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SQLite</span>
+        <span class="meta-time">2026/04/03 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，我认为人们可以随心所欲地使用 SQLite。  我很高兴人们发现它很有用。<p>不过，我仍然很困惑，人们如何继续认为严格类型有助于脚本语言（如 SQL 或 JSON）的可靠性，其中所有值都是单个超类的子类。  我在自己的实践中从未见过这种情况。  我不知道有任何客观研究支持严格打字在这种情况下有帮助的想法。  也许我错过了什么...</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, I think that people can use SQLite anyway they want.  I'm glad people find it useful.<p>I do remain perplexed, though, about how people continue to think that rigid typing helps reliability in a scripting language (like SQL or JSON) where all values are subclasses of a single superclass.  I have never seen that in my own practice.  I don't know of any objective research that supports the idea that rigid typing is helpful in that context.  Maybe I missed something...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620644" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/03 06:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>其中所有值都是单个超类的子类</i><p>我不明白这一点。您所说的值是指一行（在数据库术语中）吗？我不明白这与严格打字有什么关系。</p><p>在我看来，缺乏严格的类型有两个问题：首先，当两个或多个应用程序必须从单个数据库读取数据时，缺乏商定和强制执行的模式是一个限制。其次，当您使用通用工具处理数据时，如果这些工具不能依赖表架构，那么它们不知道列中会出现什么类型的数据。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>where all values are subclasses of a single superclass</i><p>I don't understand this. By values do you mean a row (in database terms)? I don't understand what that has to do with rigid typing.</p><p>Lack of rigid typing has two issues, in my opinion: First, when two or more applications have to read data from a single database, lack of an agreed-upon-and-enforced schema is a limitation. Second, when you use generic tools to process data, the tools have no idea what type of data to expect in a column, if they can't rely on the table schema.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 07:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">首先，我很高兴著名的“HN conjure”确实起作用了！我的“如果希普博士正在读这篇文章”是半开玩笑的，因为在 HN 上，这极有可能正是会发生的事情。感谢您的插话，Hipp 博士 - 这就是我喜欢 HN 的原因！<p>所以，如果你错过了，你就是在回应希普博士本人:)</p><p>&gt; 我不明白这与严格打字有什么关系。</p><p>现在我想向希普博士本人学习一些东西，所以这是我的看法：</p><p>脚本语言（比如我最喜欢的 Python）有鸭子类型或动态类型（我认为 Hipp 博士的一种变体，您专门称之为清单类型）。 Hipp 博士的观点是，值的数据类型与值本身相关联，而不是与保存该值的容器（“列”）相关联。 （我必须说，我在这里选择“容器”这个词是为了与希普博士的清单相一致。很好奇他是否出于同样的原因选择这个词来打字！）</p><p>- 在 Python 中，一切本质上都是 `PyObject`。</p><p>- 在 SQLite 中，每条数据都（或曾经？）在内部存储为 `sqlite3_value` 结构。</p><p>因此，使用 Python 和 SQLite 的堆栈是极其动态的，如果正确实现，则与严格类型无关 - 它实际上并不关心。唯一一次爆炸的情况是消费者出现错误但未能解释清楚。</p><p>因此，因为存在这种可能性，并且没有客观的研究证明严格类型可以提高脚本环境中的可靠性，所以我们对严格类型的热爱完全有可能只是心理体操，这也可以同样得到解决， <i>没有</i> 严格打字。</p><p>我可以在 Wes McKinney 上重新尝试“HN conjure”，看看这是否是他不得不在动态类型（NumPy 强制静态类型）方面向 Pandas 1.x df 妥协的类似原因，因为正如他们两人可能会说的那样，具有重要大小的真实数据集很少包含所有“有效”数据。由于这种设计，这使得 Pandas 能够准确地处理无效和丢失的字段（即使它会影响性能）</p><p>一个好的 <i>动态的</i> 设计应该同时存在（“有效”和“无效”）。例如：在“现实生活”数据库之上添加额外的“视图”，以强制执行您的业务规则，同时您仍然可以保留所有现实世界的杂乱数据。</p><p>OTOH，如果您不喜欢这种设计，但绝对需要严格类型，请使用 Rust/C++/PostgreSQL/Arrow 等。它们是从头开始构建的严格类型。</p><p>考虑到这一点，如果您仍然想深入研究“缺乏严格的打字有两个问题”部分，我非常乐意参与（并希望 Hipp 博士解决这个问题，以便我学习和改进！）</p><p>现实世界是喧闹的，充满惊喜，尽管像我们这样的工程师想说我们理解它，但我们不明白！因此，我们不应该对事情如此自信，而应该谦虚，承认我们的无知，并构建有弹性、设计良好的软件。</p><p>希普博士，再次感谢您的插话，我非常乐意向您了解更多信息。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">First off, I am so glad the famous "HN conjure" actually worked! My "if Dr. Hipp was reading this thread" was tongue in cheek because on HN it was extremely likely that's precisely what would happen. Thank you for chiming in, Dr. Hipp - this is why I love HN!<p>So, in case you missed it, you're responding to Dr. Hipp himself :)</p><p>&gt; I don't understand what that has to do with rigid typing.</p><p>Now I would like to learn a bit from Dr. Hipp himself, so here's my take on it:</p><p>Scripting languages (like my fav, Python) have duck or dynamic typing (a variation of what I believe Dr. Hipp, you specifically call manifest typing). Dr. Hipp's take is that the datatype of a value is associated with the value itself, not with the container that holds it (the "column"). (I must say I chose the word "container" here to jive with Dr. Hipp's manifest. Curious whether he chose that word for typing for the same reason! )</p><p>- In Python, everything is fundamentally a `PyObject`.</p><p>- In SQLite, every piece of data is (or was?) stored internally as a `sqlite3_value` struct.</p><p>As a result, a stack that uses Python and SQLite is extremely dynamic and if implemented correctly, is agnostic of a strict type - it doesn't actually care. The only time it blows up is if the consumer has a bug and fails to account for it.</p><p>Hence, because this possibility exists, and that no objective research has proven strict typing improves reliability in scripting environments, it's entirely possible our love for strict types is just mental gymnastics that could also have been addressed, equally well, <i>without</i> strict typing.</p><p>I can reattempt the "HN conjure" on Wes McKinney and see if this was a similar reason he had to compromise on dynamic typing (NumPy enforces static typing) to Pandas 1.x df because, as both of them are likely to say, real datasets of significant size rarely have all "valid" data. This allows Pandas to handle invalid and missing fields precisely because of this design (even if it affects performance)</p><p>A good <i>dynamic</i> design should work with both ("valid" and "invalid") present. For example: layer additional "views" on top of the "real life" database that enforce your business rules while you still get to keep all the real world, messy data.</p><p>OTOH, if you dont like that design but must absolutely need strict types, use Rust/C++/PostgreSQL/Arrow, etc. They are built from the ground up on strict types.</p><p>With this in mind, if you still want to delve into the "Lack of rigid typing has two issues" portion, I am very happy to engage (and hope Dr. Hipp addresses it so I learn and improve!)</p><p>The real world is noisy, has surprises in store for us and as much as engineers like us would like to say we understand it, we don't! So instead of being so cocksure about things, we should instead be humble, acknowledge our ignorance and build resilient, well engineered software.</p><p>Again, Dr. Hipp, Thank you for chiming in and I would be much obliged to learn more from you.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621420" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/03 07:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的精彩解释。但 SQL 并不像您建议的那样动态类型。如果一列被定义为 DECIMAL(8, 2)，那么该列中的某些值是字符串将会令人惊讶。 RDBMS 应提供数据完整性保证，其中之一是只能存储与声明的列类型匹配的值。<p>放宽这一保证有好处。例如，它可以使应用程序的发展变得更容易——能够在最初用于数字的列中存储字符串很方便。但是，当多个应用程序读取和写入同一个数据库时，这种便利性可能会成为一种负担。在这些情况下，您希望应用程序遵守共享模式契约，并且通常希望 RDBMS 强制执行该契约。</p><p>它还给报告系统等通用工具带来了问题，因为报告系统依赖于稳定的数据类型，例如确定列是否可以聚合或应如何格式化以进行显示。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you for the great explanation. But SQL isn't as dynamically typed as you suggest. If a column is defined as DECIMAL(8, 2), it would be surprising for some values in that column to be strings. RDBMSs are expected to provide data integrity guarantees, and one of those guarantees is that only values matching the declared column type can be stored.<p>Relaxing that guarantee has benefits. For example, it can make application evolution easier--being able to store strings in a column originally intended for numbers is convenient. But that convenience can become a liability when multiple applications read from and write to the same database. In those cases, you want applications to adhere to a shared schema contract, and the RDBMS is typically expected to enforce that contract.</p><p>It also creates problems for generic tools such as reporting systems, which rely on stable data types--for example, to determine whether a column can be aggregated or how it should be formatted for display.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621743" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andrewstuart</span>
+        <span class="meta-time">2026/04/03 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;&gt; 但如果希普博士正在阅读这篇文章<p>他是。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;&gt; but if Dr. Hipp was reading this thread<p>He is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621075" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 08:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您联系并通知他，谢谢。我希望他有时间重访——还有一些后续行动。干杯!</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you reached out and notified him, Thank you. I hope he has time to revisit - had a few more followups. Cheers!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andrewstuart</span>
+        <span class="meta-time">2026/04/03 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，我没有，我认为他很长一段时间以来都是一名普通社区成员，他可能只是在首页上看到了它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No I did not I think he’s been a regular community member a long time he probably just saw it on front page.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621887" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 04:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我理解他们为什么不这样做，但 STRICT 应该是默认值。<p>不等一下，什么意思？</p><p>正如我提到的 <a href="https://news.ycombinator.com/item?id=47619982" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47619982</a> - 您的应用程序层应该在数据传入和传出时验证数据。我提到了我使用数据库回退的两个原因</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I understand why they wouldn’t, but STRICT should be the default.<p>No wait, what do you mean?</p><p>As I mentioned at <a href="https://news.ycombinator.com/item?id=47619982" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47619982</a> - your application layer should be validating the data on its way in and out. I mention the two reasons I use for DB fall back</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620015" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SQLite</span>
+        <span class="meta-time">2026/04/03 06:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">检查数据类型与验证不同。  有很多数据是无效的，但仍然具有正确的类型。  事实上，这是常见的情况。<p>我敢说您将很难找到一个大小相当且在某处至少没有一个无效条目的数据集。  日益严格的类型规则并不能解决这个问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Checking the datatype is not the same as validating.  There is lots of data out there that is invalid, and yet still has the correct type.  In fact, that is the common case.<p>I dare say you will be hard pressed to find a dataset of significant size that doesn't have at least one invalid entry somewhere.  Increasingly strict type rules will not fix that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620776" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 07:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">希普博士，<p>&gt; 我敢说您将很难找到一个大小相当且在某处至少没有一个无效条目的数据集</p><p>我同意。根据我的经验，你忘记的比我学到的还要多，优秀数据工程师的标志是他们如何解释无效条目或者他们是否被 `/dev/null`ed。</p><p>&gt; 检查数据类型与验证不同。有很多数据是无效的，但仍然具有正确的类型。事实上，这是常见的情况。日益严格的类型规则并不能解决这个问题。</p><p>我很难放弃这个向你学习的机会，所以如果你有时间再读一遍——当你说“有很多无效的数据，但仍然有正确的类型”时，我将“类型”读作“形状”或“内存布局”，将“无效”读作“语义上错误”。</p><p>那么，一个人年龄的 `-1` 值就是一个很好的例子吗？数据库看到一个完全有效的整数（正确的形状），但业务逻辑知道一个人不能为负一岁（语义上无效）。</p><p>在这种情况下，明确地说， `0` 或 `14` 是年龄（通常是整数）的“有效类型”，但如果它位于仅限成人的企业的发票应用程序中，则完全无效的数据？</p><p>再次感谢您的时间和关注，这些互动非常有价值。</p><p>PS：我想起一位朋友抱怨说，他们完全有效的电子邮件总是被某家银行拒绝。他们用来验证电子邮件的正则表达式可能不完整，并且会拒绝他们完全有效的电子邮件地址</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Dr. Hipp,<p>&gt; I dare say you will be hard pressed to find a dataset of significant size that doesn't have at least one invalid entry somewhere</p><p>I agree. In my experience, and you've forgotten more than I have learned, the mark of a good data engineer is how they account for invalid entries or whether they get `/dev/null`ed.</p><p>&gt; Checking the datatype is not the same as validating. There is lots of data out there that is invalid, and yet still has the correct type. In fact, that is the common case. Increasingly strict type rules will not fix that.</p><p>I am having a hard time letting go of this opportunity to learn from you, so in case you have time and read this again - When you say "There is lots of data out there that is invalid, and yet still has the correct type", I read "type" as "shape" or "memory layout" and "invalid" as "semantically wrong".</p><p>So, is a good example of this a value of `-1` for a person's age? The database sees a perfectly valid integer (the correct shape), but the business logic knows a person cannot be negative one years old (semantically invalid).</p><p>In that case, to be explicit, `0` or `14` is a "valid type" for an age (usually integer), but completely invalid data if it's sitting in an invoicing application for an adult-only business?</p><p>Again, thank you for your time and attention, these interactions are very valuable.</p><p>PS: I'm reminded of a friend complaining that their perfectly valid email would keep getting rejected by a certain bank. It was likely a regex they were using to validate email was incomplete and would refuse their perfectly valid email address</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47621645" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 01:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 HN 社区来说，这些都不是新闻。预写日志记录和并发 PRAGMA 已经存在十年了。 IIRC、FTS5 并不经常内置，您必须编译 SQLite 合并才能获得它。如果您确实需要更好的打字能力，那么您确实应该使用 PostgreSQL。<p>然而，我承认，这篇文章根本没有提到，更没有人知道你可以使用纯粹的 OSS 软件构建 HA、跨区域复制 SQLite，前提是你围绕它构建你的软件。现在 <i>那</i> 将是一篇非常好的 `Modern SQLite: Features You Didn't Know It Had` 文章！</p><p>另一个有趣的讨论点是自托管 PostgreSQL 和 pgBackRest 可以在多大程度上让您达到接近零数据丢失的高 RPO、RTO 设置。我们可以自行托管这一切，这真是太神奇了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">None of these are news to the HN community. Write-ahead logging and concurrency PRAGMAs have been a given for a decade now. IIRC, FTS5 doesn't often come baked in and you have to compile the SQLite amalgamation to get it. If you do need better typing, you should really use PostgreSQL.<p>However, I will concede, and the article doesn't mention at all, far less are aware that you can build HA, cross region replicated SQLite using purely OSS software provided you architect your software around it. Now <i>that</i> would be a really good `Modern SQLite: Features You Didn't Know It Had` article!</p><p>Another interesting discussion point is how far self hosted PostgreSQL and pgBackRest can get you to a near-zero data loss high RPO, RTO setup. Its simply amazing we can self host all this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617045" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sgbeal</span>
+        <span class="meta-time">2026/04/03 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 预写日志记录和并发 PRAGMA 已经存在十年了。<p>除了严格的表和生成的列之外，列出的所有功能都已在 SQLite 中存在了 10 多年，而这两个功能当然不是新功能。 JSON API 直到 3.38 (2022-02) 才成为标准发行版的一部分，但在 3.9 (2015-10) 中添加，并在从可选扩展升级到核心功能之前就广泛使用。</p><p>- 生成的专栏：3.31 (2020-01)</p><p>- 严格表格：3.37 (2021-11)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Write-ahead logging and concurrency PRAGMAs have been a given for a decade now.<p>All of the listed features except for strict tables and generated columns have been in SQLite for 10+ years, and those two are certainly not new. The JSON APIs were not made part of the standard distribution until 3.38 (2022-02) but were added in 3.9 (2015-10) and widely used long before they were upgraded from an optional extension to a core feature.</p><p>- Generated columns: 3.31 (2020-01)</p><p>- Strict tables: 3.37 (2021-11)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617366" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subhobroto</span>
+        <span class="meta-time">2026/04/03 04:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 除了严格表和生成列之外，列出的所有功能在 SQLite 中已经存在了 10 多年，而这两个功能当然不是新功能<p>正确的。</p><p>正如我在我的全科医生中提到的，这些功能已经存在了很长、很长、很长的时间，在当前的人工智能时代，如果你远程暗示，它们会很高兴地告诉你这些功能的存在，我认为人们真的必须不遗余力地忽视它们。</p><p>不过，有一篇像这样的文章重申所有这些信息并没有什么坏处，我只是希望在一些尚不那么容易获得的东西上投入同样程度的努力。</p><p>存在差距，并且本文根本没有提到，关于实际配置 litestream、rqlite、dqlite（不一样！） 等解决方案来使用纯 OSS 软件构建 HA、跨区域复制 SQLite，前提是您围绕它构建软件。现在这将是一篇非常好的“现代 SQLite：您不知道的功能”文章！</p><p>另一个有趣的讨论点是自托管 PostgreSQL 和 pgBackRest 可以在多大程度上让您达到接近零数据丢失的高 RPO、RTO 设置。令我震惊的是，我们可以在消费级硬件上自行托管所有这些，而根本不需要接触 DC 或“云”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; All of the listed features except for strict tables and generated columns have been in SQLite for 10+ years, and those two are certainly not new<p>Correct.</p><p>As I mentioned in my GP, these features have been around a long, long, long time and in the current age of AI that would happily tell you these features exist if you remotely even hint at it, I would assume one would really have to go out of their way to be ignorant of them.</p><p>It doesn't hurt to have an article like this reiterate all that information though, I just would have loved the same level of effort put into something that's not as easily available yet.</p><p>A gap exists, and the article doesn't mention at all, about actually configuring solutions like litestream, rqlite, dqlite (not the same!) to build HA, cross region replicated SQLite using purely OSS software provided you architect your software around it. Now that would be a really good "Modern SQLite: Features You Didn't Know It Had" article!</p><p>Another interesting discussion point is how far self hosted PostgreSQL and pgBackRest can get you to a near-zero data loss high RPO, RTO setup. It just blows my mind that we can self host all this on consumer grade hardware without having to touch a DC or "the cloud" at all.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">happytoexplain</span>
+        <span class="meta-time">2026/04/03 01:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">HN 社区中有很多人对 SQLite 不太了解。科技是一个巨大的领域。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are plenty of people in the HN community who don't know much about SQLite. Tech is a big, huge, enormous, gigantic domain.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617325" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">123abcdef</span>
+        <span class="meta-time">2026/04/03 02:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">恐怕你高估了我的知识</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m afraid you overestimated my knowledge</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618102" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/03 04:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://www.explainxkcd.com/wiki/index.php/2501:_Average_Familiarity" target="_blank" rel="noopener noreferrer">https://www.explainxkcd.com/wiki/index.php/2501:_Average_Fam...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://www.explainxkcd.com/wiki/index.php/2501:_Average_Familiarity" target="_blank" rel="noopener noreferrer">https://www.explainxkcd.com/wiki/index.php/2501:_Average_Fam...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619529" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">devnotes77</span>
+        <span class="meta-time">2026/04/03 03:43</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619231" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cloudpeaklabs</span>
+        <span class="meta-time">2026/04/03 01:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617382" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">duskwuff</span>
+        <span class="meta-time">2026/04/03 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SQLite 的 JSON 功能中一个方便的功能是短语法，例如：<p></p><pre><code>    SELECT payload-&gt;&gt;'$.user.id' AS user_id FROM events ...
+</code></pre>
+这比 JSON_EXTRACT 的工作方式更加一致 - -&gt; 运算符始终返回 JSON 字符串； -&gt;&gt; 运算符（此处使用）始终返回 SQL 标量（文本、数字或 null）。更多详情： <a href="https://sqlite.org/json1.html#jptr" target="_blank" rel="noopener noreferrer">https://sqlite.org/json1.html#jptr</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One handy bit of SQLite's JSON features which isn't called out in this article is the short syntax, e.g.<p></p><pre><code>    SELECT payload-&gt;&gt;'$.user.id' AS user_id FROM events ...
+</code></pre>
+This works a little more consistently than JSON_EXTRACT - the -&gt; operator always returns a JSON string; the -&gt;&gt; operator (used here) always returns a SQL scalar (text, number, or null). More details: <a href="https://sqlite.org/json1.html#jptr" target="_blank" rel="noopener noreferrer">https://sqlite.org/json1.html#jptr</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618587" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Animats</span>
+        <span class="meta-time">2026/04/03 02:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每个人都有一个 JSON 扩展名，而且它们都略有不同。<p>我刚刚受到仍在运行 MySQL 8.0 的 Dreamhost 的严重打击。该版本有一个“JSON 扩展名”，几乎完全没用。在发现 MySQL 8.4 和 MySQL 8.0 有何不同之前，我设计了一些东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Everybody has a JSON extension, and they're all slightly different.<p>I just got hit badly by Dreamhost, which is still running MySQL 8.0. That version has a "JSON extension" which is almost totally useless. I designed something before discovering how different MySQL 8.4 and MySQL 8.0 are.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MoonWalk</span>
+        <span class="meta-time">2026/04/03 02:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来确实很酷。那么有足够的函数来迭代可能存储在 JSON 列的单行中的集合吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That does seem cool. So there are sufficient functions to iterate through collections that might be stored in a single row of a JSON column?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618379" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">duskwuff</span>
+        <span class="meta-time">2026/04/03 02:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，使用表值 JSON 函数，如 JSON_EACH 和 JSON_TREE （递归工作​​）。细节： <a href="https://sqlite.org/json1.html#table_valued_functions_for_parsing_json_json_each_jsonb_each_json_tree_and_jsonb_tree_" target="_blank" rel="noopener noreferrer">https://sqlite.org/json1.html#table_valued_functions_for_par...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, using the table-valued JSON functions like JSON_EACH and JSON_TREE (which works recursively). Details: <a href="https://sqlite.org/json1.html#table_valued_functions_for_parsing_json_json_each_jsonb_each_json_tree_and_jsonb_tree_" target="_blank" rel="noopener noreferrer">https://sqlite.org/json1.html#table_valued_functions_for_par...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618597" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

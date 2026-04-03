@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：我在 Rust 中从头开始构建了 DNS 解析器 – 没有 DNS 库 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1042/">返回本批次</a>
+      <h1>显示 HN：我在 Rust 中从头开始构建了 DNS 解析器 – 没有 DNS 库</h1>
+      <p class="subtitle">Show HN: I built a DNS resolver from scratch in Rust – no DNS libraries</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 rdme</span>
+        <span>分数 89</span>
+        <span>评论 52</span>
+        <span>2026/04/02 18:07</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47612321" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/razvandimescu/numa" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>DNS 您拥有。无论你走到哪里。 — numa.rs 单个二进制文件中的便携式 DNS 解析器。阻止任何网络上的广告，命名您的本地服务 (frontend.numa)，并通过自动还原覆盖任何主机名 - 全部通过您的笔记本电脑完成，无需云帐户或 Raspberry Pi。用 Rust 从头开始​​构建。零 DNS 库。手工解析 RFC 1035 有线协议。开箱即用的缓存、广告拦截和本地服务域。来自根名称服务器的可选递归解析，具有完整的 DNSSEC 信任链验证。一个 ~8MB 二进制文件，所有内容均已嵌入。</li><li>快速入门 # macOS brew install razvandimescu/tap/numa</li><li># Linux 卷曲 -fsSL https://raw.githubusercontent.com/razvandimescu/numa/main/install.sh |嘘</li><li># Windows — 从 GitHub 版本下载 # 所有平台 Cargo install numa sudo numa # 在前台运行（端口 53 需要 root/admin） 打开仪表板：http://numa.numa（或 http://localhost:5380) 设置为系统 DNS：</li><li>平台安装卸载</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>DNS you own. Everywhere you go. — numa.rs A portable DNS resolver in a single binary. Block ads on any network, name your local services (frontend.numa), and override any hostname with auto-revert — all from your laptop, no cloud account or Raspberry Pi required. Built from scratch in Rust. Zero DNS libraries. RFC 1035 wire protocol parsed by hand. Caching, ad blocking, and local service domains out of the box. Optional recursive resolution from root nameservers with full DNSSEC chain-of-trust validation. One ~8MB binary, everything embedded.</li><li>Quick Start # macOS brew install razvandimescu/tap/numa</li><li># Linux curl -fsSL https://raw.githubusercontent.com/razvandimescu/numa/main/install.sh | sh</li><li># Windows — download from GitHub Releases # All platforms cargo install numa sudo numa # run in foreground (port 53 requires root/admin) Open the dashboard: http://numa.numa (or http://localhost:5380) Set as system DNS:</li><li>Platform Install Uninstall</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 18:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于我需要它作为我的主要 DNS，所以我还添加了：来自根名称服务器的递归解析、DNSSEC 信任链验证、广告拦截（385K+ 域）和 LAN 服务发现。<p>我在这里写了有关 DNSSEC 实现的文章： <a href="https://numa.rs/blog/posts/dnssec-from-scratch.html" target="_blank" rel="noopener noreferrer">https://numa.rs/blog/posts/dnssec-from-scratch.html</a>
+现在它是我的日常系统DNS。 
+单个二进制文件 (~8MB)，macOS/Linux/Windows。</p><p>`sudo numa install`</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Since I needed it to be my primary DNS, I also added: recursive resolution from root nameservers, DNSSEC chain-of-trust validation, ad blocking (385K+ domains), and LAN service discovery.<p>I wrote about the DNSSEC implementation here: <a href="https://numa.rs/blog/posts/dnssec-from-scratch.html" target="_blank" rel="noopener noreferrer">https://numa.rs/blog/posts/dnssec-from-scratch.html</a>
+It's now my daily system DNS. 
+Single binary (~8MB), macOS/Linux/Windows.</p><p>`sudo numa install`</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612325" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pyprism</span>
+        <span class="meta-time">2026/04/02 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常有趣的项目！我有几个问题。加载所有默认阻止的域后，平均内存使用量是多少？目前，我在低内存单板计算机上使用 Pi-hole。可以用这个代替 Pi-hole 吗？如果是这样，我想将它用于我的所有设备。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very interesting project! I have a couple of questions. With all the default blocked domains loaded, what is the average memory usage? Currently, I am using Pi-hole on a low memory single board computer. Is it possible to use this instead of Pi-hole? If so, I’d like to use it for all of my devices."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615266" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 23:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">具有 390K 被阻止的域：约 31MB 总进程占用空间。 
+细分：
+  - 阻止列表：23.4MB（390K 域）
+  - 缓存：3.8MB（4.4K 条目）                                                                                                                                                                                                                                               
+  - 查询日志、SRTT、运行时：~4MB<p>默认情况下它绑定到 0.0.0.0:53，因此只需将设备的 DNS 指向主板的 IP</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With 390K blocked domains: ~31MB total process footprint. 
+Breakdown:
+  - Blocklist: 23.4MB (390K domains)
+  - Cache: 3.8MB (4.4K entries)                                                                                                                                                                                                                                               
+  - Query log, SRTT, runtime: ~4MB<p>It binds to 0.0.0.0:53 by default, so just point your devices' DNS to the board's IP</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615400" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 19:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！如果您在设置过程中遇到任何问题，请随时提出问题 - 很乐意帮助调试。位于 localhost:5380 的仪表板实时显示正在发生的情况。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! If you hit any issues during setup, feel free to open an issue — happy to help debug. The dashboard at localhost:5380 shows what's happening in real time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">siruwastaken</span>
+        <span class="meta-time">2026/04/02 22:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你为什么要回复自己的评论？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why are you replying to your own coment?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614868" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">happytoexplain</span>
+        <span class="meta-time">2026/04/02 22:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这是一个机器人？在另一个回复中有与此评论相同的版本，只不过它在句子中被切断。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it's a bot? There's an identical version of this comment in another reply, except it cuts off half way through a sentence.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 22:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在错误的帖子上回复，你无法删除评论，或者至少我不知道如何做到这一点</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I hit reply on the wrong post and you can't delete comments or at least I don't see how it can be done</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615057" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dgb23</span>
+        <span class="meta-time">2026/04/03 00:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我在 HN 上写的评论上方，我看到：<p>5 分钟前 |家长 |下一个 |编辑|删除</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Above the comments I've written on HN I see:<p>5 minutes ago | parent | next | edit | delete</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616384" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hxugufjfjf</span>
+        <span class="meta-time">2026/04/03 00:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这只会持续几分钟，直到被锁定，之后您将无法再删除。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That only lasts for a few minutes until it’s locked and you can no longer delete after that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616533" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eqvinox</span>
+        <span class="meta-time">2026/04/03 08:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">至少编辑时长是整整 2 个小时。当有人回复 afaik 时，删除将停止工作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It lasts 2 full hours, at least for edit. Delete stops working when someone replies afaik.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622093" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 22:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为我回复错了，而且删不掉……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">because I clicked reply on the wrong one and you can't delete it...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615045" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dwedge</span>
+        <span class="meta-time">2026/04/03 02:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有几个项目，每个月需要尽快运行几百万次 DNS 查找。我很想尝试一下，只是想看看它的性能如何以及是否会损坏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have a couple of projects that once a month need to run a few million dns lookups as quickly as possible. I'm tempted to try this just to see how it performs and if it breaks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617928" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/03 02:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你做到了请告诉我！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">let me know if you do it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">p2hari</span>
+        <span class="meta-time">2026/04/02 22:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好主意。为了测试，我在端口 3000 上运行了一个简单的 nextjs。通过仪表板添加了该服务。 
+但是，当我访问该网址时（使用 Chrome 最新版本），  <a href="https://{mygivenname}.numa/" target="_blank" rel="noopener noreferrer">https://{mygivenname}.numa/</a> 我遇到了 DNS 分辨率失败错误。
+如果我不使用尾随“/”，那么它将在 google 上搜索 {mygivenname}.numa 并显示一些搜索结果。我应该打开一个问题吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice idea. To test I ran a simple nextjs on port 3000. Added the service via the dashboard. 
+However, when I visit the url, (using chrome latest version),  <a href="https://{mygivenname}.numa/" target="_blank" rel="noopener noreferrer">https://{mygivenname}.numa/</a> I hit a DNS resolution fail error.
+If I do not use a trailing '/' then it is going to google search for {mygivenname}.numa and shows me some search results. Should I open an issue?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614851" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 22:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否有可能没有以 root 身份启动它（ sudo numa install ）？
+dig {mygivenname}.numa @127.0.0.1 是否返回 127.0.0.1 ？
+你使用什么操作系统？
+也许您将其报告为问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it possible you didn't start it as root ( sudo numa install)?
+Does dig {mygivenname}.numa @127.0.0.1 return 127.0.0.1 ?
+What OS are you on?
+Maybe you report it as an issue?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614980" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">p2hari</span>
+        <span class="meta-time">2026/04/02 22:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的快速回复。它开始起作用了。我认为这一定是一些缓存问题。但它需要尾随 '/' 。也许会为此提出问题。凉爽的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for quick response. It started to work. I think it must be some caching issue. But it needs a trailing '/' . Maybe will raise the issue for this. Cool.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615094" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">arcaen</span>
+        <span class="meta-time">2026/04/02 23:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信这实际上是浏览器特定的行为。我有时会使用假 TLD 来表示在家中托管的内容，如果我不包含尾随“/”，则 chrome 和 firefox 都会进行搜索。我的假设是浏览器会与已知的 TLD 进行快速匹配，如果不匹配，则会诉诸搜索。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I believe that is actually browser specific behavior. I sometimes use a fake TLD for stuff hosted at home, and both chrome and firefox resort to search if I don't include a trailing '/'. My assumption is the browser does a quick match against known TLDs and if it doesn't match then it resorts to search.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615498" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 23:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确切地说，我很快就会添加一个公关，告诉操作系统（和浏览器）这是一个有效的域</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">exactly, I'll add a pr soon that tells the os (and browsers) that is'a a valid domain</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615725" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">voxadam</span>
+        <span class="meta-time">2026/04/02 23:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它既不在这里也不在那里，但我可以问一下它的名字吗？我之所以这么问，是因为当我看到与计算相关的“numa”时，我立即想到“非统一内存访问”。<p>顺便说一句，非常酷的项目。我想知道这将如何在 OpenWRT 设备上运行。</p><p>我在你的 install.sh 中看到你支持 Linux 和 Darwin/MacOS，你认为支持 FreeBSD 会有什么重大障碍吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's neither here nor there but can I ask about the name? I only ask because when I see "numa" in relation to computing I immediately think "Non-Uniform Memory Access".<p>Very cool project by the way. I wonder how this would run on an OpenWRT device.</p><p>I see in your install.sh that you support Linux and Darwin/MacOS, do you think there would be any major hurdles in supporting FreeBSD?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615500" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 23:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也在罗马尼亚语中 nume = name(dns) 我还得到了那首著名的罗马尼亚歌曲 numa numa 的复活节彩蛋:) <a href="https://www.youtube.com/watch?v=YnopHCL1Jk8" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=YnopHCL1Jk8</a><p>在 OpenWRT 上 — 它是基于 musl 的 Linux，因此二进制文件应该运行 ARM，需要交叉编译
+免费 BSD 可以做到（欢迎公关？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">also in romanian nume = name(dns) and I also get the easter egg of that well known Romanian song numa numa :) <a href="https://www.youtube.com/watch?v=YnopHCL1Jk8" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=YnopHCL1Jk8</a><p>On OpenWRT — it's musl-based Linux so the binary should run the arm one would need a crosscompile
+Free BSD can be done (pr's welcome?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">camdv</span>
+        <span class="meta-time">2026/04/02 23:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在网站上，它以罗马第二任国王的名字命名</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On the web site, it's named after the second King of Rome</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615523" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kevin061</span>
+        <span class="meta-time">2026/04/03 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">界面看起来是 vivicoded 的。我对人们进行振动编码没有任何问题。事实上，我的前端技能为零，所以我依靠人工智能来制作易于使用的界面。但是，我觉得这应该在项目页面中清晰且显着地显示。<p>此外，看到 vivicoded UI 有点令人反感，因为我对后端代码的其余部分是否未 vivicoded 几乎没有信心。我知道我可能不公平，但这就是我的看法。如果开发人员告诉我他们根本没有使用人工智能，我会相信。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The interface looks vibecoded. I have no problem with people vibecoding things. In fact, I have zero frontend skills, so I rely on AI to be able to make easy-to-use interfaces. However, I feel like this should be clearly and prominently displayed in the project page.<p>Furthermore it is a little off-putting to see a vibecoded UI because I have very little confidence that the rest of the backend code is not vibecoded. I know I am possibly being unfair, but this is how it looks to me. If the developer tells me they didn't use AI at all, I would believe it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616559" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">andoando</span>
+        <span class="meta-time">2026/04/03 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我根本不接受这种批评，你更喜欢有人写一个更糟糕的 UI 吗？从什么时候开始，人们就开始编写令人惊叹的无错误软件，而没有经过振动编码就意味着您可以信任其优秀的软件？<p>我想公平地说，之前没有人会尝试这种事情并发布它，除非他们知道自己在做什么</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I dont get this criticism at all, would you prefer someone write a shittier UI? And since when were people writing amazing bug free software before hand where not being vibe coded meant you could trust its good software?<p>I guess to be fair, beforehand no body would be attempting this kind of thing and releasing it unless they knew what they were doing</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616663" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kevin061</span>
+        <span class="meta-time">2026/04/03 03:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我确实说过我可以在前端使用法学硕士，但我认为这一点应该清楚地披露。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I literally said I'm fine with using LLMs for the frontend, but I think this should be disclosed clearly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/03 00:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实如此，你可以在 git 提交中看到它。 DNS 线路协议解析器是我为理解规范而编写的原始学习项目。后来的功能（递归解析器、DNSSEC 验证、仪表板）是在 AI 的帮助下构建的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It definitely is and you can see it in the git commits. The DNS wire protocol parser was the original learning project I wrote to understand the spec. Later features (recursive resolver, DNSSEC validation, the dashboard) were built with the help of AI</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616647" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kevin061</span>
+        <span class="meta-time">2026/04/03 03:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是公平的，谢谢你让我知道！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's fair, thanks for letting me know!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47619332" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dev_l1x_be</span>
+        <span class="meta-time">2026/04/03 00:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到 webdev 的现状，这并不奇怪。在使用网络技术时，法学硕士是我的橡胶手套。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Given the state of webdev it is not a surprise. LLMs are my rubber gloves when working with web technologies.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616775" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 21:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614575" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">6r17</span>
+        <span class="meta-time">2026/04/02 21:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里同样的黑客；默认情况下我没有运行 DSN - 比设置 nginx 方便得多，因为它对目标基础设施没有意见。额外的一点是，您可以看到浏览时发生的每一个偷偷摸摸的请求；因此与此相关的另一个副项目是制作清单和策略过滤器</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Same hack here ; I have no DSN running by default - much more handy than having to set up nginx as it has no opinion on the targeted infrastructure. And the bonus point is that you can see every sneaky request that happens when you browse ; so another side-project connected to this is to make an inventory and policy filter</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614148" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 21:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，先生！
+查询日志位于 GET /querylog（或在仪表板上），显示每个请求的域、类型、路径（转发/递归/缓存/阻止）和延迟</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes sir!
+The query log is at GET /querylog (or on the dashboard) shows every request with domain, type, path (forwarded/recursive/cached/blocked) and latency</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614224" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">conradludgate</span>
+        <span class="meta-time">2026/04/03 02:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你不使用山核桃木的原因是什么？或者这是法学硕士的选择？真正好奇</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What's the reason you're not using hickory? Or was that the LLMs choice? Genuinely curious</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/03 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是作为一个学习项目开始的，从一开始到最低级别，然后我只是一一添加了我想要的功能，这才是最有意义的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This was started as a learning project, went from the start to the lowest level then I've just added features I wanted one by one, it just made the most sense</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618830" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bahador</span>
+        <span class="meta-time">2026/04/02 21:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">功能请求：libnuma，这样我就可以通过配置以编程方式使用它。此外，多个用户定义的阻止列表。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">feature request: libnuma so i can use it programmatically with configuration. also, multiple user defined blocklists.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614536" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 22:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多个阻止列表已经起作用 -<a href="https://github.com/razvandimescu/numa/blob/main/numa.toml#L44" target="_blank" rel="noopener noreferrer">https://github.com/razvandimescu/numa/blob/main/numa.toml#L4...</a>
+libnuma 的这些部分已经存在，可以完成，您能分享一下您想到的用例吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Multiple blocklists already work -<a href="https://github.com/razvandimescu/numa/blob/main/numa.toml#L44" target="_blank" rel="noopener noreferrer">https://github.com/razvandimescu/numa/blob/main/numa.toml#L4...</a>
+The pieces are already there for libnuma, it could be done, would you share what use case you have in mind?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dev_l1x_be</span>
+        <span class="meta-time">2026/04/03 00:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与 AdGuard 相比如何？如果它具有这些功能，我就会切换。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How is to compare to AdGuard? If it gets those features I would be switching over.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616769" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/03 00:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Numa 可以从根名称服务器 + DNSSEC、带有用于开发的自动 HTTPS 的 .numa 本地域以及 LAN 服务发现进行递归解析。
+您会对哪些功能感兴趣？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Numa can do recursive resolution from root nameservers + DNSSEC, .numa local domains with auto HTTPS for dev, and LAN service discovery.
+What features would you be interested in?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616852" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dwedge</span>
+        <span class="meta-time">2026/04/03 02:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">水平分割 dns 怎么样，这样我就可以在本地解析家庭服务器，而不是尾部扩展</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What about split horizon dns so I can locally resolve home servers instead of going to tailscale</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617949" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/03 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Split DNS 已经起作用 - Numa 从系统配置中自动检测 Tailscale 转发规则。匹配 .&lt;ts.net&gt; 的查询转到 Tailscale 的 DNS，其他所有内容都通过 Numa<p>如果您想在家庭服务器上完全跳过 Tailscale，Numa 的 LAN 发现会自动查找在同一网络上运行 Numa 的计算机。或者在 numa.toml 中为不运行它的机器添加静态记录。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Split DNS already works — Numa auto-detects Tailscale forwarding rules from the system config. Queries matching .&lt;ts.net&gt; go to Tailscale’s DNS, everything else goes through Numa<p>If you want to skip Tailscale entirely for home servers, Numa’s LAN discovery auto-finds machines running Numa on the same network. Or add static records in numa.toml for machines that don’t run it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47620209" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rbluethl</span>
+        <span class="meta-time">2026/04/02 18:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很酷的想法，每个在自己的机器上运行应用程序的开发人员都知道这种痛苦。我会试一试，让你知道进展如何！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool idea, every developer running apps in dev on their machine knows this pain for sure. I'll give it a spin and let you know how it goes!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 21:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！如果您在设置过程中遇到任何问题，请随时提出问题 - 很乐意帮助调试。仪表板位于 localhost:5380 （或位于 <a href="https://numa.numa" target="_blank" rel="noopener noreferrer">https://numa.numa</a>）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! If you hit any issues during setup, feel free to open an issue — happy to help debug. The dashboard at localhost:5380 (or at <a href="https://numa.numa" target="_blank" rel="noopener noreferrer">https://numa.numa</a>)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Asuka-wx</span>
+        <span class="meta-time">2026/04/03 02:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">干得好。是什么让您选择这个许可证？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice work. What made you choose this license?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47618218" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">_kidlike</span>
+        <span class="meta-time">2026/04/02 20:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常有趣。黑名单如何运作？可以管理列表吗？像史蒂文·布莱克或其他人一样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">very interesting. how does the blocklist work? can one manage the lists? like StevenBlack or others.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47613798" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 21:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，它可以配置为列表
+<a href="https://github.com/razvandimescu/numa/blob/main/numa.toml#L44" target="_blank" rel="noopener noreferrer">https://github.com/razvandimescu/numa/blob/main/numa.toml#L4...</a><p>还有一个每个域的允许列表，您可以从仪表板或 API 暂停/取消暂停阻止。</p><p>解析管道如下所示： <a href="https://numa.rs/blog/posts/dns-from-scratch.html#the-resolution-pipeline" target="_blank" rel="noopener noreferrer">https://numa.rs/blog/posts/dns-from-scratch.html#the-resolut...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, it is configurable as a list
+<a href="https://github.com/razvandimescu/numa/blob/main/numa.toml#L44" target="_blank" rel="noopener noreferrer">https://github.com/razvandimescu/numa/blob/main/numa.toml#L4...</a><p>There's also a per-domain allowlist and you can pause/unpause blocking from the dashboard or API.</p><p>Here's how the resolution pipeline looks like: <a href="https://numa.rs/blog/posts/dns-from-scratch.html#the-resolution-pipeline" target="_blank" rel="noopener noreferrer">https://numa.rs/blog/posts/dns-from-scratch.html#the-resolut...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614006" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lyfeninja</span>
+        <span class="meta-time">2026/04/02 18:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想我需要尝试一下。很酷的项目。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think I need to give this a go. Cool project.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612357" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 19:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！让我知道进展如何。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Let me know how it goes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47612711" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bulanel</span>
+        <span class="meta-time">2026/04/03 01:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">nice</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47617436" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">EdoardoIaga</span>
+        <span class="meta-time">2026/04/02 22:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Rust 太棒了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Rust it’s crazy good</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614726" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">voltagex_</span>
+        <span class="meta-time">2026/04/02 21:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好主意，可惜了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great idea, pity about the slop.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614192" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">goodpoint</span>
+        <span class="meta-time">2026/04/02 23:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们需要一个 <i>[溢出]</i> 旗帜出现在头条新闻</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">we need a <i>[slop]</i> flag in the headlines</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615459" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">arafeq</span>
+        <span class="meta-time">2026/04/02 22:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614748" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 22:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际上，如果您将容器的 DNS 指向主机（dns：compose中的[host.docker.internal]），它可以用于解析+广告拦截，但是，我已将其添加到雷达上，谢谢！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Actually, if you point a container's DNS at the host (dns: [host.docker.internal] in compose), it works for resolution + ad blocking for the reverse however, I've added it on the radar, thanks!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47614925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Kaliboy</span>
+        <span class="meta-time">2026/04/02 23:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自动 TLS 如何工作？它会自动生成自签名证书吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How does auto-TLS work? It makes a self signed certificate automatically?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615432" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rdme</span>
+        <span class="meta-time">2026/04/02 23:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的 — numa install 生成本地 CA 并将其存储在系统信任存储中。当您注册 .numa 服务时，它会生成由该 CA 签名的每服务 TLS 证书</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes — numa install generates a local CA and stores it in the system trust store. When you register a .numa service, it generates a per-service TLS cert signed by that CA</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615458" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dgb23</span>
+        <span class="meta-time">2026/04/03 00:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不想劫持线程，因为那是一个很酷的项目。<p>不过，如果您正在寻找“正常工作”并且被广泛使用的东西，请看看 caddy。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't want to hijack the thread, because that's a cool project.<p>Still, if you're looking for something that "just works" and is widely used, have a look at caddy.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47616278" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/02 23:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47615430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
