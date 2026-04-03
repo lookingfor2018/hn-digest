@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>事后分析：axios NPM 供应链妥协 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1603/">返回本批次</a>
+      <h1>事后分析：axios NPM 供应链妥协</h1>
+      <p class="subtitle">Post Mortem: axios NPM supply chain compromise</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 Kyro38</span>
+        <span>分数 88</span>
+        <span>评论 49</span>
+        <span>2026/04/03 08:00</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47621792" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/axios/axios/issues/10636" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>日期：2026 年 3 月 31 日 作者：Jason Saayman 状态：修复正在进行中 2026 年 3 月 31 日，两个恶意版本的 axios（1.14.1 和 0.30.4）通过我的受感染帐户发布到 npm 注册表。这两个版本都注入了一个名为 plain-crypto-js@4.2.1 的依赖项，该依赖项在 macOS、Windows 和 Linux 上安装了远程访问木马。恶意版本在被删除之前存活了大约 3 个小时。你受到影响了吗？检查您的锁定文件： grep -E &quot;axios@(1\.14\.1|0\.30\.4)|plain-crypto-js&quot; package-lock.json yarn.lock 2&gt;/dev/null 如果出现任何情况，则将该计算机视为已受到威胁：</li><li>降级到 axios@1.14.0（或 0.30.3 对于 0.x 用户） 删除 node_modules/plain-crypto-js/ 轮换该计算机上的每个机密、令牌和凭证 检查网络日志以了解端口 8000 上与 sfrclak[.]com 或 142.11.206.73 的连接 如果这种情况发生在 CI 运行程序上，请轮换在受影响的构建期间注入的所有机密</li><li>如果您已经固定到干净版本并且没有在 3 月 31 日 00:21 到 03:15 UTC 之间运行全新安装，那么没问题。有关详细的修复指南，包括特定于 CI/CD 的步骤，请参阅：</li><li>StepSecurity：全面的技术分析和修复 Snyk：咨询和扫描指导 Socket：对 Axios 的供应链攻击从 npm 中提取恶意依赖</li><li>发生了什么 攻击者通过有针对性的社会工程活动和 RAT 恶意软件获得了对首席维护人员 PC 的访问权限。这使他们能够访问 npm 帐户凭据，并使用该凭据来发布恶意版本。这次攻击遵循了针对开源维护者的类似活动中记录的模式。解决方案 完全擦除所有主要维护者设备并重置所有凭据。这包括所有帐户，无论平台如何，包括个人帐户和所有其他帐户。为了防止这种情况再次发生，我们进行了以下更改：</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Date: March 31, 2026 Author: Jason Saayman Status: Remediation in progress On March 31, 2026, two malicious versions of axios (1.14.1 and 0.30.4) were published to the npm registry through my compromised account. Both versions injected a dependency called plain-crypto-js@4.2.1 that installed a remote access trojan on macOS, Windows, and Linux. The malicious versions were live for about 3 hours before being removed. Are you affected? Check your lockfile: grep -E &quot;axios@(1\.14\.1|0\.30\.4)|plain-crypto-js&quot; package-lock.json yarn.lock 2&gt;/dev/null If anything comes back, treat that machine as compromised:</li><li>Downgrade to axios@1.14.0 (or 0.30.3 for 0.x users) Delete node_modules/plain-crypto-js/ Rotate every secret, token, and credential on that machine Check your network logs for connections to sfrclak[.]com or 142.11.206.73 on port 8000 If this happened on a CI runner, rotate any secrets that were injected during the affected build</li><li>If you were already pinned to a clean version and didn&#39;t run a fresh install between 00:21 and 03:15 UTC on March 31, you&#39;re fine. For detailed remediation guidance, including CI/CD-specific steps, see:</li><li>StepSecurity: full technical analysis and remediation Snyk: advisory and scanning guidance Socket: Supply Chain Attack on Axios Pulls Malicious Dependency from npm</li><li>What happened The attacker gained access to the lead maintainer&#39;s PC through a targeted social engineering campaign and RAT malware. This gave them access to the npm account credentials, which they used to publish the malicious versions. The attack followed patterns documented in similar campaigns targeting open source maintainers. Resolution Complete wipe of all lead maintainer devices as well as resetting of all credentials. This includes all accounts irrespective of platform, both personal and all other capacities. What&#39;s changing To prevent this from happening again, these are the changes being made:</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Zopieux</span>
+        <span class="meta-time">2026/04/03 10:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们不知道的不多（你基本上是 SOL，因为所有者受到了损害），但是我们现在对社会工程的实际内容有了一个小小的了解，恕我直言，这是唯一有趣的消息： <a href="https://github.com/axios/axios/issues/10636#issuecomment-4180237789" target="_blank" rel="noopener noreferrer">https://github.com/axios/axios/issues/10636#issuecomment-418...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not much we didn't know (you're basically SOL since an owner was compromised), however we now have a small peek into the actual meat of the social engineering, which is the only interesting news imho: <a href="https://github.com/axios/axios/issues/10636#issuecomment-4180237789" target="_blank" rel="noopener noreferrer">https://github.com/axios/axios/issues/10636#issuecomment-418...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622516" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hatmanstack</span>
+        <span class="meta-time">2026/04/03 10:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">jasonsaayman 和 voxpelli 从“旋转头”的角度写了一些有用的文章，阐述了需要注意的事项。  杰森提到“会议说我系统上的某些内容已经过时了。”他们使用的是 Microsoft 会议，这就是他们获得 RCE 的方式。会喜欢更多的颜色。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">jasonsaayman and voxpelli had useful write ups from the "head on a swivel" perspective of what to watch out for.  Jason mentioned "the meeting said something on my system was out of date." they were using Microsoft meeting and that's how they got RCE. Would love more color on that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 11:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在负责任地运行的 FOSS 项目中，通过正确的提交/审查/推送签名，受到损害的所有者绝对可以生存。<p>这次以及最近发生的所有其他供应链攻击都是完全可以预防的。</p><p>如此之多，以至于我在这一点上对受害者的指责感到非常自在。</p><p>这绝对是Axios团队的功劳。</p><p>设置一些智能卡来签署 git Push/commit 并广泛发布这些密钥，并强制签署合并提交，这样如果没有两个维护者签名，就不会出现任何内容，并且不会再出现单点故障。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">An owner being compromised is absolutely survivable on a responsibly run FOSS project with proper commit/review/push signing.<p>This and every other recent supply chain attack was completely preventable.</p><p>So much so I am very comfortable victim blaming at this point.</p><p>This is absolutely on the Axios team.</p><p>Go setup some smartcards for signing git push/commit and publish those keys widely, and mandate signed merge commits so nothing lands on main without two maintainer sigs, and no more single points of failure.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623043" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fortuitous-frog</span>
+        <span class="meta-time">2026/04/03 12:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否调查了维护者的妥协和发布路径？恶意版本从未通过 git 提交或推送。维护者签署了他的承诺，v1 版本使用了 OIDC 和来源证明。在维护者的计算机通过 RAT 受到攻击后，恶意软件包版本是使用 npm cli 在本地发布的；软件包维护者无法禁用/禁止 npmjs 上的本地发布。<p>看来 Axios 团队很大程度上正在实践您所宣扬的内容。即使不是：它仍然无法阻止这种妥协。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Did you investigate the maintainer compromise and publication path? The malicious version was never committed or pushed via git. The maintainer signs his commits, and v1 releases were using OIDC and provenance attestations. The malicious package versions were published locally using the npm cli after the maintainer's machine was compromised via a RAT; there's no way for package maintainers to disable/forbid local publication on npmjs.<p>It seems the Axios team was largely practicing what you're preaching. To the extent they aren't: it still wouldn't have prevented this compromise.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623199" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 13:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 axios 存储库上找不到最近签名的提交。这完全是yolo模式。那些“由github签名”的签名是没有意义的。我完全支持我的评论。<p>人们必须普遍签署提交，并且还签署审查/合并（多方），然后还对版本进行多方签名。不幸的是，只执行基本供应链安全的一步所获得的防御效果与只锁定一扇门一样多。</p><p>然而，我确实将重大责任归咎于 NPM 团队，因为他们一再拒绝可选的包签名支持，因此如果未由固定密钥的法定数量签名，启用签名的包可能会在服务器和客户端被拒绝，但除此之外，如果包是手动签名的，那么金丝雀工具可能会立即检测到这一点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can not find a single signed recent commit on the axios repo. It is totally yolo mode. Those "signed by github" signatures are meaningless. I stand by my comment in full.<p>One must sign commits -universally- and -also- sign reviews/merges (multi-party) and then -also- do multi party signing on releases. Doing only one step of basic supply chain security unfortunately buys you about as much defense as locking only a single door.</p><p>I do however certainly assign significant blame to the NPM team though for repeatedly refusing optional package signing support so packages with signing enabled can be refused at the server and client if unsigned by a quorum of pinned keys, but even aside from that if packages were signed manually then canary tools could have detected this immediately.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623348" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dns_snek</span>
+        <span class="meta-time">2026/04/03 15:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您在 Git 存储库中签名或不签名的内容并不重要，因为 NPM 不会从 Git 存储库发布。签名提交对于您的贡献者和下游分支仍然有用，但它不会对通过 NPM 使用您的包的用户产生任何影响。<p>我认为 NPM 对此负有全部责任。超过一定受欢迎程度的软件包应该需要签名/强 2FA。他们应该实施更多发布者可以选择启用的方案，例如在包可供下载之前要求超过 1 个维护者强制签字。</p><p>然后在包页面上应该显示：“[警告] 弱发布保护”或“[复选标记] 此包需要帐户 A 和帐户 B 签名才能发布”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What you sign or don't sign in your Git repo doesn't matter because NPM doesn't publish from a Git repo. Signing commits is still useful for your contributors and downstream forks but it won't have any effect on the users who use your package via NPM.<p>I think NPM is fully to blame here. Packages that exceed a certain level of popularity should require signing/strong 2FA. They should implement more schemes that publishers can optionally enable, like requiring mandatory sign-off from more than 1 maintainer before the package is available to download.</p><p>Then on the package page it should say: "[Warning] Weak publishing protection" or "[Checkmark] This package requires sign-off from accountA and accountB to publish".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623992" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">TheTaytay</span>
+        <span class="meta-time">2026/04/03 12:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是通过 git 完成的。这是来自受感染机器的直接 npm 发布。如果您在评论中进一步阅读（<a href="https://github.com/axios/axios/issues/10636#issuecomment-4181516546" target="_blank" rel="noopener noreferrer">https://github.com/axios/axios/issues/10636#issuecomment-418...</a>），似乎很难选择正确的 npm 设置来防止这种攻击。<p>如果我理解正确的话，你的建议就不会阻止它，这证明这并不像你认为的那么容易解决。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It wasn’t done through git. It was a direct npm publish from the compromised machine. If you read further down in the comments (<a href="https://github.com/axios/axios/issues/10636#issuecomment-4181516546" target="_blank" rel="noopener noreferrer">https://github.com/axios/axios/issues/10636#issuecomment-418...</a>), it seems difficult to pick the right npm settings to prevent this attack.<p>If I understand it correctly, your suggestions wouldn’t have prevented it, which is evidence that this is not as trivially fixable as you believe it is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623178" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 13:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为了防止供应链攻击，您需要在每一层进行多方加密认证，这非常简单，但您是对的，NPM 和 GitHub 控件绝对不会拯救您。微软坚称他们的集中式方法可行，但我们有大量证据表明它行不通。<p>假设所有帐户都将被接管，因为集中式企业身份验证系统从根本上来说很容易受到攻击。</p><p>这就是你实际修复它的方法：</p><p>1. 每个提交都必须由 MAINTAINERS 文件或类似文件中列出的维护者密钥签名</p><p>2. 每次审查/合并都必须由 -第二 - 人员签名 
+维护者密钥</p><p>3. 每个工件都必须确定性地构建并由多个维护者签名。</p><p>4. 在确定性且可远程证明的飞地中仅维护一个在线 npm 发布密钥，以验证多个有效的维护者签名</p><p>5. 如果以任何其他方式推送 NPM 版本，则自动发出警报，并自动撤销该版本。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To prevent supply chain attacks you need multi party cryptographic attestation at every layer, which is pretty straight forward, but you are correct, NPM and GitHub controls absolutely will not save you. Microsoft insists their centralized approach can work, but we have plenty of evidence it does not.<p>Operate under the assumption all accounts will be taken over because centralized corporate auth systems are fundamentally vulnerable.</p><p>This is how you actually fix it:</p><p>1. Every commit must be signed by a maintainer key listed in the MAINTAINERS file or similar</p><p>2. Every review/merge must be signed by a -second- 
+maintainer key</p><p>3. Every artifact must be build deterministically and be signed by multiple maintainers.</p><p>4. Have only one online npm publish key maintained in a deterministic and remotely attestable enclave that validates multiple valid maintainer signatures</p><p>5. Automatically sound the alarm if an NPM release is pushed any other way, and automatically revoke it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/03 13:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 5，NPM 端应该提供帮助，以便在新更新实际向公众公布之前发出警报。可能会有很短的暂存时间，在造成任何损害之前可以将其撤销。在此暂存期间，NPM 还应通过恶意软件扫描程序扫描该包，然后再允许其公开。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And for 5 there should be help on the NPM end to make it so that the alarms can fire before the new update is actually revealed to the public. There could be a short staging time where it could be revoked before any harm has been done. During this staging time NPM should also scan the package through a malware scanner before allowing it to go public.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623521" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">robshippr</span>
+        <span class="meta-time">2026/04/03 11:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该线程中有趣的细节是，每个合法的 v1 版本都有 OIDC 来源证明，而恶意版本则没有，但没有人检查。更简单的是，如果您在部署之间比较锁定文件，则补丁版本中出现的全新依赖项是一个非常明显的危险信号。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The interesting detail from this thread is that every legitimate v1 release had OIDC provenance attestations and the malicious one didn't, but nobody checks. Even simpler, if you're diffing your lockfile between deploys, a brand new dependency appearing in a patch release is a pretty obvious red flag.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622805" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">GCUMstlyHarmls</span>
+        <span class="meta-time">2026/04/03 12:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">老实说，我本以为该工具会为我进行证明验证。不过，锁定文件的差异将由我来承担。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To be honest, I would have assumed the tooling would do attestation verification for me. The diffing the lockfile would be on me though.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">clawfund</span>
+        <span class="meta-time">2026/04/03 11:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">npm 可以通过让软件包在注册表级别选择仅 OIDC 发布来解决一半问题。 v1 已经有了出处证明，但注册中心很高兴地接受了没有这些证明的恶意发布。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">npm could solve half of this by letting packages opt into OIDC-only publishing at the registry level. v1 already had provenance attestations but the registry happily accepted the malicious publish without them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622924" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anematode</span>
+        <span class="meta-time">2026/04/03 11:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来这是一个非常复杂的操作，我对那些让他的机器受到损害的维护人员感到同情。<p>我担心，这种情况的下一个化身是恶意软件以某种方式休眠（例如， <i>if (Date.now() &lt; 1776188434046) { 退出(); }</i>) 使伤害最大化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks like a very sophisticated operation, and I feel for the maintainer who had his machine compromised.<p>The next incarnation of this, I worry, is that the malware hibernates somehow (e.g., <i>if (Date.now() &lt; 1776188434046) { exit(); }</i>) to maximize the damage.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623031" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fraywing</span>
+        <span class="meta-time">2026/04/03 09:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过去几周供应链攻击数量惊人增加。<p>我觉得 npm 特别需要在公共项目中嵌入的恶意代码的 SA 上加强他们的游戏。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Incredible uptick in supply chain attacks over the last few weeks.<p>I feel like npm specifically needs to up their game on SA of malicious code embedded in public projects.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622390" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simulator5g</span>
+        <span class="meta-time">2026/04/03 10:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是现代战争的现实。许多国家可能正在大规模植入恶意软件。你甚至无法真正证明攻击源自何处，因此未卷入的国家也应该明智地利用当前的冲突。就像如果您主要编写德语一样，您可以将恶意软件翻译成中文、波斯语、英语或希伯来语，并采取其他措施使其看起来来自这些交战国家之一。任何正在制定涉及恶意软件的长期计划的国家都可能会在这个时候采取行动。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's the reality of modern war. Many countries are likely planting malware on a wide scale. You can't even really prove where an attack originated from, so uninvolved countries would also be smart to take advantage of the current conflict. Like if you primarily wrote German, you would translate your malware to Chinese, Farsi, English, or Hebrew, and take other steps to make it appear to come from one of those warring countries. Any country who was making a long term plan involving malware would likely do it around this time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622458" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">altmanaltman</span>
+        <span class="meta-time">2026/04/03 13:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你可以用中文和波斯语编写代码吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can write code in Chinese and Farsi?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623591" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">axitanull</span>
+        <span class="meta-time">2026/04/03 14:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以故意使用这些语言来添加注释和描述。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can deliberately put comments and descriptions using those language.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623634" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ipnon</span>
+        <span class="meta-time">2026/04/03 10:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NPM 旨在让您在计算机上运行不受信任的代码。它永远不会起作用。没有什么游戏可以提升。这就像要求鸵鸟开始飞翔。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">NPM is designed to let you run untrusted code on your machine. It will never work. There is no game to step up. It's like asking an ostrich to start flying.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622498" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcrazy</span>
+        <span class="meta-time">2026/04/03 10:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这远不是一个完整的解决方案，但为了缓解供应链妥协的这种特定途径，Github/npm 不能发行单一用途的物理硬件代币并允许项目（甚至是最受欢迎的项目）维护者使用这些硬件代币作为 2FA 的形式吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s far from a complete solution, but to mitigate this specific avenue of supply chain compromise, couldn’t Github/npm issue single-purpose physical hardware tokens and allow projects (or even mandate, for the most popular ones) maintainers use these hardware tokens as a form of 2FA?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622610" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/03 10:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">物理代币能给你什么是 totp 不能提供的？<p>编辑：等等，攻击者是否拦截了输入的 totp 代码？试图理解线程的意义</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What would a physical token give you that totp doesn't?<p>Edit: wait, did the attacker intercept the totp code as it was entered? Trying to make sense of the thread</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcrazy</span>
+        <span class="meta-time">2026/04/03 11:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">攻击者在贡献者的计算机上安装了 RAT，因此如果他们配置了 TOTP 或将恢复代码保存在该计算机上的任何位置，攻击者就可以击败 2FA。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The attacker installed a RAT on the contributor’s machine, so if they had configured TOTP or saved the recovery codes anywhere on that machine, the attacker could defeat 2FA.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622869" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/03 13:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，是的，我错过了 TOTP 机器已被入侵：\ 那么这是否意味着它 <i>会</i> 如果代码来自单独的设备，例如，就可以了。零网络连接的 Palm OS 设备上的 TOTP 应用程序？ （或者也许现在最简单的气隙选项是保持飞行模式的旧 Android 手机......）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, yes, I missed that the TOTP machine was compromised:\ Would that then imply that it <i>would</i> have been okay if codes came from a separate device, eg. a TOTP app on a Palm OS device with zero network connectivity? (Or maybe these days the easiest airgapped option is an old android phone that stays in airplane mode...)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623362" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcrazy</span>
+        <span class="meta-time">2026/04/03 13:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最简单的方法是使用提供商发行的硬件加密狗，例如 SecurID 或 Yubikey。缺乏最终用户可编程性是一个功能，而不是一个错误。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The easiest approach is a provider-issued hardware dongle like a SecurID or Yubikey. Lack of end-user programmability is a feature, not a bug.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623473" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/03 13:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 缺乏最终用户可编程性是一个功能，而不是一个错误。<p>我认为问题在于网络可访问性，而不是可编程性。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Lack of end-user programmability is a feature, not a bug.<p>I would argue that the problem is network accessibility, not programmability.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623490" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcrazy</span>
+        <span class="meta-time">2026/04/03 13:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在设计安全认证系统时，最终用户的可编程性不是一个特性。<p>对于您的前门锁来说，无限地重新编程并不是一个优势。这只是一种责任。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When designing a system for secure attestation, end-user programmability is not a feature.<p>It would not be an advantage for your front door lock to be infinitely reprogrammable. It’s just a liability.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623537" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/03 14:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，我猜证明可能有一定的价值，但感觉就像移动了球门柱。在可以危害正常联网计算机的远程攻击者的威胁模型下，我无法想象使用可编程 TOTP 代码生成器会成功的攻击，而如果该代码生成器不可重新编程，则攻击会失败。你可以吗？<p>&gt; 无限地重新编程对您的前门锁来说并不是一个优势。这只是一种责任。</p><p>那里，大多数门锁 <i>是</i> 无限地可重新编程，因为无需更换整个单元即可重新设置密钥 <i>是</i> 一个巨大的优势，而责任/劣势却很小（属于“它宁愿涉及到在这个密闭舱口的另一边”，在一种不寻常的几乎字面意义上，你必须在房子里才能重新打开锁，此时你也可以做任何其他事情）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean, I guess attestation might have some value, but it feels like moving the goalposts. Under the threat model of a remote attacker who can compromise a normal networked computer, I can't think of an attack that would succeed with a programmable TOTP code generator that would fail if that code generator was not reprogrammable. Can you?<p>&gt; It would not be an advantage for your front door lock to be infinitely reprogrammable. It’s just a liability.</p><p>Er, most door locks <i>are</i> infinitely reprogrammable, because being able to rekey them without having to replace the whole unit <i>is</i> a huge advantage and the liability/disadvantage is minimal (falling under "It rather involved being on the other side of this airtight hatchway" in an unusually almost-literal sense where you have to be inside the house in order to rekey the lock, at which point you could also do anything else).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623660" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcrazy</span>
+        <span class="meta-time">2026/04/03 14:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，认证 <i>是</i> 球门柱。社区希望确定该软件包是由具有权威的人发布的，而不仅仅是由有权访问权威私钥的人发布的。这就是证明与认证或授权的区别。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry, attestation <i>is</i> the goalpost. The community wants certainty that the package was published by a human with authority, and not just by someone who had access to an authority’s private keys. That is what distinguishes attestation from authentication or authorization.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623843" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nurettin</span>
+        <span class="meta-time">2026/04/03 13:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，不幸的是，身份验证器应用程序只是基于显而易见的二进制密钥生成 TOTP 代码，而没有任何加密。如果加密/解密机器被破解的话，这并不会有所帮助。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, unfortunately authenticator apps just generate TOTP codes based on a binary key sitting in plain sight without any encryption. Not that it would help if the encrypting/decrypting machine is pwned.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623466" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">维护人员需要做的就是代码签名。这是一个已解决的问题，但 NPM 团队十多年来一直积极拒绝可选的签名支持。即便如此，维护者仍然可以签署他们的承诺，但大多数人都懒得花几分钟来防止自己被冒充。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">All maintainers need to do is code signing. This is a solved problem but the NPM team has been actively rejecting optional signing support for over a decade now. Even so maintainers could sign their commits anyway, but most are too lazy to spend a few minutes to prevent themselves from being impersonated.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623113" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yawaramin</span>
+        <span class="meta-time">2026/04/03 13:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果解决方案是“维护者只需要做 xyz”，那么这不是一个解决方案，抱歉。它不可扩展，哪些项目变得“成功”，哪些维护者意外地成为全球代码库的关键部分，几乎纯粹是偶然。你会 <i>绝不</i> 能够找到“只”做 xyz 所需的所有维护人员。就像你永远无法让人类“仅仅”停止犯错误一样。因此，您最好开始寻找一种不依赖人类不犯错误的解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If the solution is 'maintainers just need to do xyz', then it's not a solution, sorry. It's not scalable and which projects become 'successful' and which maintainers accidentally become critical parts of worldwide codebases, is almost pure chance. You will <i>never</i> be able to get all the maintainers you need to 'just' do xyz. Just like you will never be able to get humans to 'just' stop making mistakes. So you had better start looking for a solution that doesn't rely on humans not making mistakes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jiggawatts</span>
+        <span class="meta-time">2026/04/03 13:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“纪律无法扩展”成为我最喜欢的名言之一是有原因的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Discipline doesn't scale" as become one of my favourite quotes for a reason.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623489" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pianopatrick</span>
+        <span class="meta-time">2026/04/03 14:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我看来，问题的根源在于这个人使用同一台设备来处理各种事情。<p>在我看来，NPM 可以采用的一项严厉策略是使用硬件安全性来防止此类攻击。 NPM 可以采购和配置笔记本电脑，其身份植根于笔记本电脑 TPM，而不是 2FA。配置 NPM 服务器，以便对于某些存储库，只有使用笔记本电脑 TPM 中的私钥签名的更新才能推送到 NPM。每个高调的存储库都会有某些可以为该存储库上传的笔记本电脑。使用最小版本的 Linux 设置笔记本电脑，仅使用命令行工具上传到 NPM，甚至不需要浏览器或桌面环境。将这些笔记本电脑免费提供给高调存储库的维护者以用于更新。</p><p>然后在更新时，维护人员只需通过 USB 驱动器或 CD 将代码从他们的开发机器传输到安全笔记本电脑，并从特殊笔记本电脑推送到 NPM。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems to me the root of the problem was that the guy was using the same device for all sorts of stuff.<p>Seems to me that one drastic tactic NPM could employ to prevent attacks like this is to use hardware security. NPM could procure and configure laptops with identity rooted in the laptop TPM instead of 2FA. Configure the NPM servers so that for certain repos only updates signed with the private key in the laptop TPM can be pushed to NPM. Each high profile repo would have certain laptops that can upload for that repo. Set up the laptop with a minimal version of Linux with just the command line tools to upload to NPM, not even a browser or desktop environment. Give those laptops to maintainers of high profile repos for free to use for updates.</p><p>Then at update time, the maintainer just transfers the code from their dev machine to the secure laptop via USB drive or CD and pushes to NPM from the special laptop.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">akersten</span>
+        <span class="meta-time">2026/04/03 10:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">已经发布了任何好的有效负载分析吗？真的很好奇这是否只是一个成功的信息窃取者，或者它是否有可能更深入地侵入受影响的系统。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Any good payload analysis been published yet? Really curious if this was just a one and done info stealer or if it potentially could have clawed its way deeper into affected systems.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622503" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sheept</span>
+        <span class="meta-time">2026/04/03 11:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本文[0]研究了有效负载。它是一种 RAT，因此它能够执行它收到的任何 shell 命令，而不仅仅是窃取凭据。<p>[0]： <a href="https://safedep.io/axios-npm-supply-chain-compromise/" target="_blank" rel="noopener noreferrer">https://safedep.io/axios-npm-supply-chain-compromise/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This article[0] investigated the payload. It's a RAT, so it's capable of executing whatever shell commands it receives, instead of just stealing credentials.<p>[0]: <a href="https://safedep.io/axios-npm-supply-chain-compromise/" target="_blank" rel="noopener noreferrer">https://safedep.io/axios-npm-supply-chain-compromise/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622882" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">uticus</span>
+        <span class="meta-time">2026/04/03 09:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 3 月 31 日，世界标准时间 (UTC) 01:00 左右：社区成员提交问题报告该漏洞。攻击者使用受感染的帐户删除它们。<p>有趣的是，它这样做的时候就被抓住了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; March 31, around 01:00 UTC: community members file issues reporting the compromise. The attacker deletes them using the compromised account.<p>Interesting it got caught when it did.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622330" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">momo_dev</span>
+        <span class="meta-time">2026/04/03 15:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是为什么我将每个依赖项哈希固定在我的 python 项目中。 pip install --require-hashes 带有锁定的需求文件可以准确地捕获这一点，如果包哈希意外更改，安装将失败。很惊讶这不是 npm 生态系统中的默认设置</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this is why i pin every dependency hash in my python projects. pip install --require-hashes with a locked requirements file catches exactly this, if the package hash changes unexpectedly the install fails. surprised this isn't the default in the npm ecosystem</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624006" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">minitech</span>
+        <span class="meta-time">2026/04/03 15:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">默认情况下，Npm 和其他 JavaScript 包管理器会使用哈希值生成和检查锁定文件。这是一个新版本，而不是旧版本的重新发布（无论如何，这在 npm 注册表上是不可能的）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Npm and the other JavaScript package managers do generate and check lockfiles with hashes by default. This was a new release, not a republishing of an old version (which isn’t possible on the npm registry anyway).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624222" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 11:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每次供应链安全失败时，我都会问这个问题：我们可以强制签署软件包吗？或者至少承诺？<p>十多年前，NPM 曾多次拒绝支持可选签名的 PR，但这种选择并没有过时。</p><p>任何人如果不能花 5 分钟用 40 美元的 USB 智能卡设置提交签名以防止假冒，那么他绝对没有资格进行广泛依赖于 FOSS 软件的写作。</p><p>正常化的过失仍然是过失。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I ask this on every supply chain security fail: Can we please mandate signing packages? Or at least commits?<p>NPM rejected PRs to support optional signing multiple times more than a decade ago now, and this choice has not aged well.</p><p>Anyone that cannot take 5 minutes to set up commit signing with a $40 usb smartcard to prevent impersonation has absolutely no business writing widely depended upon FOSS software.</p><p>Normalized negligence is still negligence.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">4ndrewl</span>
+        <span class="meta-time">2026/04/03 11:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在这里编写代码的人真的有责任吗？它真的应该落在那些选择使用这个未签名代码的人身上，当然吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is the onus really on people who write code here? It really should be on those who choose to use this unsigned code, surely?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lorenzohess</span>
+        <span class="meta-time">2026/04/03 11:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许吧，但如果达到数百万人下载未签名代码的程度，则可能需要签名。甚至是可重复的构建。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Perhaps, but if it's gotten to the point where millions of people download the unsigned code, signing should probably become required. Even reproducible builds.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">4ndrewl</span>
+        <span class="meta-time">2026/04/03 12:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但谁要求呢？如果您的业务等依赖于某些代码，那么您当然需要确保其质量吗？您将一些代码复制到您的计算机上，然后它就是您的代码库，对吧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Required by who though? If your business etc depends upon some code, it's up to you to ensure its quality, surely? You copy some code onto your machine then it's your codebase, right?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 12:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然我认为任何不愿意签署代码的人都是疏忽的，但我也认为任何不愿意确保在将代码投入生产之前对代码进行可信审查的人同样是疏忽的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While I think anyone unwilling to sign their code is negligent, I also feel anyone unwilling to ensure credible review of code has been done before pushing it to production is equally negligent.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623092" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lrvick</span>
+        <span class="meta-time">2026/04/03 12:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">任何维护代码供他人使用的人都有基本义务，尽最低限度的努力，以确保他们的声誉不被不良行为者劫持。<p>只需签署提交和评论即可。阻止这些攻击是如此容易，不这样做就像医生拒绝在病人之间洗手一样。</p><p>如果你不打算洗手，就不要当医生。</p><p>如果您不打算签署您的代码，请不要成为 FOSS 维护者。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anyone that maintains code for others to consume has a basic obligation to do the bare minimum to make sure their reputations are not hijacked by bad actors.<p>Just sign commits and reviews. It is so easy to stop these attacks that not doing so is like a doctor that refuses to wash their hands between patients.</p><p>If you are not going to wash your hands do not be a doctor.</p><p>If you are not going to sign your code do not be a FOSS maintainer.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623078" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hahn-kev</span>
+        <span class="meta-time">2026/04/03 14:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你付了钱，那当然可以。否则……这要看情况。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you're paid then sure. Otherwise... It depends.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nurettin</span>
+        <span class="meta-time">2026/04/03 13:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直不明白为什么CAS教程都推axios。这是在 vite 之前，构建脚本是你的反应方式。妥协后我回顾了一些项目并将它们转换为纯JS fetch 和 vite。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I never understood why all the CAS tutorials pushed axios. This was before vite and build-scripts was how you did react. After the compromise I reviewed some projects and converted them to pure JS fetch and vite.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623554" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/03 10:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OIDC 流程是否能够阻止使用 RAT 发布恶意软件包的相同问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does OIDC flow block this same issue of being able to use a RAT to publish a malicious package?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622480" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mcintyre1994</span>
+        <span class="meta-time">2026/04/03 15:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，最严格的可用选项是禁止令牌并要求 2FA。我认为，仅使用硬件 2FA 并且在受感染的计算机上没有备份代码可能会阻止这种攻击。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nope, the most restrictive option available is to disallow tokens and require 2FA. I think that using exclusively hardware 2FA and not having the backup codes on the compromised machine probably would have prevented this attack though.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fortuitous-frog</span>
+        <span class="meta-time">2026/04/03 10:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不。axios（至少是 v1；不是 v0）被设置为通过 OIDC 发布，但是 npmjs 上没有选项让包维护者将其包限制为*仅*使用 OIDC。维护人员表示，他的机器是通过 RAT 感染的，因此如果他使用基于软件的 2FA，则没有什么可以阻止这种情况。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No. axios (v1 at least; not v0) were setup to publish via OIDC, but there's no option on npmjs for package maintainers to restrict their package to *only* using OIDC. The maintainer says his machine was infected via RAT, so if he was using software-based 2FA, nothing could have prevented this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622732" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hsbauauvhabzb</span>
+        <span class="meta-time">2026/04/03 10:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，一旦计算机受到威胁，假设攻击者有足够的耐心，就没有什么真正的帮助。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, once the computer is compromised nothing really helps assuming the attacker is patient enough.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622581" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">arafeq</span>
+        <span class="meta-time">2026/04/03 15:36</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kanehorikawa</span>
+        <span class="meta-time">2026/04/03 14:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623674" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lexcamisa54</span>
+        <span class="meta-time">2026/04/03 14:04</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623642" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">JackSmith_YC</span>
+        <span class="meta-time">2026/04/03 13:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

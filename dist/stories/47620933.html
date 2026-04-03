@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>备忘录：一种只记住最后 12 行代码的语言 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-03-1603/">返回本批次</a>
+      <h1>备忘录：一种只记住最后 12 行代码的语言</h1>
+      <p class="subtitle">Memo: A language that remembers only the last 12 lines of code</p>
+      <div class="meta-line">
+        <span>danieltemkin.com</span>
+        <span>作者 notem</span>
+        <span>分数 46</span>
+        <span>评论 23</span>
+        <span>2026/04/03 06:21</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47620933" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://danieltemkin.com/Esolangs/Memo/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>× []memo 是一个意识流编码环境。你有一个程序，总是会变成新的东西。每次您返回时，它都会从您上次停下的地方继续。当代码行滚出屏幕时，它们就会被遗忘。 []memo 是函数式的，并使用自然语言语法：记住函数名称和参数作为主体。列表元素由逗号和/或两者分隔。 []memo 忽略 4 之类的数字，并期望为 4：将 p 记住为一、二和三。使用告诉我命令打印：告诉我有关名称的信息。有些值是近似值。 Cookie 仅用于存储程序状态。在 GitHub 上阅读更多内容...</li><li>这种语言是 Daniel Temkin 所著的《四十四种 Esolangs》的一部分。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>× []memo is a stream-of-conscious coding environment. You have one program, always becoming something new. Each time you return, it picks up where you left off. As lines of code scroll off the screen, they are forgotten. []memo is functional and uses natural-language syntax: Remember function-name with arguments as body.List elements are seperated by commas, ands or both. []memo ignores numerals like 4 and expects four instead: Remember p as one, two, and three.Print with the Tell me command: Tell me about name. Some values are approximated. Cookies are used only to store program state. Read more on GitHub...</li><li>This language is part of Forty-Four Esolangs, a book by Daniel Temkin.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dcre</span>
+        <span class="meta-time">2026/04/03 10:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多么令人兴奋，我成为了学究：这是“意识流”，而不是“意识流”。意识是一个形容词；不可能有它的流。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How exciting, I get to be the pedant: it’s “stream-of-consciousness,” not “stream-of-conscious.” Conscious is an adjective; there can’t be a stream of it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622493" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">psychoslave</span>
+        <span class="meta-time">2026/04/03 15:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一方面，英语充满了形态变化和其他语法类型明确的词汇化。所以这实际上只是追随主流趋势。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On the other hand English is highly imbued with lake of morphological inflection and other explicit lexicalization by grammatical type. So this is really just following the main stream tendency.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rendall</span>
+        <span class="meta-time">2026/04/03 15:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我看你这迂腐，再举一反三！<p>通过 <i>实体化</i> 绝对可以有stream-of-&lt;形容词&gt;。想想“蓝色的溪流”或“穷人的溪流”。</p><p>人们经常把一些众所周知的表达方式的尾巴剃掉：</p><p>“相同差异”→“相同差异”</p><p>“没什么大不了的”→“没什么大不了的”</p><p>“没什么大不了的。”</p><p>“足够公平”→“公平”</p><p>“公平的。”</p><p>“足够好”→“足够好”→“好”</p><p>“是啊，那就好。” （表示足够好）</p><p>“我不知道”→“不知道”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I see your pedantry, and raise it one more!<p>Through <i>substantivization</i> one can definitely have stream-of-&lt;adjective&gt;. Think "a stream of blue" or "a stream of the poor".</p><p>People often shave off the tail of well-known expressions:</p><p>“same difference” → “same diff”</p><p>“no big deal” → “no big”</p><p>“It’s no big.”</p><p>“fair enough” → “fair”</p><p>“Fair.”</p><p>“good enough” → “good enough” → “good”</p><p>“Yeah, that’s good.” (implies good enough)</p><p>“I don’t know” → “dunno”</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624175" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">globular-toast</span>
+        <span class="meta-time">2026/04/03 14:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是英国人每次读到“功能齐全”时的感受。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is how British people feel every time we read "full-featured".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">efilife</span>
+        <span class="meta-time">2026/04/03 13:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我看到“你的潜意识”时我也这么想。不，应该是“你的潜意识”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think the same when I see "your subconscious". No, it should be "your subconsciousness"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623413" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">MoltenMan</span>
+        <span class="meta-time">2026/04/03 15:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但“意识到”某事就是意识到它；你的“潜意识”是大脑“低于”你的意识的部分（尽管它确实也低于你的意识！所以也许两者都有效）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But being 'conscious' of something is being aware of it; your 'subconscious' is the part of your brain 'below' your awareness (although it is true that it's also below your consciousness! So perhaps both would work)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624003" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/03 15:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nofriend</span>
+        <span class="meta-time">2026/04/03 10:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它也是一个名词</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a noun too</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622634" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fc417fc802</span>
+        <span class="meta-time">2026/04/03 10:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我本来想反对后者实际上不是一个名词，但很惊讶地看到维基词典将其列为名词。然而它没有提供使用示例，我强烈怀疑它是错误的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was about to object that the latter is not in fact a noun but was surprised to see that wiktionary lists it as such. However it provides no usage examples and I strongly suspect it is in error.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622733" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sheept</span>
+        <span class="meta-time">2026/04/03 11:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为它偶尔与“the”一起使用，即“意识”（例如，指你身体的意识部分）。形容词有时会这样变成名词，比如“穷人”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it is occasionally used with "the," i.e. "the conscious" (referring to the conscious part of your body, for example). Adjectives sometimes become nouns this way, like "the poor"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622979" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">thaumasiotes</span>
+        <span class="meta-time">2026/04/03 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我搜索了当代美国英语语料库（ <a href="https://www.english-corpora.org/coca/" target="_blank" rel="noopener noreferrer">https://www.english-corpora.org/coca/</a> ) 代表“有意识的_n”，这意味着带有“名词”词性标签的“有意识”标记。<p>有五个结果。所有五个都是标记错误：</p><p><i>如果我们扫描得到足够的信息，然后对细胞进行足够好的建模，并有足够的计算机来运行模型的模拟，那么模拟大脑的输入输出将与原始大脑的输入输出相同。它会表现得像它本来的样子</i> 有意识的。 [形容词，修饰 <i>它</i>]</p><p><i>好吧，首先我们一起努力锻炼身体，这样我们就可以和我们一起去各个地方</i> 有意识的。 [形容词，修饰 <i>我们俩</i>]</p><p><i>伯特伦夫人看起来几乎没有</i> 有意识的。 [形容词，修饰 <i>伯特伦夫人</i>]</p><p><i>他相信，几年后，随着新兵变得更加虔诚，乌克兰将需要这个机构</i> 有意识的。 [形容词，修饰 <i>新兵</i>]</p><p><i>正是在这个意义上，拉纳的意思是恩典是</i> 有意识的。 [形容词，修饰 <i>优雅</i>]</p><p>示例 3 和 4 根本不是名词，而是被副词修饰的。</p><p>似乎可以得出这样的结论：事实上，“意识”一词并没有作为名词使用。</p><p>&gt; 形容词有时会这样变成名词，比如“穷人”</p><p>这实际上并不是“穷人”中发生的事情。代币占据的位置 <i>贫穷的</i> 这句话可以用各种各样的东西来填充：</p><p><i>上帝平等地爱每个人。富人和穷人、正义者和不正义者、神智正常者和精神分裂者、拥有数十亿美元的人和身无分文的人……</i></p><p>你想争辩说“拥有数十亿美元”是一个名词吗？</p><p>我们可以应用之前的观察和对比 <i>完全清醒的人</i> 和 <i>几乎没有意识的</i>。在这里，正如上面所说，这是不可能的 <i>有意识的</i> 成为名词，因为它被副词修饰。这……值得怀疑……因为 <i>几乎没有意识</i> 是一个名词短语，因为它的开头是 <i>有意识的</i>，我们知道它不是一个名词。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I searched the Corpus of Contemporary American English ( <a href="https://www.english-corpora.org/coca/" target="_blank" rel="noopener noreferrer">https://www.english-corpora.org/coca/</a> ) for 'conscious_n', which means the token "conscious" with a 'noun' part-of-speech tag.<p>There are five results. All five of them are tagging errors:</p><p><i>If we scan to get enough info, then model the cells well enough, and have enough computers to run the simulation of the models, then the input-output of the emulation of the brain will be the same as the input-output of the original brain. It will act like it is</i> conscious. [adjective, modifying <i>it</i>]</p><p><i>Well, first we work on working the body together, so that we can go places with both of us</i> conscious. [adjective, modifying <i>both of us</i>]</p><p><i>Lady Bertram looks barely</i> conscious. [adjective, modifying <i>Lady Bertram</i>]</p><p><i>In a few years, he believed, this institution would be needed in Ukraine, as new conscripts became more religiously</i> conscious. [adjective, modifying <i>new conscripts</i>]</p><p><i>It is in this sense that Rahner means that grace is</i> conscious. [adjective, modifying <i>grace</i>]</p><p>Examples 3 and 4 are so far from being nouns that they're being modified by adverbs.</p><p>It seems safe to conclude that in fact there is no nounal use of the word "conscious".</p><p>&gt; Adjectives sometimes become nouns this way, like "the poor"</p><p>That isn't actually what's happening in "the poor". The position occupied by the token <i>poor</i> in that phrase can be filled by all kinds of things:</p><p><i>God loves everyone equally. The rich and the poor, the just and the unjust, the sane and the schizophrenic, the possessed-of-billions-of-dollars and the penniless...</i></p><p>Do you want to argue that "possessed of billions of dollars" is a noun?</p><p>We can apply our in-passing observation from earlier and contrast <i>the fully-awake</i> with <i>the barely-conscious</i>. Here, as above, it's impossible for <i>conscious</i> to be a noun, because it is being modified by an adverb. And it's... dubious... for <i>barely conscious</i> to be a noun phrase, because it is headed by <i>conscious</i>, which we know isn't a noun.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623108" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fc417fc802</span>
+        <span class="meta-time">2026/04/03 12:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不错的数据集，我不知道有这个。<p>我的印象是否正确，一般来说“the {thing}”是一个名词短语，并不暗示有关{thing}本身的任何内容？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice dataset, I didn't know about that one.<p>Is my impression correct, that in general "the {thing}" is a noun phrase without implying anything about {thing} itself?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623278" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">thaumasiotes</span>
+        <span class="meta-time">2026/04/03 15:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我的印象是否正确，一般来说“the {thing}”是一个名词短语，并不暗示有关 {thing} 本身的任何内容？<p>是的，但有一些小警告：</p><p>1. 有些人更喜欢将“the {thing}”视为“限定词短语”，其中“限定词”是其词性的名称 <i>这</i> 属于.您可以将其称为“名词短语”，而不会失去任何有意义的内容。 “名词短语”绝对是 <i>更好的</i> 如果您不深入了解语法分析的技术杂草，请使用该术语。</p><p>2. 关于{thing}，你可以得出一些结论，但它们比“它是一个名词”更复杂。不谈论它们是公平的。</p><p>3. 在语言中，任何分析总是有问题的。 （这就是为什么不间断的传播链一侧可以有拉丁语，另一侧可以有法语。）我什至不会说具有这种结构的名词短语存在于像“你说得越多，我越想它”这样的例子中。但这种特殊的结构非常奇怪，我可以放心地说它超出了“一般”限定符的范围。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Is my impression correct, that in general "the {thing}" is a noun phrase without implying anything about {thing} itself?<p>Yes, with some minor caveats:</p><p>1. Some people prefer to see "the {thing}" as a 'determiner phrase', where 'determiner' is the name for the part of speech to which <i>the</i> belongs. You can call it a 'noun phrase' without losing anything meaningful. 'Noun phrase' is definitely a <i>better</i> term if you're not deep in the technical weeds of grammatical analysis.</p><p>2. There are conclusions you could draw about {thing}, but they're more complex than "it's a noun". It's fair to just not talk about them.</p><p>3. In language, there are always problems somewhere for any analysis. (Which is why an unbroken chain of transmission can have Latin on one side and French on the other.) I wouldn't even say that a noun phrase with that structure exists at all in an example like "The more you say it, the more I think it". But that particular construction is weird enough that I'm perfectly comfortable saying it's just outside the scope of your qualifier "in general".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47624078" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcre</span>
+        <span class="meta-time">2026/04/03 13:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，不是。你能举个例子吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No it isn't. Can you give an example?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623408" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LoganDark</span>
+        <span class="meta-time">2026/04/03 13:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我是一个有意识的人，因为我有意识。就像我是一个自闭症患者一样，因为我是自闭症患者。<p>不过，我认为这并不会使意识成为名词，而只是将形容词用作名词。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am a conscious because I am conscious. Similar to how I am an autistic because I am autistic.<p>I would argue, though, that doesn't make conscious a noun, but simply uses an adjective as a noun.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623417" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">culopatin</span>
+        <span class="meta-time">2026/04/03 13:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">两者不都是形容词吗？之所以有意识，是因为你有意识。否则你就是在重复同样的事情。我很高兴，因为我很高兴。我是粉红色的，因为我是粉红色的？免责声明：ESL</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Isn’t it an adjective on both? Being conscious because you have consciousness. Otherwise you’re repeating the same thing. I’m happy because I’m happy. I’m pink because I’m pink? Disclaimer: ESL</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623461" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dwb</span>
+        <span class="meta-time">2026/04/03 14:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从来没有听说过这种用法，这对我来说听起来不太合适。 （与此相关的是，“一个自闭症患者”通常被认为是过时的/有点冒犯/只是不正确。更好的是“一个自闭症患者”，这使它再次成为一个形容词。确实存在我偶尔听到的名词“自闭症患者”，但据我所知，不是从自闭症患者那里听到的，所以也可能会避免。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’ve never heard that usage, it doesn’t sound right to me. (Relatedly, “an autistic” is generally considered dated / mildly offensive / just incorrect. Better is “an autistic person”, which makes it an adjective again. There does exist the noun “autist” which I do hear occasionally, but not from autistic people as far as I’m aware, so would probably avoid as well.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623907" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">omoikane</span>
+        <span class="meta-time">2026/04/03 12:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为实际上是最后 10 行代码，而不是 12 行。我只是写了这 10 行：<p></p><pre><code>   Remember A as forty-two
+   Tell me about A
+   Remember B as A
+   Tell me about B
+   Remember C as B
+   Tell me about C
+   Remember D as C
+   Tell me about D
+   Remember E as D
+   Tell me about E
+</code></pre>
+您可以看到它如何将依赖关系绘制为右侧的图表，这有点简洁。  但是当我添加第 11 行时：<p></p><pre><code>   Remember F as E
+</code></pre>
+你会看到图变成了一个没有依赖项的森林，因为它忘记了根依赖项 A。事实上，如果你输入“Tell me about A”，它会说它不记得 A。<p>另一件值得尝试的好事情是：</p><p></p><pre><code>   Remember x as zero
+   Remember y as x
+   Remember x as y</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it's actually the last 10 lines of code, not 12.  I just wrote these 10 lines:<p></p><pre><code>   Remember A as forty-two
+   Tell me about A
+   Remember B as A
+   Tell me about B
+   Remember C as B
+   Tell me about C
+   Remember D as C
+   Tell me about D
+   Remember E as D
+   Tell me about E
+</code></pre>
+And you can see how it plots the dependencies as a graph on the right, which is kind of neat.  But when I add the 11th line:<p></p><pre><code>   Remember F as E
+</code></pre>
+You see the graph being turned into a forest with no dependencies, because it has forgotten the root dependency A.  Indeed, if you enter "Tell me about A", it will say it does not remember A.<p>Another neat thing to try is:</p><p></p><pre><code>   Remember x as zero
+   Remember y as x
+   Remember x as y</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dlcarrier</span>
+        <span class="meta-time">2026/04/03 09:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我的国家，我们称之为交互式 shell。<p>有趣的是，如果您从命令行运行 Python（不带任何选项），它会默认使用这样的 shell。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In my country, we call that an interactive shell.<p>Fun fact, if you run Python from a command line, with no options, it defaults to such a shell.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622169" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">moron4hire</span>
+        <span class="meta-time">2026/04/03 09:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大多数脚本语言都设计为在这种情况下提供 REPL（读取-评估-打印循环）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most scripting languages are designed to present a REPL (read-eval-print loop) in such a scenario.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622269" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">addaon</span>
+        <span class="meta-time">2026/04/03 12:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">需要 Mill 架构的编译器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Needs a compiler for the Mill architecture.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">NooneAtAll3</span>
+        <span class="meta-time">2026/04/03 11:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么右上角的旋钮没有任何作用？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">why does the knob in the top right corner do nothing?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622986" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">stitched2gethr</span>
+        <span class="meta-time">2026/04/03 09:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣。<p>另一方面，我不明白帖子如何在基本上没有评论的情况下登上首页顶部。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is intriguing.<p>On another note, I do not understand how posts make it to the top of the front page with essentially no comments.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622284" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tomhow</span>
+        <span class="meta-time">2026/04/03 09:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们如何在不出现在首页的情况下获得评论？ :)<p>一篇帖子只需要在提交后立即获得少量的有机点赞，就可以接近首页顶部。而且提交的内容可以轻松地在首页停留几个小时，而无需太多讨论。它们必须足够有趣，让人们认为它们值得投票。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How do they get comments without being on the front page? :)<p>A post just needs to get a handful of organic upvotes soon after submission, to get near the top of the front page. And submissions can easily stay on the front page for hours without much discussion. They just have to be interesting enough that people consider them worthy of an upvote.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47622354" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lexcamisa54</span>
+        <span class="meta-time">2026/04/03 14:12</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47623693" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
