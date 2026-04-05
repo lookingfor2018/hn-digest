@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AWS 工程师报告 PostgreSQL 性能被 Linux 7.0 减半，修复可能并不容易 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-05-1346/">返回本批次</a>
+      <h1>AWS 工程师报告 PostgreSQL 性能被 Linux 7.0 减半，修复可能并不容易</h1>
+      <p class="subtitle">AWS engineer reports PostgreSQL perf halved by Linux 7.0, fix may not be easy</p>
+      <div class="meta-line">
+        <span>www.phoronix.com</span>
+        <span>作者 crcastle</span>
+        <span>分数 190</span>
+        <span>评论 46</span>
+        <span>2026/04/05 08:13</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47644864" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.phoronix.com/news/Linux-7.0-AWS-PostgreSQL-Drop" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>周五，一名 Amazon/AWS 工程师对当前的 Linux 7.0 开发内核发出警报，导致 PostgreSQL 数据库服务器的吞吐量约为之前内核版本的一半。导致 PostgreSQL 性能减半的罪魁祸首是已知的，但恢复看起来可能不会发生，目前表明 PostgreSQL 可能需要进行调整。</li><li>Amazon/AWS 的 Salvatore Dipietro 报告了 PostgreSQL 的吞吐量和延迟回归。他们发现接近最终版本的 Linux 7.0 在 Graviton4 服务器上提供的吞吐量是之前内核的 0.51 倍左右，因为现在更多的时间花费在用户空间自旋锁上。</li><li>回归的平分可以追溯到 Linux 7.0 限制内核可用抢占模式的更改。这一更改之前已在 Linux 7.0 中的 Phoronix 上进行了介绍，以专注于最新 CPU Archs 的完全和惰性抢占模型，并通过 Linux 7.0 调度程序更新进行上游更新。</li><li>因此，昨天发布到 Linux 内核邮件列表的是一个补丁，考虑到所报告的回归的严重性，将 PREEMPT_NONE 恢复为默认值。</li><li>在修复主动性能回归时，似乎此更改是为了恢复 PREEMPT_NONE，因为可能不会采用默认抢占模型。编写简化抢占模式的原始代码的 Peter Zijlstra 回应说，“修复”是让 PostgreSQL 使用可重新启动序列 (RSEQ) 时间片扩展。 Linux 7.0 的时间片扩展支持也已上游。 “这里的修复是让 PostgreSQL 使用 rseq 切片扩展：</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>An Amazon/AWS engineer raised the alarms on Friday over the current Linux 7.0 development kernel leading to the throughput for the PostgreSQL database server being around half that of prior kernel versions. The culprit halving the PostgreSQL performance is known but a revert looks like it may not happen and currently suggesting that PostgreSQL may need to be adapted.</li><li>Salvatore Dipietro of Amazon/AWS reported a throughput and latency regression for PostgreSQL. They found Linux 7.0 in its near-final form delivering around 0.51x the throughputof prior kernels on a Graviton4 server due to now much more time being spent in a user-space spinlock.</li><li>Bisecting the regression was traced back to the Linux 7.0 change of restricting the available preemption modes for the kernel. That change was previously covered on Phoronix within Linux 7.0 To Focus Just On Full &amp; Lazy Preemption Models For Up-To-Date CPU Archs and in turn upstreamed with the Linux 7.0 scheduler updates.</li><li>As a result, yesterday posted to the Linux kernel mailing list was a patch to restore PREEMPT_NONE as the default given the severity of the reported regression.</li><li>While fixing an active performance regression, it looks like this change to restore PREEMPT_NONE as the default preemption model might not be picked up. Peter Zijlstra who authored the original code simplifying the preemption modes has responded that the &quot;fix&quot; is to make PostgreSQL make use of the Restartable Sequences (RSEQ) time slice extension. That time slice extension support was also upstreamed for Linux 7.0. &quot;The fix here is to make PostgreSQL make use of rseq slice extension:</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lfittl</span>
+        <span class="meta-time">2026/04/05 08:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">值得一读 Andres Freund（从事 Postgres 工作）撰写的这篇 LKML 后续文章： <a href="https://lore.kernel.org/lkml/yr3inlzesdb45n6i6lpbimwr7b25kqkn37qzlvvzgad5hfd7ut@xv4cihno76wu/" target="_blank" rel="noopener noreferrer">https://lore.kernel.org/lkml/yr3inlzesdb45n6i6lpbimwr7b25kqk...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Its worth reading this follow-up LKML post by Andres Freund (who works on Postgres): <a href="https://lore.kernel.org/lkml/yr3inlzesdb45n6i6lpbimwr7b25kqkn37qzlvvzgad5hfd7ut@xv4cihno76wu/" target="_blank" rel="noopener noreferrer">https://lore.kernel.org/lkml/yr3inlzesdb45n6i6lpbimwr7b25kqk...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47644993" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aftbit</span>
+        <span class="meta-time">2026/04/05 10:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;如果这最终确实成为一个可重现的性能问题（我仍然
+怀疑发生了更复杂的事情），我不明白用户空间如何
+预计可以减轻 7.0 中性能大幅下降的影响
+只能通过默认关闭来缓解，还引入了重要的功能
+在 7.0 中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;If this somehow does end up being a reproducible performance issue (I still
+suspect something more complicated is going on), I don't see how userspace
+could be expected to mitigate a substantial perf regression in 7.0 that can
+only be mitigated by a default-off non-trivial functionality also introduced
+in 7.0.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645616" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">justinclift</span>
+        <span class="meta-time">2026/04/05 10:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请注意，这不仅仅是一篇文章，在完整的帖子中还有更多更多信息。 :)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Note that it's just not a single post, and there's additional further information in following the full thread. :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645557" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeffbee</span>
+        <span class="meta-time">2026/04/05 09:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，“使用大页面”就摆在桌面上，而 99% 的用户却忽略了它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Funny how "use hugepages" is right there on the table and 99% of users ignore it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645286" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/04/05 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对剩下的表现感到非常惊讶。即使是我自己 - 就在昨天，我了解到 Gentoo 的 emerge 可以使用 git 并且速度快十亿倍。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m absolutely flabbergasted by the performance left on the table; even by myself - just yesterday I learned Gentoo’s emerge can use git and be a billion times faster.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645365" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TacticalCoder</span>
+        <span class="meta-time">2026/04/05 10:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AIUI 在那个线程中他们说 96 核 arm64 机器上的性能为“0.51x”，并且他们还说他们无法在 96 核 amd64 机器上重现它。<p>所以这不会影响每个运行 PostgreSQL 的人 <i>和</i> 升级到最新内核。条件似乎是：arm64、核心负载、内核 7.0、PostgreSQL 的当前版本。</p><p>当 7.0 几周后发布时，这不会是 100% 已安装的 PostgreSQL 数据库。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AIUI in that thread they're saying "0.51x" the perf on a 96-core arm64 machine and they're also saying they cannot reproduce it on a 96-core amd64 machine.<p>So it's not going to affect everybody both running PostgreSQL <i>and</i> upgrading to the latest kernel. Conditions seems to be: arm64, shitloads of core, kernel 7.0, current version of PostgreSQL.</p><p>That is not going to be 100% of the installed PostgreSQL DBs out there in the wild when 7.0 lands in a few weeks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645543" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zamalek</span>
+        <span class="meta-time">2026/04/05 13:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">后来在同一台机器上复制了它，但没有启用大页面。野餐？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It was later reproduced on the same machine without huge pages enabled. PICNIC?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">anarazel</span>
+        <span class="meta-time">2026/04/05 13:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我确实复制了它（程度要小得多，但它只是一台 48c/96t 机器）。但这在疯狂的配置中是一个荒谬的工作负载。不使用大页面比 PREEMPT_LAZY 造成的回归造成的伤害更大。<p>据我们目前所知，我预计现实世界中几乎没有尚未完全下降的工作负载会受到影响。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, I did reproduce it (to a much smaller degree, but it's just a 48c/96t machine). But it's an absurd workload in an insane configuration. Not using huge pages hurts way more than the regression due to PREEMPT_LAZY does.<p>With what we know so far, I expect that there are just about no real world workloads that aren't already completely falling over that will be affected.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646332" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">master_crab</span>
+        <span class="meta-time">2026/04/05 10:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于生产 Postgres，我认为它几乎没有影响？<p>如果有人在严重的后端环境中运行 postgres，我怀疑他们使用 Ubuntu 甚至接触 7.x 几个月（或几年）。它将是 6.x（甚至可能是 5？）上的 Debian 或 Red Hat 的某种风格。在发行版经过数月的测试之前，这些用户不会接触 7.x。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For production Postgres, i would assume it’s close to almost no effect?<p>If someone is running postgres in a serious backend environment, i doubt they are using Ubuntu or even touching 7.x for months (or years). It’ll be some flavor of Debian  or Red Hat still on 6.x (maybe even 5?). Those same users won’t touch 7.x until there has been months of testing by distros.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pmontra</span>
+        <span class="meta-time">2026/04/05 13:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的一个客户正在运行 Ubuntu 22.04，计划在 2027 年第一季度升级到 26.04。我们必须在计划中添加性能回归。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A customer of mine is running on Ubuntu 22.04 and the plan is to upgrade to 26.04 in Q1 2027. We'll have to add performance regression to the plan.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646438" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">crcastle</span>
+        <span class="meta-time">2026/04/05 10:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ubuntu 用于许多重要的后端环境。 Heroku 在其机群上运行数万（如果不是更多）Ubuntu 实例。或者至少在十几岁和 2020 年代初是这样。<p><a href="https://devcenter.heroku.com/articles/stack" target="_blank" rel="noopener noreferrer">https://devcenter.heroku.com/articles/stack</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ubuntu is used in many serious backend environments. Heroku runs tens of thousands (if not more) instances of Ubuntu on its fleet. Or at least it did through the teens and early 2020s.<p><a href="https://devcenter.heroku.com/articles/stack" target="_blank" rel="noopener noreferrer">https://devcenter.heroku.com/articles/stack</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645682" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nine_k</span>
+        <span class="meta-time">2026/04/05 11:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们会在新的 LTS 发布当天升级到它吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do they upgrade to the new LTS the day it is released?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645828" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">crcastle</span>
+        <span class="meta-time">2026/04/05 11:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">历史上没有。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not historically.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rvnx</span>
+        <span class="meta-time">2026/04/05 12:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们是对的，这是因为许多初级系统管理员相信更新=更好。<p>但现实是：</p><p></p><pre><code>  a) may get irreversible upgrades (e.g. new underlying database structure) 
+  b) permanent worse performance / regression (e.g. iOS 26)
+  c) added instability
+  d) new security issues (litellm)
+  e) time wasted migrating / debugging
+  f) may need rewrite of consumers / users of APIs / sys calls
+  g) potential new IP or licensing issues
+</code></pre>
+ETC。<p>升级某些东西的几个原因是：</p><p></p><pre><code>  a) new features provide genuine comfort or performance upgrade (or... some revert)
+  b) there is an extremely critical security issue
+  c) you do not care about stability because reverting is uneventful and production impact is nil (e.g. Claude Code)
+</code></pre>
+但 99% 的情况下，如果没有损坏，就不要修理它。<p><a href="https://en.wikipedia.org/wiki/2024_CrowdStrike-related_IT_outages" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/2024_CrowdStrike-related_IT_ou...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">and they are right, this is because a lot of junior sysadmins believe that newer = better.<p>But the reality:</p><p></p><pre><code>  a) may get irreversible upgrades (e.g. new underlying database structure) 
+  b) permanent worse performance / regression (e.g. iOS 26)
+  c) added instability
+  d) new security issues (litellm)
+  e) time wasted migrating / debugging
+  f) may need rewrite of consumers / users of APIs / sys calls
+  g) potential new IP or licensing issues
+</code></pre>
+etc.<p>A couple of the few reasons to upgrade something is:</p><p></p><pre><code>  a) new features provide genuine comfort or performance upgrade (or... some revert)
+  b) there is an extremely critical security issue
+  c) you do not care about stability because reverting is uneventful and production impact is nil (e.g. Claude Code)
+</code></pre>
+but 99% of the time, if ain't broke, don't fix it.<p><a href="https://en.wikipedia.org/wiki/2024_CrowdStrike-related_IT_outages" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/2024_CrowdStrike-related_IT_ou...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646056" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">MBCook</span>
+        <span class="meta-time">2026/04/05 11:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因此，也许这是专门针对arm64代码的回归，或者换句话说，也许这是一个已经存在很长时间但被删除的调度程序部分所掩盖的性能错误？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So perhaps this is a regression specifically in the arm64 code, or said differently maybe it’s a performance bug that has been there for a long time but covered up by the scheduler part that was removed?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">db48x</span>
+        <span class="meta-time">2026/04/05 12:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可能是其中任何一个，也可能完全是其他东西。甚至测量误差。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could be either of those, or something else entirely. Or even measurement error.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646214" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dsr_</span>
+        <span class="meta-time">2026/04/05 08:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有明智的人运行最新的内核；在生产中运行 PG 的人不应该害怕在启动时或作为 sysctl 设置非默认值。因此，这很可能是构建 PG 数据库服务器的另一个步骤（如果您的内核是 7.0 或更高版本并且 PG 是任何版本之前的版本，请关闭抢占）。<p>在最坏的情况下，它可能会成为构建 PG 服务器和常见问题解答的永久部分......但如果它对一件事影响如此严重，它也会影响其他事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nobody sensible runs the latest kernel; nobody running PG in production should be afraid of setting a non-default at either boot time or as a sysctl. So this will, most likely, be another step in building a PG database server (turn off pre-emption if your kernel is 7.0 or later and PG is pre-whatever-version).<p>At worst it might become a permanent part of building a PG server and a FAQ... but if it affects one thing this badly, it will affect others.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645053" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Meekro</span>
+        <span class="meta-time">2026/04/05 09:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 没有明智的人运行最新的内核<p>摘自文章：“Linux 7.0 稳定版将于大约两周后发布。这也是支持 Ubuntu 26.04 LTS 的内核版本，将于 4 月晚些时候发布。”</p><p>不幸的是，很多人将在不到一个月的时间内运行它。目前，需要一个内核补丁（而不是 sysctl）来撤消这个问题——希望能有所改变。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Nobody sensible runs the latest kernel<p>From the article: "Linux 7.0 stable is due out in about two weeks. This is also the kernel version powering Ubuntu 26.04 LTS to be released later in April."</p><p>Unfortunately, lots of people will be running it in less than a month. At the moment, it'll take a kernel patch (not a sysctl) to undo this-- hopefully something changes.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645288" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Neywiny</span>
+        <span class="meta-time">2026/04/05 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是没有人但不是每个人都会立即升级到最新的发行版。这就是 LTS 的优势。我什至发现，由于安全性的变化，很多程序对 24.04 的支持比 22.04 更差，所以我可以坚持使用 22.04 作为我的主要开发系统。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not nobody but not everybody upgrades to the newest distros immediately. That's the advantage of LTS. I've even found that a lot of programs have poorer support on 24.04 than 22.04 due to security changes, so I'm fine sticking with 22.04 as my main dev system.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">justinclift</span>
+        <span class="meta-time">2026/04/05 10:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; ...并不是每个人都会立即升级到最新的发行版。<p>虽然这是事实，但对于新部署来说，故事通常是“部署在当时可用的最新版本上”。</p><p>因此，几周内可能会大量部署使用 Linux 7.0 内核以及最新可用软件包的新项目/测试项目。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; ... not everybody upgrades to the newest distros immediately.<p>While that's true, for new deployments the story is often "deploy on the latest release of things available at the time".</p><p>So, there will probably be a substantial deployment of new projects / testing projects using the Linux 7.0 kernel along with the latest available software packages in a few weeks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645580" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/05 09:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这似乎只是因为您个人已经 4 年没有升级而消除了重大的性能下降。我认为这根本不常见。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This seems to be brushing off a major performance regression just because you personally don’t upgrade for 4 years. I don’t think that’s common at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/05 10:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是LTS的优势？ 24.04 是 LTS，而不是您使用的 22.04。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's the advantage of LTS? 24.04 is the LTS, not the one you use, 22.04.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645597" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SoftTalker</span>
+        <span class="meta-time">2026/04/05 10:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">22.04 也是 LTS 版本，还支持一年。<p><a href="https://ubuntu.com/about/release-cycle" target="_blank" rel="noopener noreferrer">https://ubuntu.com/about/release-cycle</a></p><p>我们现在正在考虑将生产机器移至 24.04。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">22.04 is also an LTS release, supported for another year still.<p><a href="https://ubuntu.com/about/release-cycle" target="_blank" rel="noopener noreferrer">https://ubuntu.com/about/release-cycle</a></p><p>We're just now looking at moving production machines to 24.04.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/05 10:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645628" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cortesoft</span>
+        <span class="meta-time">2026/04/05 11:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ubuntu 中所有偶数 .04 版本都是 LTS</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">All even number .04 releases are LTS in Ubuntu</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645759" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">999900000999</span>
+        <span class="meta-time">2026/04/05 11:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">取决于你的商店。<p>作为具有丰富 QA/Dev Opps 背景的人，我认为我们没有足够的细节。</p><p>只有ARM64吗？有多少个 ARM64 PG DB 运行 96 核？</p><p>然而...</p><p>这是世界上最流行的数据库。这很可能会影响许多其他鲜为人知的应用程序。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Depends on your shop.<p>As someone with a heavy QA/Dev Opps background I don't think we have enough details.</p><p>Is it only ARM64 ? How many ARM64 PG DBs are running 96 cores?</p><p>However...</p><p>This is the most popular database in the world. Odds are this will effect a bunch of other lesser known applications.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645922" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/05 09:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">情况可能是这样，但情况仍然不太好，人们不得不想：如果 PostgreSQL 受到影响，还有什么会受到影响？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That may be the case, but it’s still not a great situation to be in and one has to wonder: if PostgreSQL is affected, what else is?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/04/05 10:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一件大事 - PSQL 将被测试、注意到和修复（并且可能在普遍使用时有一个处理 7.0 的版本）。<p>但其他软件 <i>惯于</i> 甚至可能不会被注意到，除非作为（我讨厌使用这个词）enshitification。</p><p>最好在 7.0 中引入“正确的方法”，但不要回归旧的（如果需要，将“正确的”翻译成旧的） - 然后在 8.0 或未来的某个版本中实现回归。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's the big thing - PSQL will be tested, noticed, and fixed (and likely have a version that handles 7.0 by the time it's in common use).<p>But other software <i>won't</i> and may not even be noticed, except as a (I hate using the term) enshittification.</p><p>Better to introduce the "correct way" in 7.0 but not regress the old (translate the "correct" into the old if necessary) - and then in 8.0 or some future release implement the regression.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645546" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/05 10:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实，通常都是这样做的。正如邮件列表中的开发人员所提到的，在 7.0 中实现新的低级构造以及需要所述新的低级构造来缓解的性能回归并不是很好。  你需要一个宽限期，在此期间新旧方法都可以快速进行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly, this is how it’s usually done. As the developer on the mailing list mentions, implementing a new low level construct in 7.0 and a performance regression that requires said new low level construct to mitigate is not great.  You need a grace period in which both old and new approach is fast.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/04/05 10:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们需要一些明智的人来运行最新、最好的软件，否则我们不会发现这样的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We need some sensible people running the latest and greatest or we won't catch things like this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645515" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Seattle3503</span>
+        <span class="meta-time">2026/04/05 12:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您在 Docker 容器中运行，则共享主机内核。你可能别无选择。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you're running in a docker container you share the host kernel. You might not have a choice.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646066" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cwillu</span>
+        <span class="meta-time">2026/04/05 10:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">基本上所有平台都删除了设置 PREEMPT_NONE 的选项。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The option to set PREEMPT_NONE was removed for basically all platforms.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645659" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">GandalfHN</span>
+        <span class="meta-time">2026/04/05 13:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646362" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">harshreality</span>
+        <span class="meta-time">2026/04/05 09:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">PREEMPT_LAZY 的背景：<p><a href="https://lwn.net/Articles/994322/" target="_blank" rel="noopener noreferrer">https://lwn.net/Articles/994322/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Background on PREEMPT_LAZY:<p><a href="https://lwn.net/Articles/994322/" target="_blank" rel="noopener noreferrer">https://lwn.net/Articles/994322/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anal_reactor</span>
+        <span class="meta-time">2026/04/05 13:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有人可以向我解释一下有什么问题吗？我对Linux内核知之甚少，但我很好奇。我试着读了一点，但都是行话。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can someone explain to me what's the problem? I have very little knowledge of Linux kernel, but I'm curious. I've tried reading a little, but it's jargon over jargon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646445" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">longislandguido</span>
+        <span class="meta-time">2026/04/05 10:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有人检查一下贾坦最近是否提交了任何内核补丁吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anyone check to see if Jia Tan has submitted any kernel patches lately?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645465" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/05 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得在没有像 rseq 这样的内核支持的情况下在用户空间中使用自旋锁只会导致奇怪的性能下降。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like using spinlocks in user space at all without kernel support like rseq is just asking for weird performance degradations.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645527" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jcalvinowens</span>
+        <span class="meta-time">2026/04/05 10:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我觉得在没有像 rseq 这样的内核支持的情况下在用户空间中使用自旋锁只会导致奇怪的性能下降。<p>是的，完全正确。 “医生，救命啊，有人把我的木锤换成了金属锤，现在我不能再用它打自己的脸了。”</p><p>如果你在用户空间使用自旋锁，你会遇到麻烦。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I feel like using spinlocks in user space at all without kernel support like rseq is just asking for weird performance degradations.<p>Yeah, exactly. "Doctor, help, somebody replaced my wooden hammer with a metal one, and now I can't hit myself in the face with it as many times."</p><p>If you use spinlocks in userspace, you're gonna have a bad time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645620" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cperciva</span>
+        <span class="meta-time">2026/04/05 10:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这让我对我刚刚测量的 FreeBSD 14 和 FreeBSD 15.0 之间 10% 的性能下降感觉更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This makes me feel better about the 10% performance regression I just measured between FreeBSD 14 and FreeBSD 15.0.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645499" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">db48x</span>
+        <span class="meta-time">2026/04/05 12:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呵呵。他们是否至少添加了有用的功能来平衡成本？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heh. Did they at least add useful features to balance out that cost?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646221" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">galbar</span>
+        <span class="meta-time">2026/04/05 09:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在新旧解决方案都存在的情况下，在没有弃用期的情况下破坏用户空间应用程序并不是一个好主意，从而允许有一个过渡期。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not a good look to break userspace applications without a deprecation period where both old and new solutions exist, allowing for a transition period.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645228" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/05 10:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645631" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">FireBeyond</span>
+        <span class="meta-time">2026/04/05 08:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">曾几何时，Linus 会大喊大叫，说内核永远不应该“破坏”用户空间（我在某些地方看到，一些争论“它没有破坏，这只是性能回归”——我个人认为，卓越的数据库引擎的性能下降 50% 是......相当的回归）。<p>现在，引入用于处理抢占的全新机制（在 Linux 7.0 中引入）的内核工程师表示，“修复”是 Postgres 开始使用这种新机制（我认为下面的姐妹评论链接到了一位 Postgres 工程师对此的看法，我倾向于同意）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Once upon a time, Linus would shout and yell about how the kernel should never "break" userspace (and I see in some places, some arguments of "It's not broken, it's just a performance regression" - personally I'd argue a 50% hit to performance of a pre-eminent database engine is ... quite the regression).<p>Now, the kernel engineer who introduced the brand new mechanism (introduced in Linux 7.0) for handling pre-emption says the "fix" is for Postgres to start using this new mechanism (I think the sister comment below links to what one of the Postgres engineers thinks of that, and I'm inclined mostly to agree).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645023" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MBCook</span>
+        <span class="meta-time">2026/04/05 11:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不是其他维护者第一次违反“莱纳斯定律”。<p>他可能只是在等待，直到更多地了解到底是什么原因造成的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It wouldn’t be the first time one of the other maintainers ran afoul of “Linus’s law“.<p>He may simply be waiting until more is known on exactly what’s causing it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">perching_aix</span>
+        <span class="meta-time">2026/04/05 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的观点 - 我认为整个“这不是中断，而是（水平或垂直）降级”的事情是 Web 服务所独有的，但仔细想想，我想它甚至适用于这样的情况。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Entertaining perspective - I thought that the whole "it's not an outage it's a (horizontal or vertical) degradation" thing was exclusive to web services, but thinking about it, I guess it does apply even in cases like this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645363" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bear8642</span>
+        <span class="meta-time">2026/04/05 09:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我认为性能下降 50% [...] 是...相当倒退<p>的确！特别是如果所述回归恰好影响任何与贸易/市场相关的事情......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I'd argue a 50% hit to performance [...] is ... quite the regression<p>Indeed! Especially if said regression happens to impact anything trade/market related...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645306" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arjie</span>
+        <span class="meta-time">2026/04/05 11:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，他之所以大喊大叫，是因为有人这么做了。如果没有人这样做，他就永远不会大喊大叫，我们也永远不会有这条规则。因此，人们只能想象这是一件必须有人坚持到底的事情，而不是你制定一些规则并且它自我维持的事情之一。<p>毫无疑问，必须有人大声喊叫。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, the reason he'd yell about it is that someone did it. If no one ever did it, he'd never yell and we'd never have the rule. So one can only imagine that this is one of those things where someone has to keep holding the line rather than one of those things where you set some rule and it self-holds.<p>Doubtless someone will have to do the yelling.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645969" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">quietsegfault</span>
+        <span class="meta-time">2026/04/05 10:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是我的第一反应——内核不会破坏软件，或者至少过去不会。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This was my immediate thought - kernel doesn’t break software, or at least it didn’t used to.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645685" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cdelsolar</span>
+        <span class="meta-time">2026/04/05 12:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://lkml.org/lkml/2012/12/23/75" target="_blank" rel="noopener noreferrer">https://lkml.org/lkml/2012/12/23/75</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://lkml.org/lkml/2012/12/23/75" target="_blank" rel="noopener noreferrer">https://lkml.org/lkml/2012/12/23/75</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646155" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/05 10:42</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645665" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

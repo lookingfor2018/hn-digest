@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：受 3Blue1Brown 启发的 WebGL 中的 M.C. Escher 螺旋 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-05-1346/">返回本批次</a>
+      <h1>显示 HN：受 3Blue1Brown 启发的 WebGL 中的 M.C. Escher 螺旋</h1>
+      <p class="subtitle">Show HN: M. C. Escher spiral in WebGL inspired by 3Blue1Brown</p>
+      <div class="meta-line">
+        <span>static.laszlokorte.de</span>
+        <span>作者 laszlokorte</span>
+        <span>分数 47</span>
+        <span>评论 8</span>
+        <span>2026/04/05 03:43</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47642601" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://static.laszlokorte.de/escher/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>显示着色器/关于 请观看这段精彩的 3Blue1Brown 视频以获取深入的解释。总结一下：最初的想法被 M. C. Escher 在他们的艺术作品中推广。德罗斯特效应是将较小版本的图像嵌入到自身中的想法，从而导致（理论上）无限重复的递归深度。埃舍尔通过打破两个递归图像之间的界限并将它们变形在一起，进一步发展了这个想法。这导致视觉印象：不存在重复图像的单独实例，而只是向内螺旋的单个图像。这种效应也可以被认为是奇怪的循环，正如道格拉斯·霍夫施塔特（Douglas Hofstadter）在他的《哥德尔、埃舍尔、巴赫》一书中所做的那样。从计算角度来看，要将任何经典图像转换为 droste 图像，只需将经典图像的较小版本渲染到原始图像之上的某个位置即可。根据嵌套图像之间的缩放因子，必须重复此操作，直到满足所需显示分辨率的阈值，以便没有人能够认识到实际上不存在无限的越来越小的图像。生成埃舍尔螺旋以平滑地连接所有递归图像稍微复杂一些。我们需要将图像的 (x,y) 坐标转换为从发生递归的图像中心点测量的半径和角度的极坐标。这使得两个坐标都具有周期性：在德罗斯特图像中，角度显然是周期性的，半径也是周期性的，因为当向内或向外移动时，图像会在一段时间后重复。因此，只需将图像坐标系从笛卡尔坐标系更改为极坐标系，就可以使我们更清楚地看到和表达图像的周期性。下一个技巧是在极坐标空间中变换（旋转和缩放）图像。为此所需的关键见解是，原始图像中的所有同心圆都是极空间内的水平直线（因为它们在原始图像中具有相同的半径但角度不同）。因此，在极坐标空间中，德罗斯特图像的所有越来越小的实例都被展开成彼此下方大小相等的行。要打破它们的分离，我们只需打破分隔它们的水平行结构即可。只需旋转极坐标空间中的所有内容即可轻松完成此操作，以便单个图像实例对角地跨越多个（实际上是无限的）行。旋转后，极坐标空间中的一条水平线和一条垂直线穿过所有图像实例。当现在转换回笛卡尔坐标时，这会导致图像的所有实例都具有共同的所有半径和角度，从而产生螺旋效果。唯一棘手的部分是进行极空间旋转，使螺旋旋转的周期与缩放的图像一致。总的来说，这种首先转换为极坐标，然后进行简单旋转，最后转换回来的技巧可以与信号处理中的傅里叶变换的应用进行比较。傅立叶变换可用于对信号应用线性滤波器。不必在时域中计算滤波器内核与输入信号的卷积，而是可以将其作为频率中的简单逐元素乘法来完成。我们不直接进行复杂的计算，而是先转换到另一个坐标系，在那里进行简单的计算，然后再转换回来。对于计算笛卡尔空间中的疯狂螺旋的埃舍尔效应，我们只需移动到极坐标，进行简单的旋转，然后它们向后移动。您可以在下面阅读用于进行转换的 WebGL 顶点和片段着色器。其他一些人已经构建了一些具有相同效果的非常酷的演示。例如，此游戏 Eschers Print Gallery 和应用于播放视频的相同效果。顶点着色器 Framgnet 着色器</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Show Shader / About See this fantastic 3Blue1Brown video for an in depth explanation. To summarize: The original idea is popularized by M. C. Escher in their artworks. The droste effect is the idea of embedding a smaller version of an image into itself leading to an (theoretically) infinitely repeating recursive depth. Escher took this idea even further by breaking the boundary between two recursive images and morphing them together. This leads to the visual impression that there are no separate instances of a repeated image but just a single image spiraling inwards. This effect can also be recognized as strange loop as done by Douglas Hofstadter in his book Gödel, Escher, Bach. Computationally, to turn any classic image into a droste image a smaller version of the classic image has just to be renderered somewhere ontop of the original image. Depending on the scaling factor between nested images this has to be repeated until the threshold of the required display resolution is met, so that nobody can recognize that there are in fact not infinite smaller and smaller images. Generating an Escher spiral to connect all the recursive images smoothly is slightly more sophisticated. We need to transform the (x,y)-coordinates of the image into polar coordinates of radius and angle measured from the center point in the image at which the recursion takes place. This makes both coordinates periodic: The angle is obviously periodic and the radius is periodic in droste images because when moving inwards or outwards the image will repeat after some period So just changing the images coordinate system from cartesian to polar coordinates enables us to see and to express the periodicity of the image much more clearly. The next trick is to transform (rotate and scale) the image in its polar coordinate space. The key insight required for this is that all concetric circles from the original image are straight horzontall lines inside the polar space (because they have all the same radius but different angles in the original image). So in the polar space all the smaller and smaller instances of the droste image are unwrapped into equally sized rows below to each other. To break their separation we just have to break the horzontal row structure seperating them. This can easily be done by just rotating everything in polar space so that a single image instance runs diagonally across multiple (actually all infinite) rows. After the rotation both a single horzontal line and a single vertical line in polar space run through all image instances. When now transforming back into cartesian coordinates this leads to all the instaces of the images having both all radii and and angles in common, resulting in a spiralling effect. The only tricky part is to do the polar space rotation in such a way that the period of the spiral turning lines up with the image being scaled. Overall this trick of first transforming into polar coordinates, then doing a simple rotation and finally transforming back can be compared to the application of the fourier transform in signal processing. The fourier transform can be used to apply linear filters to a signal. Instead of computing the convolution of the filter kernel with the input signal in the time domain it can be done as a simple element-wise multiplication in the frequency. Instead of doing a complicated calculation directly we first transform into another coordinate system, do a simple calculation there and them transform back. For the Escher effect for calculating a crazy spiral in cartesian space, we just move to polar coordinates, to a simple rotation and them move back. Below you can read the WebGL vertex and and fragment shaders for doing the the transformation. Some other people have already built some really cool demos of the same effect. For example this recreation Eschers Print Gallery and the same effect to applied to playing video. Vertex Shader Framgnet Shader</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vivzkestrel</span>
+        <span class="meta-time">2026/04/05 13:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里向 webgl 专家提出愚蠢的问题吗？<p>- 你能使用 web gl 构建一个完整的 fps 射击游戏吗？物理是如何处理的？碰撞检测、敌方AI如何处理？使用 web gl 制作的《反恐精英》游戏可以达到什么样的帧速率？</p><p>- webgl 和 Threejs 以及 Babylonjs 之间有什么区别？</p><p>- 假设你非常了解 html、css 和 js 但不熟悉 gamedev，那么做这样的事情需要花费多少工时</p><p>- open gl 是 web gl 的非网页版本吗？或者它们完全不同？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">stupid question to webgl experts here?<p>- can you build an entire fps shooter game using web gl? how is physics handled? how is collision detection, enemy AI handled? what kind of frame rate can you expect from a counter strike game made in web gl?</p><p>- what is the difference between webgl and threejs and babylonjs?</p><p>- what is the man hour effort involved for doing something like this assuming you know html, css and js pretty well but not familiar with gamedev</p><p>- is open gl the non web version of web gl? or are they completely different?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646452" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Panzerschrek</span>
+        <span class="meta-time">2026/04/05 13:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也做了我自己的版本： <a href="https://www.youtube.com/watch?v=xxLfDHe93_M" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=xxLfDHe93_M</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did my own version too: <a href="https://www.youtube.com/watch?v=xxLfDHe93_M" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=xxLfDHe93_M</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47646434" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">djmips</span>
+        <span class="meta-time">2026/04/05 10:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么不包括打印画廊图像？或者 - 如果担心版权，加载图像的能力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why not include the Print Gallery image? Or - if worried about copyright, the ability to load an image.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645701" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">crazygringo</span>
+        <span class="meta-time">2026/04/05 10:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷！然而，我花了一段时间才弄清楚应该如何使用它。<p>对于其他人：</p><p>至少在桌面上，您需要单击并向上/向下拖动带有两个箭头的“滑动”左侧控件。</p><p>或单击“自动播放”。</p><p>laszlokorte——我可以建议向上/向下图标也应该是可点击/可按住的吗？由于它们是图标，因此看起来像按钮，而不是“滑动区域”。而且，也许默认打开自动播放（但控件仍然可见）？因为一开始我并不清楚该网站的重点是无限缩放。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool! However, it took me a while to figure out how this was supposed to be used.<p>For others:</p><p>On desktop, at least, you need to click and drag up/down on the left-hand control that says "swipe" with two arrows.</p><p>Or click "Autoplay".</p><p>laszlokorte -- can I suggest that the up/down icons should also be clickable/holdable? Since they're icons, they look like buttons, not a "swipe area". And also, maybe default to having autoplay on (but still with the controls visible)? Because it was not clear to me, at first, that the whole point of the site is infinite zoom.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645618" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kmoser</span>
+        <span class="meta-time">2026/04/05 11:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">鼠标滚轮也能用</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Mouse scroll wheel works, too</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645796" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nvme0n1p1</span>
+        <span class="meta-time">2026/04/05 11:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太棒了！我也希望能够上传自定义图像。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is awesome! I'd love to be able to upload a custom image too.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645763" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sgbeal</span>
+        <span class="meta-time">2026/04/05 04:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其他观众请注意：要获得埃舍尔式的效果，需要点击页面顶部的复选框（在大显示器上很容易错过）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Note to other viewers: getting the Escher-esque effect requires tapping a checkbox at the top of the page (easy to miss on a large monitor).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47642888" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">breakyerself</span>
+        <span class="meta-time">2026/04/05 11:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太棒了。我很想看到原来的埃舍尔图像在那里滚动。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is awesome. I'd love to see the original escher image scroll through there.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47645788" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
