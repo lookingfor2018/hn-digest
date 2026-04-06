@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>案例研究：恢复损坏的 12 TB 多设备池 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-06-1623/">返回本批次</a>
+      <h1>案例研究：恢复损坏的 12 TB 多设备池</h1>
+      <p class="subtitle">Case study: recovery of a corrupted 12 TB multi-device pool</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 salt4034</span>
+        <span>分数 53</span>
+        <span>评论 14</span>
+        <span>2026/04/06 10:28</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47656303" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/kdave/btrfs-progs/issues/1107" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>您好，提前感谢您的阅读。这不是错误报告。这是一个案例研究，记录了严重损坏的 12 TB 多设备池的恢复工作，在此共享，以防任何观察结果对 btrfs-progs 开发有用。这个目标是建设性的，而不是抱怨。一段摘要 3 个设备池（数据单一、元数据 DUP、DM-SMR 磁盘）上的硬重启使盘区树和可用空间树处于本机修复路径无法解析的状态。随后的 btrfs check --repair 运行进入了 46,000 多次提交的无限循环，净进度为零，将 4 个 backup_roots 插槽旋转到任何崩溃前的回滚点。通过针对内部 btrfs-progs API 构建的一组 14 个自定义 C 工具，恢复最终成功，最终数据丢失了 4.59 TB 中的约 7.2 MB（0.00016%）。该池现已全面投入使用。全面分析 我以结构化的方式编写了该案例，涵盖环境、时间表、根本原因分类、我们根据经验得出的防弹安全标准，以及 9 个特定领域，在这些领域中，相对较小的上游更改将阻止对大多数自定义工具的需求。 https://github.com/msedek/btrfs_fixes/blob/main/INCIDENT-ANALYSIS.md 九个建议的改进领域，按对遇到类似情况的运营商的预期影响排序：</li><li>A. btrfs check --repair 中的进度检测，以便 46,000 个提交循环中止并发出明确消息，而不是销毁 backup_roots。 B. reinit_extent_tree 中 BTRFS_ADD_DELAYED_REF 的对称处理，与现有的 BTRFS_DROP_DELAYED_REF 豁免相匹配。 C. btrfs_del_items 重新平衡中的同级安全预检查，因此低于 LEAF_DATA_SIZE/4 的耗尽不会在过时的可共享同级上触发 push_leaf_left。 D. 使用三种显式模式（错误、静默、更新）监督 alloc_reserved_tree_block 中的 EEXIST 处理。 E. btrfsrescuerebuild-extent-tree 子命令，从预扫描的引用列表进行操作，作为当前死锁的 --init-extent-tree 的替代方案。 F. 具有内置试运行的 btrfsrescue clean-orphan-inodes 子命令，可应用防弹 5 条件检查并生成机器可读的计划。 G. 用于手术 BLOCK_GROUP_ITEM 的 btrfs 救援修复 bg-accounting。在批量范围树重建后使用修复。 H. 更清晰的文档表明 backup_roots[0..3] 是一个四提交滑动窗口，而不是历史备份（被广泛误解）。 I. DIR i_size = sum(namelen * 2) 规则的文档，该规则在孤立目录条目清理期间困扰我们，并且当前未记录在任何面向用户的位置。</li><li>参考实现 所有 14 个自定义工具以及 alloc_reserved_tree_block 的单行补丁均以 GPL-2.0 形式发布于：https://github.com/msedek/btrfs_fixes 每个工具默认都有一个只读扫描模式和一个可选择的 --write 模式。 README.md 解释了恢复期间使用的执行顺序。我不建议直接将它们作为上游补丁。上面的大多数提议都不是单一功能的改变，要让其中任何一个被接受都需要与比我更熟悉所涉及子系统的人进行设计讨论。共享参考实现比在没有上下文的情况下打开九个单独的拉取请求更有用。我希望如何收到此信息 请将此视为输入，而不是需求。如果任何单一的观察或建议值得追求，我很乐意扩展分析，提供会话日志中的额外证据，或针对我们所遭受的损坏类别测试任何建议的补丁。如果它们都没有用，也没有问题，感谢您提供的工具集帮助我们完成了大部分工作。再次感谢。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Hello, and thanks in advance for reading. This is not a bug report. It is a case study write up of a recovery effort on a severely corrupted 12 TB multi-device pool, shared here in case any of the observations are useful to btrfs-progs development. The goal is constructive, not a complaint. One paragraph summary A hard power cycle on a 3 device pool (data single, metadata DUP, DM-SMR disks) left the extent tree and free space tree in a state that no native repair path could resolve. A subsequent btrfs check --repair run entered an infinite loop of 46,000+ commits with zero net progress, rotating the 4 backup_roots slots past any pre-crash rollback point. Recovery eventually succeeded through a set of 14 custom C tools built against the internal btrfs-progs API, with a final data loss of about 7.2 MB out of 4.59 TB (0.00016 percent). The pool is now fully operational. Full analysis I wrote the case up in a structured way that covers environment, timeline, root cause classification, the bulletproof safety criterion we derived empirically, and 9 specific areas where a relatively small upstream change would have prevented the need for most of the custom tooling. https://github.com/msedek/btrfs_fixes/blob/main/INCIDENT-ANALYSIS.md The nine proposed improvement areas, in order of expected impact on operators hitting similar cases:</li><li>A. Progress detection in btrfs check --repair so 46,000 commit loops abort with a clear message instead of destroying backup_roots. B. Symmetric handling of BTRFS_ADD_DELAYED_REF in reinit_extent_tree, matching the existing BTRFS_DROP_DELAYED_REF exemption. C. Sibling safety precheck in btrfs_del_items rebalance so a drain below LEAF_DATA_SIZE/4 does not trigger push_leaf_left on a stale sharable sibling. D. Supervised EEXIST handling in alloc_reserved_tree_block with three explicit modes (error, silent, update). E. A btrfs rescue rebuild-extent-tree subcommand that operates from a pre-scanned ref list, as an alternative to the currently deadlocking --init-extent-tree. F. A btrfs rescue clean-orphan-inodes subcommand with a built-in dry-run that applies the bulletproof 5-condition check and produces a machine-readable plan. G. A btrfs rescue fix-bg-accounting for surgical BLOCK_GROUP_ITEM.used fixes after bulk extent tree rebuild. H. Clearer documentation that backup_roots[0..3] is a four commit sliding window, not historical backup (widely misunderstood). I. Documentation of the DIR i_size = sum(namelen * 2) rule, which bit us during orphan dir entry cleanup and is not currently written down in any user facing place.</li><li>Reference implementation All 14 custom tools, along with the single-line patch to alloc_reserved_tree_block, are published in GPL-2.0 form at: https://github.com/msedek/btrfs_fixes Every tool has a read-only scan mode by default and a --write mode that is opt-in. The README.md explains the execution order used during recovery. I am not proposing these as upstream patches directly. Most of the proposals above are not single function changes and getting any of them accepted would require a design discussion with people more familiar than me with the subsystems involved. Sharing the reference implementation felt more useful than opening nine separate pull requests without context. How I would like this to be received Please treat this as input, not as a demand. If any single observation or proposal is worth pursuing, I am happy to expand the analysis, provide additional evidence from the session logs, or test any proposed patch against the class of damage we hit. If none of it is useful, no problem, and thanks for the tool set that got us most of the way there. Thanks again.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/06 13:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这不是错误报告。 [...]目标是建设性的，而不是抱怨。<p>呃，我很欣赏尝试具有建设性，但在什么可能的情况下，电源循环可能会丢失池不是一个错误？如果这在技术上不是一个“错误”，因为 BTRFS 官方指定它可能会失败，那么为什么在任何文档的开头都没有以大粗体文本显示这一点？因为这对于用户来说是一件大事。</p><p>编辑：从较长的文章中：</p><p>&gt; 初始损坏。硬重启中断了第 18958 到 18959 代的提交。多个元数据块的两个 DUP 副本都是使用不一致的父代和子代写入的。</p><p>作者是否禁用了安全机制来实现这种情况？我对 ZFS 比较熟悉，但我希望 BTRFS 也使用 CoW 模型，在这种模型中，不可能存在多个不一致的元数据块，而不仅仅是将您恢复到最后一次完全良好的提交。如果它默认这样做，但有一种方法可以以提高性能的名义禁用该保护，那将极大地改变我对整个事情的看法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; This is not a bug report. [...] The goal is constructive, not a complaint.<p>Er, I appreciate trying to be constructive, but in what possible situation is it not a bug that a power cycle can lose the pool? And if it's not technically a "bug" because BTRFS officially specifies that it can fail like that, why is that not in big bold text at the start of any docs on it? 'Cuz that's kind of a big deal for users to know.</p><p>EDIT: From the longer write-up:</p><p>&gt; Initial damage. A hard power cycle interrupted a commit at generation 18958 to 18959. Both DUP copies of several metadata blocks were written with inconsistent parent and child generations.</p><p>Did the author disable safety mechanisms for that to happen? I'm coming from being more familiar with ZFS, but I would have expected BTRFS to also use a CoW model where it wasn't possible to have multiple inconsistent metadata blocks in a way that didn't just revert you to the last fully-good commit. If it does that by default but there's a way to disable that protection in the name of improving performance, that would significantly change my view of this whole thing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rcxdude</span>
+        <span class="meta-time">2026/04/06 16:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">btrfs 在这方面的声誉并不高。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">btrfs's reputation is not great in this regard.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rincebrain</span>
+        <span class="meta-time">2026/04/06 14:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">据我所知，不，作者没有禁用他记录的任何类型的内容。<p>我怀疑作者的意图不是“我不认为这是一个错误”，而是“我认为就某件事是否是错误进行激烈的争论是没有用的”。我不知道这在 btrfs 讨论中是否常见，但我确实在其他地方看到过类似的争论。</p><p>（我个人最喜欢的仍然是“如果有人从技术上理论上可以编写一些东西来恢复数据，那么这不是一个数据丢失错误”。也许，从技术上来说，这是真的，但如果没有人编写这样的工具，那么没有人会关心那里的语义。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As far as I can see, no, the author disabled nothing of the sort that he documented.<p>I suspect that the author's intent is less "I do not view this as a bug" and more "I do not think it's useful to get into angry debates over whether something is a bug". I do not know whether this is a common thing on btrfs discussions, but I have certainly seen debates to that effect elsewhere.</p><p>(My personal favorite remains "it's not a data loss bug if someone could technically theoretically write something to recover the data". Perhaps, technically, that's true, but if nobody is writing such a tool, nobody is going to care about the semantics there.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657608" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/06 15:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我怀疑作者的意图不是“我不认为这是一个错误”，而是“我认为就某件事是否是错误进行激烈的争论是没有用的”。<p>同意，我很欣赏将事情转化为富有成效的对话的尝试。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I suspect that the author's intent is less "I do not view this as a bug" and more "I do not think it's useful to get into angry debates over whether something is a bug".<p>Agreed, and I appreciate the attempt to channel things into a productive conversation.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657768" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/04/06 15:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除非我错过了，否则这篇文章永远不会识别出因果错误，只会识别出使恢复变得更加困难的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unless I missed it the writeup never identifies a causal bug, only things that made recovery harder.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657761" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/04/06 14:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这显然是LLM输出，但也许LLM输出对应于真实场景。克劳德能够自主恢复损坏的文件系统似乎是合理的，但默认情况下我不会相信它的“洞察力”。我很想看看 btrfs 开发者对此的看法！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is obviously LLM output, but perhaps LLM output that corresponds to a real scenario. It's plausible that Claude was able to autonomously recover a corrupted fs, but I would not trust its "insights" by default. I'd love to see a btrfs dev's take on this!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657692" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">number6</span>
+        <span class="meta-time">2026/04/06 14:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这也是我的第一冲动。第二，如果这件事发生在我身上，我将无法挽回。所有定制的 C 工具都在讨论...如果你问 Claude Code，它会编写一些代码。<p>他恢复磁盘本身就令人惊奇。我本来会放弃并只是撤回备份。</p><p>但是，我希望看到开发人员说：你为什么不使用我们为此用例创建的 --&lt;flag&gt;</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is also my first impulse. The second was, if this happened to me, I would not be able to recover it. All the custom c tool talk... If you ask Claude Code it will code something up.<p>Well that he recovered the disks is amazing in itself. I would have given up and just pulled a backup.</p><p>However, I would like to see a Dev saying: why didn't you use the --&lt;flag&gt; which we created for this Usecase</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657748" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/06 15:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我假设真实的场景需要法学硕士的大力帮助才能恢复。希望作者能够澄清一下。另外，对于 BTRFS 开发人员来说，尽管我更愿意在花时间之前得到一些迹象表明它是真实的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was assuming real scenario with heavy LLM help to recover. Would be nice for the author to clarify. And, separately, for BTRFS devs to weigh in, though I'd somewhat prefer to get some indication that it's real before spending their time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nslsm</span>
+        <span class="meta-time">2026/04/06 15:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">法学硕士不会犯“一个段落摘要”之类的错误</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">An LLM wouldn't make a mistake like "One paragraph summary"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658093" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/06 14:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657615" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">stinkbeetle</span>
+        <span class="meta-time">2026/04/06 13:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 案例研究：恢复严重损坏的 12 TB 多设备池，以及建设性差距分析和参考工具集 #1107<p>请不要成为 btrfs 请不要成为 btrfs 请不要成为 btrfs...</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Case study: recovery of a severely corrupted 12 TB multi-device pool, plus constructive gap analysis and reference tool set #1107<p>Please don't be btrfs please don't be btrfs please don't be btrfs...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657355" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">toaste_</span>
+        <span class="meta-time">2026/04/06 15:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，唯一的其他选择是 bcachefs，如果这篇 LLM 生成的博文是由开发人员认为有感知能力的 OpenClaw 实例编写的，这可能会很有趣：<p><a href="https://www.reddit.com/r/bcachefs/comments/1rblll1/the_blog_of_an_llm_saying_its_owned_by_kent_and/" target="_blank" rel="noopener noreferrer">https://www.reddit.com/r/bcachefs/comments/1rblll1/the_blog_...</a></p><p>但没有。这是 btrfs。</p><p>顺便说一句，令人印象深刻的是，LLM 代理能够生成一套自定义工具，这些工具显然成功地用于从损坏的 btrfs 阵列中恢复一些数据，甚至是临时的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean, the only other option was bcachefs, which might have been funny if this LLM-generated blogpost were written by the OpenClaw instance the developer has decided is sentient:<p><a href="https://www.reddit.com/r/bcachefs/comments/1rblll1/the_blog_of_an_llm_saying_its_owned_by_kent_and/" target="_blank" rel="noopener noreferrer">https://www.reddit.com/r/bcachefs/comments/1rblll1/the_blog_...</a></p><p>But no. It was btrfs.</p><p>As a side note, it's somewhat impressive that an LLM agent was able to produce a suite of custom tools that were apparently successfully used to recover some data from a corrupted btrfs array, even ad-hoc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/06 15:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它 <i>可以</i> 是ZFS。我会更惊讶，但它仍然可能有错误。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It <i>could</i> be ZFS. I'd be much more surprised, but it can still have bugs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657918" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">praseodym</span>
+        <span class="meta-time">2026/04/06 15:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多年来，Linux 上的 ZFS 存在许多错误，特别是 ZFS 原生加密，尤其是发送/接收加密卷。另一个问题是，在ZFS上使用swap仍然会保证在内存不足的情况下挂起内核，因为ZFS需要分配内存来写入swap。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ZFS on Linux has had many bugs over the years, notably with ZFS-native encryption and especially sending/receiving encrypted volumes. Another issue is that using swap on ZFS is still guaranteed to hang the kernel in low memory scenarios, because ZFS needs to allocate memory to write to swap.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">phoronixrly</span>
+        <span class="meta-time">2026/04/06 13:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">致原作者：经历了这次磨难之后，您还继续使用 btrfs 吗？一个仅以 14 个自定义 C 工具为代价，在硬重启时不会吃掉（所有）数据的 FS 对我来说是一个艰难的选择，无论有多少发行版试图将它推入我的喉咙作为“生产就绪”......<p>另外，令人印象深刻的工作！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To theal author: did you continue using btrfs after this ordeal? An FS that will not eat (all) your data upon a hard powercycle only at the cost of 14 custom C tools is a hard pass from me no matter how many distros try to push it down my throat as 'production-ready'...<p>Also, impressive work!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657334" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

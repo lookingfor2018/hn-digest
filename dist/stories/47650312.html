@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>（每晚）Rust 中的尾部调用解释器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-06-1623/">返回本批次</a>
+      <h1>（每晚）Rust 中的尾部调用解释器</h1>
+      <p class="subtitle">A tail-call interpreter in (nightly) Rust</p>
+      <div class="meta-line">
+        <span>www.mattkeeter.com</span>
+        <span>作者 g0xA52A2A</span>
+        <span>分数 155</span>
+        <span>评论 36</span>
+        <span>2026/04/05 23:18</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47650312" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.mattkeeter.com/blog/2026-04-05-tailcall/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dathinab</span>
+        <span class="meta-time">2026/04/06 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 生成的 VM 优于我之前的 Rust 实现和我手工编码的 ARM64 程序集<p>对我来说，“高度专业化的虚拟机/指令解释器”的高效程度总是令人惊讶</p><p>就像例如两个关于如何在 rust 中实现更好（快速、更紧凑）序列化的独立研究项目最终得到了类似用于序列化指令的 VM/解释器之类的东西，从而实现更高的性能和更紧凑的代码大小，同时仍然支持与 serde 类似的功能集（1）</p><p>（一般来说，单态化和双分派（例如 serde）可以让你走得很远，但最好的方法总是不是极端。既不能减轻单态化也不能减轻动态分派，而是在利用两者的优势之间取得平衡。并且专门的迷你虚拟机在某种程度上是一种额外灵活的动态分派形式。）</p><p>---</p><p>(1)：在正常到大型项目上更紧凑的代码大小，在微型项目上没有必要，因为“固定开销”通常稍大，而每个序列化类型/协议开销可以更小。</p><p>(1b)：它们一直是实验性研究项目，不确定它们是否已发布到 GitHub，不适合在生产或类似用途中使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; resulting VM outperforms both my previous Rust implementation and my hand-coded ARM64 assembly<p>it's always surprising for me how absurdly efficient "highly specialized VM/instruction interpreters" are</p><p>like e.g. two independent research projects into how to have better (fast, more compact) serialization in rust ended up with something like a VM/interpreter for serialization instructions leading to both higher performance and more compact code size while still being cable of supporting similar feature sets as serde(1)</p><p>(in general monomorphisation and double dispatch (e.g. serde) can bring you very far, but the best approach is like always not the extrem. Neither allays monomorphisation nor dynamic dispatch but a balance between taking advantage of the strength of both. And specialized mini VMs are in a certain way an extra flexible form of dynamic dispatch.)</p><p>---</p><p>(1): More compact code size on normal to large project, not necessary on micro projects as the "fixed overhead" is often slightly larger while the per serialization type/protocol overhead can be smaller.</p><p>(1b): They have been experimental research project, not sure if any of them got published to GitHub, non are suited for usage in production or similar.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47651430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sa46</span>
+        <span class="meta-time">2026/04/06 06:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">八个月前，一个新的 Go protobuf 解析器 [1] 在这里出现了 [2]，它带有一个专门的 VM，其性能比默认生成的 protobuf 代码高出 3 倍。<p>[1]： <a href="https://mcyoung.xyz/2025/07/16/hyperpb/" target="_blank" rel="noopener noreferrer">https://mcyoung.xyz/2025/07/16/hyperpb/</a></p><p>[2]： <a href="https://news.ycombinator.com/item?id=44591605" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44591605</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A new Go protobuf parser [1] made the rounds here eight months ago [2] with a specialized VM that outperforms the default generated protobuf code by 3x.<p>[1]: <a href="https://mcyoung.xyz/2025/07/16/hyperpb/" target="_blank" rel="noopener noreferrer">https://mcyoung.xyz/2025/07/16/hyperpb/</a></p><p>[2]: <a href="https://news.ycombinator.com/item?id=44591605" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44591605</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gavinray</span>
+        <span class="meta-time">2026/04/06 02:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说，嵌入式虚拟机/解释器能够胜过直接代码是没有意义的<p>您正在添加一个抽象和间接层，那么更间接的解决方案怎么可能具有更好的性能呢？</p><p>这似乎违反直觉，所以我用谷歌搜索了一下。显然，这很大程度上归结为指令缓存效率和分支预测。我能找到的最好的内容是这篇文章，以及来自 LuaJIT 的 Mike Pall 的一些零星评论：</p><p><a href="https://sillycross.github.io/2022/11/22/2022-11-22/" target="_blank" rel="noopener noreferrer">https://sillycross.github.io/2022/11/22/2022-11-22/</a></p><p>有趣的是，在一篇关于使用 Clang 最近的 [[musttail]] tailcall 属性来提高 C++ JSON 解析性能的类似博文中也讨论了这一点：</p><p><a href="https://blog.reverberate.org/2021/04/21/musttail-efficient-interpreters.html" target="_blank" rel="noopener noreferrer">https://blog.reverberate.org/2021/04/21/musttail-efficient-i...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It doesn't make sense to me that an embedded VM/interpreter could ever outperform direct code<p>You're adding a layer of abstraction and indirection, so how is it possible that a more indirect solution can have better performance?</p><p>This seems counterintuitive, so I googled it. Apparently, it boils down to instruction cache efficiency and branch prediction, largely. The best content I could find was this post, as well as some scattered comments from Mike Pall of LuaJIT fame:</p><p><a href="https://sillycross.github.io/2022/11/22/2022-11-22/" target="_blank" rel="noopener noreferrer">https://sillycross.github.io/2022/11/22/2022-11-22/</a></p><p>Interestingly, this is also discussed on a similar blogpost about using Clang's recent-ish [[musttail]] tailcall attribute to improve C++ JSON parsing performance:</p><p><a href="https://blog.reverberate.org/2021/04/21/musttail-efficient-interpreters.html" target="_blank" rel="noopener noreferrer">https://blog.reverberate.org/2021/04/21/musttail-efficient-i...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mananaysiempre</span>
+        <span class="meta-time">2026/04/06 04:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 对于我来说，嵌入式虚拟机/解释器能够胜过直接代码是没有意义的。您正在添加一个抽象和间接层，那么更间接的解决方案怎么可能具有更好的性能呢？<p>它 <i>是</i> 有趣的是，但是（就像我几个月前已经提到的[1]）对于序列化（相邻）格式，特别是字节码解释器的优先位置已经被一次又一次地重新发现。</p><p>我知道的最早的例子是微软的 MIDL，它开始为 NDR un/marshalling 生成 C 代码，但很快（大约 1995 年）切换到字节码程序（出于某种原因，微软将其称为“格式字符串”；现在还有 typelib 编组和 WinRT 元数据驱动的编组，后者完全没有文档记录，但都是数据驱动的）。 Bellard 的非自由 ffasn1（似乎）也使用字节码，这与 ASN.1 的主要 FOSS 实现不同。 Protocol Buffers 始于 codegen（将 Google 用户隐藏在反/序列化代码中），但 UPB 使用“表驱动”，即字节码、解析 [2]。</p><p>在我看来，这段漫长历史中最有趣的一章是 Swift 基于字节码的价值见证[3,4]。 Swift（唯一）支持与多态值类型的 ABI 兼容性，因此例如您可以在结构体中间有一个字段，其大小和对齐方式仅在动态链接时才知道。它以几乎与您期望的方式[5]（以及数十年前 IBM 的 SOM 跨 ABI 边界进行继承的方式相同）来完成此操作：每种类型都有一个 vtable（“值见证”），其中充满了编译器生成的方法，如大小、对齐、复制、移动等，对于多态类型实例，这些方法将调用类型参数的见证方法并根据结果进行计算。无论如何，这里的故事也是这样的，他们从本机代码生成开始，被埋在生成的代码下，然后切换到字节码。 （我想知道——接下来他们会转向 PGO 和 JIT，比如 Protobuf 的 hyperpb[6] 吗？另外，基于字节码的 Serde 什么时候会转向？）</p><p>[1] <a href="https://news.ycombinator.com/item?id=44665671" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44665671</a>，我懒得复制链接，所以请参考那里缺少的参考资料。</p><p>[2] <a href="https://news.ycombinator.com/item?id=44664592" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44664592</a> 和父母的第二个链接。</p><p>[3] <a href="https://forums.swift.org/t/sr-14273-byte-code-based-value-witnesses/50554" target="_blank" rel="noopener noreferrer">https://forums.swift.org/t/sr-14273-byte-code-based-value-wi...</a></p><p>[4] Rexin，“Swift 中的紧凑价值见证”，2023 LLVM Dev。 MTG., <a href="https://www.youtube.com/watch?v=hjgDwdGJIhI" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=hjgDwdGJIhI</a></p><p>[5] Pestov, McCall，“实现 Swift 泛型”，2017 年 LLVM 开发。 MTG., <a href="https://www.youtube.com/watch?v=ctS8FzqcRug" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=ctS8FzqcRug</a></p><p>[6] <a href="https://mcyoung.xyz/2025/07/16/hyperpb/" target="_blank" rel="noopener noreferrer">https://mcyoung.xyz/2025/07/16/hyperpb/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; It doesn't make sense to me that an embedded VM/interpreter could ever outperform direct code. You're adding a layer of abstraction and indirection, so how is it possible that a more indirect solution can have better performance?<p>It <i>is</i> funny, but (like I’ve already mentioned[1] a few months ago) for serialization(-adjacent) formats in particular the preferential position of bytecode interpreters has been rediscovered again and again.</p><p>The earliest example I know about is Microsoft’s MIDL, which started off generating C code for NDR un/marshalling but very soon (ca. 1995) switched to bytecode programs (which Microsoft for some reason called “format strings”; these days there’s also typelib marshalling and WinRT metadata-driven marshalling, the latter completely undocumented, but both data-driven). Bellard’s nonfree ffasn1 also (seemingly) uses bytecode, unlike the main FOSS implementations of ASN.1. Protocol Buffers started off with codegen (burying Google user in de/serialization code) but UPB uses “table-driven”, i.e. bytecode, parsing[2].</p><p>The most interesting chapter in this long history is in my opinion Swift’s bytecode-based value witnesses[3,4]. Swift (uniquely) has support for ABI compatibility with polymorphic value types, so e.g. you can have a field in the middle of your struct whose size and alignment only become known at dynamic linking time. It does this in pretty much the way you expect[5] (and the same way IBM’s SOM did inheritance across ABI boundaries decades ago): each type has a vtable (“value witness”) full of compiler-generated methods like size, alignment, copy, move, etc., which for polymorphic type instances will call the type arguments’ witness methods and compute on the results. Anyways, here too the story is that they started with native codegen, got buried under the generated code, and switched to bytecode instead. (I wonder—are they going to PGO and JIT next, like hyperpb[6] for Protobuf? Also, bytecode-based serde when?)</p><p>[1] <a href="https://news.ycombinator.com/item?id=44665671" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44665671</a>, I’m too lazy to copy over the links so refer there for the missing references.</p><p>[2] <a href="https://news.ycombinator.com/item?id=44664592" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=44664592</a> and parent’s second link.</p><p>[3] <a href="https://forums.swift.org/t/sr-14273-byte-code-based-value-witnesses/50554" target="_blank" rel="noopener noreferrer">https://forums.swift.org/t/sr-14273-byte-code-based-value-wi...</a></p><p>[4] Rexin, “Compact value witnesses in Swift”, 2023 LLVM Dev. Mtg., <a href="https://www.youtube.com/watch?v=hjgDwdGJIhI" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=hjgDwdGJIhI</a></p><p>[5] Pestov, McCall, “Implementing Swift generics”, 2017 LLVM Dev. Mtg., <a href="https://www.youtube.com/watch?v=ctS8FzqcRug" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=ctS8FzqcRug</a></p><p>[6] <a href="https://mcyoung.xyz/2025/07/16/hyperpb/" target="_blank" rel="noopener noreferrer">https://mcyoung.xyz/2025/07/16/hyperpb/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653326" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/06 07:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能可以将几乎所有枚举调度重新表述为某种“字节码解释器”，特别是如果递归运行以解析某种序列。如果字节码可以帮助您实现比架构的本机二进制表示更简洁的某些程序代码表示，那么在某些情况下这可能会更快，这是有道理的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You could probably rephrase almost any enum dispatch whatsoever as a "bytecode interpreter" of a sort, especially if run recursively to parse over some kind of sequence. If bytecode helps you achieve a more succinct representation of some program code than the native binary representation for your architecture, it makes sense that this could be faster in some cases.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655090" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">UncleEntity</span>
+        <span class="meta-time">2026/04/06 09:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，Clang的musttail和preserve_none使解释器的编写变得更加简单，只需为自己创建一个有保证的尾部调用操作码调度方法（连续传递风格在这里很有效），使用Copy-and-Patch将它们缝合在一起，你就拥有了一个肮脏的jit编译器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, Clang's musttail and preserve_none make interpreter writing much simpler, just make yourself a guaranteed tail call opcode dispatch method (continuation passing style works a treat here), stitch those together using Copy-and-Patch and you have yourself a down and dirty jit compiler.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655984" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anematode</span>
+        <span class="meta-time">2026/04/06 12:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好帖子:)<p>去年我正在研究一个尾部调用解释器（<a href="https://github.com/anematode/b-jvm/blob/main/vm/interpreter2.c" target="_blank" rel="noopener noreferrer">https://github.com/anematode/b-jvm/blob/main/vm/interpreter2...</a>）并且在将 WASM 从 switch-dispatch 循环转换为尾部调用时发现了类似的回归。 SpiderMonkey 表现最好，几乎没有回归，而 V8 和 JSC 完全失败了——与博客文章的发现相同。因为我的目标是原生和 WASM，所以我编写了一个复杂的宏系统，它将在 WASM 上执行切换调度，并在原生上执行尾部调用。</p><p>最终，因为 V8 的寄存器分配无法处理 switch-loop 并且溢出了所有内容，所以我基本上手动概述了所有实现过于臃肿的字节码。但 V8 仍然会内联这些实现，搬起石头砸自己的脚，所以我编写了一个 wasm-opt 传递来通过 __funcref 表间接它们，这阻止了内联。</p><p>要从 WASM 尾部调用版本中获得更多性能，一个技巧是使用类型化的 __funcref 表。设置起来非常糟糕，我实际上必须为此编写一个 wasm-opt 传递，但基本上，如果您只是天真地执行“函数指针”的尾部调用（在 WASM 中通常是某个全局表的索引），VM 必须检查指针的有效性以及匹配的签名。使用 __funcref 表，您可以保证函数有效，避免所有这些烦人的检查。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice post :)<p>Last year I was working on a tail-call interpreter (<a href="https://github.com/anematode/b-jvm/blob/main/vm/interpreter2.c" target="_blank" rel="noopener noreferrer">https://github.com/anematode/b-jvm/blob/main/vm/interpreter2...</a>) and found a similar regression on WASM when transforming it from a switch-dispatch loop to tail calls. SpiderMonkey did the best with almost no regression, while V8 and JSC totally crapped out – same finding as the blog post. Because I was targeting both native and WASM I wrote a convoluted macro system that would do a switch-dispatch on WASM and tail calls on native.</p><p>Ultimately, because V8's register allocation couldn't handle the switch-loop and was spilling everything, I basically manually outlined all the bytecodes whose implementations were too bloated. But V8 would still inline those implementations and shoot itself in the foot, so I wrote a wasm-opt pass to indirect them through a __funcref table, which prevented inlining.</p><p>One trick, to get a little more perf out of the WASM tail-call version, is to use a typed __funcref table. This was really horrible to set up and I actually had to write a wasm-opt pass for this, but basically, if you just naively do a tail call of a "function pointer" (which in WASM is usually an index into some global table), the VM has to check for the validity of the pointer as well as a matching signature. With a __funcref table you can guarantee that the function is valid, avoiding all these annoying checks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657047" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">functional_dev</span>
+        <span class="meta-time">2026/04/06 15:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本文显示 WASM 速度慢 1.2-3.7 倍，您的经验也证实了这一点。<p>您知道哪些操作回归最多吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article shows WASM being 1.2-3.7x slower, and your experience confirms it.<p>Do you have any idea which operations regress the most?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657823" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">anematode</span>
+        <span class="meta-time">2026/04/06 15:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据查看 V8 的 JIT 代码，实际上堆栈溢出检查似乎有很多开销。函数序言和尾声在尾调用情况下同样臃肿。如果我能找到它们，我会上传一些屏幕截图。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Based on looking at V8's JITed code, there seemed to be a lot of overhead with stack overflow checking, actually. The function prologues and epilogues were just as bloated in the tail-call case. I'll upload some screenshots if I can find them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657953" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bjoli</span>
+        <span class="meta-time">2026/04/06 01:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最后！尾巴叫！几年前我不得不写 Rust，而我内心的 ocaml 人渴望写尾递归。<p>尾递归为人们打开了使用宏编写非常非常简洁的循环设施的大门。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Finally! Tail calls! I had to write rust some years ago, and the ocaml person in me itched to get to write tail recursion.<p>Tail recursion opens up for people to write really really neat looping facilities using macros.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47651897" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/04/06 06:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以使用尾钉编写哪些宏示例？因为 Rust 中的宏已经可以是递归的（多年来我已经编写了很多利用它的宏），所以 Rust 中的尾部调用的更好优化将为它们打开哪些大门并不是立即显而易见的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What are some examples of macros that your  would be able to be written with tail cails? Because macros in Rust can already be recursive (and I've written plenty of ones that take advantage of it over the years), it's not immediately obvious what doors  better optimization of tail calls in Rust would open up for them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654761" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moefh</span>
+        <span class="meta-time">2026/04/06 11:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不确定这在 Rust 中有何用处，但是宏和尾部调用允许人们（例如）在没有本机循环语法的 Scheme 中编写迭代循环。<p>也许同样的想法可以用在 Rust 中，其中一些结构更容易以递归形式而不是循环来编写？</p><p>无论如何，这是一个在Scheme中使用尾调用的 `for-loop` 宏的愚蠢示例：</p><p></p><pre><code>    (define-syntax for-loop
+      (syntax-rules ()
+        ((for-loop var start end body ...)
+         (letrec ((loop (lambda (var)
+                          (unless (&gt;= var end)
+                            body ...
+                            (loop (+ var 1))))))  ; &lt;-- tail call
+           (loop start)))))
+</code></pre>
+以下是如何使用它来打印数字 0 到 9：<p></p><pre><code>    (for-loop i 0 10
+              (display i)
+              (newline))
+</code></pre>
+该宏扩展为一个调用自身进行循环的函数。由于Scheme保证有正确的尾部调用，因此保证调用不会破坏堆栈。<p>（请注意，您可能永远不会看到这样使用 `letrec`：人们会使用命名的 `let`，它是 `letrec` 的确切用法的语法糖。我用 `letrec` 方式编写它以使函数显式化）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not sure how this would be useful in Rust, but macros and tail calls are what allows one to (for example) write iterative loops in Scheme, which doesn't have a native loop syntax.<p>Maybe the same idea can be used in Rust where some constructs are easier to write in recursive form instead of a loop?</p><p>In any case, here's a silly example of a `for-loop` macro in Scheme using a tail call:</p><p></p><pre><code>    (define-syntax for-loop
+      (syntax-rules ()
+        ((for-loop var start end body ...)
+         (letrec ((loop (lambda (var)
+                          (unless (&gt;= var end)
+                            body ...
+                            (loop (+ var 1))))))  ; &lt;-- tail call
+           (loop start)))))
+</code></pre>
+And here's how you'd use it to print the numbers 0 to 9:<p></p><pre><code>    (for-loop i 0 10
+              (display i)
+              (newline))
+</code></pre>
+This macro expands to a function that calls itself to loop. Since Scheme is guaranteed to have proper tail calls, the calls are guaranteed to not blow the stack.<p>(Note that you'll probably never see a `letrec` used like this: people would use a named `let`, which is syntax sugar for that exact usage of `letrec`. I wrote it the `letrec` way to make the function explicit).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656484" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bjoli</span>
+        <span class="meta-time">2026/04/06 12:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我为（狡猾的）计划写了这个： <a href="https://rikspucko.koketteriet.se/bjoli/goof-loop" target="_blank" rel="noopener noreferrer">https://rikspucko.koketteriet.se/bjoli/goof-loop</a><p>这只是尾部调用的糖衣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wrote this for (guile) scheme: <a href="https://rikspucko.koketteriet.se/bjoli/goof-loop" target="_blank" rel="noopener noreferrer">https://rikspucko.koketteriet.se/bjoli/goof-loop</a><p>This is just sugar over tail calls.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657012" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">iknowstuff</span>
+        <span class="meta-time">2026/04/06 02:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信 Rust 现在有成为 TCO 关键字。<p><a href="https://doc.rust-lang.org/std/keyword.become.html" target="_blank" rel="noopener noreferrer">https://doc.rust-lang.org/std/keyword.become.html</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Rust has the become keyword now I believe for TCO.<p><a href="https://doc.rust-lang.org/std/keyword.become.html" target="_blank" rel="noopener noreferrer">https://doc.rust-lang.org/std/keyword.become.html</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652327" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tialaramex</span>
+        <span class="meta-time">2026/04/06 05:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章解释了大部分内容，但对于初学者来说，一旦这篇文章落地，关键要点是：使用 `become` 你可以在 Rust 中编写尾调用，它会保证它们要么工作，要么不编译，你不能出现这样的情况（存在于多种语言中）：你认为你已经编写了尾调用，但你没有（或者也许你已经编写了，但你切换到了不同的编译器，或者对代码做了看似无关紧要的更改），现在堆栈已经溢出。<p>Rust 非常擅长为我们习惯于看到的“仅限专家”功能提供人体工程学支持，而用户体验相应较差。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article explains most of this, but the key takeaway for beginners once this lands is: With `become` you can write tail calls in Rust and it will promise they either work or don't compile, you can't have the case (which exists in several languages) where you thought you'd written a tail call but you hadn't (or maybe you had but you switched to a different compiler or made a seemingly inconsequential change to the code) and now the stack has overflowed.<p>Rust has been really good at providing ergonomic support for features we're too used to seeing provided as "Experts only" features with correspondingly poor UX.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/04/06 06:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与“哎呀，它默默地降级为性能较差的东西，因为不变量不再为真”相比，“要么它工作，要么不编译”，这与我倾向于描述默认情况下使用选择加入副本移动语义的好处非常相似，在 Rust 中，与在 C++ 中相比，在 C++ 中，你需要正确设置事情，如果你搞砸了，可能仍然会意外地复制它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Either it works or doesn't compile" compared to "oops it silently degraded to the less performant thing because an invariant stopped being true" is remarkably similar to how I tend to describe the benefit of having move semantics by default with opt-in copies in Rust compared to in C++ where you need to set up things right and might still accidentally have it copy if you mess it up.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654790" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">drob518</span>
+        <span class="meta-time">2026/04/06 08:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Clojure 的“recur”形式的工作原理类似，因为它保证是尾递归的，如果不是，编译器将抛出异常。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Clojure’s “recur” form works similarly in that it’s guaranteed to be tail recursive, and if it isn’t the compiler will throw an exception.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655389" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">marcyb5st</span>
+        <span class="meta-time">2026/04/06 07:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个改变。我想知道我是否更愿意在函数签名上添加一些内容（例如尾部调用约束 fn 中的 `tcc_fn foo() ...` ），并且当遇到 rust 编译器会检查函数体是否可尾部调用时。<p>我担心添加另一个关键字可能会迷失在 Rust 开发人员需要记住的关键字海洋中。如果您不经常使用递归，那么在实际需要时您可能不会使用它。
+在函数签名中包含此信号意味着人们只需阅读文档即可接触到它，并最终会了解到它的存在以及（希望）如何使用它。</p><p>大家觉得怎么样？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like this change. I was wondering if I would've preferred to have something on the function signature (eg `tcc_fn foo() ...` as in Tail Call Constrained fn) and when encountering that the rust compiler would make checks about whether the body of the function is tail-callable.<p>My fear is that adding yet another keyword it might get lost in the sea of keywords that a Rust developer needs to remember. And if recursion is not something you do often you might not reach for it when actually needed.
+Having this signal in the function signature means that people would be exposed to it just by reading the documentation and eventually will learn it exists and (hopefully) how to wield it.</p><p>What do you folks think?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654868" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tialaramex</span>
+        <span class="meta-time">2026/04/06 07:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们关心的属性不是函数的属性，而是调用者的属性，因此标记函数没有帮助。<p>`become blah(foo, bar)` 与 `blah(foo, bar)` 相同，只是我们（调用者）承诺 <i>我们</i> 没有什么可做的，所以当 blah 返回时，它可以返回 <i>我们的</i> 呼叫者。</p><p>如果别人喊“blah” <i>他们</i> 如果他们不想要这种行为，他们可能还有很多事情要做，如果他们被跳过，那将是一场灾难。</p><p>在某些语言中，无论如何你都会获得 TCO，这是非常明显的，但 Rust 具有 C++ 所谓的 RAII，当函数结束时，所有局部变量都会被销毁，这可能是一项不平凡的工作。想必破坏本地 i32 是微不足道的，[u8; 也是如此。 32] 但销毁本地 String 则不然，更不用说 HashMap 了，谁知道销毁 File、DBQuery 或 Foo 有多复杂……</p><p>因此，从某种意义上说，“所有”变得就是试图更快地带来这种破坏，所以它发生了 <i>前</i> 打电话，之后就没什么可做的了。无论如何，我们不再使用该 String 了，我们先销毁它，然后 HashMap 呢？当然，哦...不，实际上如果我们毁掉那个 Foo <i>前</i> 调用 blah 需要 Foo 来搞乱事情……Rust 的borrowck 在这里发挥作用，帮助我们避免一个可怕的错误，我们的代码是无意义的，它无法构建。</p><p>编辑：改进解释</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The property we care about isn't a property of functions but of callers, so marking a function doesn't help.<p>`become blah(foo, bar)` is the same thing as `blah(foo, bar)` except that we, the caller are promising that <i>we</i> have nothing further to do and so when blah returns it can return to <i>our</i> caller.</p><p>If somebody else calls blah <i>they</i> don't want that behaviour, they might have lots more to do and if they were skipped over that's a disaster.</p><p>In some languages it's very obvious when you're going to get TCO anyway, but Rust has what C++ calls RAII, when a function ends all the local variables get destroyed and this may be non-trivial work. Presumably destroying a local i32 is trivial &amp; so is a [u8; 32] but destroying a local String isn't, let alone a HashMap and who knows how complicated it is to destroy a File or a DBQuery or a Foo...</p><p>So in a sense "all" become does is try to bring that destruction sooner a little, so it happens <i>before</i> the call, leaving nothing to do afterwards. We weren't using that String any more anyway, lets just destroy it first, and the HashMap? Sure, and oh... no, actually if we destroy that Foo <i>before</i> calling blah which needs the Foo that messes things up... Rust's borrowck comes in clutch here to help us avoid a terrible mistake, our code was nonsense, it doesn't build.</p><p>Edited: Improve explanation</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654988" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/04/06 10:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">鉴于像 `pub(crate) async fn foo() ...` 这样的东西并不罕见，函数签名开始变得笨拙的担忧感觉比关于“关键字海洋”的假设要具体得多。查看当前语言中的关键字列表（此处列出： <a href="https://doc.rust-lang.org/std/#keywords" target="_blank" rel="noopener noreferrer">https://doc.rust-lang.org/std/#keywords</a>），我并没有真正看到很多我认为普通 Rust 程序员会说是必须记住的负担的内容。最多， `union` 和 `unsafe` 可能是大多数 Rust 程序员不需要直接使用的，而 `SelfTy` 一开始可能看起来有点混乱，因为关键字本身拼写为 `Self` （大概以这种方式列出是为了更容易与文档中的 `self` 条目区分开来），但即使包括那些我认为可能超过一半不是特定于 Rust 的内容。<p>至于出现在文档中，我认为这甚至可能是一个明确的非目标；我不清楚为什么这应该被视为 API 的一部分。如果有人更新其尾递归函数以手动循环（反之亦然），则似乎不需要更新文档。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Given that it's not really that uncommon to see something like `pub(crate) async fn foo() ...`, the concern of function signatures starting to get unwieldy feels a lot more concrete than hypotheticals about a "sea of keywords". From looking at the list of keywords in the language currently (listed here: <a href="https://doc.rust-lang.org/std/#keywords" target="_blank" rel="noopener noreferrer">https://doc.rust-lang.org/std/#keywords</a>), I don't really see a whole lot that I think the average Rust programmer would say is a burden to have to remember. At most, `union` and `unsafe` are probably ones that most Rust programmers are not going to need to use directly, and `SelfTy` might look a bit confusing at first due to the fact that the keyword itself is spelled `Self` (and presumably listed in that way to make it easier to differentiate from the `self` entry in the documentation), but even including those I'd argue that probably over half aren't specific to Rust.<p>As for being in the documentation, I'd argue that might even be an explicit non-goal; it's not clear to me why that should be something considered part of the API. If someone updates their tail recursive function to manually loop instead (or vice-versa), it doesn't seem like that should necessitate the documentation being updated.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656343" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">steveklabnik</span>
+        <span class="meta-time">2026/04/06 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从帖子的第一行开始：<p>&gt; 上周，我使用 Bebe 关键字编写了一个尾部调用解释器，该解释器最近被添加到 Nightly Rust 中（7 个月前是最近的，对吧？）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the first line of the post:<p>&gt; Last week, I wrote a tail-call interpreter using the become keyword, which was recently added to nightly Rust (seven months ago is recent, right?).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652548" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/04/06 13:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊，太好了！<p>我想知道为什么他们选择了一个新的关键字；我假设编译器在认为可能时会机会主义地执行 TCO，并且我认为需要 TCO（否则编译失败）的最简单方法可以使用属性来完成。</p><p>（不确定这篇文章是否解决了这个问题......我只是浏览了一下。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ah that's great!<p>I wonder why they went with a new keyword; I assumed the compiler would opportunistically do TCO when it thinks it's possible, and I figured that the simplest way to require TCO (or else fail compilation) could be done with an attribute.</p><p>(Not sure if the article addressed that... I only skimmed it.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657407" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aw1621107</span>
+        <span class="meta-time">2026/04/06 15:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我想知道他们为什么选择一个新的关键字；我假设编译器在认为可能时会机会主义地执行 TCO，并且我认为需要 TCO（否则编译失败）的最简单方法可以使用属性来完成。<p>第一个保证尾部调用的 RFC 声明 `return` 上的属性是一个可能的替代方案，“如果可以将属性附加到表达式”[0]。不过那是 1.0 之前的事情了；我相信 Rust 现在至少支持某些表达式的属性，但我不知道它是什么时候添加的。</p><p>第二个 RFC [1] 似乎没有讨论关键字与属性，但它确实提到概念验证实现“完全按照解析 `return` 关键字的方式解析 `become`。语义上的差异稍后处理”，所以也许关键字实际上在实现方面更简单？</p><p>从这里开始，还有一些关于属性与关键字的更多讨论 [2]，尽管这里讨论的属性是函数级属性，而不是有效替换 `return` 的属性。共识似乎是，函数级属性至少没有足够的表达能力来支持所需的语义。还简要提及 `become` 与 `return` （即，由于语义不同而出现新关键字）。</p><p>[0]: <a href="https://github.com/rust-lang/rfcs/pull/81/changes" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rfcs/pull/81/changes</a></p><p>[1]： <a href="https://github.com/DemiMarie/rfcs/blob/become/0000-proper-tail-calls.md" target="_blank" rel="noopener noreferrer">https://github.com/DemiMarie/rfcs/blob/become/0000-proper-ta...</a></p><p>[2]： <a href="https://github.com/rust-lang/rfcs/pull/1888#issuecomment-278988088" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rfcs/pull/1888#issuecomment-278...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I wonder why they went with a new keyword; I assumed the compiler would opportunistically do TCO when it thinks it's possible, and I figured that the simplest way to require TCO (or else fail compilation) could be done with an attribute.<p>The first RFC for guaranteed tail calls stated an attribute on `return` was a possible alternative "if and when it becomes possible to attach attributes to expressions" [0]. That was from pre-1.0, though; I believe Rust now supports attributes on at least some expressions, but I don't know when that was added.</p><p>The second RFC [1] doesn't seem to discuss keyword vs. attribute, but it does mention that the proof-of-concept implementation "parses `become` exactly how it parses the `return` keyword. The difference in semantics is handled later", so perhaps a keyword is actually simpler implementation-wise?</p><p>There's some more discussion on attribute vs. keyword starting here [2], though the attribute being discussed there is a function-level attribute rather than something that effectively replaces a `return`. The consensus seems to be that a function-level attribute is not expressive enough to support the desired semantics, at least. There's also a brief mention of `become` vs. `return` (i.e., new keyword because different semantics).</p><p>[0]: <a href="https://github.com/rust-lang/rfcs/pull/81/changes" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rfcs/pull/81/changes</a></p><p>[1]: <a href="https://github.com/DemiMarie/rfcs/blob/become/0000-proper-tail-calls.md" target="_blank" rel="noopener noreferrer">https://github.com/DemiMarie/rfcs/blob/become/0000-proper-ta...</a></p><p>[2]: <a href="https://github.com/rust-lang/rfcs/pull/1888#issuecomment-278988088" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rfcs/pull/1888#issuecomment-278...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">phi-go</span>
+        <span class="meta-time">2026/04/06 15:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当前的 rfc 在这里： <a href="https://github.com/rust-lang/rfcs/pull/3407" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rfcs/pull/3407</a><p>它确实对关键字与属性和其他选项进行了更多讨论。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The current rfc is here: <a href="https://github.com/rust-lang/rfcs/pull/3407" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rfcs/pull/3407</a><p>It does have some more discussion on keywords vs attributes and other options.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657996" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">vaylian</span>
+        <span class="meta-time">2026/04/06 14:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">来自文章：<p>&gt; 即使在发布版本中，编译器也没有优化堆栈。随着我们执行越来越多的操作，堆栈变得越来越深，直到不可避免地溢出。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the article:<p>&gt; Even in a release build, the compiler has not optimized out the stack. As we execute more and more operations, the stack gets deeper and deeper until it inevitably overflows.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657563" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aw1621107</span>
+        <span class="meta-time">2026/04/06 14:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这涉及到为什么 TCO/TCE 是可取的，但它没有解决为什么 Rust 开发人员选择使用关键字来保证 TCE。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That touches on why TCO/TCE is desirable, but it doesn't address why the Rust devs chose to use a keyword for guaranteed TCE.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657704" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jakewins</span>
+        <span class="meta-time">2026/04/06 15:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得我在其他地方看到过，那里的争论是你经常 <i>必须</i> 让这个优化在依赖它的算法中工作，否则你会得到堆栈溢出。拥有一个关键字来强制它变得非常有用，而不是依赖于希望未来的编译器版本和不同的架构目标都会发现优化机会。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like I’ve seen elsewhere that the argument there is that you often <i>must</i> have this optimisation working in algos that rely on it or you will get stack overflows. Having a keyword to force it then becomes a very useful thing, vs relying on hopes that future compiler versions and different arch targets will all discover the optimisation opportunity.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657807" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aw1621107</span>
+        <span class="meta-time">2026/04/06 15:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 使用关键字来强制它变得非常有用，而不是依赖于希望未来的编译器版本和不同的架构目标都会发现优化机会。<p>是的，在某些情况下，有一种方法来保证 TCO/TCE 是至关重要的。然而，GP 的问题是，为什么是一个专门的关键字而不是一个假设的属性可以有效地完成同样的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Having a keyword to force it then becomes a very useful thing, vs relying on hopes that future compiler versions and different arch targets will all discover the optimisation opportunity.<p>Having a way to guarantee TCO/TCE is essential for some cases, yes. GP's question, though, was why a keyword specifically and not a hypothetical attribute that effectively does the same thing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657895" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ashutoshmishr88</span>
+        <span class="meta-time">2026/04/06 11:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴看到每晚登陆。这对于异步工作效果很好还是现在纯粹是同步尾部调用？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">nice to see become landing in nightly. does this work well with async or is it purely sync tail calls for now?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656727" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aw1621107</span>
+        <span class="meta-time">2026/04/06 15:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这对于异步工作效果很好还是现在纯粹是同步尾部调用？<p>目前的 RFC 一般暂时不允许 `become` 与 `async` 一起使用 [0]：</p><p>&gt; 不允许从异步函数或异步块进行尾部调用。这是由于实现工作量很大，因为它需要对异步状态机进行特殊处理。未来的 RFC 可以放宽此限制。</p><p>&gt; 也不允许在 `.await` 表达式（例如 `become f().await`）上使用 `become`。这是因为 `become` 需要函数调用，而 `.await` 不是函数调用，而是一个特殊的构造。</p><p>&gt; 请注意，从同步代码尾部调用异步函数是可能的，但异步函数的返回类型是 `impl Future`，这不太有趣。</p><p>[0]: <a href="https://github.com/phi-go/rfcs/blob/guaranteed-tco/text/0000-explicit-tail-calls.md#async" target="_blank" rel="noopener noreferrer">https://github.com/phi-go/rfcs/blob/guaranteed-tco/text/0000...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; does this work well with async or is it purely sync tail calls for now?<p>The current RFC generally does not allow `become` to be used with `async` for now [0]:</p><p>&gt; Tail calling from async functions or async blocks is not allowed. This is due to the high implementation effort as it requires special handling for the async state machine. This restriction can be relaxed by a future RFC.</p><p>&gt; Using `become` on a `.await` expression, such as `become f().await`, is also not allowed. This is because `become` requires a function call and `.await` is not a function call, but is a special construct.</p><p>&gt; Note that tail calling async functions from sync code is possible but the return type for async functions is `impl Future`, which is unlikely to be interesting.</p><p>[0]: <a href="https://github.com/phi-go/rfcs/blob/guaranteed-tco/text/0000-explicit-tail-calls.md#async" target="_blank" rel="noopener noreferrer">https://github.com/phi-go/rfcs/blob/guaranteed-tco/text/0000...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658047" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">measurablefunc</span>
+        <span class="meta-time">2026/04/06 04:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更准确的标题是说这是一个尾调用 <i>优化的</i> 口译员。单独的尾部调用并不特殊，重要的是编译器或运行时正确地重用调用者的框架，而不是推送另一个调用框架并增加堆栈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">More accurate title would be to say it is a tail call <i>optimized</i> interpreter. Tail calls alone aren't special b/c what matters is that the compiler or runtime properly reuses caller's frame instead of pushing another call frame &amp; growing the stack.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tialaramex</span>
+        <span class="meta-time">2026/04/06 05:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许，这可能取决于你如何看待它。优化是显而易见的，我希望任何优化编译器都会 TCO 所有幼稚的尾部调用 - 但 Rust 或 C++ 或其他十几种语言的问题在于，你可以很容易地编写这样的代码： <i>你</i> 认为可以优化，但编译器要么看不到如何优化，要么可以看到这是不可能的，并且（没有此关键字）您不会发现这一点，因为增长堆栈是您编写的内容的有效实现，即使它不是您的意思。<p>“become”关键字允许我们表达我们的意思，我们想要尾部调用，而且，呃，编译器当然会优化它 <i>是否可以是尾调用</i> 而且现在编译器有权说“对不起戴夫，这是不可能的”而不是增加堆栈。大多数时候你写了一些愚蠢的东西。 “哦，调试日志记录发生在调用之后，这永远不会起作用，我会重新安排事情”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe, it probably depends on how you're looking at it. The optimization is obvious, I expect any optimizing compiler will TCO all naive tail calls - but the trouble in Rust or C++ or a dozen other languages is that you can so easily write code which <i>you</i> think can be optimized but the compiler either can't see how or can see that it's not possible and (without this keyword) you don't find out about this because growing the stack is a valid implementation of what you wrote even though it's not what you meant.<p>The "become" keyword allows us to express our meaning, we want the tail call, and, duh, of course the compiler will optimize that <i>if it can be a tail call</i> but also now the compiler is authorized to say "Sorry Dave, that's not possible" rather than grow the stack. Most often you wrote something silly. "Oh, the debug logging happens after the call, that's never going to work, I will shuffle things around".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654108" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kryptiskt</span>
+        <span class="meta-time">2026/04/06 06:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不会称其为优化的，因为这意味着它由于尾部调用而获得性能，并且否则会工作，但尾部调用是解释器功能不可或缺的一部分。如果编译器不能被迫发出它们，它根本就不起作用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wouldn't call it optimized, since that implies that it gains performance due to the tail calls and would work otherwise, but the tail calls are integral to the function of the interpreter. It simply wouldn't work if the compiler can't be forced to emit them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">UncleEntity</span>
+        <span class="meta-time">2026/04/06 09:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但尾部调用对于解释器的功能来说是不可或缺的<p>事实并非如此，蹦床可以有效地模拟它们，其中堆栈不会以每次操作码调度的函数调用为代价而持续增长。尾部调用只是优化这个调度循环（或者尾部回调到蹦床，无论你想如何设置它）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; but the tail calls are integral to the function of the interpreter<p>Not really, a trampoline could emulate them effectively where the stack won't keep growing at the cost of a function call for every opcode dispatch. Tail calls just optimize out this dispatch loop (or tail call back to the trampoline, however you want to set it up).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">measurablefunc</span>
+        <span class="meta-time">2026/04/06 06:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我写的是标准命名法<p>&gt; 无需向调用堆栈添加新的堆栈帧即可实现尾调用。当前过程的大部分帧不再需要，可以用尾部调用的帧代替，适当修改（类似于进程的覆盖，但针对函数调用）。然后程序可以跳转到被调用的子程序。生成这样的代码而不是标准调用序列称为 <i>尾调用</i> <i>消除</i> 或者 <i>尾调用</i> <i>优化</i>。 （<a href="https://en.wikipedia.org/wiki/Tail_call" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Tail_call</a>）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What I wrote is standard nomenclature<p>&gt; Tail calls can be implemented without adding a new stack frame to the call stack. Most of the frame of the current procedure is no longer needed, and can be replaced by the frame of the tail call, modified as appropriate (similar to overlay for processes, but for function calls). The program can then jump to the called subroutine. Producing such code instead of a standard call sequence is called <i>tail-call</i> <i>elimination</i> or <i>tail-call</i> <i>optimization</i>. (<a href="https://en.wikipedia.org/wiki/Tail_call" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Tail_call</a>)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654588" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moring</span>
+        <span class="meta-time">2026/04/06 16:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">质疑标准术语也很有用，只要它能提供洞察力，而不仅仅是自行车淘汰。通常期望“优化”（在优化编译器的上下文中）不会改变程序的语义。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Questioning standard nomenclature is useful too, as long as it provides insight and is not just bike-shedding. "optimization" (in the context of an optimizing compiler) is generally expected not to alter the semantics of a program.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658157" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Morpheus_Matrix</span>
+        <span class="meta-time">2026/04/06 08:21</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655413" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ninjahawk1</span>
+        <span class="meta-time">2026/04/06 02:46</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652563" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

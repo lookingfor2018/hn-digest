@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我们用 Bun 替换 Node.js，吞吐量提高了 5 倍 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-06-1623/">返回本批次</a>
+      <h1>我们用 Bun 替换 Node.js，吞吐量提高了 5 倍</h1>
+      <p class="subtitle">We replaced Node.js with Bun for 5x throughput</p>
+      <div class="meta-line">
+        <span>trigger.dev</span>
+        <span>作者 pier25</span>
+        <span>分数 53</span>
+        <span>评论 26</span>
+        <span>2026/04/06 09:57</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47656114" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://trigger.dev/blog/firebun" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>更新（2026 年 3 月 30 日）：这篇文章发布后不久，Bun 发布了内存泄漏修复程序。 🔥</li><li>在对延迟最敏感的服务之一中，我们用 Bun 替换了 Node.js，吞吐量提高了 5 倍。我们还发现了仅存在于 Bun 的 HTTP 模型中的内存泄漏。该服务称为 Firestarter。这是我们的热启动连接代理：它拥有来自空闲运行控制器的数千个长轮询 HTTP 连接，每个连接都在等待工作。当任务运行到达时，Firestarter 将其与等待的控制器进行匹配，并通过保持的连接发送有效负载。没有冷启动，没有容器旋转。它位于 Trigger.dev 上每个任务执行的关键路径中。问题：Firestarter 使用了太多 CPU。它在 Node.js 上运行，将 31% 的时间花费在 SQLite 查询中，使用 Zod 解析每个请求，并在每个 GET 上使用 Object.fromEntries() 转换标头。它有效，但速度很慢。我们花了四轮分析才达到这个目标，我们遇到了一些在其他地方没有记录过的Bun惊喜。第 1 阶段：终止 SQLite 查询引擎 最初的连接管理器被设计为通用的可查询存储。它接受任意嵌套元数据，将其递归地扁平化为键值对，并对内存 SQLite 数据库中的所有内容建立索引。 Node 22 附带了内置的 node:sqlite，因此它是零依赖的。 SQL 为我们提供了对任意字段组合的灵活部分匹配。这在当时是有意义的，因为我们还不知道访问模式。结果访问模式始终是相同的 4 个字段。每次匹配尝试都运行此查询： SELECT DISTINCT c.id, c.metadataFROM Connections cJOINmetadata_index mi ON c.id = mi.connection_idWHERE c.id IN ( SELECT connection_id FROMmetadata_index WHERE (key = ? AND value = ?) OR (key = ? AND value = ?) OR (key = ? AND value = ?) OR (key = ? AND value = ?) GROUP BY connection_id HAVING COUNT(DISTINCT key) = ?)LIMIT 1 一个带有 JOIN、GROUP BY 和 HAVING COUNT(DISTINCT) 的相关子查询，其本质上是一个哈希表查找（我们确实过度设计了这个）。元数据始终是相同的 4 个字段：部署 ID、版本、CPU 和内存。我们在负载下运行节点 --prof（500 个模拟控制器，50 个并发管理程序请求）并使用 --prof-process 处理输出。 getConnection 占总 CPU 时间的 31%。我们用复合键 Map&lt;string, Set&lt;string&gt;&gt; 替换了 SQLite。键是一个以 null 分隔的部署 + 版本 + cpu + 内存字符串。匹配变成了 O(1)，而不是 SQL 查询。结果：MetricSQLiteMapThroughput2,099 req/s4,534 req/sp50 延迟22.5ms10.1msp95 延迟29.1ms14.9ms最大延迟619ms403ms 2.2 倍吞吐量，2.2 倍更好的中值延迟。我们可以删除 --experimental-sqlite Node.js 标志。我们如何进行基准测试 这篇文章中的每个数字都来自相同的可重现设置：500 个模拟控制器保持持久的保持活动连接，k6 在 30 秒内触发 50 个并发管理器匹配请求。 # 终端 1: start Firestarterbun src/bun.ts# 终端 2: 500 个带有持久套接字的控制器node bench/controllers.js --controllers 500# 终端 3: k6 负载测试 (supervisor 端)k6 run --vus 50 --duration 30s bench/load.js 控制器模拟器 (controllers.js) 复制真实的生产行为: 每个控制器打开一个 GET /warm-start长轮询，收到匹配或超时，然后立即在同一个套接字上重新轮询。 k6 脚本 (load.js) POST 具有可配置等待点大小的真实 DequeuedMessage 有效负载。我们在每个阶段都运行了这个精确的设置。相同的硬件，相同的参数。唯一的变量是代码。 （更多关于我们的 k6 设置在下面的奖励部分。） 第 2 阶段：转向 Bun 随着 SQLite 的消失，重新分析显示 50%+ 的 CPU 时间在节点：http 内部：writev、套接字管理、流处理。当您持有数千个并发长轮询连接时，Node.js 的 HTTP 堆栈的开销很重要。我们使用 Bun.serve() 及其本机路由 API 添加了一个 Bun 入口点 (bun.ts)。连接管理器已经与传输无关（我们在 SQLite 删除期间提取了它），因此它主要是布线。具有 500 个控制器和 50 个并发管理程序请求的基准测试：MetricNode.js (Map)Bun.serve()Throughput4,534 req/s9,434 req/sp50 延迟 10.1ms4.5msp95 延迟 14.9ms7.4msmax 延迟 403ms22ms 全面另一个 2 倍（上面的 Bun 数字已经包括下面的第 3 阶段优化）。第 3 阶段：分析并剥离热路径 Bun 开箱即用的速度更快，但我们还没有完成分析。 Bun 有一个 --cpu-prof-md 标志，它将 CPU 配置文件输出为 markdown 而不是 Chrome DevTools 格式。输出是 grep 友好的并且无需任何工具即可读取。 # 从 CPU profiling 开始，markdown 输出bun --cpu-prof --cpu-prof-md --cpu-prof-dir /tmp/bun-prof src/bun.ts# 在另一个终端运行负载测试，然后杀掉 serverk6 run --vus 50 --duration 30s bench/load.js# 读取 profilecat /tmp/bun-prof/*.cpuprofile.md 输出是一个 markdown 表，你可以读入任何编辑：## 热门功能（自拍）|自我% |自我|功能|位置 ||------:|--------:|--------------------|------------------------|| 22.0% | 87.2 毫秒 | `_parse` | `zod/v3/types.js` || 10.5% | 41.6 毫秒 | `fromEntries` | `[native code]` || 8.6% | 34.1 毫秒 | `#structuredLog` | `structuredLogger` || 4.2% | 16.6 毫秒 | `fetch` | `[native code]` || 3.1% | 12.3 毫秒 | `addConnection` | `connectionManager` |三个明显的热点。每个 POST 上的 Zod DequeuedMessage.safeParse()：CPU 的 22%。对每个主管匹配请求进行完整的 Zod 模式验证。由于这是我们自己的服务之间的内部流量（控制器已经验证了完整的架构），因此我们用最少的现场存在检查替换了它。每次 GET 上的 Object.fromEntries(req.headers.entries())：CPU 的 10.5%。我们在每个请求上将标头迭代器转换为普通对象，然后读取各个字段。替换为直接 req.headers.get() 调用。即使过滤后也可调试日志记录：CPU 的 8.6%。结构化记录器在检查日志级别之前序列化日志参数。即使调试关闭，像 logger.debug(...) 这样的调用仍然会构建 JSON 字符串。结合起来，这三个修复在相同负载下将 CPU 使用量减少了约 40%。第 4 阶段：编译为单个二进制文件 接下来：运行时本身。 Bun 有一个bun build --compile 标志，可生成单个独立的可执行文件。容器中不需要运行时，没有node_modules，也不需要源文件。 RUN Bun build --compile --minify src/bun.ts --outfile firestarter 已编译的二进制文件与解释的 Bun: MetricInterpretedCompiledThroughputbaseline+14%p95 Latencybaseline-24%Image size~120MB (bun + node_modules)~68MB (single binary) 该镜像根本不需要安装 Bun 或 Node.js。只是二进制文件和 CA 证书捆绑包。我们还尝试了 --bytecode（JSC 字节码预编译），发现它实际上会损害稳态性能。字节码有助于冷启动（CLI 工具、无服务器函数），但对于 JSC 的 JIT 已预热的长时间运行的服务器来说，较大的二进制文件和额外的内存映射开销会使其速度变慢。 Bun 不会自动信任集群内 Kubernetes CA 证书。我们的节点检查器（查询 K8s API 是否有封锁节点）失败，无法验证第一个证书。使用一个环境变量修复： NODE_EXTRA_CA_CERTS=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt Bun 内存泄漏 在部署到生产环境后，Grafana 仪表板讲述了两个故事。 CPU 已关闭。但 RSS 正在快速攀升。</li><li>左边黄色的是 Node.js，稳定在 192 MiB。绿色爬升到 250 MiB 是 Bun 与泄漏。右边的蓝色是最终版本：稳定在 ~85 MiB。三个生命周期路径 每个 GET /warm-start 请求都会返回一个 Promise&lt;Response&gt;，Bun 会一直保存该 Promise&lt;Response&gt; 直到我们解决它。可以通过三种方式解决：</li><li>已声明（与运行匹配）：主管调用 getConnection()，我们通过持有的 Promise 发送有效负载。 Bun 发送响应，进行清理。</li><li>超时：65 秒后，scheduleCleanup 触发，调用 destroy()，它用 408 解决承诺。Bun 发送它，清理。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Update (March 30, 2026): Shortly after this post went live, Bun shipped a fix for the memory leak. 🔥</li><li>We replaced Node.js with Bun in one of our most latency-sensitive services and got a 5x throughput increase. We also found a memory leak that only exists in Bun&#39;s HTTP model. The service is called Firestarter. It&#39;s our warm start connection broker: it holds thousands of long-poll HTTP connections from idle run controllers, each waiting for work. When a task run arrives, Firestarter matches it to a waiting controller and sends the payload through the held connection. No cold start, no container spin-up. It&#39;s in the critical path of every task execution on Trigger.dev. The problem: Firestarter was using too much CPU. It was running on Node.js, spending 31% of its time inside a SQLite query, parsing every request with Zod, and converting headers with Object.fromEntries() on every GET. It worked, but it was slow. It took four rounds of profiling to get there, and we hit a few Bun surprises we haven&#39;t seen documented elsewhere. Phase 1: kill the SQLite query engine The original connection manager was designed as a generic queryable store. It accepted arbitrary nested metadata, flattened it recursively into key-value pairs, and indexed everything in an in-memory SQLite database. Node 22 shipped with node:sqlite built-in, so it was zero-dependency. SQL gave us flexible partial matching on any combination of fields. It made sense at the time because we didn&#39;t know the access pattern yet. Turns out the access pattern was always the same 4 fields. Every match attempt ran this query: SELECT DISTINCT c.id, c.metadataFROM connections cJOIN metadata_index mi ON c.id = mi.connection_idWHERE c.id IN ( SELECT connection_id FROM metadata_index WHERE (key = ? AND value = ?) OR (key = ? AND value = ?) OR (key = ? AND value = ?) OR (key = ? AND value = ?) GROUP BY connection_id HAVING COUNT(DISTINCT key) = ?)LIMIT 1 A correlated subquery with JOIN, GROUP BY, and HAVING COUNT(DISTINCT) for what is fundamentally a hash table lookup (we really overengineered this one). The metadata is always the same 4 fields: deployment ID, version, CPU, and memory. We ran node --prof under load (500 simulated controllers, 50 concurrent supervisor requests) and processed the output with --prof-process. getConnection was 31% of total CPU time. We replaced SQLite with a composite-key Map&lt;string, Set&lt;string&gt;&gt;. The key is a null-delimited string of deployment + version + cpu + memory. Matching became O(1) instead of a SQL query. The results: MetricSQLiteMapThroughput2,099 req/s4,534 req/sp50 latency22.5ms10.1msp95 latency29.1ms14.9msmax latency619ms403ms 2.2x throughput, 2.2x better median latency. And we could drop the --experimental-sqlite Node.js flag. How we benchmarked Every number in this post comes from the same reproducible setup: 500 simulated controllers holding persistent keep-alive connections, with k6 firing 50 concurrent supervisor match requests for 30 seconds. # Terminal 1: start Firestarterbun src/bun.ts# Terminal 2: 500 controllers with persistent socketsnode bench/controllers.js --controllers 500# Terminal 3: k6 load test (supervisor side)k6 run --vus 50 --duration 30s bench/load.js The controller simulator (controllers.js) replicates real production behavior: each controller opens a GET /warm-start long-poll, receives a match or times out, then immediately re-polls on the same socket. The k6 script (load.js) POSTs realistic DequeuedMessage payloads with configurable waitpoint sizes. We ran this exact setup at every phase. Same hardware, same parameters. The only variable was the code. (More on our k6 setup in the bonus section below.) Phase 2: move to Bun With SQLite gone, re-profiling showed 50%+ of CPU time in node:http internals: writev, socket management, stream handling. Node.js&#39;s HTTP stack has overhead that matters when you&#39;re holding thousands of concurrent long-poll connections. We added a Bun entry point (bun.ts) using Bun.serve() with its native routing API. The connection manager was already transport-agnostic (we&#39;d extracted it during the SQLite removal), so it was mostly wiring. Benchmarks with 500 controllers and 50 concurrent supervisor requests: MetricNode.js (Map)Bun.serve()Throughput4,534 req/s9,434 req/sp50 latency10.1ms4.5msp95 latency14.9ms7.4msmax latency403ms22ms Another 2x across the board (and the Bun numbers above already include the Phase 3 optimizations below). Phase 3: profile and strip the hot path Bun was faster out of the box, but we weren&#39;t done profiling. Bun has a --cpu-prof-md flag that outputs CPU profiles as markdown instead of Chrome DevTools format. The output is grep-friendly and readable without any tooling. # Start with CPU profiling, markdown outputbun --cpu-prof --cpu-prof-md --cpu-prof-dir /tmp/bun-prof src/bun.ts# Run load test in another terminal, then kill the serverk6 run --vus 50 --duration 30s bench/load.js# Read the profilecat /tmp/bun-prof/*.cpuprofile.md The output is a markdown table you can read in any editor: ## Hot Functions (Self Time)| Self% | Self | Function | Location ||------:|-------:|-------------------|----------------------|| 22.0% | 87.2ms | `_parse` | `zod/v3/types.js` || 10.5% | 41.6ms | `fromEntries` | `[native code]` || 8.6% | 34.1ms | `#structuredLog` | `structuredLogger` || 4.2% | 16.6ms | `fetch` | `[native code]` || 3.1% | 12.3ms | `addConnection` | `connectionManager` | Three clear hotspots. Zod DequeuedMessage.safeParse() on every POST: 22% of CPU. Full Zod schema validation on every supervisor match request. Since this is internal traffic between our own services (the controller already validates the full schema), we replaced it with minimal field presence checks. Object.fromEntries(req.headers.entries()) on every GET: 10.5% of CPU. We were converting the headers iterator to a plain object on every request, then reading individual fields. Replaced with direct req.headers.get() calls. Debug logging even when filtered: 8.6% of CPU. The structured logger was serializing log arguments before checking the log level. Calls like logger.debug(...) still built the JSON string even when debug was off. Combined, these three fixes cut CPU usage by ~40% under identical load. Phase 4: compile to a single binary Next: the runtime itself. Bun has a bun build --compile flag that produces a single self-contained executable. No runtime, no node_modules, no source files needed in the container. RUN bun build --compile --minify src/bun.ts --outfile firestarter The compiled binary vs interpreted Bun: MetricInterpretedCompiledThroughputbaseline+14%p95 latencybaseline-24%Image size~120MB (bun + node_modules)~68MB (single binary) The image doesn&#39;t need Bun or Node.js installed at all. Just the binary and a CA cert bundle. We also tried --bytecode (JSC bytecode precompilation) and found it actually hurt steady-state performance. Bytecode helps cold starts (CLI tools, serverless functions), but for a long-running server where JSC&#39;s JIT has warmed up, the larger binary and extra memory mapping overhead makes it slower. Bun doesn&#39;t automatically trust the in-cluster Kubernetes CA certificate. Our node checker (which queries the K8s API for cordoned nodes) failed with unable to verify the first certificate. Fixed with one env var: NODE_EXTRA_CA_CERTS=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt The Bun memory leak After deploying to production, the Grafana dashboard told two stories. CPU was down. But RSS was climbing fast.</li><li>Yellow on the left is Node.js, stable at 192 MiB. Green climbing to 250 MiB is Bun with the leak. Blue on the right is the final version: flat at ~85 MiB. The three lifecycle paths Every GET /warm-start request returns a Promise&lt;Response&gt; that Bun holds until we resolve it. There are three ways it gets resolved:</li><li>Claimed (matched to a run): the supervisor calls getConnection(), we send the payload through the held promise. Bun sends the response, cleans up.</li><li>Timeout: after 65 seconds, scheduleCleanup fires, calls destroy() which resolves the promise with a 408. Bun sends it, cleans up.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nlehuen</span>
+        <span class="meta-time">2026/04/06 15:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们替换的 SQL 查询非常令人畏缩和业余（“让我们撒上 DISTINCT 直到所有那些来自我们低效的 KV 元数据模式的讨厌的冗余行消失”）。他们没有承认这一点，并以某种方式将其归咎于 SQlite，这一事实让我当场停止阅读，并为任何依赖他们产品的人感到非常担心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The SQL query they replaced was extremely cringe and amateurish ("let's sprinkle DISTINCT until all those pesky redundant rows that come from our inefficient KV metadata schema go away"). The fact they did not acknowledge that and somehow blame it on SQlite made me stop reading on the spot, and be very worried for whoever depends on their products.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658080" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fleebee</span>
+        <span class="meta-time">2026/04/06 14:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对这篇文章的标题感到困惑。据我所知，大部分（如果不是全部）性能改进都来自于放弃 SQLite 和 Zod。<p>在与 Node 进行比较之前，他们对 Bun 版本应用了优化，将 CPU 时间缩短了约 40%。声称“用 Bun 替换 Node.js”带来了 5 倍的吞吐量，这是对研究结果的严重歪曲。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm puzzled by the title of this post. From what I can gather most, if not all, of the performance improvements came from sacking SQLite and Zod.<p>They applied optimizations that cut CPU time by ~40% to the Bun version before comparing it with Node. Claiming 5x throughput from "replacing Node.js with Bun" is a wild misrepresentation of the findings.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657520" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">LaSombra</span>
+        <span class="meta-time">2026/04/06 14:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不要让事实妨碍吸引人的标题</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Don’t let facts get in the way of a catchy headline</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657705" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dcre</span>
+        <span class="meta-time">2026/04/06 12:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很好奇为什么bun build --compile 会更快。文档说：<p>“编译后的可执行文件减少了内存使用并缩短了 Bun 的启动时间。</p><p>通常，Bun 在导入和 require 时读取并转译 JavaScript 和 TypeScript 文件。这是 Bun 的大部分功能“正常工作”的部分原因，但它不是免费的。从磁盘读取文件、解析文件路径、解析、转换和打印源代码需要花费时间和内存。</p><p>通过编译的可执行文件，您可以将该成本从运行时转移到构建时。”</p><p><a href="https://bun.com/docs/bundler/executables#deploying-to-production" target="_blank" rel="noopener noreferrer">https://bun.com/docs/bundler/executables#deploying-to-produc...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was curious why bun build --compile would be faster. The docs say:<p>“Compiled executables reduce memory usage and improve Bun’s start time.</p><p>Normally, Bun reads and transpiles JavaScript and TypeScript files on import and require. This is part of what makes so much of Bun “just work”, but it’s not free. It costs time and memory to read files from disk, resolve file paths, parse, transpile, and print source code.</p><p>With compiled executables, you can move that cost from runtime to build-time.”</p><p><a href="https://bun.com/docs/bundler/executables#deploying-to-production" target="_blank" rel="noopener noreferrer">https://bun.com/docs/bundler/executables#deploying-to-produc...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mdavid626</span>
+        <span class="meta-time">2026/04/06 13:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是关于 Bun，而是更多关于 sqlite 和 zod 的替代品。为什么解释为“包子更快”？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not about Bun, but more about sqlite and zod replacements. Why interpret this as "Bun is faster"?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nikanj</span>
+        <span class="meta-time">2026/04/06 14:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这样可以获得更多反应</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Gets more reactions that way</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mordae</span>
+        <span class="meta-time">2026/04/06 16:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对那些“aaa\0bbb\0ccc\0ddd”地图键感到畏缩。这比嵌套映射慢得多，并且需要分配字符串，从而给 GC 更多的工作要做。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I cringed at those "aaa\0bbb\0ccc\0ddd" Map keys. That's much slower than nested maps and requires allocating the strings, giving GC more work to do.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658141" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ksec</span>
+        <span class="meta-time">2026/04/06 12:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;下一步：运行时本身。 Bun 有一个bun build --compile 标志，可生成单个独立的可执行文件。容器中不需要运行时，没有node_modules，也不需要源文件。<p>我不知道。那么 Bun 基本上是一个完整的运行时 + 框架，几乎没有部署问题？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Next: the runtime itself. Bun has a bun build --compile flag that produces a single self-contained executable. No runtime, no node_modules, no source files needed in the container.<p>I didn't know that. So Bun is basically a whole runtime + framework all in one with little to no deployment headaches?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656956" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jamsinclair</span>
+        <span class="meta-time">2026/04/06 12:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Bun 构建创建了一个大型的独立可执行文件，没有进行任何优化。几乎就像一个大型电子建筑。<p>Deno 也提供相同的功能，但具有更小的优化二进制文件。</p><p>感谢 Bun 帮助创造良性竞争。我觉得 Deno 经常受到大多数人的关注。更多安全选项，比 Node 更快，基于 Web 标准构建。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The bun build creates a large self-contained executable with no optimisations. Almost like a large electron build.<p>Deno also provides the same functionality, but with a smaller optimized binary.</p><p>Appreciate Bun helping creating healthy competition. I feel like Deno falls under most people's radar often. More security options, faster than Node, built on web standards.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657049" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matorl</span>
+        <span class="meta-time">2026/04/06 13:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Deno 的安全选项对于 AI 沙箱非常有用。比节点的权限更广泛。包子也非常需要同样的东西。<p>Bun 有一个 PR 提供了相同的安全性，但它已经搁置了几个月了 <a href="https://github.com/oven-sh/bun/pull/25911" target="_blank" rel="noopener noreferrer">https://github.com/oven-sh/bun/pull/25911</a></p><p>我想将现有项目迁移到 Bun，但在它拥有适当的安全权限系统之前无法迁移。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Deno's security options are very useful for AI sandboxes. Broader than node's permissions. Bun badly needs the same.<p>There's a PR for Bun that gives the same security but it's been sitting for months <a href="https://github.com/oven-sh/bun/pull/25911" target="_blank" rel="noopener noreferrer">https://github.com/oven-sh/bun/pull/25911</a></p><p>I want to migrate an existing project to Bun but cannot until it has a security permission system in place.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dsissitka</span>
+        <span class="meta-time">2026/04/06 14:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很好奇：<p></p><pre><code>  $ cat app.ts
+  console.log("Hello, world!");
+  $ cat build
+  #!/usr/bin/env bash
+  
+  bun build --compile --outfile bun-darwin-arm64         --target bun-darwin-arm64         app.ts
+  bun build --compile --outfile bun-darwin-x64           --target bun-darwin-x64           app.ts
+  bun build --compile --outfile bun-darwin-x64-baseline  --target bun-darwin-x64-baseline  app.ts
+  bun build --compile --outfile bun-linux-arm64          --target bun-linux-arm64          app.ts
+  bun build --compile --outfile bun-linux-arm64-musl     --target bun-linux-arm64-musl     app.ts
+  bun build --compile --outfile bun-linux-x64            --target bun-linux-x64            app.ts
+  bun build --compile --outfile bun-linux-x64-baseline   --target bun-linux-x64-baseline   app.ts
+  bun build --compile --outfile bun-linux-x64-modern     --target bun-linux-x64-modern     app.ts
+  bun build --compile --outfile bun-linux-x64-musl       --target bun-linux-x64-musl       app.ts
+  bun build --compile --outfile bun-windows-arm64        --target bun-windows-arm64        app.ts
+  bun build --compile --outfile bun-windows-x64          --target bun-windows-x64          app.ts
+  bun build --compile --outfile bun-windows-x64-baseline --target bun-windows-x64-baseline app.ts
+  bun build --compile --outfile bun-windows-x64-modern   --target bun-windows-x64-modern   app.ts
+  
+  deno compile --output deno-x86_64-pc-windows-msvc    --target x86_64-pc-windows-msvc    app.ts
+  deno compile --output deno-x86_64-apple-darwin       --target x86_64-apple-darwin       app.ts
+  deno compile --output deno-aarch64-apple-darwin      --target aarch64-apple-darwin      app.ts
+  deno compile --output deno-x86_64-unknown-linux-gnu  --target x86_64-unknown-linux-gnu  app.ts
+  deno compile --output deno-aarch64-unknown-linux-gnu --target aarch64-unknown-linux-gnu app.ts
+  $ ls -1hs
+  total 1.6G
+  4.0K app.ts
+  4.0K build
+   59M bun-darwin-arm64
+   64M bun-darwin-x64
+   64M bun-darwin-x64-baseline
+   95M bun-linux-arm64
+   89M bun-linux-arm64-musl
+   95M bun-linux-x64
+   94M bun-linux-x64-baseline
+   95M bun-linux-x64-modern
+   90M bun-linux-x64-musl
+  107M bun-windows-arm64.exe
+  110M bun-windows-x64-baseline.exe
+  111M bun-windows-x64.exe
+  111M bun-windows-x64-modern.exe
+   77M deno-aarch64-apple-darwin
+   87M deno-aarch64-unknown-linux-gnu
+   84M deno-x86_64-apple-darwin
+   92M deno-x86_64-pc-windows-msvc.exe
+   93M deno-x86_64-unknown-linux-gnu
+  $
+</code></pre>
+也许我缺少一些标志？ Bun 的文档说 --compile 意味着 --production。我在 Deno 的文档中没有看到任何内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was curious:<p></p><pre><code>  $ cat app.ts
+  console.log("Hello, world!");
+  $ cat build
+  #!/usr/bin/env bash
+  
+  bun build --compile --outfile bun-darwin-arm64         --target bun-darwin-arm64         app.ts
+  bun build --compile --outfile bun-darwin-x64           --target bun-darwin-x64           app.ts
+  bun build --compile --outfile bun-darwin-x64-baseline  --target bun-darwin-x64-baseline  app.ts
+  bun build --compile --outfile bun-linux-arm64          --target bun-linux-arm64          app.ts
+  bun build --compile --outfile bun-linux-arm64-musl     --target bun-linux-arm64-musl     app.ts
+  bun build --compile --outfile bun-linux-x64            --target bun-linux-x64            app.ts
+  bun build --compile --outfile bun-linux-x64-baseline   --target bun-linux-x64-baseline   app.ts
+  bun build --compile --outfile bun-linux-x64-modern     --target bun-linux-x64-modern     app.ts
+  bun build --compile --outfile bun-linux-x64-musl       --target bun-linux-x64-musl       app.ts
+  bun build --compile --outfile bun-windows-arm64        --target bun-windows-arm64        app.ts
+  bun build --compile --outfile bun-windows-x64          --target bun-windows-x64          app.ts
+  bun build --compile --outfile bun-windows-x64-baseline --target bun-windows-x64-baseline app.ts
+  bun build --compile --outfile bun-windows-x64-modern   --target bun-windows-x64-modern   app.ts
+  
+  deno compile --output deno-x86_64-pc-windows-msvc    --target x86_64-pc-windows-msvc    app.ts
+  deno compile --output deno-x86_64-apple-darwin       --target x86_64-apple-darwin       app.ts
+  deno compile --output deno-aarch64-apple-darwin      --target aarch64-apple-darwin      app.ts
+  deno compile --output deno-x86_64-unknown-linux-gnu  --target x86_64-unknown-linux-gnu  app.ts
+  deno compile --output deno-aarch64-unknown-linux-gnu --target aarch64-unknown-linux-gnu app.ts
+  $ ls -1hs
+  total 1.6G
+  4.0K app.ts
+  4.0K build
+   59M bun-darwin-arm64
+   64M bun-darwin-x64
+   64M bun-darwin-x64-baseline
+   95M bun-linux-arm64
+   89M bun-linux-arm64-musl
+   95M bun-linux-x64
+   94M bun-linux-x64-baseline
+   95M bun-linux-x64-modern
+   90M bun-linux-x64-musl
+  107M bun-windows-arm64.exe
+  110M bun-windows-x64-baseline.exe
+  111M bun-windows-x64.exe
+  111M bun-windows-x64-modern.exe
+   77M deno-aarch64-apple-darwin
+   87M deno-aarch64-unknown-linux-gnu
+   84M deno-x86_64-apple-darwin
+   92M deno-x86_64-pc-windows-msvc.exe
+   93M deno-x86_64-unknown-linux-gnu
+  $
+</code></pre>
+Maybe I'm missing some flags? Bun's docs say --compile implies --production. I don't see anything in Deno's docs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657556" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">burnt-resistor</span>
+        <span class="meta-time">2026/04/06 15:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在哪里？ Bun 的文档网站搜索引擎没有显示它，但有一个关于该主题的公开 PR。<p><a href="https://github.com/oven-sh/bun/issues/26373" target="_blank" rel="noopener noreferrer">https://github.com/oven-sh/bun/issues/26373</a></p><p>文档网站说：--生产设置标志--minify，process.env.NODE_ENV =生产，以及生产模式JSX导入和转换</p><p>可能会尝试：</p><p></p><pre><code>   bun build --compile --production --bytecode --outfile myapp app.ts</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Where? bun's doc site search engine doesn't show it but there's an open PR on the topic.<p><a href="https://github.com/oven-sh/bun/issues/26373" target="_blank" rel="noopener noreferrer">https://github.com/oven-sh/bun/issues/26373</a></p><p>Doc site says: --production sets flag --minify, process.env.NODE_ENV = production, and production-mode JSX import &amp; transform</p><p>Might try:</p><p></p><pre><code>   bun build --compile --production --bytecode --outfile myapp app.ts</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657963" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dsissitka</span>
+        <span class="meta-time">2026/04/06 15:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">噢，这不是文档网站。我很懒：<p></p><pre><code>  $ bun build --help | grep Implies
+      --compile                             Generate a standalone Bun executable containing your bundled code. Implies --production
+  $
+</code></pre>
+事实上我确实仔细检查过它，因为它曾经是错误的。为了更好地衡量：<p></p><pre><code>  $ grep bun build
+  bun build --bytecode --compile --outfile bun-darwin-arm64         --production --target bun-darwin-arm64         app.ts
+  bun build --bytecode --compile --outfile bun-darwin-x64           --production --target bun-darwin-x64           app.ts
+  bun build --bytecode --compile --outfile bun-darwin-x64-baseline  --production --target bun-darwin-x64-baseline  app.ts
+  bun build --bytecode --compile --outfile bun-linux-arm64          --production --target bun-linux-arm64          app.ts
+  bun build --bytecode --compile --outfile bun-linux-arm64-musl     --production --target bun-linux-arm64-musl     app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64            --production --target bun-linux-x64            app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64-baseline   --production --target bun-linux-x64-baseline   app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64-modern     --production --target bun-linux-x64-modern     app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64-musl       --production --target bun-linux-x64-musl       app.ts
+  bun build --bytecode --compile --outfile bun-windows-arm64        --production --target bun-windows-arm64        app.ts
+  bun build --bytecode --compile --outfile bun-windows-x64          --production --target bun-windows-x64          app.ts
+  bun build --bytecode --compile --outfile bun-windows-x64-baseline --production --target bun-windows-x64-baseline app.ts
+  bun build --bytecode --compile --outfile bun-windows-x64-modern   --production --target bun-windows-x64-modern   app.ts
+  $ ls -1hs bun*
+   59M bun-darwin-arm64
+   64M bun-darwin-x64
+   64M bun-darwin-x64-baseline
+   95M bun-linux-arm64
+   89M bun-linux-arm64-musl
+   95M bun-linux-x64
+   94M bun-linux-x64-baseline
+   95M bun-linux-x64-modern
+   90M bun-linux-x64-musl
+  107M bun-windows-arm64.exe
+  110M bun-windows-x64-baseline.exe
+  111M bun-windows-x64.exe
+  111M bun-windows-x64-modern.exe
+  $</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">D'oh, it wasn't the doc site. I was lazy:<p></p><pre><code>  $ bun build --help | grep Implies
+      --compile                             Generate a standalone Bun executable containing your bundled code. Implies --production
+  $
+</code></pre>
+I actually did double check it though because it used to be wrong. For good measure:<p></p><pre><code>  $ grep bun build
+  bun build --bytecode --compile --outfile bun-darwin-arm64         --production --target bun-darwin-arm64         app.ts
+  bun build --bytecode --compile --outfile bun-darwin-x64           --production --target bun-darwin-x64           app.ts
+  bun build --bytecode --compile --outfile bun-darwin-x64-baseline  --production --target bun-darwin-x64-baseline  app.ts
+  bun build --bytecode --compile --outfile bun-linux-arm64          --production --target bun-linux-arm64          app.ts
+  bun build --bytecode --compile --outfile bun-linux-arm64-musl     --production --target bun-linux-arm64-musl     app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64            --production --target bun-linux-x64            app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64-baseline   --production --target bun-linux-x64-baseline   app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64-modern     --production --target bun-linux-x64-modern     app.ts
+  bun build --bytecode --compile --outfile bun-linux-x64-musl       --production --target bun-linux-x64-musl       app.ts
+  bun build --bytecode --compile --outfile bun-windows-arm64        --production --target bun-windows-arm64        app.ts
+  bun build --bytecode --compile --outfile bun-windows-x64          --production --target bun-windows-x64          app.ts
+  bun build --bytecode --compile --outfile bun-windows-x64-baseline --production --target bun-windows-x64-baseline app.ts
+  bun build --bytecode --compile --outfile bun-windows-x64-modern   --production --target bun-windows-x64-modern   app.ts
+  $ ls -1hs bun*
+   59M bun-darwin-arm64
+   64M bun-darwin-x64
+   64M bun-darwin-x64-baseline
+   95M bun-linux-arm64
+   89M bun-linux-arm64-musl
+   95M bun-linux-x64
+   94M bun-linux-x64-baseline
+   95M bun-linux-x64-modern
+   90M bun-linux-x64-musl
+  107M bun-windows-arm64.exe
+  110M bun-windows-x64-baseline.exe
+  111M bun-windows-x64.exe
+  111M bun-windows-x64-modern.exe
+  $</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/06 14:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">理想情况下，我们仍然只在浏览器上使用 JavaScript，我个人并不关心良性竞争，相反，当我被困在编写我不要求的服务器端代码时，npm 实际上可以工作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ideally we would still only use JavaScript on the browser, personally I don't care about about the healthy competition, rather that npm actually works when I am stuck writing server side code I didn't ask for.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">burnt-resistor</span>
+        <span class="meta-time">2026/04/06 15:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FE-BE 标准化在劳动力和代码迁移可移植性方面是高效的，但我真的很喜欢在生产中静态编译和优化 BE 的想法。BE 绝对没有必要或理由在产品中做动态任何事情。只要它在出现问题时保留分析检查能力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FE-BE standardization is efficient in terms of labor and code migration portability, but I really like the idea of static compilation and optimization of the BE in production.. there's absolutely no need or reason for the BE to do dynamic anything in prod. As long as it retains profiling inspectability when things go wrong.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657990" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">thewarman</span>
+        <span class="meta-time">2026/04/06 12:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个（单个可执行文件）现在也可以在 Node.js 中作为 SEA 模式使用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This (single executable) is available in node.js now too as SEA mode.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657086" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">claytongulick</span>
+        <span class="meta-time">2026/04/06 13:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但我认为它仍然无法与 ESM 一起使用，只能与 CommonJS 一起使用，因此虽然不是不可克服的，但不如bun那么好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But I think it still doesn't work with ESM, only CommonJS, so while not insurmountable, not as good as bun.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657230" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">williamstein</span>
+        <span class="meta-time">2026/04/06 13:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">带有 Node.js 的 SEA “适用于”几乎任意通用的 Node 代码——几乎任何可以使用 Node 运行的东西。  然而，您可能需要付出大量额外的努力，例如，使用 [1]，并且可能需要付出更多的工作（例如，复制资产或使用虚拟文件系统）。<p>[1] <a href="https://www.npmjs.com/package/@vercel/ncc" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/@vercel/ncc</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SEA with node.js "works" for nearly arbitrarily general node code -- pretty much anything you can run with node.  However you may have to put in substantial extra effort, e.g., using [1], and possibly more work (e.g., copying assets out or using a virtual file system).<p>[1] <a href="https://www.npmjs.com/package/@vercel/ncc" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/@vercel/ncc</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657306" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mememememememo</span>
+        <span class="meta-time">2026/04/06 13:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果转向 Go、Rust 或 C++，你会得到多少收益？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How much would you get by moving to Go, Rust or C++?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657283" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/06 14:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很多，但显然我们无法摆脱服务器端 JavaScript 代码。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A lot, but apparently we cannot get rid of having server side JavaScript code.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657578" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jimbob45</span>
+        <span class="meta-time">2026/04/06 14:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望您能得到回复而不是否决票。我想知道为什么人们认为 Bun 在这里更受欢迎。对于跨平台的非性能重要的代码，我会整天使用 Bun。一旦速度进入等式，我不明白为什么你仍然使用它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish you were getting replies instead of downvotes. I want to know why people think Bun is preferable here. For cross-platform non-performance-important code, I’ll use Bun all day. Once speed enters the equation, I don’t see why you’d still be using it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657524" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">abustamam</span>
+        <span class="meta-time">2026/04/06 12:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除了具有独立部署目标和共享包的 monorepos 之外，我对所有内容都使用 Bun。我使用yarn 或pnpm 作为monorepos。也许它在过去六个月里发生了变化，但例如，当我只想构建 Web 应用程序时，我永远无法让 docker 正确解决我的依赖关系，因为面包锁是基于存储库中的所有包确定的，因此隔离单个叶子会导致错误。<p>也许我做错了什么，但我搜索了文档和在线，并询问了多个人工智能代理，但无济于事。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I use bun for everything except for monorepos with isolated deployment targets and shared packages. I use yarn or pnpm for monorepos. Maybe it's changed in the last six months but I could never get docker to properly resolve my dependencies when I only want to build the web app, for example, since the bun lock is deterministic based off of all the packages in the repo so isolating a single leaf makes it error.<p>Maybe I'm doing something wrong but I scoured docs and online and asked multiple AI agents to no avail.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">azinman2</span>
+        <span class="meta-time">2026/04/06 13:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么Bun是说JSC比v8好很多吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So is Bun saying that JSC is much better than v8?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657316" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">carefree-bob</span>
+        <span class="meta-time">2026/04/06 13:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更重要的是 Zig 比 JS 更快。 Bun 的速度优势来自所有 Zig 绑定，而不是 JS 解释器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's more that Zig is faster than JS. The speed advantages of Bun come from all the Zig bindings, not the JS interpreter.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657329" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/06 14:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C 和 C++ 也是如此，nodejs 也有绑定。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">C and C++ as well, and nodejs has bindings.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657574" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">denys_potapov</span>
+        <span class="meta-time">2026/04/06 12:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">tl;dr 用 Map 替换 SQLite 约 2 倍加速，用 ifs 替换 zod 验证约 2 倍加速。 Bun 在未解决的承诺中存在内存泄漏 - 现已修复</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">tl;dr replace SQLite with Map ~ 2x speed up, replace zod validation with ifs ~ 2x speed up. Bun had a memory leak on unresolved promises - now fixed</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657006" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">LeonTing1010</span>
+        <span class="meta-time">2026/04/06 12:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657025" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

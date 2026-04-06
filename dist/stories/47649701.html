@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perfmon – 将您最喜欢的 CLI 监控工具整合到一个 TUI 中 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-06-1623/">返回本批次</a>
+      <h1>Perfmon – 将您最喜欢的 CLI 监控工具整合到一个 TUI 中</h1>
+      <p class="subtitle">Perfmon – Consolidate your favorite CLI monitoring tools into a single TUI</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 paperplaneflyr</span>
+        <span>分数 48</span>
+        <span>评论 11</span>
+        <span>2026/04/05 22:16</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47649701" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/sumant1122/Perfmon" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>适用于您的终端的现代化、轻量级且可定制的 TUI 性能监视器。</li><li>功能 • 安装 • 使用 • 配置 • 贡献</li><li>💡 为什么是Perfmon？传统的性能监视器常常会淹没用户大量的信息，或者缺乏灵活性来准确显示您所需要的信息。 Perfmon 通过提供以下功能解决了这个问题：</li><li>整合：在一个位置查看多个诊断工具（如 top、vmstat、netstat）的输出。焦点：干净的选项卡式界面让您可以在不同的指标之间切换，而不会造成终端混乱。可见性：实时迷你图提供对系统核心资源的即时“一目了然”的运行状况检查。灵活性：不喜欢默认设置？通过简单的 TOML 文件引入您自己的 shell 命令。</li><li>✨ 特点</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>A modern, lightweight, and customizable TUI performance monitor for your terminal.</li><li>Features • Installation • Usage • Configuration • Contributing</li><li>💡 Why Perfmon? Traditional performance monitors often overwhelm users with information or lack the flexibility to show exactly what you need. Perfmon solves this by providing:</li><li>Consolidation: View output from multiple diagnostic tools (like top, vmstat, netstat) in one place. Focus: A clean, tabbed interface lets you switch between different metrics without terminal clutter. Visibility: Real-time sparklines provide an immediate &quot;at-a-glance&quot; health check of your system&#39;s core resources. Flexibility: Don&#39;t like the defaults? Bring your own shell commands via a simple TOML file.</li><li>✨ Features</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gertrunde</span>
+        <span class="meta-time">2026/04/06 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可能不是最好的名字选择......？<p>（编辑： <a href="https://en.wikipedia.org/wiki/Performance_Monitor" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Performance_Monitor</a> 如果人们不知道，通常称为... perfmon）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Possibly not the best choice of name...?<p>(Edit: <a href="https://en.wikipedia.org/wiki/Performance_Monitor" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Performance_Monitor</a> in case people are unaware, usually known as... perfmon)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653547" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zelifcam</span>
+        <span class="meta-time">2026/04/06 10:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的提交。<p>TMUX 支持向终端添加静态页眉或页脚。您可以将信息/统计信息，任何您想要的内容一目了然。它支持多个窗格或选项卡，其中包含您想要的内容。会话管理。全部来自配置文件。但它还做了更多与您的具体用例无关的事情。它也被扭曲了20年。所以它很坚固。</p><p>还有很多人听到 perfmon 可能会想到 Windows。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for the submission.<p>TMUX supports adding static headers or footers to your terminal. You can put info / stats , whatever you want in a glance. It supports multiple panes or tabs with whatever you want as content. Session management. All from config files. But it also does so much more unrelated to your specific use case. It’s also been wrenched on for 2 decades. So it’s solid.</p><p>There’s also a lot of folks out that that hear perfmon and probably think of windows.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656361" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jackhab</span>
+        <span class="meta-time">2026/04/06 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用 tmux 来整合选项卡和窗格中的 TUI 监视器。 perfmon 有什么好处？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was using tmux to consolidate TUI monitors in both tabs and panes. What's the advantage of perfmon?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47651804" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nickjj</span>
+        <span class="meta-time">2026/04/06 07:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这也是我使用的，这样做的好处是您可以本地使用现有的工具，并且您可以灵活地安排它们。可以将窗格拆分为 1 个窗口或各自会话中的不同窗口。<p>例如，我的点文件中有一个 `monitor` 脚本 <a href="https://github.com/nickjj/dotfiles/blob/master/.local/bin/monitor" target="_blank" rel="noopener noreferrer">https://github.com/nickjj/dotfiles/blob/master/.local/bin/mo...</a> 目前它只是将 btop 和专用的 GPU 监控工具分开。</p><p>如果我已经在 tmux 中并运行该脚本，它会在新的 tmux 窗口中拆分一些工具，但如果我不在 tmux 中，那么它会创建一个具有相同拆分的新“监视器”会话。我还将它分配给我的状态栏，如果我单击 Waybar 的 CPU 图标，它会在新终端中“启动或聚焦”该监视脚本，这样如果我多次单击 CPU ，它就不会产生重复项。基本上我想如何启动它有最终的自由。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is what I use too, the nice thing about this is you can use your existing tools natively and you have lots of flexibility in how you want them arranged. Could be split panes in 1 window or different windows in their own session.<p>For example I have a `monitor` script in my dotfiles at <a href="https://github.com/nickjj/dotfiles/blob/master/.local/bin/monitor" target="_blank" rel="noopener noreferrer">https://github.com/nickjj/dotfiles/blob/master/.local/bin/mo...</a> which for now just splits btop and a dedicated GPU monitoring tool.</p><p>If I'm already in tmux and run that script it splits a few tools in a new tmux window but if I'm not in tmux already then it creates a new "monitor" session with the same splits. I also have it assigned to my status bar where if I click Waybar's CPU icon, it "launches or focuses" that monitor script in a new terminal so it doesn't spawn duplicates if I click the CPU multiple times. Basically ultimate freedom in how I want to launch it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655172" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">paperplaneflyr</span>
+        <span class="meta-time">2026/04/06 12:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢人们的反馈。<p>是的，我现在意识到“Perform”这个名字已经被占用了。是否会做出与监控/可观察性主题产生共鸣的改变。</p><p>还将修复其他问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Appreciate the feedback folks.<p>Yes, I realize now that the name "Perform" is taken. Will have it changed that resonates with the monitoring/observability theme.</p><p>Will fix other issues as well.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657081" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">paperplaneflyr</span>
+        <span class="meta-time">2026/04/05 22:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我构建 Perfmon 是因为我发现自己经常在多个终端选项卡之间切换以检查不同的系统指标（top 用于进程、vmstat 用于内存、netstat 用于流量等）。我想要一个统一的视图，它不仅显示一组硬编码的统计数据，而且让我可以使用自己的工具。<p>是什么让它与众不同：
+与 htop 或 btop 等静态监视器不同，Perfmon 是围绕选项卡式界面设计的，其中每个选项卡只是 TOML 配置中定义的 shell 命令。如果您有每 5 秒运行一次的特定脚本或 grep 命令来检查日志或指标，您只需将其放入配置中，它就会成为仪表板中的一个选项卡。</p><p>主要特点：
+- 可扩展：将任何 shell 命令定义为选项卡。
+- 实时指标：CPU、内存、负载和网络的实时迷你图（适用于 Linux、macOS 和 Windows）。
+- 现代 TUI：使用 Go bubbletea 框架构建，带来干净、响应灵敏的感觉。
+- 轻量级：最小的资源占用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I built Perfmon because I found myself constantly switching between multiple terminal tabs to check different system metrics (top for processes, vmstat for memory, netstat for traffic, etc.). I wanted a single, unified view that didn't just show a hardcoded set of stats, but let me bring my own tools.<p>What makes it different:
+Unlike static monitors like htop or btop, Perfmon is designed around a tabbed interface where each tab is just a shell command defined in a TOML config. If you have a specific script or a grep command you run every 5 seconds to check a log or a metric, you can just drop it into the config, and it becomes a tab in your dashboard.</p><p>Key Features:
+- Extensible: Define any shell command as a tab.
+- Live Metrics: Real-time sparklines for CPU, Mem, Load, and Network (works on Linux, macOS, and Windows).
+- Modern TUI: Built using the Go bubbletea framework for a clean, responsive feel.
+- Lightweight: Minimal resource footprint.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47649702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PeterWhittaker</span>
+        <span class="meta-time">2026/04/06 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来不错，但很想知道它与底部（btm）相比，功能方面。谢谢！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks pretty good, but would love to know this compares to bottom (btm), featurewise. Thanks!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47650950" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">paperplaneflyr</span>
+        <span class="meta-time">2026/04/06 01:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Perfmon 本质上允许您定义日常使用的命令，在 toml 文件中定义它们并选项卡它们，即可自定义。
+可能是 docker 或 kubernetes 命令等等。这一点与btm不同。<p>底部（btm）比顶部提供更多图形。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Perfmon essentially allows you to define commands you use daily, defined them in a toml file and tab them, ie customizable.
+It could be docker or kubernetes commands and so on. This is different from btm.<p>Bottom(btm) gives just more graphical than top.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47651590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jrm4</span>
+        <span class="meta-time">2026/04/06 00:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈，我确实从来没有听说过“bottom”，也没有查过它，但是永远做 Linux/Unix 并几乎确切地知道它必须是什么，只是给出了名字，这有点有趣。  如果我错了，我会编辑它，但我打赌我不会。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ha, I've literally never heard of bottom, and haven't looked it up yet, but it's just kind of funny doing Linux/Unix forever and knowing almost exactly what it must be about, just given the name.  I'll edit this if I was wrong, but I bet I won't be.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47651100" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">elC0mpa</span>
+        <span class="meta-time">2026/04/06 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，看起来很棒。只是一个快速的一般建议：<p>您应该直接向 install.sh 提供一个curl，以便为您的工具提供更简单的安装步骤，此外我认为将其发布在 MacOS 用户的 homebrew 上会很好。</p><p>这篇文章来得正是时候，因为我正在开发 CLI 并且我想在下一个主要版本中为其添加一些交互性，并且您的 CLI 在某种程度上帮助了我。</p><p>这是我的 CLI (<a href="https://github.com/elC0mpa/aws-doctor" target="_blank" rel="noopener noreferrer">https://github.com/elC0mpa/aws-doctor</a>）</p><p>您可以在那里查看我如何实现 homebrew 发行版和 install.sh 文件以实现轻松安装步骤</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow, looks great. Just a quick general recommendations:<p>You should give a direct curl to an install.sh to provide a simpler installation step for you tool and besides I think it would be good to publish it on home brew for MacOS users.</p><p>This post came in a good moment because I am developing a CLI and I want to add some interactivity to it in the next major version and in some way your CLI has helped me with that.</p><p>This is my CLI (<a href="https://github.com/elC0mpa/aws-doctor" target="_blank" rel="noopener noreferrer">https://github.com/elC0mpa/aws-doctor</a>)</p><p>There you can check how I implemented the home brew distribution and the install.sh file for the easy installation step</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652595" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mrichman</span>
+        <span class="meta-time">2026/04/06 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">名字不好。不安装。在 macOS 上运行不佳。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Bad name. Doesn't install. Doesn't work well on macOS.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655443" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1484 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>使用 LM Studio 的新无头 CLI 和 Claude Code 在本地运行 Gemma 4 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-06-1623/">返回本批次</a>
+      <h1>使用 LM Studio 的新无头 CLI 和 Claude Code 在本地运行 Gemma 4</h1>
+      <p class="subtitle">Running Gemma 4 locally with LM Studio&#39;s new headless CLI and Claude Code</p>
+      <div class="meta-line">
+        <span>ai.georgeliu.com</span>
+        <span>作者 vbtechguy</span>
+        <span>分数 260</span>
+        <span>评论 64</span>
+        <span>2026/04/06 01:13</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47651540" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://ai.georgeliu.com/p/running-google-gemma-4-locally-with" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>云 AI API 曾经很棒，但后来却变得不那么棒了。速率限制、使用成本、隐私问题和网络延迟都会加起来。对于代码审查、起草或测试提示等快速任务，完全在您的硬件上运行的本地模型具有真正的优势：零 API 成本、没有数据离开您的机器以及一致的可用性。Google 的 Gemma 4 由于其混合专家架构而对于本地使用很有趣。 26B 参数模型每次前向传递仅激活 4B 参数，这意味着它在无法处理密集 26B 模型的硬件上运行良好。在我的具有 48 GB 统一内存的 14” MacBook Pro M4 Pro 上，它非常适合，每秒生成 51 个令牌。尽管根据我的经验，在 Claude Code 中使用时速度会显着减慢。Google Gemma 4 26B-a4b LLM 模型通过 LM Studio API 使用 Claude Code 别名命令 claude-lmGoogle 发布了 Gemma 4 作为四个模型的系列，而不仅仅是一个。产品阵容涵盖广泛硬件目标范围：Google Gemma 4 LLM 模型“E”模型（E2B、E4B）使用每层嵌入来优化设备上部署，并且是唯一支持音频输入（语音识别和翻译）的变体。31B 密集模型的能力最强，在 MMLU Pro 上得分为 85.2%，在 AIME 2026 上得分为 89.2%。为什么我选择 26B-A4B。混合专家架构是关键。它有 128 个专家加上 1 个共享专家，但每个令牌仅激活 8 个专家（3.8B 参数）。通用的经验法则估计 MoE 密集 - 等效质量大致为 sqrt（总 x 活跃参数），这使得该模型的推理成本与 4B 密集模型相当，其质量远高于该权重类别。 MMLU Pro 和 AIME 2026 上的 88.3%，接近密集的 31B（85.2% 和 89.2%），同时运行速度显着加快。下面的图表说明了这一情况。它以对数尺度绘制了启用思维的最新开放权重模型的 Elo 分数。左上角的蓝色突出显示区域是您想要的位置：高性能、占用空间小。Gemma 4 26B-A4B（Elo） ~1441）稳居该区域，远高于其 25.2B 参数权重。31B 密集变体得分略高（~1451），但仍然非常紧凑，就上下文而言，Qwen 3.5 397B-A17B（~1450 Elo）和 GLM-5（~1457 Elo）等模型需要 100-600B 总参数才能达到相似的得分。 Kimi-K2.5（~1457 Elo）需要超过 1,000B。26B-A4B 只需要一小部分参数即可实现具有竞争力的 Elo，这直接转化为更低的内存需求和更快的本地推理。这使得 MoE 模型能够在本地使用中实现变革，无需使用集群或高端 GPU 设备来运行与 400B+ 参数庞然大物竞争的模型。 48 GB 统一内存就足够了。对于 48 GB Mac 上的本地推理，这是最佳选择，密集的 31B 会消耗更多内存并生成更慢的令牌，因为 E4B 更轻，但能力明显较差。 26B-A4B 为您提供 256K 最大上下文、视觉支持（用于分析屏幕截图和图表）、本机函数/工具调用以及可配置思维模式的推理。 Google Gemma 4 模型性能与大小比较 LM Studio 一直是运行本地模型的流行桌面应用程序，版本 0.4.0 通过引入 llmster（从桌面应用程序提取并打包为独立服务器）从根本上改变了架构。实际结果：您现在可以使用 lms CLI 完全从命令行运行 LM Studio，这使得它可以在 CI/CD 中的无头服务器上使用。 0.4.0 中的关键新增功能：llmster 守护进程：无需桌面应用程序即可管理模型加载和推理的后台服务 CLI：用于下载、加载、聊天和服务模型的完整命令行界面并行请求处理：连续批处理而不是顺序排队，因此对同一模型的多个请求同时运行有状态 REST API：一个新的/v1/chat 端点可跨请求维护对话历史记录MCP 集成：具有权限密钥门控的本地模型上下文协议支持使用单个命令安装 lms CLI：# Linux/Mac curl -fsSL https://lmstudio.ai/install.sh |</li><li># Windows irm https://lmstudio.ai/install.ps1 | iex然后启动无头守护进程：lms守护进程在macOS上，更新两个推理运行时：lms运行时更新llama.cpp lms运行时更新mlx随着守护进程运行，下载Google的Gemma 4 26B模型：lms get google/gemma-4-26b-a4bCLI显示它将下载的变体（默认情况下Q4_K_M量化，17.99） GB）并要求确认： ↓ 下载：型号 google/gemma-4-26b-a4b - 64.75 KB └─ ↓ 下载：Gemma 4 26B A4B Instruct Q4_K_M [GGUF] - 17.99 GB</li><li>即将下载 17.99 GB。</li><li>？开始下载？ ❯ 是 否 更改变体选择如果您已有模型，CLI 会告诉您并显示加载命令：✔ 开始下载？是 模型已下载。要使用，请运行： lms load google/gemma-4-26b-a4b 列出所有下载的模型：lms ls 您有 10 个模型，占用 118.17 GB 磁盘空间。</li><li>LLM 参数架构大小设备 gemma-3-270m-it-mlx 270m gemma3_text 497.80 MB 本地 google/gemma-4-26b-a4b（1 个变体）26B-A4B gemma4 17.99 GB 本地 gpt-oss-20b-mlx 20B gpt_oss 22.26 GB 本地Flame-3.2-1b-instruct 1B Flame 712.58 MB 本地 nvidia/nemotron-3-nano（1 个变体） 30B nemotron_h 17.79 GB 本地 openai/gpt-oss-20b（1 个变体） 20B gpt-oss 12.11 GB 本地 qwen/qwen3.5-35b-a3b（1 个变体） 35B-A3B qwen35moe 22.07 GB 本地 qwen2.5-0.5b-instruct-mlx 0.5B Qwen2 293.99 MB 本地 zai-org/glm-4.7-flash（1 个变体） 30B glm4_moe_lite 24.36 GB 本地</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Cloud AI APIs are great until they are not. Rate limits, usage costs, privacy concerns, and network latency all add up. For quick tasks like code review, drafting, or testing prompts, a local model that runs entirely on your hardware has real advantages: zero API costs, no data leaving your machine, and consistent availability.Google’s Gemma 4 is interesting for local use because of its mixture-of-experts architecture. The 26B parameter model only activates 4B parameters per forward pass, which means it runs well on hardware that could never handle a dense 26B model. On my 14” MacBook Pro M4 Pro with 48 GB of unified memory, it fits comfortably and generates at 51 tokens per second. Though there’s significant slowdowns when used within Claude Code from my experience.Google Gemma 4 26B-a4b LLM model served via LM Studio API with Claude Code alias command claude-lmGoogle released Gemma 4 as a family of four models, not just one. The lineup spans a wide range of hardware targets:Google Gemma 4 LLM modelsThe “E” models (E2B, E4B) use Per-Layer Embeddings to optimize for on-device deployment and are the only variants that support audio input (speech recognition and translation). The 31B dense model is the most capable, scoring 85.2% on MMLU Pro and 89.2% on AIME 2026.Why I picked the 26B-A4B. The mixture-of-experts architecture is the key. It has 128 experts plus 1 shared expert, but only activates 8 experts (3.8B parameters) per token. A common rule of thumb estimates MoE dense - equivalent quality as roughly sqrt(total x active parameters), which puts this model around 10B effective. In practice, it delivers inference cost comparable to a 4B dense model with quality that punches well above that weight class. On benchmarks, it scores 82.6% on MMLU Pro and 88.3% on AIME 2026, close to the dense 31B (85.2% and 89.2%) while running dramatically faster.The chart below tells the story. It plots Elo score against total model size on a log scale for recent open-weight models with thinking enabled. The blue-highlighted region in the upper left is where you want to be: high performance, small footprint.Gemma 4 26B-A4B (Elo ~1441) sits firmly in that zone, punching well above its 25.2B parameter weight. The 31B dense variant scores slightly higher (~1451) but is still remarkably compact. For context, models like Qwen 3.5 397B-A17B (~1450 Elo) and GLM-5 (~1457 Elo) need 100-600B total parameters to reach similar scores. Kimi-K2.5 (~1457 Elo) requires over 1,000B. The 26B-A4B achieves competitive Elo with a fraction of the parameters, which translates directly into lower memory requirements and faster local inference.This is what makes MoE models transformative for local use. You do not need a cluster or a high-end GPU rig to run a model that competes with 400B+ parameter behemoths. A laptop with 48 GB of unified memory is enough.For local inference on a 48 GB Mac, this is the sweet spot. The dense 31B would consume more memory and generate tokens slower because every parameter participates in every forward pass. The E4B is lighter but noticeably less capable. The 26B-A4B gives you 256K max context, vision support (useful for analyzing screenshots and diagrams), native function/tool calling, and reasoning with configurable thinking modes, all at 51 tokens/second on my hardware.Google Gemma 4 model performance vs size comparisonLM Studio has been a popular desktop app for running local models for a while. Version 0.4.0 changed the architecture fundamentally by introducing llmster, the core inference engine extracted from the desktop app and packaged as a standalone server.The practical result: you can now run LM Studio entirely from the command line using the lms CLI. No GUI required. This makes it usable on headless servers, in CI/CD pipelines, SSH sessions, or just for developers who prefer staying in the terminal.Key additions in 0.4.0:llmster daemon: a background service that manages model loading and inference without the desktop applms CLI: full command-line interface for downloading, loading, chatting, and serving modelsParallel request processing: continuous batching instead of sequential queuing, so multiple requests to the same model run concurrentlyStateful REST API: a new /v1/chat endpoint that maintains conversation history across requestsMCP integration: local Model Context Protocol support with permission-key gatingInstall the lms CLI with a single command:# Linux/Mac curl -fsSL https://lmstudio.ai/install.sh | bash</li><li># Windows irm https://lmstudio.ai/install.ps1 | iexThen start the headless daemon:lms daemon upOn macOS, update both inference runtimes:lms runtime update llama.cpp lms runtime update mlxWith the daemon running, download Google’s Gemma 4 26B model:lms get google/gemma-4-26b-a4bThe CLI shows you the variant it will download (Q4_K_M quantization by default, 17.99 GB) and asks for confirmation: ↓ To download: model google/gemma-4-26b-a4b - 64.75 KB └─ ↓ To download: Gemma 4 26B A4B Instruct Q4_K_M [GGUF] - 17.99 GB</li><li>About to download 17.99 GB.</li><li>? Start download? ❯ Yes No Change variant selectionIf you already have the model, the CLI tells you and shows the load command:✔ Start download? yes Model already downloaded. To use, run: lms load google/gemma-4-26b-a4bList all downloaded models:lms lsYou have 10 models, taking up 118.17 GB of disk space.</li><li>LLM PARAMS ARCH SIZE DEVICE gemma-3-270m-it-mlx 270m gemma3_text 497.80 MB Local google/gemma-4-26b-a4b (1 variant) 26B-A4B gemma4 17.99 GB Local gpt-oss-20b-mlx 20B gpt_oss 22.26 GB Local llama-3.2-1b-instruct 1B Llama 712.58 MB Local nvidia/nemotron-3-nano (1 variant) 30B nemotron_h 17.79 GB Local openai/gpt-oss-20b (1 variant) 20B gpt-oss 12.11 GB Local qwen/qwen3.5-35b-a3b (1 variant) 35B-A3B qwen35moe 22.07 GB Local qwen2.5-0.5b-instruct-mlx 0.5B Qwen2 293.99 MB Local zai-org/glm-4.7-flash (1 variant) 30B glm4_moe_lite 24.36 GB Local</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hackerman70000</span>
+        <span class="meta-time">2026/04/06 16:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里真正的故事并不是 Gemma 4，而是线束和模型现在完全解耦了。 Claude Code、OpenCode、Pi、Codex 均可与任何后端配合使用。编码代理正在成为商品层，竞争正在转向模型质量和成本。对用户有利，对任何护城河为安全带的人不利</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The real story here isn't Gemma 4 specifically, it's that the harness and the model are now fully decoupled. Claude Code, OpenCode, Pi, Codex all work with any backend. The coding agent is becoming a commodity layer and the competition is moving to model quality and cost. Good for users, bad for anyone whose moat was the harness</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658242" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">seifbenayed1992</span>
+        <span class="meta-time">2026/04/06 15:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本地模特终于开始感到愉快，而不仅仅是“可能”。无头 LM Studio 流程特别好，因为它使本地推理可以从真实工具而不是演示中使用。<p>在此空间中构建的人的相关注释：我一直在研究 cloclo (<a href="https://www.npmjs.com/package/cloclo" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/cloclo</a>），一个开源编码代理 CLI，这正是我所兴奋的方向。它本身支持 LM Studio、Ollama、vLLM、Jan 和 llama.cpp 作为云模型的提供者，因此您可以在本地后端和托管后端之间切换，而无需改变您的工作方式。</p><p>感觉我们正在接近一个良好的默认设置，其中本地模型是私有的/便宜的，足以日常使用，而当您需要额外的功能时，云模型仍然存在。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Local models are finally starting to feel pleasant instead of just "possible." The headless LM Studio flow is especially nice because it makes local inference usable from real tools instead of as a demo.<p>Related note from someone building in this space: I've been working on cloclo (<a href="https://www.npmjs.com/package/cloclo" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/cloclo</a>), an open-source coding agent CLI, and this is exactly the direction I'm excited about. It natively supports LM Studio, Ollama, vLLM, Jan, and llama.cpp as providers alongside cloud models, so you can swap between local and hosted backends without changing how you work.</p><p>Feels like we're getting closer to a good default setup where local models are private/cheap enough to use daily, and cloud models are still there when you need the extra capability.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658062" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">edinetdb</span>
+        <span class="meta-time">2026/04/06 10:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Claude Code 已成为我迭代数据管道工作的主要界面 — 
+具体来说，规范政府监管备案（跨三个不同的领域的 XBRL） 
+会计标准）并通过 REST 和 MCP 公开它们。<p>MCP 部分是工作流程变得有趣的地方。而不是建立一个客户端 
+调用端点，您以声明方式描述工具，模型决定何时 
+调用它们。对于金融数据来说，这是非常有效的——像这样的查询 
+“将该公司的杠杆趋势与行业同行进行 10 年来的比较”得到 
+自动分解为正确的工具调用顺序，无需硬编码 
+这个逻辑。</p><p>我没有看到太多讨论的一件事：工具延迟敏感性要高得多 
+会话式 MCP 的使用优于批处理管道。 2s 工具响应感觉很好 
+脚本但破坏了对话流程。我们最终缓存了经常访问的表 
+内存中（~26MB）以获得低于 100 毫秒的响应。您是否注意到类似的阈值 
+延迟从哪里开始影响模型推理链的质量？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Claude Code has become my primary interface for iterating on data pipeline work — 
+specifically, normalizing government regulatory filings (XBRL across three different 
+accounting standards) and exposing them via REST and MCP.<p>The MCP piece is where the workflow gets interesting. Instead of building a client 
+that calls endpoints, you describe tools declaratively and the model decides when to 
+invoke them. For financial data this is surprisingly effective — a query like 
+"compare this company's leverage trend to sector peers over 10 years" gets 
+decomposed automatically into the right sequence of tool calls without you hardcoding 
+that logic.</p><p>One thing I haven't seen discussed much: tool latency sensitivity is much higher in 
+conversational MCP use than in batch pipelines. A 2s tool response feels fine in a 
+script but breaks conversational flow. We ended up caching frequently accessed tables 
+in-memory (~26MB) to get sub-100ms responses. Have you noticed similar thresholds 
+where latency starts affecting the quality of the model's reasoning chain?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656210" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tatrions</span>
+        <span class="meta-time">2026/04/06 12:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的问题。在实践中，我发现每个工具调用的阈值约为 300-500 毫秒。在此之下，多级链条感觉流畅。在它上面，复合可以让你——2秒/调用的20步链最少需要40秒的墙时间，而且我注意到模型往往会在缓慢的工具调用之间生成更多的填充推理，这只会使上下文膨胀而不会增加价值。<p>您的缓存方法听起来不错。对我来说有很大影响的另一件事是减少往返次数 - 将相关数据捆绑到单个工具响应中（一次调用中的表+架构+元数据与三个单独的调用）比加速单个调用更有帮助。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting question. I've seen the threshold land around 300-500ms per tool call in practice. Below that, multi-step chains feel fluid. Above it the compounding gets you -- a 20-step chain at 2s/call is 40s wall time minimum, and I've noticed models tend to generate more filler reasoning between slow tool calls that just bloats context without adding value.<p>Your caching approach sounds right. The other thing that made a big difference for me was reducing round trips -- bundling related data into a single tool response (table + schema + metadata in one call vs three separate calls) helped more than speeding up individual calls.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">janalsncm</span>
+        <span class="meta-time">2026/04/06 16:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据我的经验，Qwen3-coder 的编码效果更好，并且大小相似。不管怎样，在最近对 CC 的质量和价格感到沮丧之后，我很高兴有本地选择。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Qwen3-coder has been better for coding in my experience and has similar sizes. Either way, after a bunch of frustration with the quality and price of CC lately I’m happy there are local options.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658152" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">trvz</span>
+        <span class="meta-time">2026/04/06 03:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>  ollama launch claude --model gemma4:26b</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>  ollama launch claude --model gemma4:26b</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652824" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">datadrivenangel</span>
+        <span class="meta-time">2026/04/06 03:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人惊讶的是，这是如此简单，而且如果您安装了 ollama 和 claude，它就可以工作！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's amazing how simple this is, and it just works if you have ollama and claude installed!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gcampos</span>
+        <span class="meta-time">2026/04/06 08:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您需要增加上下文窗口大小，否则工具调用功能将无法工作</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You need to increase the context window size or the tool calling feature wont work</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655569" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mil22</span>
+        <span class="meta-time">2026/04/06 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于那些想知道如何做到这一点的人：<p></p><pre><code>  OLLAMA_CONTEXT_LENGTH=64000 ollama serve
+</code></pre>
+或者，如果您正在使用该应用程序，请打开 Ollama 应用程序的“设置”对话框并在其中进行调整。<p>Codex 也有效：</p><p></p><pre><code>  ollama launch codex --model gemma4:26b</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For those wondering how to do this:<p></p><pre><code>  OLLAMA_CONTEXT_LENGTH=64000 ollama serve
+</code></pre>
+or if you're using the app, open the Ollama app's Settings dialog and adjust there.<p>Codex also works:</p><p></p><pre><code>  ollama launch codex --model gemma4:26b</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655994" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pshirshov</span>
+        <span class="meta-time">2026/04/06 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">出于某种原因，这对我不起作用，克劳德永远不会从某种恶性循环中返回。 Nemotron、glm 和 qwen 3.5 工作得很好，但 gemma 不行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For some reason, that doesn't work for me, claude never returns from some ill loop. Nemotron, glm and qwen 3.5 work just fine, gemma - doesn't.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">trvz</span>
+        <span class="meta-time">2026/04/06 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于默认为 q4 变体，请尝试 q8 变体：<p></p><pre><code>  ollama launch claude --model gemma4:26b-a4b-it-q8_0</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Since that defaults to the q4 variant, try the q8 one:<p></p><pre><code>  ollama launch claude --model gemma4:26b-a4b-it-q8_0</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654177" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pshirshov</span>
+        <span class="meta-time">2026/04/06 07:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">甚至尝试了具有 128k 上下文的 gemma4:31b 和 gemma4:31b （我有 72GiB VRAM）。没有什么。我想我是被诅咒了。如果这很重要的话，那就是 ollama-rocm（我在 Vulkan 上有奇怪的错误，也许 gemma 在 radeon 上行为不端？..）。<p>UPD：尝试过ollama-vulkan。它可以工作，gemma4:31b-it-q8_0 具有 64k 上下文！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Even tried gemma4:31b and gemma4:31b with 128k context (I have 72GiB VRAM). Nothing. I'm cursed I guess. That's ollama-rocm if that matters (I had weird bugs on Vulkan, maybe gemma misbehaves on radeons somehow?..).<p>UPD: tried ollama-vulkan. It works, gemma4:31b-it-q8_0 with 64k context!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654953" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">alfiedotwtf</span>
+        <span class="meta-time">2026/04/06 15:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于较小的 Gemma 4，默认上下文是 128k，对于较大的 Gemma 4，默认上下文是 256k，因此您切断了上下文，它不知道如何继续。<p>将其切换到本机（或者 -c 0 也可能有效）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The default context is 128k for the smaller Gemma 4’s and 256k for the bigger ones, so you’re cutting off context and it doesn’t know how to continue.<p>Bump it to native (or -c 0 may work too)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658100" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vbtechguy</span>
+        <span class="meta-time">2026/04/06 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">以下是我在 macOS 上设置 Gemma 4 26B 进行本地推理的方法，该推理可与 Claude Code 一起使用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Here is how I set up Gemma 4 26B for local inference on macOS that can be used with Claude Code.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47651542" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">canyon289</span>
+        <span class="meta-time">2026/04/06 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一篇很好的文章！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a nice writeup!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652586" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">martinald</span>
+        <span class="meta-time">2026/04/06 03:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仅供参考，MoE 并没有真正节省 (V)RAM。您仍然需要将所有权重加载到内存中，这只是意味着每次前向传递时参考的次数更少。因此它提高了 tok/s，但没有提高 vram 使用率。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just FYI, MoE doesn't really save (V)RAM. You still need all weights loaded in memory, it just means you consult less per forward pass. So it improves tok/s but not vram usage.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653114" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">IceWreck</span>
+        <span class="meta-time">2026/04/06 04:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您使用推理引擎，可以将一些专家从 VRAM 卸载到 CPU RAM，则确实如此。
+这意味着我可以在 12 GB VRAM GPU + 16 GB 内存中容纳 350 亿参数 MoE。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It does if you use an inference engine where you can offload some of the experts from VRAM to CPU RAM.
+That means I can fit a 35 billion param MoE in let's say 12 GB VRAM GPU + 16 gigs of memory.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Yukonv</span>
+        <span class="meta-time">2026/04/06 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这样一来，您将遭受严重的性能损失并成为严重的 I/O 瓶颈。我已经能够使用 Flash MoE 技术以每秒 10 个令牌的快速速度从 M5 Max（12 GB/s SSD 读取）流式传输 Qwen3.5-397B-A17B。当令牌生成时，需要咨询不同的专家，从而导致大量的 I/O 流失。因此，虽然可行，但它只适用于批处理作业，不适用于交互式使用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With that you are taking a significant performance penalty and become severely I/O bottlenecked. I've been able to stream Qwen3.5-397B-A17B from my M5 Max (12 GB/s SSD Read) using the Flash MoE technique at the brisk pace of 10 tokens per second. As tokens are generated different experts need to be consulted resulting in a lot of I/O churn. So while feasible it's only great for batch jobs not interactive usage.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654135" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/06 06:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">10 tok/s 对于聊天来说已经足够了，但对于与代理工作负载交互来说就不太合适了。因此，该技术本身对于在本地运行大型模型仍然是值得的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">10 tok/s is quite fine for chatting, though less so for interaction with agentic workloads. So the technique itself is still worthwhile for running a huge model locally.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654683" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">IceWreck</span>
+        <span class="meta-time">2026/04/06 06:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 因此，虽然可行，但它仅适用于批处理作业，不适用于交互式使用。<p>我的意思是是的，但这取决于模型有多大。我给出的示例（Qwen 3.5 35BA3B）在 12 GB VRAM 中拟合 35B Q4 K_M（大小为 20 GB）模型。使用 4070Ti + 高速 32 GB DDR5 内存，您可以轻松获得 700 个令牌/秒的提示处理速度和 55-60 个令牌/秒的生成速度，速度相当快。</p><p>另一方面，如果我尝试在 96 GB DDR5 + 相同的 12 GB VRAM 中安装 120B 模型，我会得到 2-5 个令牌/秒生成。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; So while feasible it's only great for batch jobs not interactive usage.<p>I mean yeah true but depends on how big the model is. The example I gave (Qwen 3.5 35BA3B) was fitting a 35B Q4 K_M (say 20 GB in size) model in 12 GB VRAM. With a 4070Ti + high speed 32 GB DDR5 ram you can easily get 700 token/sec prompt processing and 55-60 token/sec generation which is quite fast.</p><p>On the other hand if I try to fit a 120B model in 96 GB of DDR5 + the same 12 GB VRAM I get 2-5 token/sec generation.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/06 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您的 120B 模型可能具有更多的活动参数，因此它可能只能容纳 dGPU 的 VRAM 中的几个共享层。在统一内存平台上运行该模型可能会更好，VRAM 较慢，但容量更大。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Your 120B model likely has way more active parameters, so it can probably only fit a few shared layers in the VRAM for your dGPU. You might be better off running that model on a unified memory platform, slower VRAM but a lot more of it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654826" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/06 04:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您永远不需要记住所有权重。您可以从 RAM、磁盘、网络等交换它们。MOE 减少了下一次前向传递需要交换的数据量。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You never need to have all weights in memory. You can swap them in from RAM, disk, the network, etc. MOE reduces the amount of data that will need to be swapped in for the next forward pass.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653791" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">martinald</span>
+        <span class="meta-time">2026/04/06 06:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，你在技术上是对的，但实际上你会在每个推理请求中交换（大量？）大多数的输入和输出，因此会给作者正在使用的用例造成巨大的瓶颈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes you're right technically, but in reality you'd be swapping them the (vast?) majority in and out per inference request so would create an enormous bottleneck for the use case the author is using for.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654448" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zozbot234</span>
+        <span class="meta-time">2026/04/06 06:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用统一内存，从 RAM 读取到 GPU 计算缓冲区并不是那么痛苦，并且您可以使用部分 RAM 缓存来最大限度地减少其他类型交换的影响。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With unified memory, reading from RAM to GPU compute buffer is not that painful, and you can use partial RAM caching to minimize the impact of other kinds of swapping.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654709" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/06 08:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您不必只在 VRAM 中积极使用专家。您可以加载尽可能多的重量。如果出现“缓存未命中”，您就必须付出代价来交换权重，但如果出现命中，则无需付出代价。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You don't have to only have the experts being actively used in VRAM. You can load as many weights as will fit. If there is a "cache miss" you have to pay the price to swap in the weights, but if there is a hit you don't.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655474" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">asymmetric</span>
+        <span class="meta-time">2026/04/06 05:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">具有 &gt;48GB RAM 的框架桌面是否适合尝试此功能？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is a framework desktop with &gt;48GB of RAM a good machine to try this out?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654287" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pshirshov</span>
+        <span class="meta-time">2026/04/06 07:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仅适用于聊天会话，不适用于代理编码。它太慢了，不切实际（需要 10 分钟才能回答有关 2k LoC 项目的简单问题 - 并且使用 5070 附加卡）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Only for chat sessions, not for agentic coding. It's just too slow to be practical (10 minutes to answer a simple question about a 2k LoC project - and that's with a 5070 addon card).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655018" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ac29</span>
+        <span class="meta-time">2026/04/06 14:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章是关于只有 4B 个活动参数的 MoE 模型，回答一个关于小项目的问题不应该花 10 分钟。<p>我在 Ryzen 395+ 上以 1300t/s 预填充和约 60t/s 解码速度测量了该模型的 4 位量化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This article is about a MoE model with only 4B active parameters, it shouldn't take 10 minutes to answer a question about a small project.<p>I measured a 4bit quant of this model at 1300t/s prefill and ~60t/s decode on Ryzen 395+.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657640" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nl</span>
+        <span class="meta-time">2026/04/06 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">框架桌面不是有Ryzen 395 AI吗？这是像 Mac 一样的统一内存架构。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn't the framework desktop have a Ryzen 395 AI? That's a unified memory architecture like the Macs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656910" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jonplackett</span>
+        <span class="meta-time">2026/04/06 03:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么等等，杰玛和克劳德之间的互动是什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So wait what is the interaction between Gemma and Claude?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652866" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">unsnap_biceps</span>
+        <span class="meta-time">2026/04/06 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">lm studio 提供了一个与 Anthropic 兼容的本地端点，因此您可以将 Claude 代码指向它，它将使用您的本地模型来满足其请求，但是，我在 LM Studio 和 Claude 代码丢失其位置方面遇到了很多问题。它会思考一段时间，提出一个计划，开始执行，然后就停在中间。我会要求它继续，它会做一个小的改变，然后再次卡住。<p>使用ollama的api没有同样的问题，所以我一直坚持使用ollama进行本地开发工作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">lm studio offers an Anthropic compatible local endpoint, so you can point Claude code at it and it'll use your local model for it's requests, however, I've had a lot of problems with LM Studio and Claude code losing it's place. It'll think for awhile, come up with a plan, start to do it and then just halt in the middle. I'll ask it to continue and it'll do a small change and get stuck again.<p>Using ollama's api doesn't have the same issue, so I've stuck to using ollama for local development work.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652904" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">keerthiko</span>
+        <span class="meta-time">2026/04/06 03:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就编码代理/工具而言，克劳德代码的效率是相当低的（我来自 CC 之前的助手）。它之所以可行，是因为最大订阅为您提供了大约无限的代币预算，即使您达到了限制，该预算也会在几个小时内重置。但这也只是因为云模型具有大量令牌窗口（目前 opus 上有 100 万个令牌），这在本地使用所需的 VRAM 来实现有点困难。<p>如果你以某种方式设法打开一个足够大的 VRAM 游乐场，那么开放权重模型不太擅长处理如此大的上下文窗口（即使 opus 也几乎没有能力），而在完成解析之前基本上不会对他们在做什么感到困惑。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Claude Code is fairly notoriously token inefficient as far as coding agent/harnesses go (i come from aider pre-CC). It's only viable because the Max subscriptions give you approximately unlimited token budget, which resets in a few hours even if you hit the limit. But this also only works because cloud models have massive token windows (1M tokens on opus right now) which is a bit difficult to make happen locally with the VRAM needed.<p>And if you somehow managed to open up a big enough VRAM playground, the open weights models are not quite as good at wrangling such large context windows (even opus is hardly capable) without basically getting confused about what they were doing before they finish parsing it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653082" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">unsnap_biceps</span>
+        <span class="meta-time">2026/04/06 03:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在工作中使用 CC，所以我还没有探索其他选项。有没有更好的本地使用方法？我以为它们都会非常相似。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I use CC at work, so I haven't explored other options. Is there a better one to use locally? I presumed they were all going to be pretty similar.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653258" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jaggederest</span>
+        <span class="meta-time">2026/04/06 05:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您想尝试相同的不同模型，Opencode 是典型的选择。在他们最近与 Anthropic 发生混乱之后，你将不得不对作品/十四行诗/俳句使用 API 定价，这使得它有点不可能，但它可以让你使用例如交换任意数量的云或本地模型。 ollama 或 z.ai 或您喜欢的任何后端提供商。<p>我认为他们的编码代理工具的能力略低于克劳德代码，但它在替代模型中也表现得更好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you want to experiment with same-harness-different-models Opencode is classically the one to use. After their recent kerfluffle with Anthropic you'll have to use API pricing for opus/sonnet/haiku which makes it kind of a non-starter, but it lets you swap out any number of cloud or local models using e.g. ollama or z.ai or whatever backend provider you like.<p>I'd rate their coding agent harness as slightly to significantly less capable than claude code, but it also plays better with alternate models.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653924" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">blitzar</span>
+        <span class="meta-time">2026/04/06 06:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望泄露的克劳德代码能够缩小功能范围，也许谷歌提供的产品一旦从克劳德那里借用了一些想法就变得可行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am hopeful the leaked claude code narrows the capability, perhaps even googles offering will be viable once they borrow some ideas from claude.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654461" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andhuman</span>
+        <span class="meta-time">2026/04/06 14:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对 Mistral Vibe 有很好的体验。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have good experience with Mistral Vibe.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47657738" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">satvikpendem</span>
+        <span class="meta-time">2026/04/06 09:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">开放代码</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OpenCode</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656038" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tatrions</span>
+        <span class="meta-time">2026/04/06 12:11</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656911" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/04/06 06:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654365" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">storus</span>
+        <span class="meta-time">2026/04/06 03:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你不能使用克劳德穴居人模式吗？<p><a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">https://github.com/JuliusBrussee/caveman</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can't you use Claude caveman mode?<p><a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">https://github.com/JuliusBrussee/caveman</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653145" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mbesto</span>
+        <span class="meta-time">2026/04/06 05:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白为什么当 OpenCode、Cursor、Zed 等都存在、“免费”并且几乎​​可以与任何 llm 一起使用时我会使用 Claude Code。除非我遗漏了一些东西，否则这似乎是一个奇怪的用例。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't get why I would use Claude Code when OpenCode, Cursor, Zed, etc. all exist, are "free" and work with virtually any llm. Seems like a weird use case unless I'm missing something.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654161" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">panagathon</span>
+        <span class="meta-time">2026/04/06 11:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我不明白为什么当 OpenCode、Cursor、Zed 等都存在、“免费”并且几乎​​可以与任何 llm 一起使用时我会使用 Claude Code。除非我遗漏了一些东西，否则这似乎是一个奇怪的用例。<p>我同意你的观点。我尝试过杰玛和克劳德的代码，但效果不好。忘记了可以使用bash！</p><p>然而，Gemma 用 Pi 作为安全带在本地运行是一头野兽。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I don't get why I would use Claude Code when OpenCode, Cursor, Zed, etc. all exist, are "free" and work with virtually any llm. Seems like a weird use case unless I'm missing something.<p>I'm with you on this. I've tried Gemma and Claude code and it's not good. Forgets it can use bash!</p><p>However, Gemma running locally with Pi as the harness is a beast.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656638" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">superb_dev</span>
+        <span class="meta-time">2026/04/06 06:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据我的经验，Claude Code 更好。虽然我最近开始使用Zed，而且还不错</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From my experience, Claude Code is just better. Although I recently started using Zed and it’s pretty good</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654734" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">blitzar</span>
+        <span class="meta-time">2026/04/06 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">之前我发现克劳德代码比使用大型模型或本地模型的替代方案更好。然而，现在距离更近了，在克劳德代码泄露之后，竞争已经没有太多借口了。就我个人而言，我会尝试使用 OpenCode。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">previously I have found claude code to be just better than the alternatives, using large models or local. It is, however, closer now and not much excuse for the competition after the claude code leak. Personally, I will be giving this a go with OpenCode.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654428" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bdangubic</span>
+        <span class="meta-time">2026/04/06 05:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就像问为什么要使用 intellij 或 vscode 或……当有 vim 和 emacs 时</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this is like asking why use intellij or vscode or … when there is vim and emacs</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654245" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">NamlchakKhandro</span>
+        <span class="meta-time">2026/04/06 08:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，这更像是，既然存在lazyvim、astronvim，为什么还要使用微软付费的nvim发行版</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No it's more like, why use a Microsoft paid for distro of nvim when lazyvim, astronvim exist</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655412" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Someone1234</span>
+        <span class="meta-time">2026/04/06 03:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用 Claude Code 似乎是当前流行的前端，我想知道 Anthropic 需要多长时间才能发布更新以使其交钥匙功能少一点甚至少很多？他们非常清楚，他们并不是在非常特定的方式之外使用这些东西的拥护者。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Using Claude Code seems like a popular frontend currently, I wonder how long until Anthropic releases an update to make it a little to a lot less turn-key? They've been very clear that they aren't exactly champions of this stuff being used outside of very specific ways.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47652945" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nerdix</span>
+        <span class="meta-time">2026/04/06 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为现在没有任何动力这样做，因为开放模型并不那么好。绝大多数企业只需支付额外费用即可获得前沿模型。给他们带来竞争优势的是模型，而不是安全带。 Harness 比 Opus 更容易复制。<p>也有好处。一些开发人员可能会在工作之外学习使用更便宜的模型来使用 Claude Code，然后提倡在工作中使用 Claude Code（他们的公司只会从 Anthropic、Bedrock 等购买访问权限）。类似于供个人使用的免费 ESXi 许可证如何帮助基础设施人员获得该产品的技能，从而创造了健康的劳动力供应和渴望传播福音的 VMware 布道者。 Anthropic 不能因为成本而放弃对 Claude 模型的访问，因此可以允许开发人员以其他方式学习如何使用 Claude Code 并用它开发工作流程。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think there is any incentive to do so right now because the open models aren't as good. The vast majority of businesses are going to just pay the extra cost for access to a frontier model. The model is what gives them a competitive advantage, not the harness. The harness is a lot easier to replicate than Opus.<p>There are benefits too. Some developers might learn to use Claude Code outside of work with cheaper models and then advocate for using Claude Code at work (where their companies will just buy access from Anthropic, Bedrock, etc). Similar to how free ESXi licenses for personal use helped infrastructure folks gain skills with that product which created a healthy supply of labor and VMware evangelists that were eager to spread the gospel. Anthropic can't just give away access to Claude models because of cost so there is use in allowing alternative ways for developers to learn how to use Claude Code and develop a workflow with it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653743" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">deskamess</span>
+        <span class="meta-time">2026/04/06 07:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Claude Code（桌面）模型与 Bedrock 的模型有很大不同吗？我认为你可以将 VSCode（不是 Claude Desktop）连接到 Bedrock Anthropic 模型。 Claude Desktop 中是否有 VSCode/cli 中没有的功能？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are the Claude Code (desktop) models very different from what Bedrock has? I thought you could hook up VSCode (not Claude Desktop) to Bedrock Anthropic models. Are there features in Claude Desktop that are not in VSCode/cli?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655140" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alfiedotwtf</span>
+        <span class="meta-time">2026/04/06 16:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">然而 Codex 的具体目标是与所有后端兼容！直到 Gemma 4，虽然它已经相当稳定，但由于未知工具而完全失败（我猜是模板问题）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yet Codex specifically aims out to be compatible with all backends! Up until Gemma 4 though it’s been pretty solid, but totally fails with unknown tool (I’m guessing a template issue)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47658166" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">chvid</span>
+        <span class="meta-time">2026/04/06 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是不是和使用OpenCode差不多？<p>与托管的 Anthropic 模型相比，使用 Claude Code 运行本地模型实际上可用于任何实际工作吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it not about the same as using OpenCode?<p>And is running a local model with Claude Code actually usable for any practical work compared to the hosted Anthropic models?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">falcor84</span>
+        <span class="meta-time">2026/04/06 06:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，如果他们这样做了，那可能会搬起石头砸自己的脚，因为克劳德代码源代码现在就在那里，而人们正在等待一个借口来“清理房间”重新实现并分叉它</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, if they did, it would probably be shooting themselves in the foot, seeing that the Claude Code source is out there now, and people are waiting for an excuse to "clean-room" reimplement and fork it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47654383" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">moomin</span>
+        <span class="meta-time">2026/04/06 03:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在这很适合他们。您为产品付费，并且不需要花费他们的服务器任何费用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Right now it suits them down to the ground. You pay for the product and you don’t cost their servers anything.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653097" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">phainopepla2</span>
+        <span class="meta-time">2026/04/06 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您无需支付任何费用即可使用 Claude Code 作为非人类模型的前端</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You don't pay anything to use Claude Code as a front end to non-Anthropic models</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653166" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">quinnjh</span>
+        <span class="meta-time">2026/04/06 04:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以不需要订阅？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">so no subscription is needed?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653513" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kenmacd</span>
+        <span class="meta-time">2026/04/06 07:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不要使用 cli 工具。您可以安装它并更改设置以指向几乎任何其他型号。<p>这是一个还不错的工具，但当存在 Pi 和 OpenCode 等开源工具（或 octofriend、forge 或 droid 等）时，我认为使用它没有太多意义。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">not to use the cli tool. You can install it and change the settings to point to pretty much any other model.<p>It's an okay-enough tool, but I don't see a lot of point in using it when open sources tools like Pi and OpenCode exist (or octofriend, or forge, or droid, etc).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655159" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wyre</span>
+        <span class="meta-time">2026/04/06 04:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 CC 之所以受欢迎，是因为它们迎合了普通程序员的需求，并且将继续这样做，而不是因为 CC 特别是交钥匙的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think CC is popular because they are catering to the common denominator programmer and are going to continue to do that, not because CC is particularly turn-key.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653532" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aetherspawn</span>
+        <span class="meta-time">2026/04/06 08:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以使用较小的 Gemma 4B 模型作为较大 31B 模型的推测解码吗？<p>为什么/为什么不呢？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you use the smaller Gemma 4B model as speculative decoding for the larger 31B model?<p>Why/why not?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655275" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MeetRickAI</span>
+        <span class="meta-time">2026/04/06 08:12</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655354" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">inzlab</span>
+        <span class="meta-time">2026/04/06 08:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">太棒了，运行大软件的硬件越轻就越新奇。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">awesome, the lighter the hardware running big softwares the more novelty.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655451" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">techpulselab</span>
+        <span class="meta-time">2026/04/06 08:14</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">meidad_g</span>
+        <span class="meta-time">2026/04/06 05:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47653828" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/04/06 07:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655037" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">NamlchakKhandro</span>
+        <span class="meta-time">2026/04/06 08:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不知道为什么人们会为克劳德代码烦恼。<p>太卡壳了，有更高级的 cli 编码工具</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't know why people bother with Claude code.<p>It's so jank, there are far superior cli coding harness out there</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655402" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">loveparade</span>
+        <span class="meta-time">2026/04/06 08:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你有什么建议吗？我已经尝试过 pi 和 opencode，两者都比 claude 更好，但我想知道是否还有其他的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What do you recommend? I've tried both pi and opencode and both are better than claude imo, but I wonder if there are others.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655414" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tarruda</span>
+        <span class="meta-time">2026/04/06 08:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Codex 是最好的开箱即用体验，尤其是由于其内置的沙箱。唯一的缺点是它的编辑工具需要 LLM 输出差异，而只有经过训练的 GPT 才能正确执行此操作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Codex is the best out-of-box experience, especially due to its builtin sandboxing. Only drawback is that its edit tool requires the LLM to output a diff which only GPTs are trained to do correctly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655510" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">loveparade</span>
+        <span class="meta-time">2026/04/06 08:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，我不喜欢 Codex 正是因为它内置的沙箱。如果我需要一个沙箱，我宁愿自己在代理进程周围做一个简单的 bwrap，我更喜欢代理 cli 做一堆妨碍我的沙箱魔法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting, I don't like codex exactly because of its built-in sandboxing. If I need a sandbox I rather do a simple bwrap myself around the agent process, I prefer that over the agent cli doing a bunch of sandboxing magic that gets in my way.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">prettyblocks</span>
+        <span class="meta-time">2026/04/06 09:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Codex 沙箱与克劳德代码上的 /sandbox 有何不同？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how is codex sandbox different from /sandbox on claude code?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47656056" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dimgl</span>
+        <span class="meta-time">2026/04/06 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">黑客新闻中的模糊发布？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Vagueposting in Hacker News?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655440" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">z0mghii</span>
+        <span class="meta-time">2026/04/06 08:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你能详细说明一下什么是卡顿吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you elaborate what is jank about it?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47655416" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
