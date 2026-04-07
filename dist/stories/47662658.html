@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sc-im：终端中的电子表格 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-07-1615/">返回本批次</a>
+      <h1>Sc-im：终端中的电子表格</h1>
+      <p class="subtitle">Sc-im: Spreadsheets in your terminal</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 m-hodges</span>
+        <span>分数 96</span>
+        <span>评论 28</span>
+        <span>2026/04/07 00:00</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47662658" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/andmarti1424/sc-im" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>注意 2025 年 5 月 21 日：新版本 v0.8.5 - 该项目需要您的帮助！这是一个单人项目，赞助很少。我仍然想维持和发展 SC-IM，但我是家里唯一的收入来源，想要随心所欲地工作变得很困难。如果您可以捐款（见底部），请捐款。非常感谢您的帮助！谢谢。</li><li>电子表格计算器 Improvised，又名 sc-im，是一个基于 ncurses、类似 vim 的电子表格计算器。 sc-im 基于 sc，其原作者是 James Gosling 和 Mark Weiser，后来由 Chuck Martin 添加了 mod。 sc-im 的一些功能</li><li>用于编辑单元格内容的 Vim 移动命令。撤消/重做。支持 65.536 行和 702 列。 （如果需要，行数可以扩展到 1.048.576）。 CSV / TAB 分隔 / XLSX 文件导入和导出。消耗臭氧层物质进口。降价导出。键映射。自动备份。直接颜色支持 - 指定 RGB 值，用户甚至可以在运行时自定义屏幕颜色。对单元格着色或赋予它们格式，例如粗体、斜体或下划线。广泛的字符支持。支持以下字母：英语、西班牙语、法语、意大利语、德语、葡萄牙语、俄语、乌克兰语、希腊语、土耳其语、捷克语、日语、中文。行排序。行过滤器。小计。细胞移位。剪贴板支持。 GNUplot 交互。 LUA 的脚本支持。还带有触发器和 C 动态链接模块。用您喜欢的语言实现外部函数并在 SC-IM 中使用它们。使用 SC-IM 作为非交互式计算器，从外部脚本读取其输入。</li><li>快速启动</li><li>主要目的</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>NOTE 05/21/2025: New release v0.8.5 - This project needs your help! This is a one person project and have very little sponsoring. I want to still maintain and develop sc-im, but I am the only income in my family and its becoming difficult to work as much as I would want. If you can make a donation (see at the bottom), please do. Your help would be really appreciated!! Thanks.</li><li>Spreadsheet Calculator Improvised, aka sc-im, is an ncurses based, vim-like spreadsheet calculator. sc-im is based on sc, whose original authors are James Gosling and Mark Weiser, and mods were later added by Chuck Martin. Some of the features of sc-im</li><li>Vim movements commands for editing cell content. UNDO / REDO. 65.536 rows and 702 columns supported. (The number of rows can be expanded to 1.048.576 if wished). CSV / TAB delimited / XLSX file import and export. ODS import. Markdown export. Key-mappings. Autobackup. Direct color support - specifing the RGB values, screen colors can be customized by user, even at runtime. Colorize cells or give them format such as bold, italic or underline. Wide character support. The following alphabets are supported: English, Spanish, French, Italian, German, Portuguese, Russian, Ukrainian, Greek, Turkish, Czech, Japanese, Chinese. Sort of rows. Filter of rows. Subtotals. Cell shifting. Clipboard support. GNUPlot interaction. Scripting support with LUA. Also with triggers and c dynamic linked modules. Implement external functions in the language you prefer and use them in SC-IM. Use SC-IM as a non-interactive calculator, reading its input from an external script.</li><li>Quick start</li><li>Key Purpose</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/07 00:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几周前有人提到这个问题时我就尝试了一下[1]。<p>它非常整洁，但确实有很多错误。  打包版本也没有编译 xls 支持（至少在 Fedora 上），这是不幸的，尽管构建相当容易[2]。</p><p>不过我喜欢这个想法，所以我真的希望这些问题能够得到解决！  如果维护者愿意，我很乐意提供帮助。</p><p>[1] <a href="https://news.ycombinator.com/item?id=47457009" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47457009</a></p><p>[2] <a href="https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80%90im-with-xls-support-on-Fedora" target="_blank" rel="noopener noreferrer">https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tried this out when it was mentioned a few weeks ago[1].<p>It's pretty neat but does have a number of bugs.  The packaged version also doesn't have xls support compiled in (at least on Fedora) which is unfortunate, though building is fairly easy[2].</p><p>I love the idea of it though, so I'm really hoping these issues get ironed out!  I'm happy to help contribute if maintainers are willing.</p><p>[1] <a href="https://news.ycombinator.com/item?id=47457009" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47457009</a></p><p>[2] <a href="https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80%90im-with-xls-support-on-Fedora" target="_blank" rel="noopener noreferrer">https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47663231" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">VariousPrograms</span>
+        <span class="meta-time">2026/04/07 03:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这可能只是一种技能或错误的用例，但您是否只使用电子表格进行纯粹的数字运算？我玩过终端电子表格，主要是 sc-im，但我经常有一些长格式文本字段（如“注释”），它们比 GUI 更难处理。<p>Visidata 是我发现的唯一一个可以很好地处理表格数据中的大型文本字段的终端程序，就像您可以向下钻取表行，然后按 Ctrl+O 在编辑器中编辑字段一样，但它不是电子表格。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This could just be a skill or wrong use case thing, but do you only use spreadsheets for pure number-crunching? I've played terminal spreadsheets, mostly sc-im, but I often have some longform text field (like 'Notes') that becomes more fiddly to deal with than a GUI.<p>Visidata is the only terminal program I've found that handles large text fields in tabular data nicely the way you can drill down into a table row, then Ctrl+O to edit a field in your editor, but it's not a spreadsheet.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665796" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dodomodo</span>
+        <span class="meta-time">2026/04/07 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为电子表格是一个更好的例子，它需要实际 GUI 的微妙之处。这在各种不精确的情节中最为明显。但仅使用电子表格本身时，GUI 的优势也同样存在，它传达拟物化二维空间的能力要大得多。<p>终端并不是不能成为更强大的数据处理工具，但你必须使用不同的范式。</p><p>尽管如此，从美学角度来看，我还是喜欢那些简单的 TUI 界面。它们给我带来了一种我无法完全解释的奇怪的舒适感。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think spreadsheets are a greater example of something that require the subtleties of an actual GUI. This is most obvious with the various plots which are hilariously imprecise. But the advantages of GUI are also present when just using the spreadsheet itself, it's ability to convey the skeuomorphic two dimensional space is much greater.<p>And it's not like the terminal can't be a greater data processing tool, but you have to use different paradigms.</p><p>Still from an esthetical perspective I love those simple TUI interfaces. They invoke a weird sense of comfort in me that I can't fully explain.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664005" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">akavel</span>
+        <span class="meta-time">2026/04/07 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，年轻的学徒，检查一下那些奇怪的旧程序，它们被称为“VisiCalc”和“Lotus 1-2-3”。<p><a href="https://en.wikipedia.org/wiki/VisiCalc" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/VisiCalc</a></p><p><a href="https://en.wikipedia.org/wiki/Lotus_1-2-3" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Lotus_1-2-3</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lol, young padawan, check up those weird old programs that were called "VisiCalc" and "Lotus 1-2-3".<p><a href="https://en.wikipedia.org/wiki/VisiCalc" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/VisiCalc</a></p><p><a href="https://en.wikipedia.org/wiki/Lotus_1-2-3" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Lotus_1-2-3</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664684" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nomel</span>
+        <span class="meta-time">2026/04/07 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是在任何复杂的 GUI 成为可能之前的事情。当时别无选择。<p>相关的，请参阅早期基于 GUI 的操作系统的疯狂成功和兴奋。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Which were before GUI of any complexity were possible. There was no alternative at the time.<p>Related, see the insane success and excitement from the early GUI based operating systems.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665017" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/07 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>我认为电子表格是一个更好的例子，它需要实际 GUI 的微妙之处</i><p>我也一直好奇这个问题。  我认为一个出色的 TUI 可以做到这一点，但它如何真正发挥作用还有待观察。  如果我还没有这么多项目，我会尝试一下，因为我真的很喜欢用于电子表格的“vim”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>I think spreadsheets are a greater example of something that require the subtleties of an actual GUI</i><p>I've been wondering about this too.  I think a great TUI could get it done though, but it remains to be seen how it could really stack up.  If I didn't have so many projects already, I'd give this a shot because I would really love a "vim" for spreadsheets</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664508" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dmarinus</span>
+        <span class="meta-time">2026/04/07 02:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得的第一个电子表格是 TUI（pccalc、Lotus 123）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The first spreadsheets I remember were TUI (pccalc, Lotus 123)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664720" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">chadrs</span>
+        <span class="meta-time">2026/04/07 01:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个，但随着 TUI 框架的所有进步，使用 C + ncurses 感觉就像一条艰难的道路。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love this but with all the advances of TUI frameworks, using C + ncurses feels like such a hard path.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664346" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">talideon</span>
+        <span class="meta-time">2026/04/07 01:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是一个历史悠久的工具，仅仅为了利用 bubbletea 或 textual 等功能而将其移植到其他语言是没有意义的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a tool with a long vintage, and it wouldn't make sense to port it to a different language just to take advantage of the likes of bubbletea or textual.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664433" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/07 02:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意。  另外，对于如此复杂的东西，我怀疑性能不会自动足够好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed.  Also for something this complex, performance isn't going to be automatically good enough I suspect.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664536" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dafty4</span>
+        <span class="meta-time">2026/04/07 01:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您更喜欢哪个较新的 TUI 框架？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool which newer TUI frameworks do you prefer?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664424" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aldanor</span>
+        <span class="meta-time">2026/04/07 02:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Rust 的ratatui 在底层方面非常好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Rust's ratatui is pretty good on the lower-level side of things</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664816" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rkagerer</span>
+        <span class="meta-time">2026/04/07 03:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但为什么？<p>这感觉就像是一种领域，特别是 GUI 的优势提供了卓越的体验，一旦它变得足够复杂，你基本上就可以在终端中构建一个。</p><p>几十年前我使用过块状电子表格...告诉我为什么我今天想再次使用它们？</p><p>合法的问题 - 我想了解我忽略的这个东西满足的需求。  （请不要只回复“缺少功能区/广告/膨胀等”，任何一种风格都不需要这些废话）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But why?<p>This feels like the kind of domain in particular where the advantages of a GUI provide a superior experience, and once it gets sophisticated enough you'll have basically built one anyway just in the terminal.</p><p>I used blocky spreadsheets a few decades ago... Tell me why I want to use them again today?</p><p>Legit question - I want to understand the needs I'm overlooking which this thing meets.  (Please don't just reply "lack of ribbon/ads/bloat etc", none of that nonsense is required in either flavor).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665484" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dsign</span>
+        <span class="meta-time">2026/04/07 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过去的块状电子表格可以在几千字节的 RAM 中运行。今天，这是微控制器领域。从那里，我可以设计出一些答案：<p>- 在 RISC-V+Core-V 设备中运行的电子表格不易受到供应链问题和地缘政治压力的影响。</p><p>- 价格。运行纯文本电子表格所需的硬件价值约为 10 美元或更少。</p><p>- 能源消耗。现在，包含您的业务数据的服务器可以在能源匮乏的共产主义古巴深处运行……也许吧。</p><p>- 更好的安全性。很多人和军队都对在装有大量 IC 和敌方领土制造的闭源斑点的计算机中记录危险玩具感到紧张。仅仅枚举传统笔记本电脑或平板电脑中的所有这些 IC 和 blob 是很困难的。</p><p>- 尺寸。更小、更冷的芯片更容易隐藏，如果您在祖国旅行期间从事不想让海关发现的事情，这一点很重要。在这种情况下，您可以使用笔记本电脑作为终端，访问在夹克按钮内运行的服务器中的敏感数据......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The blocky spreadsheets of yesteryear could run in a few kilobytes of RAM. Today, that's microcontroller territory. From there,  I can contrive a few answers:<p>- A spreadsheet that runs in a RISC-V+Core-V device is less susceptible to supply-chain issues and geopolitical stresses.</p><p>- Price. The hardware needed to run a text-only spreadsheet is worth about 10 bucks or less.</p><p>- Energy consumption. Now the server with your business data can run deep within energy-starved communist Cuba...probably.</p><p>- Better security. Plenty of people and armies get nervous about keeping tallies of dangerous toys in computers with lots of ICs and closed-source blobs made in enemy territory. Just enumerating all those ICs and blobs in a conventional laptop or tablet is difficult.</p><p>- Size. A smaller, cooler chip is easier to hide, which matters if you spent your trip to the motherland working on something you don't want customs to find out. In that case, you can use your laptop as a terminal to the sensitive data in your server running inside a button of your jacket...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666556" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thesuitonym</span>
+        <span class="meta-time">2026/04/07 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果支持另存为 xlsx，我会很高兴。能够打开它们固然很好，但如果我能够在 MS Office 用户不知情的情况下与他们进行协作，那就太好了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd love if this had support for saving as xlsx. Being able to open them is nice, but it would be great if I could collaborate with MS Office users without them ever knowing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47663780" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/07 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实如此。  但它没有编译到包存储库中，因此您可能必须自己构建它[1]。  目前它也有点问题。<p>[1]： <a href="https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80%90im-with-xls-support-on-Fedora" target="_blank" rel="noopener noreferrer">https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It does.  It's not compiled in to the package repos though, so you might have to build it yourself[1].  It's also a bit buggy currently.<p>[1]: <a href="https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80%90im-with-xls-support-on-Fedora" target="_blank" rel="noopener noreferrer">https://github.com/andmarti1424/sc-im/wiki/Building-sc%E2%80...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664521" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dang</span>
+        <span class="meta-time">2026/04/07 03:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相关正在进行的线程：<p><i>Sheets：基于终端的电子表格工具</i> - <a href="https://news.ycombinator.com/item?id=47636456" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47636456</a> - 2026 年 4 月（46 条评论）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Related ongoing thread:<p><i>Sheets: Terminal based spreadsheet tool</i> - <a href="https://news.ycombinator.com/item?id=47636456" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47636456</a> - April 2026 (46 comments)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665851" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lrobinovitch</span>
+        <span class="meta-time">2026/04/07 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">类似工具的现代发布： <a href="https://github.com/maaslalani/sheets" target="_blank" rel="noopener noreferrer">https://github.com/maaslalani/sheets</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A modern launch of a similar tool: <a href="https://github.com/maaslalani/sheets" target="_blank" rel="noopener noreferrer">https://github.com/maaslalani/sheets</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665829" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dang</span>
+        <span class="meta-time">2026/04/07 03:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正在讨论这个问题 <a href="https://news.ycombinator.com/item?id=47636456" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47636456</a> - OP 看起来是一个后续（原则上很好，但我们出于以下原因降低了它们的权重） <a href="https://hn.algolia.com/?dateRange=all&amp;page=0&amp;prefix=true&amp;query=follow-up%20downweight&amp;sort=byDate&amp;type=comment" target="_blank" rel="noopener noreferrer">https://hn.algolia.com/?dateRange=all&amp;page=0&amp;prefix=true&amp;que...</a>）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That one is being discussed at <a href="https://news.ycombinator.com/item?id=47636456" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47636456</a> - OP looks to have been a follow-up (which is great in principle but we downweight them for reasons described at <a href="https://hn.algolia.com/?dateRange=all&amp;page=0&amp;prefix=true&amp;query=follow-up%20downweight&amp;sort=byDate&amp;type=comment" target="_blank" rel="noopener noreferrer">https://hn.algolia.com/?dateRange=all&amp;page=0&amp;prefix=true&amp;que...</a>)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665864" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tiarafawn</span>
+        <span class="meta-time">2026/04/07 03:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另请参阅 visdata 以获取替代方案 <a href="https://www.visidata.org/" target="_blank" rel="noopener noreferrer">https://www.visidata.org/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">See also visidata for an alternative <a href="https://www.visidata.org/" target="_blank" rel="noopener noreferrer">https://www.visidata.org/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665385" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nickandbro</span>
+        <span class="meta-time">2026/04/07 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">喜欢vim麦粒肿编辑</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Love vim stye editing</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664446" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vrighter</span>
+        <span class="meta-time">2026/04/07 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我上次尝试时出现了很多错误和崩溃。应该看看是否有所改善</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">lots of bugs and crashes last time I tried it. Should see if it improved</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664677" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">w4zz</span>
+        <span class="meta-time">2026/04/07 02:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在人们所做的事情很疯狂，但它真的很酷！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Insane what people make these days, but its really cool!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664886" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nomel</span>
+        <span class="meta-time">2026/04/07 02:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这些日子？曾经有一段时间图形用户界面存在/成为可能。<p>1979 年： <a href="https://en.wikipedia.org/wiki/VisiCalc" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/VisiCalc</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">These days? There was a time before graphical user interfaces existed/were possible.<p>1979: <a href="https://en.wikipedia.org/wiki/VisiCalc" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/VisiCalc</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664952" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">drumhead</span>
+        <span class="meta-time">2026/04/07 00:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以莲花1-2-3</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So Lotus 1-2-3</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47663168" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">talideon</span>
+        <span class="meta-time">2026/04/07 01:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但起源于 81 年的 Unix，因此比 Lotus 1-2-3 早约 2 年。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But originating on Unix in '81, and thus predating Lotus 1-2-3 by ~2 years.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">leecoursey</span>
+        <span class="meta-time">2026/04/07 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么...Visicalc？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So... Visicalc?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666044" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ConanRus</span>
+        <span class="meta-time">2026/04/07 02:17</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">baldr333</span>
+        <span class="meta-time">2026/04/07 00:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47663131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">freedomben</span>
+        <span class="meta-time">2026/04/07 00:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>非常垃圾的软件。</i><p>即使要具有一点建设性，你也需要说得更具体一些。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>Very shitty software.</i><p>To be even remotely constructive, you're going to need to be a little more specific.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47663241" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 00:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47663177" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

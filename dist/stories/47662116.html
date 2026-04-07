@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sky – 一种受 Elm 启发的语言，可编译为 Go | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-07-1615/">返回本批次</a>
+      <h1>Sky – 一种受 Elm 启发的语言，可编译为 Go</h1>
+      <p class="subtitle">Sky – an Elm-inspired language that compiles to Go</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 whalesalad</span>
+        <span>分数 163</span>
+        <span>评论 58</span>
+        <span>2026/04/06 23:22</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47662116" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/anzellai/sky" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>实验性的——Sky 正在积极开发中。 API 和内部结构将会改变。</li><li>Sky 是一种实验性编程语言，它将 Go 的实用主义与 Elm 的优雅相结合，创建了一种简单的全栈语言，您可以在其中编写 FP 代码并发布单个可移植的二进制文件。模块主要暴露（main）</li><li>导入标准日志暴露（println）</li><li>main = println &quot;来自天空的问候！&quot; Sky 汇集了什么：</li><li>Go - 快速编译、单一静态二进制文件、经过实战考验的生态系统，涵盖数据库、HTTP 服务器、云 SDK 以及 Elm - Hindley-Milner 类型推断、代数数据类型、详尽的模式匹配、纯函数、Elm 架构 Phoenix LiveView - 服务器驱动的 UI，具有 DOM 比较、会话管理和 SSE 订阅。没有客户端框架。不需要 WebSocket</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Experimental -- Sky is under active development. APIs and internals will change.</li><li>Sky is an experimental programming language that combines Go&#39;s pragmatism with Elm&#39;s elegance to create a simple, fullstack language where you write FP code and ship a single portable binary. module Main exposing (main)</li><li>import Std.Log exposing (println)</li><li>main = println &quot;Hello from Sky!&quot; What Sky brings together:</li><li>Go -- fast compilation, single static binary, battle-tested ecosystem covering databases, HTTP servers, cloud SDKs, and everything in between Elm -- Hindley-Milner type inference, algebraic data types, exhaustive pattern matching, pure functions, The Elm Architecture Phoenix LiveView -- server-driven UI with DOM diffing, session management, and SSE subscriptions. No client-side framework. No WebSocket required</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">melodyogonna</span>
+        <span class="meta-time">2026/04/07 02:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这两种新语言编译成 Go 后，在几天之内就登上了 HN 头版。人们似乎喜欢 Go 的一切，除了语言本身。我？我喜欢 Go 的一切，包括语言，不过这些转译语言很有趣。<p>但我一直想知道它们是否可以在比源代码更低的级别进行集成。就像 JVM 语言如何在字节码级别集成，或者 LLVM 语言如何在 LLVM 级别集成</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's two new languages compiling to Go making HN frontpage in as many days. It seems people like everything about Go except the language itself. Me? I like everything about Go including the language, these transpiled languages are interesting though.<p>But I keep wondering if they could integrate at a lower-level than the source code. Like how JVM languages integrate at the bytecode level, or LLVM languages at the LLVM level</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664939" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sbrother</span>
+        <span class="meta-time">2026/04/07 09:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 人们喜欢 Go 的一切，除了语言本身。<p>感谢您如此简洁地表达了我对 Go 的感受！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; people like everything about Go except the language itself.<p>Thanks for putting so succinctly exactly how I feel about Go!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669822" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MichaelNolan</span>
+        <span class="meta-time">2026/04/07 03:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但我一直想知道它们是否可以在比源代码更低的级别进行集成。<p>我相信他们可以，但是以 Go 源代码为目标的好处是为早期采用者提供了逃生通道。如果它直接针对 LLVM，我永远不会考虑在工作中使用它，因为它被放弃的风险太高了。但由于它的目标是源码，我可能会考虑将其用于工作中一些重要性不高的项目。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; But I keep wondering if they could integrate at a lower-level than the source code.<p>I’m sure they could, but targeting go source code has the benefit of giving early adopters an escape hatch. If it targeted LLVM directly, I would never consider using this at work since the risk of it being abandoned is too high. But since it targets go source, I would perhaps consider it for some low importance projects at work.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665375" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">seabrookmx</span>
+        <span class="meta-time">2026/04/07 04:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">标准 go 工具链不使用 LLVM。 Go 有自己的汇编格式和机器代码生成。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The standard go toolchain doesn't use LLVM. Go has its own assembly format and machine code generation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666962" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gethly</span>
+        <span class="meta-time">2026/04/07 16:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">围棋很简单。人们喜欢复杂性。因此，写抽象是为了让自己感觉更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Go is simple. People like complexity. So the write abstractions to feel better about themselves.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47672071" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nu11ptr</span>
+        <span class="meta-time">2026/04/07 04:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但我一直想知道它们是否可以在比源代码更低的级别进行集成。<p>不幸的是，源代码级别以下的任何内容都不稳定，因此他们会在任何 Go 版本发布后不断地追求更改。我个人希望他们能专注于使其易于访问，因为 Go 实际上有一个很好的运行时并且可以成为一个很好的语言目标。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; But I keep wondering if they could integrate at a lower-level than the source code.<p>Unfortunately nothing below source code level is stable, so they would constantly be chasing changes after any Go release. I personally wish they would focus on making it accessible, as Go actually has a nice runtime and would make a good language target.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666751" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">melodyogonna</span>
+        <span class="meta-time">2026/04/07 15:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊哈！这就能解释事情了。我想知道 Go 程序集是否至少稳定并有记录，但找不到任何东西</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Aha! That would explain things. I was wondering if the Go assembly at least is stable and documented, couldn't really find anything</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671648" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">onlyrealcuzzo</span>
+        <span class="meta-time">2026/04/07 04:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一件是什么？<p>我正在开发一种语言，它可以通过自定义的类似 Go 的运行时转换为 Zig（并且没有垃圾收集器，而是 Rust 风格的仿射运动）。</p><p>Sky 看起来很酷，因为它以有趣的方式添加到 Go 中。</p><p>我最初考虑保留 GC 并直接转译为 Go，这样我就不需要编写运行时了。</p><p>遵守规则！确实如此。但我 <i>恨</i> 写作/阅读 Go.</p><p>所以我很高兴有更多的人这样做！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What was the other one?<p>I'm working on a language that transpiles to Zig with a custom Go-like runtime (and no garbage collector, Rust-style Affine movement instead).</p><p>Sky seems quite cool, as it's additive to Go in interesting ways.</p><p>I originally considered keeping the GC and just transpiling to Go so I didn't need to write a Runtime.</p><p>Go rules! It really does. But I <i>HATE</i> writing/reading Go.</p><p>So I'm glad more people are doing this!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666375" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">melodyogonna</span>
+        <span class="meta-time">2026/04/07 15:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://lisette.run/" target="_blank" rel="noopener noreferrer">https://lisette.run/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://lisette.run/" target="_blank" rel="noopener noreferrer">https://lisette.run/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gottorf</span>
+        <span class="meta-time">2026/04/07 09:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 遵守规则！确实如此。但我讨厌写/读 Go。<p>相同的。我喜欢 Go 工具包、编译故事、编译速度、向后兼容性、10 年前过时的 Go 代码仍然可以编译和运行的事实等等，只是不太关心语言本身。</p><p>我想知道 Go 的积极属性是否与聪明类型和其他开发人员友好的功能不兼容？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Go rules! It really does. But I HATE writing/reading Go.<p>Same. I love the Go toolkits, the compile story, the speed at which it compiles, its backwards compatibility, the fact that stale Go code 10 years old still compile and run, etc., just don't care much for the language itself.</p><p>I wonder if the positive attributes of Go aren't compatible with clever types and other developer-friendly features?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669775" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">throwaway894345</span>
+        <span class="meta-time">2026/04/07 10:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">主要是 Go 已经在如何构建一种编程语言方面处于领先地位，该语言具有令人惊叹的调度程序、垃圾收集器、编译器、包管理器、格式化程序等。他们将所有“创新预算”都花在了任何编程语言中最重要且最被忽视的功能上，并让语言本身变得非常无聊。<p>最终，Go 的运行时和工具将成为沼泽标准，每个人都会认为它们很无聊，然后人们将开始在它们之上构建更令人兴奋的语言。假设人工智能不会毁掉一切。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s mostly that Go was already pioneering how to build a programming language that had an amazing scheduler, garbage collector, compiler, package manager, formatter, etc. They spent all of their “innovation budget” on the most important—and most neglected—features of any programming language and allowed the language itself to be pretty boring.<p>Eventually Go’s runtime and tooling will be bog standard and everyone will think of them as boring and then people will start building more exciting languages on top of them. Assuming AI doesn’t blow everything up.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670063" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">styluss</span>
+        <span class="meta-time">2026/04/07 04:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://lisette.run/" target="_blank" rel="noopener noreferrer">https://lisette.run/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://lisette.run/" target="_blank" rel="noopener noreferrer">https://lisette.run/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666545" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">onlyrealcuzzo</span>
+        <span class="meta-time">2026/04/07 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">厉害了，这是 <i>非常</i> 接近我最初的想法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Awesome, this is <i>very</i> close to what I originally considered.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667138" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">osigurdson</span>
+        <span class="meta-time">2026/04/07 07:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我理解其动机，因为我不太喜欢编写 Go 代码。有趣的是，我不介意阅读它（只要 if err != nil 不是太累人）。<p>不过有一个转译步骤吗？我会（勉强）接受 Typescript 中的这一点，但实际上不会接受任何其他语言。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I understand the motivation as I don't really like writing Go code. Interestingly, I don't mind reading it though (as long as the if err != nil isn't too exhausting).<p>A transpilation step though? I'll accept that in Typescript (barely) but not for any other language really.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668831" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ksec</span>
+        <span class="meta-time">2026/04/07 03:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我们将 Go 视为不同类型的 C，那么将 Go 作为编译目标似乎是有意义的，因为 C 是编译目标。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If we think of Go as different kind of C, then having Go as a compiled target seems to make sense as C is a compiled target.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665663" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">throwaway894345</span>
+        <span class="meta-time">2026/04/07 10:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">LLVM和JVM有稳定的接口。 Go 有一个中间表示，但它不稳定。当实现发生变化时，任何想要依赖它的人都会陷入困境。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">LLVM and JVM have stable interfaces. Go has an intermediate representation but it isn’t stable. Anyone who wanted to depend on it would be on the hook when the implementation changes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670021" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 06:05</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667910" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">1-more</span>
+        <span class="meta-time">2026/04/07 04:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我会将其添加到我的受 Elm 启发的工具列表中，这让人想起 Brian Eno 关于第一张 Velvet Underground 专辑的俏皮话：“我认为购买这 30,000 张专辑中的一张的每个人都组建了一支乐队！”使用 Elm，感觉就像是 1% 的 Elm 用户创建了一种语言。<p><a href="https://quoteinvestigator.com/2016/03/01/velvet/" target="_blank" rel="noopener noreferrer">https://quoteinvestigator.com/2016/03/01/velvet/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I will add this to my list of Elm-inspired tools that call to mind Brian Eno's quip about the first Velvet Underground album: "I think everyone who bought one of those 30,000 copies started a band!" With Elm it feels like it's 1% of Elm users creating a language.<p><a href="https://quoteinvestigator.com/2016/03/01/velvet/" target="_blank" rel="noopener noreferrer">https://quoteinvestigator.com/2016/03/01/velvet/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666418" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bbkane</span>
+        <span class="meta-time">2026/04/07 12:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您应该发布您的“Elm 启发工具”列表 - 我敢打赌它相当大。我的脑海中浮现出：冰镇、react redux、珍珠奶茶（Go lib）、Roc lang。<p>我确信还有更多。我还在等待有人写一篇“榆树回顾展”，审视它的兴起和停滞</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You should publish your "Elm-inspired tool" list- I bet it's pretty large. Off the top of my head: iced, react redux, bubble tea (Go lib), Roc lang.<p>I'm sure there are lots more. I'm still waiting for someone to write an "Elm retrospective" and examine its rise and stagnation</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">taolson</span>
+        <span class="meta-time">2026/04/07 05:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴看到另一种具有 Haskell / Miranda 类型语法的语言，但 vivi 编码的实现确实显示了：例如src/Compiler/Infer.sky isUpperStart:<p></p><pre><code>    isUpperStart : String -&gt; Bool
+    isUpperStart name =
+        case String.slice 0 1 name of
+            
+            "A" -&gt;
+                True
+            
+            "B" -&gt;
+                True
+            
+            "C" -&gt;
+                True
+        ... for 23 more cases.
+</code></pre>
+而bootstrap编译器中相应的go代码就更糟糕了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice to see another language with Haskell / Miranda type syntax, but the vibe-coded implementation sure shows: e.g. src/Compiler/Infer.sky isUpperStart:<p></p><pre><code>    isUpperStart : String -&gt; Bool
+    isUpperStart name =
+        case String.slice 0 1 name of
+            
+            "A" -&gt;
+                True
+            
+            "B" -&gt;
+                True
+            
+            "C" -&gt;
+                True
+        ... for 23 more cases.
+</code></pre>
+And the corresponding go code in the bootstrap compiler is even worse.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667041" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bonesss</span>
+        <span class="meta-time">2026/04/07 14:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的职业生涯始于清理前互联网时代由独立开发人员编写的系统。我见过很多这样的starts_with_UCase() 实现。<p>我现在知道我将结束我的职业生涯，清理由长期在线氛围编码员编写的系统，犯所有同样的错误，没有任何借口。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I started my career cleaning up systems written by solo devs in the pre internet era. I’ve seen a lot of starts_with_UCase() implementations like that.<p>I see now I’m going to end my career cleaning up systems written by chronically online vibe coders, making all the same mistakes, with none of the excuses.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 08:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669419" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">toastal</span>
+        <span class="meta-time">2026/04/07 05:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Haskell/Miranda 使用 `::` 而不是 `:` 作为类型签名，这与 Elm 不同，并且基本上该系列的其他成员优先考虑类型的按键次数少于列表 cons。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Haskell/Miranda use `::` instead of `:` for type signatures unlike Elm &amp; basically the rest of the family which prioritize types being less keypresses than list cons.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667299" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">taolson</span>
+        <span class="meta-time">2026/04/07 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，我的意思是“哈斯克尔/米兰达 <i>风格</i> 语法”——例如柯里化函数、带有少量样板的简洁语法等。 <i>类型</i> 太超载了;-)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry, I meant "Haskell / Miranda <i>style</i> syntax" -- e.g. curried functions, concise syntax with little boilerplate, etc.  The word <i>type</i> is too overloaded ;-)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zem</span>
+        <span class="meta-time">2026/04/07 01:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">乍一看这看起来棒极了！基本上以全栈语言提供了我想要的一切。期待尝试它。<p>编辑：再浏览一下文档/示例，看起来 javascript 互操作相当笨重，既因为它依赖于字符串连接来嵌入 javascript 片段，又因为字符串连接语法不是很好（并且格式化程序使其变得更糟 - 请参阅示例 <a href="https://github.com/anzellai/sky/blob/main/examples/13-skyshop/src/Lib/OAuth.sky" target="_blank" rel="noopener noreferrer">https://github.com/anzellai/sky/blob/main/examples/13-skysho...</a>）</p><p>我鼓励您至少添加具有插值支持的多行字符串，并且最好为 html 文字添加一个小型编译器。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">at first glance this looks amazing! basically provides everything I have ever wanted in a full stack language. looking forward to experimenting with it.<p>edit: looking through the docs/examples some more, it looks like javascript interop is fairly clunky, both because it relies on string concatenation to embed fragments of javascript, and because the string concatenation syntax is not great (and the formatter makes it even worse - see the example at <a href="https://github.com/anzellai/sky/blob/main/examples/13-skyshop/src/Lib/OAuth.sky" target="_blank" rel="noopener noreferrer">https://github.com/anzellai/sky/blob/main/examples/13-skysho...</a>)</p><p>I would encourage you to at the least add multiline strings with interpolation support, and ideally add a small compiler for html literals.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">skybrian</span>
+        <span class="meta-time">2026/04/07 01:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">函数式语言有一些好的特性，也有一些坏的特性，没有理由全部复制它们。例如，您不需要拥有 Hindley-Milner 类型系统（双向更好）或柯里化，因为它是一种函数式语言。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Functional languages have some good and some bad features and there's no reason to copy them all. For example, you don't need to have a Hindley-Milner type system (bidirectional is better) or currying just because it's a functional language.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664464" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">troupo</span>
+        <span class="meta-time">2026/04/07 03:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们需要更多 <i>务实</i> 语言。例如。 Erlang 和 Elixir 都是函数式的，但避开了 FP 纯粹主义者所提倡的所有东西（复杂类型系统、纯度、默认柯里化等）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We need more <i>pragmatic</i> languages. E.g. Erlang and Elixir are functional, but eschew all the things FP purists advocate for (complex type systems, purity, currying by default etc.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665540" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rapind</span>
+        <span class="meta-time">2026/04/07 05:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您喜欢 Erlang、Elixir 和 Elm/Haskell，那么 Gleam + Lustre（即 TEA）非常适合。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you like Erlang, Elixir, and Elm/Haskell, then Gleam + Lustre (which is TEA) is a pretty great fit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667517" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 08:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669284" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zem</span>
+        <span class="meta-time">2026/04/07 04:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ocaml 有一个复杂的类型系统，但它也非常实用，因为它不会强迫您采用任何一种范例，您可以在给定情况下做任何最有效的事情。 （scala 可以说在“做你想做的”方向上走得更远，但它也提高了复杂性）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ocaml has a complex type system but it's also very pragmatic in that it doesn't force you into any one paradigm, you can do whatever works best in a given situation. (scala arguably goes further in the "do whatever you want" direction but it also dials the complexity way up)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666496" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">troupo</span>
+        <span class="meta-time">2026/04/07 04:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的！完全忘记了 OCaml，因为我只用了几个月的时间</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes! Completely forgot about OCaml because I only spent a couple of months with it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666637" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">redoh</span>
+        <span class="meta-time">2026/04/07 02:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Elm 的类型系统和架构确实使用起来很愉快，因此看到这些想法移植到 Go 编译目标很有趣。您可以获得 Elm 的安全性和表现力，但最终会得到一个可以部署在任何地方的 Go 二进制文件。我想知道错误消息如何比较，因为这始终是 Elm 最强的功能之一。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Elm's type system and architecture are genuinely pleasant to work with, so seeing those ideas ported to a Go compilation target is interesting. You get the safety and expressiveness of Elm but end up with a Go binary you can deploy anywhere. I wonder how the error messages compare, since that was always one of Elm's strongest features.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">linzhangrun</span>
+        <span class="meta-time">2026/04/07 11:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个非常好的尝试，但我对AI时代新的编程语言的前景相当悲观。当然，除非它是一种专门为人工智能编码而设计的语言——例如，一种独立且携带大量上下文信息的语言，使其不适合人类编写，但非常适合大型语言模型。这样的未来或许是非常有希望的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is a very good attempt, but I am quite pessimistic about the prospects of new programming languages in the AI era. Unless, of course, it is a language specifically designed for AI coding — for example, one that is self-contained and carries a great deal of contextual information, making it unsuitable for humans to write but highly suitable for large language models. That kind of future would probably be quite promising.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670488" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">danpalmer</span>
+        <span class="meta-time">2026/04/07 07:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，这太棒了。我一直想喜欢 Haskell，但从未真正做到，Elm 实现了可用性和正确性的平衡，而且架构很漂亮。<p>我从来不喜欢 Go，但它的优势绝对是编译为单个二进制文件、快速编译时间和并发原语（不一定使用它们）等。编译为 Go 是一个好主意。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow, this is amazing. I always wanted to love Haskell but never really managed, Elm nailed the balance of usability and correctness, plus the architecture was beautiful.<p>I've never liked Go, but its strengths are absolutely compiling to single binaries, fast compile times, and concurrency primitives (not necessarily using them) etc. Compiling to Go is a great idea.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668634" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">librasteve</span>
+        <span class="meta-time">2026/04/07 04:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷。<p>我正在比较这个 <a href="https://github.com/anzellai/sky#tea-architecture" target="_blank" rel="noopener noreferrer">https://github.com/anzellai/sky#tea-architecture</a> 与这个 <a href="https://harcstack.org" target="_blank" rel="noopener noreferrer">https://harcstack.org</a> （我的事）...我想我还有一些工作要做;-)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool.<p>I am comparing this <a href="https://github.com/anzellai/sky#tea-architecture" target="_blank" rel="noopener noreferrer">https://github.com/anzellai/sky#tea-architecture</a> with this <a href="https://harcstack.org" target="_blank" rel="noopener noreferrer">https://harcstack.org</a> (my thing) ... guess I have some work to do ;-)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">submain</span>
+        <span class="meta-time">2026/04/07 03:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">干得好:)。 Go 没有 TCO。这意味着函数式语言（无 for 循环）可能会炸毁堆栈。你是怎么解决的？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great work :). Go doesn't have TCO. That means functional languages (no for loops) could blow up the stack. How did you solve that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665746" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kubb</span>
+        <span class="meta-time">2026/04/07 03:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以将任何尾递归函数编译为带有循环且无递归的函数。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can just compile any tail recursive function to a function with a loop and no recursion.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665936" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">1-more</span>
+        <span class="meta-time">2026/04/07 04:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">事实上，Elm 就是这样做的！尾调用递归编译为 while 循环。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is in fact how Elm does it! Tail call recursion compiles to a while loop.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666370" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">srean</span>
+        <span class="meta-time">2026/04/07 05:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并没有解决我发现尾递归最诱人的用例。这将是相互递归的函数。<p>如果该函数可以写成惯用的循环，我可能会首先这样做。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That does not address the use case where I find tail recursion most tempting. That would be mutually recursive functions.<p>If the function can be written as an idiomatic  loop I probably would do so in the first place.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">apgwoz</span>
+        <span class="meta-time">2026/04/07 09:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你_可以_做蹦床，但这有点传染性，或者需要非常明确地使用额外的代码，等等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You _can_ do trampolines, but that is kind of infectious, or needs to be very explicit with extra code, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669794" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adamwk</span>
+        <span class="meta-time">2026/04/07 04:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没错，但递归只是优化重要性的一小部分。这意味着尾部调用的函数仍然构建在堆栈上，并且长函数链（如 fp 中常见的那样）可能会溢出</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Right but recursion is only a smaller part of why the optimization is important. It means tail-called functions still build on the stack and long function chains—as is common with fp—can overflow</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 04:48</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666854" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">onlyrealcuzzo</span>
+        <span class="meta-time">2026/04/07 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">首先 - 很棒的工作。  恭喜。  自托管是一项成就！<p>但我很想知道您事后对这个过程的想法。</p><p>我理解为什么它很有价值：广泛撒网来捕获错误，并发出一个良好的信号，表明您的语言总体上“准备好了”。</p><p>我正在研究一种类似的语言，但担心走上自托管的道路，因为我认为这会减慢我的速度而不是加快我的速度。</p><p>它对你来说效果如何？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">First - awesome job.  Congrats.  Self hosting is an accomplishment!<p>But I'm curious to get your thoughts on the process in hindsight.</p><p>I understand why it's valuable: to cast a wide net in catching bugs and give a good signal that your language is generally "ready".</p><p>I'm working on a similar language, but worried about going down the self-hosting path, as I think it'd slow me down rather than speed me up.</p><p>How did it work for you?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ModernMech</span>
+        <span class="meta-time">2026/04/07 05:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里的实际成就是什么？该语言似乎是在一个月前出现的，并且主要是由 Claude 编写的。如果自助托管只是要求克劳德去做并且需要几周的时间，那么这真的是一项成就吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What's the actual accomplishment here? It seems like the language came into existence a month ago and was written mostly by Claude. If self hosting is a matter of asking Claude to do it and it takes a couple weeks, is it really an accomplishment at all?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667399" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">onlyrealcuzzo</span>
+        <span class="meta-time">2026/04/07 05:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Anything + Go 的运行时是一种合理的语言。<p>Go 的运行时是有史以来最伟大的软件之一。</p><p>假设这是可行的 - 自托管可以保证 <i>最低限度</i> “工作”水平 - 这很有用！</p><p>我不想依赖垃圾收集器的不可预测性，所以我选择构建自己的运行时，但它不会很快像 Go 那样好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anything + Go's runtime is a reasonable language.<p>Go's runtime is one of the greatest pieces of software ever built.</p><p>Assuming this works - which self-hosting guarantees a <i>minimum</i> level of "working" - this is useful!</p><p>I didn't want to rely on the unpredictability of a garbage collector, so I chose to build my own runtime, but it's not going to be as good as Go any time soon.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667550" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Philpax</span>
+        <span class="meta-time">2026/04/07 08:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“我本可以做到的！”<p>“是的，但你没有。”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"I could have made that!"<p>"Yes, but you didn't."</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669061" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">troosevelt</span>
+        <span class="meta-time">2026/04/07 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，必须有人真正做到这一点，而他们确实做到了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, somebody has to actually do it, and they did.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667524" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">harikb</span>
+        <span class="meta-time">2026/04/07 04:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与语言本身有些无关：<p>&gt; 编译器通过 3 代以上的自编译进行引导。</p><p>我想它适用于任何语言编译器，但如果你是自托管的，你自然会发布二进制包。请确保您在项目背后有足够的支持来设置安全构建管道。作为用户，我们永远无法看到任何东西，哪怕是一层嵌套。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Somewhat unrelated to the language itself:<p>&gt; The compiler bootstraps through 3+ generations of self-compilation.</p><p>I guess it applies to any language compiler, but f you are self-hosting, you will naturally release binary packages. Please make sure you have enough support behind the project to setup secure build pipeline. As a user, we will never be able to see something even one nesting-level up.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666536" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">troad</span>
+        <span class="meta-time">2026/04/07 08:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得人们对自托管有太多的迷恋。有一种有害的想法，即一种语言只有在自托管时才算得上是“真正的”语言，但自托管编译器在可移植性、构建完整性等方面带来了真正的成本。<p>如果我编写一个编译器（上帝保佑，因为语言设计正是那种优雅的自行车脱落，我永远不会爬出来），它将是一个直接的 C89 转译器，具有用于可选现代功能（如 SIMD）的条件汇编内联。它可以在任何东西上编译并运行，而且永远免费。为什么我会为了一些自托管的社交声望而放弃它呢？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like there's too much of a fetish for self-hosting. There's this pernicious idea that a language isn't a 'real' language until it's self-hosted, but a self-hosted compiler imposes real costs in terms of portability, build integrity, etc.<p>If I ever write a compiler - God forbid, because language design is exactly the kind of elegance bike-shedding I'll never crawl my way out of - it's going to be a straight-up C89 transpiler, with conditional asm inlines for optional modern features like SIMD. It would compile on anything and run on anything, for free, forever. Why would I ever give that up for some self-hosting social cachet?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669199" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">p1necone</span>
+        <span class="meta-time">2026/04/07 09:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您用自己的语言编写 C89 输出转译器，它仍然具有可移植性。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you wrote the C89 outputting transpiler in your own language it would still be just as portable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669479" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">troad</span>
+        <span class="meta-time">2026/04/07 12:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我将依赖于与特定平台（操作系统、libc 等）紧密结合的预先存在的二进制文件，并且随着时间的推移，证明构建完整性/确保可重现的构建将变得越来越困难。 （ARM 构建是否意味着运行 x64 模拟器作为某些漫长的历史引导过程的一部分？）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd be dependent on pre-existing binaries that are closely wedded to a particular platform (OS, libc etc), and it over time it would become more and more difficult to attest to build integrity / ensure reproducible builds. (Is the ARM build meant to run an x64 emulator as part of some lengthy historic bootstrapping process?)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670706" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">__natty__</span>
+        <span class="meta-time">2026/04/07 04:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很高兴看到受 Java 启发的语言被编译为 Go。我真的很喜欢 Go 的可移植性和标准库以及 Java……的冗长。我更喜欢明确的名称、类型和所有与之相关的语法。 Graalvm 不是我的答案，因为据我所知它不支持交叉编译。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would love to see Java inspired language compiled to Go. I really like Go portability and standard library and Java... verbosity. I prefer explicit names, types and all the syntax around that. Graalvm is not an answer for me because as far as I'm aware it doesn't support cross-compile.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666659" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">weavie</span>
+        <span class="meta-time">2026/04/07 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以在大约一周内使用价值 50 美元的代币实现这一目标。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You could make it happen in about a week and $50 worth of tokens.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668112" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">riclib</span>
+        <span class="meta-time">2026/04/07 01:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">迫不及待地想玩它。很棒的设计！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can’t wait to play with it. Great design!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47664387" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tasuki</span>
+        <span class="meta-time">2026/04/07 02:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说有点太前沿了，但它看起来确实超级好（即完全像 Elm）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A bit too bleeding edge for me, but it does look super nice (ie exactly like Elm).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ch4s3</span>
+        <span class="meta-time">2026/04/07 04:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您允许 FFI，您真的受到 Elm 的启发吗？ ;)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you allow FFI are you really inspired by Elm? ;)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666737" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zem</span>
+        <span class="meta-time">2026/04/07 08:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们的灵感来自于重复 elm 的优点并修复不好的功能！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">they're inspired by repeating elm's good features and fixing the bad ones!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669006" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mrichman</span>
+        <span class="meta-time">2026/04/07 04:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">编译为 Go 还是转译为 Go？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Compiles to Go or transpiles to Go?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666614" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">farfatched</span>
+        <span class="meta-time">2026/04/07 04:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">两者都可以。<p>“从形式上来说，‘Transpiler’是一个无用的词”</p><p><a href="https://people.csail.mit.edu/rachit/post/transpiler-formal/" target="_blank" rel="noopener noreferrer">https://people.csail.mit.edu/rachit/post/transpiler-formal/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Either is fine.<p>``Formally speaking, "Transpiler" is a useless word''</p><p><a href="https://people.csail.mit.edu/rachit/post/transpiler-formal/" target="_blank" rel="noopener noreferrer">https://people.csail.mit.edu/rachit/post/transpiler-formal/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666655" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">9rx</span>
+        <span class="meta-time">2026/04/07 04:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以自由地使用任何您想要的词。甚至“bloopydoopy”，如果你愿意的话。但“编译”是最好的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You are free to use whatever word you want. Even "bloopydoopy", if you so wish. But "compiles" is best.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666782" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MegagramEnjoyer</span>
+        <span class="meta-time">2026/04/07 10:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，这太酷了！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">wow this is pretty cool!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670244" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">desireco42</span>
+        <span class="meta-time">2026/04/07 07:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Elm 是我最喜欢的语言。我喜欢 Ruby，也喜欢其他一些语言，甚至喜欢 Haskell，但 Elm 很特别。那么让我们来完成这项工作吧。<p>现在您已经创建了基础，让我们看看如何推进它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Elm is a language I enjoyed the most. I love Ruby, I loved some other languages, even Haskell I enjoyed, but Elm is special. So let's make this work.<p>Now that you got foundation created, let's see how to move it forward.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

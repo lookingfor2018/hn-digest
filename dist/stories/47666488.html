@@ -1,0 +1,1994 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>导致 TCP 网络在 49.7 天后停止工作的 macOS 错误 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-07-1615/">返回本批次</a>
+      <h1>导致 TCP 网络在 49.7 天后停止工作的 macOS 错误</h1>
+      <p class="subtitle">A macOS bug that causes TCP networking to stop working after 49.7 days</p>
+      <div class="meta-line">
+        <span>photon.codes</span>
+        <span>作者 RyanZhuuuu</span>
+        <span>分数 145</span>
+        <span>评论 92</span>
+        <span>2026/04/07 04:20</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47666488" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://photon.codes/blog/we-found-a-ticking-time-bomb-in-macos-tcp-networking" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>Photon 为 iMessage、WhatsApp、Telegram 等上的对话式 AI 代理提供支持。开源 Spectrum 框架 + SDK 用于无缝代理交互。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Photon powers conversational AI agents on iMessage, WhatsApp, Telegram, and more. Open-source Spectrum framework + SDK for seamless agent interactions.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">EdNutting</span>
+        <span class="meta-time">2026/04/07 05:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在发现他们是否曾就这个问题联系苹果之前，我已经厌倦了人工智能的写作？有谁知道吗？<p>此外，严重过度戏剧化。是的，这是一个值得发现和了解的错误，但它不是定时炸弹 - 很少有用户可能会受到此影响。</p><p>了解操作系统内核的性质，我猜即使只是让 Mac 笔记本电脑进入睡眠状态也足以避免这个问题，因为它会重置 TCP 堆栈 - 这可能就是为什么有些人报告正常运行时间更长而没有遇到这个问题，因为 (iirc) Mac 上的正常运行时间不会仅仅为了睡眠而重置？仅用于完全重启？</p><p>无论如何，总而言之，是的，希望苹果能解决这个问题，但这不是任何人都需要恐慌的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I got tired of the AI writing before finding out if they even attempted to contact Apple about this issue? Does anyone know?<p>Also, massively over-dramatised. Yes, a bug worth finding and knowing about, but it’s not a time bomb - very few users are likely to be affected by this.</p><p>Knowing the nature of OS kernels, I’m guessing even just putting a Mac laptop to sleep would be enough to avoid this issue as it would reset the TCP stack - which may be why some people are reporting much longer uptimes without hitting this problem, since (iirc) uptime doesn’t reset on Macs just for a sleep? Only for a full reboot?</p><p>Anyway, all in all, yeah hopefully Apple fix this but it’s not something anyone needs to panic about.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667323" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bigiain</span>
+        <span class="meta-time">2026/04/07 07:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 极少数用户可能会受到此影响<p>我有相当强烈的怀疑，我在一两周前就在一台不会自动进入睡眠状态的 MacBook 上经历过这种情况，而且很可能有 50 天左右的正常运行时间。</p><p>它具有所描述的所有症状 - TCP 连接无法正常工作，而我仍然可以在任何地方 ping 通，并且同一网络上的所有其他设备都很好。切换 WiFi 网络并插入以太网没有帮助。重新启动“修复”了它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; very few users are likely to be affected by this<p>I have a reasonably strong suspicion that I experienced this a week or two back, on a MacBook that doesn't go into sleep automatically and quite likely had 50-ish days of uptime.</p><p>It had all the symptoms described - tcp connections not working while I could still ping everywhere just fine, and all the other devices on the same network were fine. Switching WiFi networks and plugging in to ethernet didn't help. A reboot "fixed" it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668615" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">EdNutting</span>
+        <span class="meta-time">2026/04/07 07:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果 HN 上的用户比 Apple 的普通用户更有可能遇到此问题，我不会感到惊讶。我们是一群奇怪的人；）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would not be surprised if people on HN were more likely to hit this issue than Apple's average users. We're a weird bunch ;)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668657" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bigiain</span>
+        <span class="meta-time">2026/04/07 10:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可以确认至少我们中的一个人（我）很奇怪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can confirm at least on of us (me) is weird.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670084" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">castillar76</span>
+        <span class="meta-time">2026/04/07 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我同意：这解释了我多年来在 Mac 笔记本电脑上注意到的奇怪行为。我倾向于将它们暂停很长时间而不重新启动，尤其是那些不经常离开办公室的工作。有时，我会发现系统奇怪地冻结，正如他们所描述的那样：TCP 堆栈被阻塞，但其上的其他所有内容都表现正常。 （嗯，主要是：有些应用程序会阻止启动并永远反弹，但我怀疑这是因为它们在启动时尝试进行网络调用，但它被阻止了。）唯一的解决办法是重新启动。<p>这不是一场灾难，但非常烦人。至少现在我可以安排至少每 30 天重新启动一次以保持运行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep, I concur: this explains a bizarre behavior I’ve noted in my Mac laptops for ages now. I have a tendency to just suspend them without rebooting for ages, especially the work one that doesn’t leave my office as frequently. Periodically, I’d come in to find the system bizarrely frozen just as they describe: TCP stack blocked up, but everything else on it behaving normally. (Well, mostly: some apps would block starting and bounce eternally, but I suspect that’s because they’re trying to make a network call while starting up and it’s blocking.) The only fix was a reboot.<p>It’s not a disaster, but very annoying. At least now I can just schedule a reboot every 30 days at minimum to keep things running.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669097" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fingerlocks</span>
+        <span class="meta-time">2026/04/07 14:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">GP说暂停而不重新启动 <i>防止</i> 的问题。<p>我的正常运行时间仅在操作系统升级强制时才会重置，而且我从未遇到过此问题。这与睡眠治愈堆栈理论是一致的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">GP said that suspending without rebooting <i>prevents</i> the issue.<p>My uptime resets only when forced by an OS upgrade and I have never experienced this issue. This is consistent with the sleep-heals-the-stack theory.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671554" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RyanZhuuuu</span>
+        <span class="meta-time">2026/04/07 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我们已向苹果报告，他们已将其归档到内部系统中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yes we have reported to Apple and they have filed it in their internal system.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">otterley</span>
+        <span class="meta-time">2026/04/07 06:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否需要将这篇博文写成 20 页长并让 AI 来撰写？尤其是这种戏剧性的风格？<p>记住这条黄金法则：如果你自己都懒得写，那为什么你的观众还要自己去读呢？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Did you need to make this blog post 20 pages long and have AI write it? Especially in such dramatic style?<p>Remember the golden rule: if you can't be bothered to write it yourself, why should your audience be bothered to read it ourselves?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668154" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloisius</span>
+        <span class="meta-time">2026/04/07 10:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您使用博客文章解释，可能需要更新它，因为它是不正确的，正如下面贾斯汀弗兰克尔指出的那样。来自帖子：<p></p><pre><code>    tcp_now   = 4,294,960,000  (frozen at pre-overflow value)
+</code></pre>
+博客文章中的错误是计时器没有包装，即使它注意到了 <i>应该</i> 是：<p></p><pre><code>    timer     = 4,294,960,000 + 30,000 = 4,294,990,000 - MAX_INT = 22,704
+</code></pre>
+所以：<p></p><pre><code>    TSTMP_GEQ(4294960000, 22704)
+    = 4294960000 - 22704
+    = 4294937296
+    = 4294937296 &gt;= 0 ?  → true! (not false)
+</code></pre>
+这当然是一个错误，但它会导致每当调用 tcp_gc() 时都会收获处于 TCP_WAIT 状态的套接字，无论 2*MSL 是否已通过。只有当 tcp_now 卡住时才会发生这种情况 <i>后</i> 从启动开始需要 4,294,937,296 毫秒。<p>但是，如果 tcp_now 卡住至少 30 秒，则可能会发生与博客中描述的类似的错误 <i>前</i> 它会包裹起来。由于 tcp_now 仅在存在 TCP 流量时更新，因此如果在滚动之前至少 30 秒没有 TCP 流量（从启动起的 MAX_INT 毫秒），就会发生这种情况。</p><p>通过一些 TCP 流量来防止后者发生应该很容易，尽管过早获得 TCP_WAIT 连接也不是很好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Might want to update it if you used the blog post explanation because it's incorrect as justinfrankel noted below. From the post:<p></p><pre><code>    tcp_now   = 4,294,960,000  (frozen at pre-overflow value)
+</code></pre>
+The mistake in the blog post is timer isn't wrapped, even though it notes it <i>should</i> be:<p></p><pre><code>    timer     = 4,294,960,000 + 30,000 = 4,294,990,000 - MAX_INT = 22,704
+</code></pre>
+Therefore:<p></p><pre><code>    TSTMP_GEQ(4294960000, 22704)
+    = 4294960000 - 22704
+    = 4294937296
+    = 4294937296 &gt;= 0 ?  → true! (not false)
+</code></pre>
+This is a bug of course, but it would cause sockets in TCP_WAIT state to be reaped anytime tcp_gc() is called, regardless of whether 2*MSL has passed or not. This only happens though if tcp_now gets stuck <i>after</i> 4,294,937,296 ms from boot.<p>A bug similar to what the blog described can happen however if tcp_now gets stuck at least 30 seconds <i>before</i> it it would have wrapped. Since tcp_now is only updated if there is TCP traffic, this can happen if there is no TCP traffic for at least 30 seconds before before it would roll over (MAX_INT ms from boot).</p><p>It's should be easy to prevent the latter from happening with some TCP traffic, though reaping TCP_WAIT connections early isn't great either.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670136" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">delusional</span>
+        <span class="meta-time">2026/04/07 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然没有。他们会自己修吗？读起来真的就像克劳德在博客上发脾气一样。<p>&gt; 我们正在积极研究比重新启动更好的修复方法 - 一种有针对性的解决方法，可以解决冻结的 tcp_now 问题，而无需完全重新启动系统。在那之前，请在时间耗尽之前安排重新启动。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Apparently no. They'll be fixing it themselves? It really reads like Claude run amok on the blog.<p>&gt; We are actively working on a fix that is better than rebooting — a targeted workaround that addresses the frozen tcp_now without requiring a full system restart. Until then, schedule your reboots before the clock runs out.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tjohns</span>
+        <span class="meta-time">2026/04/07 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">还有其他人觉得这些人工智能撰写的博客文章难以阅读吗？写作风格和结构有些不自然，我很难指出它。<p>至少，这篇文章花了太长的时间才达到要点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does anybody else find these AI-authored blog posts difficult to read? Something about the writing style and structure just feels unnatural, it's hard put my finger on it.<p>At the very least, the writing takes way too long to get to a point.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667275" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dawnerd</span>
+        <span class="meta-time">2026/04/07 08:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同样，人工智能写的任何东西对我来说都很难阅读，而且非常累人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Same, AI written anything is really difficult for me to read and pretty exhausting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669015" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gowld</span>
+        <span class="meta-time">2026/04/07 05:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AI 很好地将博客文章压缩为 2 段——当 tcp_now 时钟超过其数据类型的最大值时，Mac 拒绝让其翻转。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AI does a good job of condensing the blog post to 2 paragraphs -- Mac refuses to let the tcp_now clock rollover when it exceeds the max value in its data type.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667728" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">coldtea</span>
+        <span class="meta-time">2026/04/07 06:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它可以将其总结为非帖子吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can it summarize it down to a non-post?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668042" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">brianwawok</span>
+        <span class="meta-time">2026/04/07 07:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它能概括整个黑客新闻帖子的存在吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can it summarize this entire hacker news post out of existence?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668534" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nslsm</span>
+        <span class="meta-time">2026/04/07 07:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">用AI把你的想法展开成冗长的帖子，用AI把冗长的帖子压缩成人类可以消化的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Use AI to expand  your thoughts into a long-winded post, use AI to compress the long-winded post into something that can be digested by a human.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668542" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">EdNutting</span>
+        <span class="meta-time">2026/04/07 07:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是双子座和电子邮件——字面意思是“写下要点，双子座会起草你的电子邮件”，然后是“收到一封很长的电子邮件？让双子座为你总结一下。”<p>世界上最有效的电子邮件解压缩技术 - 组合起来完全浪费时间和计算，但如果人为生成的邮件占发送/接收的电子邮件的大部分（遗憾的是并非如此），那么每种产品单独使用都有意义。我们使用人工智能向人们发送垃圾邮件，人工智能检测垃圾邮件，人工智能编写非垃圾邮件，人工智能总结非垃圾邮件。人工智能在各个层面都效率低下，而且没有回头路。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This but Gemini and Email - literally marketed as "write bullet points and Gemini will draft your email", followed by "received a long email? Let Gemini summarise it for you."<p>The world's most effective _de_compression technology for email - total waste of time and compute when combined, but each product would make sense in isolation if human-generated mail was the majority of email sent/received (except sadly it isn't). We're using AI to spam people, AI to detect spam, AI to write non-spam and AI to summarise non-spam. AI inefficiency at every level and no way back.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bigiain</span>
+        <span class="meta-time">2026/04/07 07:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">步骤 3) Sam Altman 获利。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Step 3) Sam Altman profits.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668644" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mcculley</span>
+        <span class="meta-time">2026/04/07 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 它不会在开发测试中被捕获——谁会运行 50 天的测试？<p>您不必运行系统 50 天。您可以模拟环境并更快地计时。许多高可靠性系统都是通过这种方式进行测试的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; It will not be caught in development testing — who runs a test for 50 days?<p>You don't have to run the system for 50 days. You can simulate the environment and tick the clock faster. Many high reliability systems are tested this way.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667182" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dezgeg</span>
+        <span class="meta-time">2026/04/07 07:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">IIRC Linux 内核中 jiffies 时间计数器的初始值在启动时初始化为回绕点之前的五分钟左右，正是为了捕获此类问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">IIRC the initial value for the jiffies time counter in Linux kernel is initialized at boot time to something like five minutes before the wraparound point, precisely to catch this kind of issues.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668591" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bobmcnamara</span>
+        <span class="meta-time">2026/04/07 07:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也有WinCE</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">WinCE too</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668616" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hombre_fatal</span>
+        <span class="meta-time">2026/04/07 05:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它使用硬件时钟，在睡眠期间暂停。没有勾选。<p>如果您想了解时间如何影响程序，您可能会更改 fns（例如calculate_tcp_clock）以将正常运行时间作为参数，以便您可以对其进行健全性检查。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It uses a hardware clock, one that pauses during sleep. There is no tick.<p>If you wanted to see how time impacts the program, you'd prob change fns like calculate_tcp_clock to take uptime as an argument so that you could sanity check it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667565" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mcculley</span>
+        <span class="meta-time">2026/04/07 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。我的意思是设计软件以使其可测试。<p>使用该值的代码可以在可以控制该值的环境中运行。</p><p>我已经编写了执行相同操作的代码，并为其构建了一个测试工具。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes. I do mean designing software to make it testable.<p>The code that uses that value can be run in an environment where that value can be controlled.</p><p>I have written code that does this same thing and built a test harness for it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668840" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adamtulinius</span>
+        <span class="meta-time">2026/04/07 06:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们谈论的是一家生产其操作系统所运行的硬件的公司。我确信他们能找到一种方法让硬件时钟运行得更快。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We're talking about a company that produces the hardware their OS is running on. I'm sure they can find a way to make the hardware clock run faster.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 05:33</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667457" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sho_hn</span>
+        <span class="meta-time">2026/04/07 05:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哎呀，很多 <i>视频游戏</i> 都是这样测试的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heck, many <i>video games</i> are tested this way.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667258" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">AndroTux</span>
+        <span class="meta-time">2026/04/07 15:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的。我想我可以确认这一点。拥有一个正常运行时间为 55 天且大部分处于闲置状态的 Tahoe 系统：<p>% netstat - 和 | grep TIME_WAIT | 时间等待厕所</p><p>850</p><p>所有其他正常运行时间 &lt; 49.7 天的系统均报告较低的个位数到两位数的数字。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting. I think I can confirm this. Got a Tahoe system with 55 days uptime that's mostly idling:<p>% netstat -an | grep TIME_WAIT | wc -l</p><p>850</p><p>All other systems with &lt; 49.7 days uptime report low single to double digit numbers.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671951" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">otterley</span>
+        <span class="meta-time">2026/04/07 04:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">听起来它会影响每个打开的 TCP 连接，而不仅仅是 OpenClaw。 （不过，TCP 连接能维持这么长时间的情况非常罕见。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sounds like it affects every open TCP connection, not just OpenClaw. (It's pretty rare for a TCP connection to live that long, though.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666849" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">josephcsible</span>
+        <span class="meta-time">2026/04/07 04:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">各个 TCP 连接不需要维持那么长的时间。一旦 macOS 系统的正常运行时间达到 49.7 天，此错误就会开始影响所有 TCP 连接。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Individual TCP connections don't need to live that long. Once a macOS system reaches 49.7 days of uptime, this bug starts affecting all TCP connections.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666952" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">throw0101d</span>
+        <span class="meta-time">2026/04/07 05:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>一旦 macOS 系统的正常运行时间达到 49.7 天，此错误就会开始影响所有 TCP 连接。</i><p>我的工作 MacBook (macOS 15.7.4) 上当前的 `uptime`：</p><p></p><pre><code>    17:14  up 50 days, 22 mins, 16 users, load averages: 2.06 1.95 1.94
+</code></pre>
+我现在应该遇到 TCP 连接问题吗？ （我不是。）<p>我个人的 iMac 正常运行时间为 279 天。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>Once a macOS system reaches 49.7 days of uptime, this bug starts affecting all TCP connections.</i><p>Current `uptime` on my work MacBook (macOS 15.7.4):</p><p></p><pre><code>    17:14  up 50 days, 22 mins, 16 users, load averages: 2.06 1.95 1.94
+</code></pre>
+Am I supposed to be having issues with TCP connections right now? (I'm not.)<p>My personal iMac is at 279 days of uptime.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667222" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloisius</span>
+        <span class="meta-time">2026/04/07 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据帖子：<p>$ netstat -an | grep -c TIME_WAIT</p><p>如果它返回的计数持续增长，您就会看到缓慢的泄漏。在某些时候，新的连接将开始失败。多久完全取决于您的机器关闭新连接的速度。</p><p>由于大量客户端流量涉及服务器关闭连接，因此我想这可能需要一段时间。</p><p>目前还不清楚它是否会在您的 mac 关闭时泄漏，或者仅当它无法从对等方获取 (FIN, ACK) 返回时发生泄漏，从而 TCP_WAIT 垃圾收集器运行。如果是后者，则可能需要更长的时间，具体取决于连接质量。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">According to the post:<p>$ netstat -an | grep -c TIME_WAIT</p><p>If the count it returns keeps growing, you're seeing a slow leak. At some point, new connections will start failing. How soon depends entirely on how quickly your machine closes new connections.</p><p>Since a lot of client traffic involves the server closing connections instead, I imagine it could take a while.</p><p>It's unclear if it'll leak whenever your mac closes or only when it fails to get a (FIN, ACK) back from the peer so the TCP_WAIT garbage collector runs. If it's the latter, then it could take substantially longer, depending on connection quality.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">throw0101d</span>
+        <span class="meta-time">2026/04/07 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>    % netstat -an | grep -c TIME_WAIT | wc -l
+       1</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>    % netstat -an | grep -c TIME_WAIT | wc -l
+       1</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667367" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloisius</span>
+        <span class="meta-time">2026/04/07 05:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您想删除 wc -l。<p>Mac `grep -c` 计算匹配的行数，因此它始终打印 1 行，因此通过管道传输到 wc -l 将始终返回 1。</p><p>或者只是打开并执行 netstat -an |grep TCP_WAIT 并观看它。如果几分钟后没有消失，那么您就发现了问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You want to drop the wc -l.<p>Mac `grep -c` counts lines that match, so it always prints 1 line, so piping to wc -l will always return 1.</p><p>Or just open up and do netstat -an |grep TCP_WAIT and just watch it. If any don't disappear after a few minutes, then you're seeing the issue.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">comex</span>
+        <span class="meta-time">2026/04/07 13:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它们可能不会受到影响，因为有错误的代码仅在 macOS 26 中添加：<p><a href="https://github.com/apple-oss-distributions/xnu/blame/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/netinet/tcp_subr.c#L3753" target="_blank" rel="noopener noreferrer">https://github.com/apple-oss-distributions/xnu/blame/f6217f8...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They probably aren’t affected because the buggy code was only added in macOS 26:<p><a href="https://github.com/apple-oss-distributions/xnu/blame/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/netinet/tcp_subr.c#L3753" target="_blank" rel="noopener noreferrer">https://github.com/apple-oss-distributions/xnu/blame/f6217f8...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">0x457</span>
+        <span class="meta-time">2026/04/07 05:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以运行 `sysctl kern.boottime` 来获取它何时启动并从那里进行数学计算。<p>我也无法重现。我想说我至少遇到过一次这个问题，昨天我在重新启动之前我的正常运行时间是 60 天。</p><p>但它不是即时的，它只是永远不会释放连接。因此，您可以拥有 3 年的正常运行时间，并且不会耗尽连接或在遇到该问题后不久就耗尽。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can run `sysctl kern.boottime` to get when it was booted and do the math from there.<p>I also can't reproduce. I want to say I have encountered this issue at least once, yesterday I before rebooted my uptime was 60 days.</p><p>But it's not instant, it just never releases connections. So you can have uptime of 3 years and not run out of connections or run out shortly after hitting that issue.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667384" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">spogbiper</span>
+        <span class="meta-time">2026/04/07 05:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只是从文章中的错误描述开始，但似乎根据您的网络活动，您实际上会的确切时间 <i>注意</i> 影响可能会有很大差异</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm just going from the bug description in the article, but it seems that depending on your network activity, the exact time you will actually <i>notice</i> an impact could vary quite a bit</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667322" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">driftcoder</span>
+        <span class="meta-time">2026/04/07 05:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果它在保活或重传计时器中，桌面使用将完全掩盖它。浏览器在失败时重新连接，短暂的请求不关心保活。您只会注意到依赖操作系统检测失效对等点的事物 - 持久数据库连接、ssh 隧道、长时间运行的流。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">if it's in keepalive or retransmission timers, desktop use would mask it completely. browsers reconnect on failure, short-lived requests don't care about keepalives. you'd only notice in things that rely on the OS detecting a dead peer — persistent db connections, ssh tunnels, long-running streams.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667329" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bigiain</span>
+        <span class="meta-time">2026/04/07 07:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 17:14 长达 50 天，22 分钟，16 位用户，平均负载：2.06 1.95 1.94<p>&gt; 我现在应该遇到 TCP 连接问题吗？ （我不是。）</p><p>如果我对 slop 帖子的略读是正确的，那么只有在该机器没有花任何时间睡眠的情况下，您才会在该机器上遇到问题。 （我有一台永不休眠的 Macbook，我很确定它在一两周前就遇到了这个错误。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; 17:14  up 50 days, 22 mins, 16 users, load averages: 2.06 1.95 1.94<p>&gt; Am I supposed to be having issues with TCP connections right now? (I'm not.)</p><p>If my skim read of the slop post is correct, you'll only have issues on that machine if it hasn't spent any of that time asleep. (I have one Macbook that never sleeps, and I'm pretty sure it hit this bug a week or two back.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668690" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">CamperBob2</span>
+        <span class="meta-time">2026/04/07 05:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然有。  他们需要活下去，直到被拆毁。<p>他们几乎从不 <i>做</i> 不管出于什么原因，他们都应该活那么久。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure they do.  They need to live until torn down.<p>They almost never <i>do</i> live that long, for whatever reason, but they should.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667033" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">josephcsible</span>
+        <span class="meta-time">2026/04/07 05:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，连接持续这么长时间并不需要触发此错误。我知道对于某些工作负载，连接保持这么长时间可能很重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I meant that having a connection live that long isn't necessary to trigger this bug. I know that for some workloads, it can be important for connections to live that long.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667076" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gpvos</span>
+        <span class="meta-time">2026/04/07 05:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然，OpenClaw 现在比什么都重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Obviously, OpenClaw is now more important than anything else.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667030" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mememememememo</span>
+        <span class="meta-time">2026/04/07 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 OpenClaw 来说，这个错误是一个安全功能</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For OpenClaw this bug is a security feature</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667142" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">justinfrankel</span>
+        <span class="meta-time">2026/04/07 05:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">拥有多台 macOS 计算机，其正常运行时间超过 600-1000 天，至少每分钟左右进行 TCP 个连接，但它们的 TIME_WAIT 连接仍然正常到期。<p>这些内核版本：</p><p>Darwin 内核版本 20.6.0：2023 年 7 月 6 日星期四 22:12:47 PDT；根：xnu-7195.141.49.702.12~1/RELEASE_ARM64_T8101arm64</p><p>Darwin 内核版本 17.7.0：2019 年 4 月 24 日星期三 21:17:24 PDT；根：xnu-4570.71.45~1/RELEASE_X86_64 x86_64</p><p>所以...想知道那是关于什么的？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">have multiple macOS machines with 600-1000+ day uptimes, which do TCP connections every minute or so at a minimum, they are still expiring their TIME_WAIT connections as normal.<p>these kernel versions:</p><p>Darwin Kernel Version 20.6.0: Thu Jul  6 22:12:47 PDT 2023; root:xnu-7195.141.49.702.12~1/RELEASE_ARM64_T8101 arm64</p><p>Darwin Kernel Version 17.7.0: Wed Apr 24 21:17:24 PDT 2019; root:xnu-4570.71.45~1/RELEASE_X86_64 x86_64</p><p>so... wonder what that's about?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667289" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">justinfrankel</span>
+        <span class="meta-time">2026/04/07 05:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊，阅读他们的分析，有一些错误解释了这一点。特别是这个：<p></p><pre><code>  tcp_now   = 4,294,960,000  (frozen at pre-overflow value)
+  timer     = 4,294,960,000 + 30,000 = 4,294,990,000
+              (exceeds uint32 max → wraps to a small number)
+</code></pre>
+他们说，计时器回绕到一个小数字<p></p><pre><code>  TSTMP_GEQ(4294960000, 4294990000)
+</code></pre>
+他们忘了把它包装在那里，它应该是 TSTMP_GEQ(4294960000,small_number)<p></p><pre><code>  = (int)(4294960000 - 4294990000)
+  = (int)(-30000)
+  = -30000 &gt;= 0 ?  → false!
+</code></pre>
+错误的！<p>此错误可能会在很短的时间内发生，如果您在此期间获得足够的 TCP 连接到 TIME_WAIT，它们可能会继续存在。但我认为原来的帖子完全反应过度，可能是法学硕士写的，哈哈。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ah reading their analysis, there are errors that explain this. Particularly this:<p></p><pre><code>  tcp_now   = 4,294,960,000  (frozen at pre-overflow value)
+  timer     = 4,294,960,000 + 30,000 = 4,294,990,000
+              (exceeds uint32 max → wraps to a small number)
+</code></pre>
+timer wraps to a small number, they say<p></p><pre><code>  TSTMP_GEQ(4294960000, 4294990000)
+</code></pre>
+they forgot to wrap it there, it should be TSTMP_GEQ(4294960000, small_number)<p></p><pre><code>  = (int)(4294960000 - 4294990000)
+  = (int)(-30000)
+  = -30000 &gt;= 0 ?  → false!
+</code></pre>
+wrong!<p>There may be a short time period where this bug occurs, and if you get enough TCP connections to TIME_WAIT in that period, they could stick around, maybe. But I think the original post is completely overreacting and was probably written by a LLM, lol.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloisius</span>
+        <span class="meta-time">2026/04/07 07:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎确实存在一个错误，但这不是博客所描述的。<p>如果 tcp_now 在 &lt;= 2^32 - 30000 毫秒时停止更新，则 TSTMP_GEQ(tcp_now, timer) 将始终失败，因为计时器为 tcp_now + 30000，不会换行。</p><p>这看起来确实是可能的，因为更新 tcp_now 的calculate_tcp_clock()仅在存在 TCP 流量时运行。因此，如果在 49 天的正常运行时间内停止所有 TCP 流量并等待大约一天，tcp_now 将停留在停止 TCP 流量之前的值。</p><p>如果 tcp_now 陷入 &gt; 2^32 - 30000 的情况，看起来 TIME_WAIT 中的 TCP 套接字最终会立即关闭，而不是等待 30 秒，这也不是很好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There does appear to be a bug, but it's not what the blog describes.<p>If tcp_now stops updating at &lt;= 2^32 - 30000 milliseconds, then TSTMP_GEQ(tcp_now, timer) will always fail since timer is tcp_now + 30000 which won't wrap.</p><p>This does look like it is possible since calculate_tcp_clock() which updates tcp_now only runs when there's TCP traffic. So if at 49 days uptime you halted all TCP traffic and waited about a day, tcp_now would be stuck at the value before you halted TCP traffic.</p><p>In cases where tcp_now gets stuck at &gt; 2^32 - 30000, it looks like TCP sockets in the TIME_WAIT will end up being closed immediately instead of waiting 30 seconds, which isn't great either.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668945" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fingerlocks</span>
+        <span class="meta-time">2026/04/07 15:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你确定吗？<p>tcp_now 的最大值实际上无法达到 2^32，因为该数字的尾随零超出了数据类型的位宽度。</p><p>因此，当 tcp_now 等于 2^32 - 3000 时，tcp_now + 30000 将换行。 
+你的不等号应该严格&lt;，否则结果不成立。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you sure?<p>tcp_now’s maximum cannot physically reach 2^32 because the trailing zeros of that number exceeds the bit width of data type.</p><p>Therefore, tcp_now + 30000 will wrap when tcp_now is equal to  2^32 - 3000. 
+Your inequality sign should be strict &lt;, otherwise the result does not follow.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">justinfrankel</span>
+        <span class="meta-time">2026/04/07 08:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这是有道理的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yep that makes sense</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669011" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">comex</span>
+        <span class="meta-time">2026/04/07 05:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该错误去年才在 macOS 26 中引入：<p><a href="https://github.com/apple-oss-distributions/xnu/blame/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/netinet/tcp_subr.c#L3753" target="_blank" rel="noopener noreferrer">https://github.com/apple-oss-distributions/xnu/blame/f6217f8...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The bug was introduced only last year in macOS 26:<p><a href="https://github.com/apple-oss-distributions/xnu/blame/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/netinet/tcp_subr.c#L3753" target="_blank" rel="noopener noreferrer">https://github.com/apple-oss-distributions/xnu/blame/f6217f8...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667423" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">plorkyeran</span>
+        <span class="meta-time">2026/04/07 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; Apple 社区 #250867747：macOS Catalina —“无法建立新的 TCP 连接。”新连接输入 SYN_SENT 然后立即关闭。现有连接不受影响。只有重新启动才能修复它。<p>如果这是 macOS 26 的 bug，那么引用它是一件很奇怪的事情。我经常在 50 天以上的正常运行时间内没有出现任何问题，因此它是一个新错误是有道理的，也许他们过去也曾遇到过具有类似症状的不同错误。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Apple Community #250867747: macOS Catalina — "New TCP connections can not establish." New connections enter SYN_SENT then immediately close. Existing connections unaffected. Only a reboot fixes it.<p>This is a weird thing to cite if it's a macOS 26 bug. I quite regularly go over 50 days of uptime without issues so it makes sense for it to be a new bug, and maybe they had different bugs in the past with similar symptoms.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667805" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloisius</span>
+        <span class="meta-time">2026/04/07 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的。文章提到了运行 Catalina 的论坛上的投诉，所以这肯定是别的原因。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting. The article mentions complaints on the forums running Catalina, so that must be something else.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667677" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">js2</span>
+        <span class="meta-time">2026/04/07 06:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为一个也操作 Mac 机群的人，多年来，这个错误不可能早于 macOS 26。如果错误描述正确，那么它一定是一个新错误。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As someone who also operates fleets of Macs, for years now, there is no possible way this bug predates macOS 26. If the bug description is correct, it must be a new one.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667877" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">groby_b</span>
+        <span class="meta-time">2026/04/07 05:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章是使用人工智能编写的，因此除非您验证这些投诉，否则安全的默认假设是它们不存在。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article is written using AI, so unless you verified the complaints, the safe default assumption is that they don't exist.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aloisius</span>
+        <span class="meta-time">2026/04/07 06:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它肯定存在，但它可能是一个完全不相关的问题。<p><a href="https://discussions.apple.com/thread/250867747" target="_blank" rel="noopener noreferrer">https://discussions.apple.com/thread/250867747</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It definitely exists, but it could be a completely unrelated issue.<p><a href="https://discussions.apple.com/thread/250867747" target="_blank" rel="noopener noreferrer">https://discussions.apple.com/thread/250867747</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668012" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">netcoyote</span>
+        <span class="meta-time">2026/04/07 07:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">此类问题困扰着各种软件。以前遇到过此类问题，对于激战游戏服务器（运行长时间存在的确定性游戏实例），我们初始化了一个每个游戏上下文变量，该变量被添加到 Windows GetTickCount() 中，其值使得结果要么在 0x7fff_ffff 滴答之前 5 秒，要么在 0xffff_ffff 滴答之前 5 秒，这样任何奇怪的时间计算溢出错误都可能立即出现。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This type of problem plagues all sorts of software. Having experienced this type of problem before, for Guild Wars game servers -- which run deterministic game instances that live for long periods of time -- we initialized a per-game-context variable that gets added to Windows GetTickCount() to a value such that the result was either 5 seconds before 0x7fff_ffff ticks, or 5 seconds before 0xffff_ffff ticks, so that any weird time-computation overflow errors would be likely to show up immediately.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">toast0</span>
+        <span class="meta-time">2026/04/07 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，所有依赖溢出的东西都需要在启动后立即溢出，这样才能得到很好的测试。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep, everything that relies on overflow needs to overflow soon after start, so that it's well tested.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670669" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">JensRantil</span>
+        <span class="meta-time">2026/04/07 06:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这让我想起了 208 天后出现的 Linux 内核调度程序错误： <a href="https://www.claudiokuenzler.com/blog/247/linux-virtual-server-crash-update_cpu_power-kernel-uptime-bug" target="_blank" rel="noopener noreferrer">https://www.claudiokuenzler.com/blog/247/linux-virtual-serve...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This reminds me of the Linux kernel scheduler bug that kicked in after 208 days: <a href="https://www.claudiokuenzler.com/blog/247/linux-virtual-server-crash-update_cpu_power-kernel-uptime-bug" target="_blank" rel="noopener noreferrer">https://www.claudiokuenzler.com/blog/247/linux-virtual-serve...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668445" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bigiain</span>
+        <span class="meta-time">2026/04/07 07:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">还有波音 787<p><a href="https://airguide.info/boeing-787s-must-be-turned-off-every-51-days-to-prevent-data-error/" target="_blank" rel="noopener noreferrer">https://airguide.info/boeing-787s-must-be-turned-off-every-5...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And Boeing 787s<p><a href="https://airguide.info/boeing-787s-must-be-turned-off-every-51-days-to-prevent-data-error/" target="_blank" rel="noopener noreferrer">https://airguide.info/boeing-787s-must-be-turned-off-every-5...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">loloquwowndueo</span>
+        <span class="meta-time">2026/04/07 04:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，让我想起了 49.7 天后的 Windows 95 崩溃错误。难道我们什么也没学到吗？ <a href="https://pipiscrew.github.io/posts/why-window/" target="_blank" rel="noopener noreferrer">https://pipiscrew.github.io/posts/why-window/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">lol reminds me of the windows 95  crash bug after 49.7 days. Have we learned nothing. <a href="https://pipiscrew.github.io/posts/why-window/" target="_blank" rel="noopener noreferrer">https://pipiscrew.github.io/posts/why-window/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666684" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aranelsurion</span>
+        <span class="meta-time">2026/04/07 04:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只是想记住我最后一次看到这个神奇的天数是在哪里。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was just trying to remember where did I last see this magic number of days.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666835" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">loloquwowndueo</span>
+        <span class="meta-time">2026/04/07 04:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章确实提到了多年来发现的一些实例，包括 Windows 实例。我记得那是因为我们曾经开玩笑说这没什么大不了的 - Windows 95 计算机要达到 49 天正常运行时间的唯一方法是它实际上不执行任何操作或以任何方式使用。如果你觉得有趣的话，Windows 95 会崩溃。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article does mention a few instances found over the years, including the windows one. That’s the one I remember though because we used to joke it was not a big deal - the only way for a windows 95 computer to reach 49 days of uptime is if it’s literally not doing anything or being used in any way. Windows 95 would crash if you looked at it funny.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">StilesCrisis</span>
+        <span class="meta-time">2026/04/07 06:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">并抛出一个吃豆人 8 位级别计数器溢出，只是为了提醒我们人工智能不可信！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And throws in a Pac-man 8-bit level counter overflow just to remind us that AI cannot be trusted!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">flomo</span>
+        <span class="meta-time">2026/04/07 05:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OS/2 有一个类似的错误，人们用它作为服务器，所以我确信它咬了一些人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OS/2 had a similar bug, and people used that as a server, so I'm sure it bit some people.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667333" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">larodi</span>
+        <span class="meta-time">2026/04/07 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">49-7=42
+一切都清楚了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">49-7=42
+it is all clear</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666881" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">auspiv</span>
+        <span class="meta-time">2026/04/07 05:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">波音 787 喷气式飞机可能也是同样的情况 - <a href="https://www.theregister.com/2020/04/02/boeing_787_power_cycle_51_days_stale_data" target="_blank" rel="noopener noreferrer">https://www.theregister.com/2020/04/02/boeing_787_power_cycl...</a><p>说 51 天，这将是一个有趣的（毫秒）数</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">probably same thing for boeing 787 jets - <a href="https://www.theregister.com/2020/04/02/boeing_787_power_cycle_51_days_stale_data" target="_blank" rel="noopener noreferrer">https://www.theregister.com/2020/04/02/boeing_787_power_cycl...</a><p>says 51 days, which would be an interesting number of (milli)seconds</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667232" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">otherme123</span>
+        <span class="meta-time">2026/04/07 05:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它可能是溢出，但与寄存器增加的频率有关，而不是与te寄存器的最大值有关。例如。在这个 32 Mhz 芯片上，每 500,000 个周期 +1 这个 uint16 (65535) 一次，以前是 1 Mhz 芯片，从来没有出现过问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It could be an overflow but related with the frequency at which the register was increasing, rather than the max value of te register. E.g. +1 this uint16 (65535) once every 500,000 cycles on this 32 Mhz chip, that previously was a 1 Mhz chip and never had a problem.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667631" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ok123456</span>
+        <span class="meta-time">2026/04/07 04:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">字面意思是“新旧事物”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Quite literally "the new old thing."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666727" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">znpy</span>
+        <span class="meta-time">2026/04/07 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是为什么 49.7 天听起来很熟悉！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">that's why the 49.7 days sounded familiar!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667453" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gghootch</span>
+        <span class="meta-time">2026/04/07 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这和 OpenClaw 到底有什么关系呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What does this have to do with OpenClaw exactly?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666993" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">beanjuiceII</span>
+        <span class="meta-time">2026/04/07 04:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用的是 sequoia M1 笔记本电脑
+ 正常运行时间
+16:38 228 天，21:03，1 位用户，平均负载：6.14 5.93 5.64<p>我猜我被标记为安全了！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i'm on sequoia M1 laptop with
+ uptime
+16:38  up 228 days, 21:03, 1 user, load averages: 6.14 5.93 5.64<p>guess i'm marked safe!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666714" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 04:43</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666786" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dvh</span>
+        <span class="meta-time">2026/04/07 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">完全像阿杜伊诺</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly like arduino</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/07 06:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Windows 95不是因为有这样的问题而出名吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wasn't windows 95 famous for having an issue like this?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668130" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">guywithahat</span>
+        <span class="meta-time">2026/04/07 06:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Arduino也是如此；我认为它们都与在 uint32_t 中存储毫秒有关，然后在翻转时出现不可预测的行为</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Arduino too; I assume they all have to do with storing milliseconds in a uint32_t, and then getting unpredictable behavior when it rolls over</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668164" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 06:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667867" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">MatMercer</span>
+        <span class="meta-time">2026/04/07 05:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这让我想起了一些人的说法：“我从不重新启动我的 MacOS，这很好！”。是的，可能是这样，但我永远不会相信任何没有定期重新启动的计算机，哈哈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This made me remember some folks that are "I never reboot my MacOS and it's fine!". Yeah probably it is but I'll never trust any computer without periodic reboots lol.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">QuantumNomad_</span>
+        <span class="meta-time">2026/04/07 05:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我还是这样，当我通过USB连接外部硬盘或SSD，使用它然后弹出它时，我在拔掉USB线之前完全关闭了MacBook Pro。万一。<p>我最近使用的笔记本电脑最长的正常运行时间可能是 90 天左右，但那是因为那台笔记本电脑放在我的车库里，连接了墙壁电源（可能对电池不利）并连接了一些外部存储，我时不时地通过 WireGuard 远程访问该机器。当我重新启动该计算机时，只是出于习惯，我不小心通过远程图形会话单击了重新启动。</p><p>大多数时候，我在车库中远程使用笔记本电脑都是通过 ssh 会话，但偶尔我会使用远程桌面。在我在远程桌面会话中单击重新启动后，我意识到我刚刚犯了什么错误 - 我将 WireGuard 设置为在登录后启动。所以重启后，我暂时无法返回。由于我在另一个国家，所以我不能直接走到车库。但我确实有家人可以，所以我通过电话指示其中一位如何为我登录，以便 WireGuard 会自动启动备份。你可能认为这种情况只会发生一次，但在我再次犯同样的错误后，我可能不得不派家人代表我去车库，也许三四次。</p><p>对于我实际随身携带并插拔电源等的笔记本电脑，我重新启动之间的正常时间间隔为每 1 到 3 天之间。无论如何，冷启动速度很快，因此在工作一天后或弹出外部 HDD 或 SSD 时将其关闭并不会真正花费我任何明显的时间。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m still at where when I connect external hard drive or SSD via USB, use it and then eject it, I shut down the MacBook Pro completely before I unplug the USB cable. Just in case.<p>The longest uptime I have had on any of my recent laptops is probably around 90 days but that’s because that laptop was sitting in my garage with wall power connected (probably bad for the battery) and some external storage connected and I’d remote into that machine over WireGuard now and then. When I did reboot that machine it was only out of habit that I accidentally clicked on reboot via a remote graphical session.</p><p>Most of the time my remote use of the laptop in the garage would be ssh sessions, but occasionally I’d use Remote Desktop. Right after I clicked reboot in the Remote Desktop session I realized what mistake I had just done - I have WireGuard set up to start after login. So after the reboot, I was temporarily unable to get back in. As I was in another country I couldn’t just walk over to the garage. But I do have family that could, so I instructed one of them over the phone on how to log in for me so that WireGuard would automatically start back up. You’d think this would happen only once, but I probably had to send family to the garage on my behalf maybe three or four times after me having made the same mistake again.</p><p>For the laptops that I actually carry around and plug and unplug things to etc, normal amount of time between reboots for me is somewhere between every 1 and 3 days. Cold boot is plenty fast anyway, so shutting it down after a day of work or when ejecting an external HDD or SSD doesn’t really cost me any noticeable amount of time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667262" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Delk</span>
+        <span class="meta-time">2026/04/07 05:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我还是这样，当我通过USB连接外部硬盘或SSD，使用它然后弹出它时，我在拔掉电缆之前完全关闭了MacBook Pro。万一。<p>听起来……有点偏执？至少在 Linux (Gnome) 上，如果我单击“安全删除驱动器”，它实际上会关闭驱动器电源并阻止外部机械驱动器旋转。一旦硬盘驱动器不再旋转，无论如何都不会发生有用的同步。现代操作系统绝对应该足够可靠，可以信任它可以正确卸载驱动器。</p><p>&gt; 对于我实际随身携带并插入和拔出东西的笔记本电脑，对我来说，重新启动之间的正常时间间隔为每 1 到 3 天之间。无论如何，冷启动速度很快，因此在工作一天后或弹出外部 HDD 或 SSD 时将其关闭并不会真正花费我任何明显的时间。</p><p>我个人不会经常重新启动我的笔记本电脑，但这并不是因为启动花费了太多时间。这是因为我喜欢保留状态：打开的应用程序、打开的文件、终端仿真器会话、特定虚拟桌面上的窗口等。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I’m still at where when I connect external hard drive or SSD via USB, use it and then eject it, I shut down the MacBook Pro completely before I unplug the cable. Just in case.<p>That sounds... a bit paranoid? At least on Linux (Gnome), if I click to "safely remove drive" it actually powers off the drive and stops external mechanical drives from spinning. No useful syncing is going to happen anyway once a hard drive no longer spins. A modern OS should definitely be reliable enough that it can be trusted to properly unmount a drive.</p><p>&gt; For the laptops that I actually carry around and plug and unplug things to etc, normal amount of time between reboots for me is somewhere between every 1 and 3 days. Cold boot is plenty fast anyway, so shutting it down after a day of work or when ejecting an external HDD or SSD doesn’t really cost me any noticeable amount of time.</p><p>I personally don't reboot my laptop that often, but it's not because of a boot taking too much time. It's because I like to keep state: open applications, open files, terminal emulator sessions, windows on particular virtual desktops, etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mschuster91</span>
+        <span class="meta-time">2026/04/07 06:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 现代操作系统绝对应该足够可靠，可以信任它可以正确卸载驱动器。<p>问题不仅仅存在于堆栈的操作系统端。磁盘固件 - 特别是 SSD - <i>爱</i> 对上面的层撒谎[1]。</p><p>[1] <a href="https://news.ycombinator.com/item?id=46239726" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=46239726</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; A modern OS should definitely be reliable enough that it can be trusted to properly unmount a drive.<p>The problem isn't just in the OS side of the stack. Disk firmwares - especially SSDs - <i>love</i> to lie to the layers above [1].</p><p>[1] <a href="https://news.ycombinator.com/item?id=46239726" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=46239726</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">exe34</span>
+        <span class="meta-time">2026/04/07 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">$ 正常运行时间<p>22:22:45 累计 3748 天 21:20, 2 位用户, 平均负载: 1.42, 1.36, 1.02</p><p>很搞笑，我想是因为我的笔记本电池没电了，当我更换它时，它必须更新10年前的时间？我不知道为什么，因为这台笔记本电脑是 2012 年中期的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">$ uptime<p>22:22:45  up 3748 days 21:20,  2 users,  load average: 1.42, 1.36, 1.02</p><p>It's very funny, I think it's because my laptop battery died and when I replaced it, it had to update the time from 10 years ago? I'm not sure why, as the laptop is from mid-2012.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667346" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jasonjayr</span>
+        <span class="meta-time">2026/04/07 05:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 17:27:20 向上 1112 天, 10:36, 50 个用户, 平均负载: 0.20, 0.19, 0.18<p>我以为我用我的戴尔笔记本电脑创下了这里的记录，但我想你赢了。  到了一定程度之后，我决定看看我能坚持多久。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; 17:27:20 up 1112 days, 10:36, 50 users,  load average: 0.20, 0.19, 0.18<p>I thought I had a record going here with my Dell laptop, but I guess you win.  After a certain point, I just decided to see how long I can make it go.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667439" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">daveorzach</span>
+        <span class="meta-time">2026/04/07 04:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你想确切地看到你的机器何时会遇到这个问题，我组合了一个鱼壳函数来计算精确的时间戳，主要是振动编码。<p>calc_tcp_overflow_time.fish： <a href="https://gist.github.com/daveorzach/64538f82a89fa24e5d134557cb97019d" target="_blank" rel="noopener noreferrer">https://gist.github.com/daveorzach/64538f82a89fa24e5d134557c...</a></p><p>Monitor_tcp_time_wait.fish： <a href="https://gist.github.com/daveorzach/0964a7a67c08c50043ff707cfc7903d2" target="_blank" rel="noopener noreferrer">https://gist.github.com/daveorzach/0964a7a67c08c50043ff707cf...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you want to see exactly when your machine will hit this, I threw together a fish shell function that calculates the precise timestamp, mostly vibe coded.<p>calc_tcp_overflow_time.fish: <a href="https://gist.github.com/daveorzach/64538f82a89fa24e5d134557cb97019d" target="_blank" rel="noopener noreferrer">https://gist.github.com/daveorzach/64538f82a89fa24e5d134557c...</a></p><p>monitor_tcp_time_wait.fish: <a href="https://gist.github.com/daveorzach/0964a7a67c08c50043ff707cfc7903d2" target="_blank" rel="noopener noreferrer">https://gist.github.com/daveorzach/0964a7a67c08c50043ff707cf...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667005" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Philpax</span>
+        <span class="meta-time">2026/04/07 05:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ctrl+F“张开爪”。没有结果。阙？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ctrl+F "OpenClaw". No results. Que?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667067" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">apatheticonion</span>
+        <span class="meta-time">2026/04/07 05:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">忽略AI文章内容。<p>天哪，我希望 Apple 为 Mac 计算机上的 Linux 提供第一方支持。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ignoring the AI article contents.<p>God I wish Apple offered first party support for Linux on Mac computers.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667664" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">throw03172019</span>
+        <span class="meta-time">2026/04/07 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">距离我的机器崩溃并且丢失所有标签页只剩 11 天了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I only have 11 days left until my machine crashes and I lose all of my tabs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666859" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fortran77</span>
+        <span class="meta-time">2026/04/07 06:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有人让 Mac 运行超过 49.7 天？我们这里有 Windows 服务器（具有长期 TCP/IP 连接），每 6 个月才重新启动一次以应用补丁。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nobody keeps their Macs running for more than 49.7 days? We have Windows Servers here (with long-term TCP/IP connections) that are only rebooted every 6 months to apply patches.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667961" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">poppafuze</span>
+        <span class="meta-time">2026/04/07 06:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://news.ycombinator.com/item?id=41939318" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=41939318</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://news.ycombinator.com/item?id=41939318" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=41939318</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667909" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 05:44</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667613" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nalekberov</span>
+        <span class="meta-time">2026/04/07 06:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很少重新启动我的 Mac mini，除了我的互联网提供商在半夜突然停止正常工作之外，我从来没有遇到过这样的问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I rarely restart my Mac mini, and I have never had such an issue beyond my internet provider suddenly stopping properly working in the middle of the night.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">revv00</span>
+        <span class="meta-time">2026/04/07 07:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">奥兹！重新启动的善意提醒。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Orz! A kindly reminder for rebooting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668639" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">WesolyKubeczek</span>
+        <span class="meta-time">2026/04/07 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 OpenClaw，这是一个功能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In case of OpenClaw, this is a feature.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667019" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">4fterd4rk</span>
+        <span class="meta-time">2026/04/07 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当一些俄罗斯人进行即时注射时，OpenClaw 威胁将你的 NSFW 照片发送给奶奶，除非你给它一些比特币，你所要做的就是将谈判拖延 49 天！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When some Russians do a prompt injection and OpenClaw is threatening to send your NSFW pics to Grandma unless you give it some Bitcoin all you have to do is drag out the negotiations for 49 days!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667115" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">WesolyKubeczek</span>
+        <span class="meta-time">2026/04/07 14:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我担心奶奶会立即发回一些她自己的 NSFW 照片。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’d be afraid the Grandma would send some of her own NSFW pictures right back.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671583" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cute_boi</span>
+        <span class="meta-time">2026/04/07 05:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于简单的事情来说，太多的文字和文字......可能是由 openclaw 写的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">too much words and text for simple thing..... probably written by openclaw</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667085" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jijji</span>
+        <span class="meta-time">2026/04/07 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我以为艾伦·考克斯 (Alan Cox) 在 20 世纪 90 年代初修复了所有 TCP IP 错误，哈哈</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I thought Alan Cox fixed all the TCP IP bugs in the early 1990s lol</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">toast0</span>
+        <span class="meta-time">2026/04/07 06:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Alan Cox 从事 TCP 工作吗？我以为他正在研究记忆之类的东西。<p>无论如何，维基百科就是这么说的：[1]，而以他的名字命名的出版物是关于大页面的[2]</p><p>[1] <a href="https://wiki.freebsd.org/AlanCox" target="_blank" rel="noopener noreferrer">https://wiki.freebsd.org/AlanCox</a></p><p>[2] <a href="https://www.usenix.org/legacy/events/osdi02/tech/full_papers/navarro/navarro_html/" target="_blank" rel="noopener noreferrer">https://www.usenix.org/legacy/events/osdi02/tech/full_papers...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Did Alan Cox work on tcp? I thought he was working on memory and stuff.<p>That's what the wiki says anyway: [1], and a publication with his name is about huge pages [2]</p><p>[1] <a href="https://wiki.freebsd.org/AlanCox" target="_blank" rel="noopener noreferrer">https://wiki.freebsd.org/AlanCox</a></p><p>[2] <a href="https://www.usenix.org/legacy/events/osdi02/tech/full_papers/navarro/navarro_html/" target="_blank" rel="noopener noreferrer">https://www.usenix.org/legacy/events/osdi02/tech/full_papers...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">486sx33</span>
+        <span class="meta-time">2026/04/07 09:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669583" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">awithrow</span>
+        <span class="meta-time">2026/04/07 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一颗定时炸弹？谈论需要重新启动的错误的方式真是太戏剧化了。它甚至不是一次严重的崩溃。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A ticking time bomb? What an overly dramatic way to talk about a bug that requires a reboot. Its not even a hard crash.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667178" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

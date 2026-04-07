@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026 年缩放 UI：Prezi、impress.js 以及为什么我构建了不同的东西 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-07-1615/">返回本批次</a>
+      <h1>2026 年缩放 UI：Prezi、impress.js 以及为什么我构建了不同的东西</h1>
+      <p class="subtitle">Zooming UIs in 2026: Prezi, impress.js, and why I built something different</p>
+      <div class="meta-line">
+        <span>news.ycombinator.com</span>
+        <span>作者 tinchox6</span>
+        <span>分数 89</span>
+        <span>评论 42</span>
+        <span>2026/04/07 02:53</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47665194" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        
+      </div>
+    </header>
+    
+      <section class="block">
+        <h3>正文（中文）</h3>
+        <div class="post-body" data-role="story-zh">如今，在 Web 界面中使用缩放功能基本上有两种既定方法。它们服务于不同的目的并做出不同的权衡。我构建了第三个，所以我会尽力公平地评价每个的优点和不足。<p>* 普雷兹
+Prezi 开创了用于演示的缩放画布，并且仍然是该领域的市场领导者。它最近添加了人工智能驱动的生成和文本编辑工具。这是一款具有真正吸引力的抛光产品。</p><p>但 Prezi 是一个封闭的平台，而不是图书馆。您不能在自己的应用程序中使用其缩放引擎。有意义的功能的定价为每月 15 美元起，导出到 PowerPoint 会将所有缩放效果扁平化为静态幻灯片。用户反复抱怨缩放和平移转换会导致晕动病。从根本上说，Prezi 使用缩放作为预先安排的帧之间的讲故事设备。这不是一个导航模型。这是一个演示模型。</p><p>* 印象.js
+impress.js 将类似 Prezi 的缩放功能引入了开放网络。它是一个基于 CSS3 转换和过渡的演示框架，直接受到 Prezi 的启发。它推出时确实具有开创性。
+它的架构是基于步骤的：您在 3D 空间中定位“步骤”，然后相机在它们之间移动。这对于演示来说非常有用，但它无法帮助您构建用户通过放大内容进行导航的应用程序。 impress.js 没有动态安装视图、管理缩放深度或处理导航状态的概念。这是一个带有缩放技巧的幻灯片引擎。</p><p>* 祖姆利
+这就是我建造的。完全披露：我是唯一的开发者。
+这个想法是提供一种使用缩放的传统页面导航的替代方案。您将元素标记为可缩放，将其指向视图，Zumly 会处理过渡并插入新视图。基本上就是这样。</p><p>在离开 Zircle UI（一个 Vue 缩放库）后，我于 2020 年创立了 Zumly，试图进一步利用我所学到的知识。与框架无关，仅关注缩放部分。从那时起，我多次重写了引擎，多次改变了方法。直到现在我才真正对这种感觉感到满意。</p><p>视图在缩放转换期间动态安装和卸载。在 impress.js 中，所有步骤同时存在于 DOM 中。在 Zumly 中，您放大触发元素，然后目标视图被注入并缩放到位。这更接近于 SPA 中路由的工作方式，而不是幻灯片的工作方式。</p><p>登陆页面是用 Zumly 本身构建的，因此您可以在接触任何代码之前有所了解。</p><p>很好奇是否还有其他人考虑过这个空间。是什么让缩放 UI 有效或失败？</p><p>登陆页面（使用 Zumly 构建）：https://zumerlab.github.io/zumly</p><p>GitHub：https://github.com/zumerlab/zumly</p></div>
+        <div class="post-body is-hidden" data-role="story-raw">There are essentially two established ways to use zooming in web interfaces today. They serve different purposes and make different tradeoffs. I built a third one, so I'll try to be fair about what each does well and where it falls short.<p>* Prezi
+Prezi pioneered the zooming canvas for presentations and remains the market leader in that space. It recently added AI-powered generation and text editing tools. It's a polished product with real traction.</p><p>But Prezi is a closed platform, not a library. You can't use its zoom engine in your own app. Pricing starts at $15/month for meaningful features, and exporting to PowerPoint flattens all zoom effects into static slides. A recurring complaint from users is that the zooming and panning transitions cause motion sickness. And fundamentally, Prezi uses zoom as a storytelling device between pre-arranged frames. It's not a navigation model. It's a presentation model.</p><p>* impress.js
+impress.js brought Prezi-like zooming to the open web. It's a presentation framework based on CSS3 transforms and transitions, directly inspired by Prezi. It was genuinely groundbreaking when it launched.
+Its architecture is step-based: you position "steps" in 3D space and the camera moves between them. That's great for presentations, but it doesn't help you build an app where users navigate by zooming into content. impress.js has no concept of dynamically mounting views, managing zoom depth, or handling navigation state. It's a slide deck engine with a zoom trick.</p><p>* Zumly
+This is what I built. Full disclosure: I'm the sole developer.
+The idea is offering an alternative to traditional page navigation using zooming. You mark an element as zoomable, point it to a view, and Zumly handles the transition and inserts new views. That's basically it.</p><p>I started Zumly in 2020 after leaving behind Zircle UI (a Vue zooming library), trying to take what I learned further. Framework-agnostic, focused just on the zoom part. Since then I've rewritten the engine several times, changed the approach more than once. Only now I'm actually happy with how it feels.</p><p>Views are dynamically mounted and unmounted during zoom transitions. In impress.js, all steps exist in the DOM simultaneously. In Zumly, you zoom into a trigger element, and the target view gets injected and scaled into place. This is closer to how routing works in SPAs than to how slide decks work.</p><p>The landing page is built with Zumly itself so you can get the feel before touching any code.</p><p>Curious if anyone else has thought about this space. What makes zooming UIs work or fail?</p><p>Landing page (built with Zumly): https://zumerlab.github.io/zumly</p><p>GitHub: https://github.com/zumerlab/zumly</p></div>
+        <button type="button" class="btn ghost" data-action="toggle-story-raw">查看原文</button>
+      </section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">justinc8687</span>
+        <span class="meta-time">2026/04/07 08:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为一个患有前庭偏头痛的人，不幸的是，访问演示网站后立即感到头晕。  我强烈鼓励您实施“@media (prefers-reduced-motion: reduce)”媒体查询来处理可访问性 [1]。  我希望变焦能变成正常的链接，否则，要么减慢速度，要么产生某种非前庭攻击诱导的流。<p>这里还有一些其他好的资源： <a href="https://www.a11yproject.com/posts/understanding-vestibular-disorders/" target="_blank" rel="noopener noreferrer">https://www.a11yproject.com/posts/understanding-vestibular-d...</a> 或者 <a href="https://web.dev/articles/prefers-reduced-motion" target="_blank" rel="noopener noreferrer">https://web.dev/articles/prefers-reduced-motion</a></p><p>我并不是说这是批评，因为我确信您以前从未听说过这些问题，但我鼓励您（或任何依赖动画的人）将其实现到他们的包中。</p><p>[1] <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/A...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As someone who suffers from vestibular migraines, unfortunately visiting the demo  site instantly made get dizzy.  I highly encourage you to implement the "@media (prefers-reduced-motion: reduce)" media query to handle accessibility [1].  I'd hopefully expect the zooms to turn into normal links or failing that, either slow down or have some kind of non-vestibular-attack-inducing flow.<p>Here are some other good resources: <a href="https://www.a11yproject.com/posts/understanding-vestibular-disorders/" target="_blank" rel="noopener noreferrer">https://www.a11yproject.com/posts/understanding-vestibular-d...</a> or <a href="https://web.dev/articles/prefers-reduced-motion" target="_blank" rel="noopener noreferrer">https://web.dev/articles/prefers-reduced-motion</a></p><p>I don't say this as criticism as I'm sure you've never heard of these issues before, but something I'd encourage you (or anyone who relies on animations) to implement into their package.</p><p>[1] <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/A...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 08:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以使用 driver none 来避免转换。我正在努力减少运动</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can use driver none to avoid transitions. And I’m working on reduce motion</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669320" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">8organicbits</span>
+        <span class="meta-time">2026/04/07 08:53</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669382" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sijmen</span>
+        <span class="meta-time">2026/04/07 03:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用缩放作为更深入地过渡到子仪表板的一种有趣的方式。从“任务控制”-&gt;“卫星”-&gt;“子系统”的导航感觉异常直观和有趣。 
+我可能会选择保持一致的导航栏/侧边栏，以支持缩放导航。如果我们面对的是很多高级用户，则需要一些面包屑来快速返回到任何缩放级别。但总的来说，我认为这完全可行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting way to use zooming as a way to transition deeper into sub-dashboards. The navigation from "Mission Control" -&gt; "Satellite" -&gt; "Subsystem" feels oddly intuitive and fun. 
+I would maybe opt for keeping a consistent navbar/sidebar, to support out-of-zoom navigation. And if we are dealing with a lot of power-users some breadcrumb to quickly go back to any zoom-level. But overall, i think this could totally work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665972" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">欣赏它！面包屑和返回导航绝对在我的雷达范围内。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Appreciate it! Breadcrumbs and back navigation are definitely on my radar.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667129" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">epaga</span>
+        <span class="meta-time">2026/04/07 04:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的很喜欢这个（并且怀念 Prezi 简单明了的日子）。<p>我自己也按照类似的思路编写了一个应用程序，但它不是一个演示应用程序，而是一个思想组织者（适用于所有 Apple 平台）。 <a href="https://mindscopeapp.com" target="_blank" rel="noopener noreferrer">https://mindscopeapp.com</a></p><p>我认为我自己的“可缩放”用户界面的关键是交叉链接、搜索和速度/敏捷性。让动画太重只会减慢你的速度。 Zumly 在这方面看起来确实很棒。干得好！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really love this (and miss the days when Prezi was simple and straightforward).<p>I've written an app myself along sort-of similar lines, but it's less a presentation app and more a thought organizer (works on all Apple platforms). <a href="https://mindscopeapp.com" target="_blank" rel="noopener noreferrer">https://mindscopeapp.com</a></p><p>I think what proved key for my own "zoomable" UI was cross-linking, search, and speed/snappiness. Make the animations too heavy and it just slows you down. Zumly seems really great in this regard. Well done!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666296" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！速度是一个重点，很高兴它能实现。顺便说一句，你的应用程序看起来真的很酷。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Speed was a big focus, glad it comes through. Your app looks really cool btw.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667105" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ericmcer</span>
+        <span class="meta-time">2026/04/07 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真的很酷，就像其他人所说的那样，这让您感觉自己正在与所有页面进行交互，而不是一次与一个页面进行交互。<p>我确实注意到转发似乎不起作用。 IE。如果我点击一个页面，它会放大，按后退它会缩小，按前进它会闪烁网址，但没有正常的前进行为。</p><p>我也不知道您是否想支持`open in new tab`，但这对很多人来说都是一个硬要求。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Really cool, like others are saying this makes you feel like you are interacting with all the pages at once instead of one page at a time.<p>I did notice that forward doesn't seem to work. I.E. If I click into a page, it zooms in, press back it zooms back out, press forward it flickers the url but doesn't have normal forward behavior.</p><p>I also don't know if you want to support `open in new tab` but that would be a hard req for many people.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">向前导航的良好捕捉。从架构上讲，我不保留已访问视图的历史记录，因此前进无处可去。但这是值得解决的问题，特别是对于程序化导航流程。在新选项卡中打开也在我的雷达范围内。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good catch on forward navigation. Architecturally I don't keep a history of already-visited views, so forward has nowhere to go. It's something worth tackling though, especially for programmatic navigation flows. Open in new tab is on my radar too.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667570" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ericmcer</span>
+        <span class="meta-time">2026/04/07 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在幕后，当导航发生时，您是否会将内容推送到浏览器历史记录中？我不会尝试自己重写历史 api，但只需确保在导航发生时 `pushState()` 即可。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Under the hood aren't you pushing things into the browser history as navigation happens? I wouldn't try to rewrite the history api myself but just make sure you `pushState()` as navigation happens.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668111" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lateforwork</span>
+        <span class="meta-time">2026/04/07 04:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">爱它。但存在一个重大的可用性问题：缺乏能指（又名可供性）。我如何知道某物何时可缩放？因为没有指示符，所以当我点击某个东西却发现它不可缩放时，我经常会感到失望。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Love it. But there is a significant usability issue: Lack of signifier (aka affordance). How do I known when something is zoomable? Because there is no signifier, I am frequently disappointed when I click on something and it turns out it is not zoomable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666636" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ericmcer</span>
+        <span class="meta-time">2026/04/07 05:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我看来，这更多的是图书馆的消费者而不是图书馆。<p>就像我不希望任何其他前端路由器库以某种方式为我装饰链接一样。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">that would be more on the consumer of the library than on the library imo.<p>Like I wouldn't expect any other frontend router library to decorate links for me in a certain way.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667390" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平点。没有关于可缩放内容的视觉提示是真正的差距。考虑如何处理这个问题而不使 UI 混乱。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fair point. No visual cue for what's zoomable is a real gap. Thinking about how to handle that without cluttering the UI.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667383" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">handfuloflight</span>
+        <span class="meta-time">2026/04/07 08:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许是悬停上的图标或小静态图标，但后者可能会重复，悬停将解决重复问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe an icon on hover or a small static icon but the latter could get repetitive, the hover would solve the repetition.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669203" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mochidusk</span>
+        <span class="meta-time">2026/04/07 04:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想说这对于页面转换来说更有趣。我期待鼠标滚轮滚动来缩放，所以我本能地滚动期待某种缩放效果。<p>我记得 HN 上有一个网站，提供了宇宙尺度的互动游览，从非常微观的世界（如果我没记错的话，我认为它甚至可以达到普朗克长度）一直到宏观（黑洞、星系）。我对这样一个实现类似功能的缩放库很感兴趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd say this is more of an interesting take on page transitions. I was expecting mouse wheel scroll to zoom, so I instinctively scrolled expecting some kind of zooming effect.<p>I remembered there was a website featured here on HN that had an interactive tour of the scale of the universe ranging from the very microscopic world (if I remember correctly I think it even went down to Planck length) all the way to the macroscopic (black holes, galaxies). I'd be interested in such a zooming library that achieves something like that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666237" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，滚动的期望值出现了很多。我认为《宇宙的规模》是 scijs，不同的野兽，但却是正确缩放的一个很好的例子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah the scroll expectation comes up a lot. Scale of the Universe was scijs I think, different beast but a great example of zoom done right.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tosti</span>
+        <span class="meta-time">2026/04/07 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来非常令人印象深刻。另外，我想知道 a11y 的含义是什么。我一点也不怀念Macromedia Flash 地狱。这是 HTML5，因此只要稍加努力，它就可以看起来很漂亮，并且仍然可以满足视障人士的需求。<p>编辑：我无法滚动任何展示。可能是故意的，但切断的用户界面可能会很烦人。</p><p>Edit2：我在生产线上打开了黄色汽车，然后返回页面，所有内容都超出了屏幕范围，看起来很混乱</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This looks seriously impressive. Also, I wonder what the a11y implications are. I don't miss Macromedia Flash hell at all. This is HTML5, so with a bit of effort it could look beautiful and still cater to the visually impaired.<p>Edit: I can't scroll any of the showcases. Probably deliberate, but a cut-off UI can be annoying.</p><p>Edit2: I opened the yellow car on the production line and going back the page got all offscreen and looks messed up</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665786" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 08:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我关闭了除家庭助理之外的滚动事件。您可以根据需要启用或禁用</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I turn of scroll events except on home assistant. You can enable or disable depending on your needs</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！ a11y 角度是我想要正确解决的问题。也注意到了这些错误，汽车问题是一个已知问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! The a11y angle is something I want to tackle properly. Noted the bugs too, the car one is a known issue.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667156" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">handfuloflight</span>
+        <span class="meta-time">2026/04/07 07:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的下巴确实掉下来了。这可以与混合面包屑+菜单完美搭配，为您提供逃生舱或精细的按需遍历。爱它！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My jaw did drop. This could pair really well with a hybrid bread crumb + menu that gives you an escape hatch or granular on demand traversal. Love it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668983" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 08:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you!!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669073" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cjlm</span>
+        <span class="meta-time">2026/04/07 05:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对这个空间思考了很多，参见鹰模式： <a href="https://www.youtube.com/watch?v=G6yPQKt3mBA" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=G6yPQKt3mBA</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think about this space a lot, see Eagle Mode: <a href="https://www.youtube.com/watch?v=G6yPQKt3mBA" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=G6yPQKt3mBA</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667264" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">TheTaytay</span>
+        <span class="meta-time">2026/04/07 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这确实令人印象深刻。我一直想将我的整个知识库保留在画布上，以便我可以“思考”或进行空间导航。这很整洁。<p>在主登陆页面中，当我点击时，我一直希望有一个图例来向我展示“我有多深”或“我如何离开这里？”，并且就像其他人评论的那样，我希望有一个功能可供向我展示什么是可点击/可缩放的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is indeed seriously impressive. I keep wanting to keep my entire knowledgebase on a canvas so that I can "think" or navigate spatially. Thisis neat.<p>In the main landing page, as I was clicking around, I kept wishing to have a legend to show me either "how deep I am" or "how do I get out of here?", and like someone else commented, I would love an affordance showing me what was clickable/zoomable.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667175" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！深度指示器和可缩放可供性都是我正在积极研究的东西。很高兴空间导航的想法引起了共鸣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Both the depth indicator and the zoomable affordance are things I'm actively working on. Glad the spatial navigation idea resonates.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667499" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bschwindHN</span>
+        <span class="meta-time">2026/04/07 08:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在移动 Safari 上使用向后滑动手势非常容易破坏您的着陆页。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's extremely easy to break your landing page with the back swipe gesture on mobile safari.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669094" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jareklupinski</span>
+        <span class="meta-time">2026/04/07 08:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">制作精良:)对于文档和特定仪表板来说，这有很多很好的用途<p>当每个人都开始在他们的 ipad 上“深入研究大数据”时，我就玩过类似的概念，但我从未想出一种聪明的方法来“横向”钻探，或者允许人们从一个深层的一个“洞察”之间切换并将其与另一个“洞察”联系起来，而无需一路放大然后再放大，上下文“虫洞”（全手工制作）或面包屑（足够多的层后混乱）</p><p>我要添加到演示中的一件事是检测我在滚动滚动到该部分（在鼠标上）时悬停在哪里，滚动出作品</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">very well made :) for documentation and specific dashboards this has a lot of great uses<p>i played with a similar concept back when everyone was starting to 'drill down into big data' on their ipads, and i never came up with a clever way of drilling 'sideways', or allowing people to go between one 'insight' from one deep level and tie it into another without zooming all the way back out and then back in, contextual 'wormholes' (all handmade), or breadcrumbs (messy after enough layers)</p><p>one thing i'd add to the demo is detecting where i'm hovering over while scrolling to scroll into that part (on a mouse), scroll out works</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47669268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tzm</span>
+        <span class="meta-time">2026/04/07 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为缩放在单独用于离散事物时是有效的。它确实增加了一种愉悦感，但我正在努力思考它的功能实用性……也许是沉浸式演示的过渡效果等……干得好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think zooming is effective when it's used in isolation for discrete things. It does add a sense of delight, but there is a functional usefulness of this that I'm trying to wrap my head around.. perhaps a transition effect for an immersive demo, etc.. nice work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666476" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！是的，沉浸式演示和仪表板似乎是最适合的地方。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Yeah, immersive demos and dashboards are where it seems to click best.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667173" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">theflyinghorse</span>
+        <span class="meta-time">2026/04/07 05:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈！我喜欢它！我已经有一段时间没有感受到探索新导航方式的乐趣了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">HA! I Love it! It's a been a while since I felt this sort of joy exploring a new way to navigate</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667763" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">christoff12</span>
+        <span class="meta-time">2026/04/07 06:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 仍然是该领域的市场领导者<p>到</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; remains the market leader in that space<p>TIL</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47668353" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">drob518</span>
+        <span class="meta-time">2026/04/07 03:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的。有一次，我习惯性地捏住 iPad 进行缩小，结果它变得非常混乱。但是，是的，有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting. At one point I pinched my iPad to zoom out of habit and it got very confused. But yea, interesting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47665845" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈，注意到了。捏合冲突是触摸设备上的一个已知痛点，需要解决这个问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ha, noted. Pinch conflicts are a known pain point on touch devices, need to sort that out.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667432" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tracker1</span>
+        <span class="meta-time">2026/04/07 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">建议使用history-api 导航而不是基于哈希的路由。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would suggest using history-api navigation over the hash based routing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666012" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很好，哈希路由是快速路径。历史 API 在列表中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good call, hash routing was the quick path. History API is on the list.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667450" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">eisfresser</span>
+        <span class="meta-time">2026/04/07 04:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">家庭助理展示看起来棒极了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Home Assistant showcase looks fabulous.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666494" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴你喜欢它！建造那个很有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Glad you liked it! That one was fun to build.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667194" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">solarkraft</span>
+        <span class="meta-time">2026/04/07 03:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我非常尊重那些以如此毅力追求自己特殊兴趣的人 - 你显然关心缩放用户界面。<p>我也是（只是程度较小）！这是表达层次结构的好方法。</p><p>我遇到的一件事是，在 iOS Safari 中使用后滑导航手势后，它变得完全有问题。然而，这种原生手柄对我来说是一件非常酷的事情，就像你有时在向上/向下滚动时看到的 iOS“关闭回到缩略图”手势一样，我在其他地方还没有真正看到过这种情况。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have great respect for people pursuing their special interests with such perseverance - you clearly care about zooming UIs.<p>And so do I (just to a lesser extent)! It’s a great way to express hierarchy.</p><p>One thing I encountered is that  it becomes all buggy after using the slide-back navigation gesture in iOS Safari. Yet this being natively handles would be a really cool thing to me, like those iOS “close back to thumbnail” gestures you sometimes see when scrolling up/down that I haven’t really seen replicated anywhere else.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666141" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这意味着很多，谢谢。 iOS 的返回手势虽然很棘手，但实现起来确实很方便。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That means a lot, thanks. The iOS back gesture thing is tricky but would be really sweet to pull off.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 10:45</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47670158" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cynicalsecurity</span>
+        <span class="meta-time">2026/04/07 03:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 Firefox 中无法正常工作。<p>感觉很迟缓，但也许可以通过减少过渡时间来解决这个问题。</p><p>但为什么？人们通常不会注意到这种过渡效果，并且它不会以任何有意义的积极方式影响用户体验。感觉完全没有必要。</p><p>也许你可以将它重新用作某些游戏引擎的模组。这感觉很适合电子游戏；不适用于网站。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn't work correctly in Firefox.<p>Feels sluggish, but maybe this could be fixed by reducing the transition time.</p><p>But why? People usually don't notice such transition effects and it doesn't affect user experience in any meaningful positive way. It feels absolutely unnecessary.</p><p>Maybe you could re-use it as a mod for some game engine. This feels appropriate for video games; not for web-sites.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666069" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">solarkraft</span>
+        <span class="meta-time">2026/04/07 04:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的观点完全相反，但可能有着同样的信念。感觉 <i>非常</i> 沟通层次结构以及事物的来源和去向是必要的。它传达了许多重要的信息和连续性。在现实生活中，事物不会一直突然出现和消失。我们的大脑不是这样调节的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have the exactly opposite view, possibly with the same amount of conviction. It feels <i>very</i> necessary to communicate hierarchy and where things are coming from and going. It communicates a lot of important information and continuity. In real life, you don’t have things suddenly appearing and disappearing all the time. That’s not how our brains are conditioned.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666179" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tinchox6</span>
+        <span class="meta-time">2026/04/07 05:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Firefox 的问题确实存在，我想解决它们。关于“为什么”，公平地说，它并不适合每个 UI。但我确实认为当层次结构需要空间感时这是有意义的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Firefox issues are real and I want to fix them. On the "why", fair to be skeptical, it's not for every UI. But I do think it makes sense when hierarchy needs to feel spatial.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667462" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jvdvegt</span>
+        <span class="meta-time">2026/04/07 04:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">奇怪的是，似乎在 Android 上的 Firefox 中运行良好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Weird, seems to work fine in Firefox on Android.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666739" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">heyethan</span>
+        <span class="meta-time">2026/04/07 14:49</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47671556" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kabir_daki</span>
+        <span class="meta-time">2026/04/07 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“2026 年的缩放 UI：Prezi、impress.js，以及为什么我构建了一些不同的东西”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Zooming UIs in 2026: Prezi, impress.js, and why I built something different"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47667931" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">syaz2</span>
+        <span class="meta-time">2026/04/07 04:35</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47666669" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
