@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>你无法取消 JavaScript 承诺（除非有时可以） | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-08-1046/">返回本批次</a>
+      <h1>你无法取消 JavaScript 承诺（除非有时可以）</h1>
+      <p class="subtitle">You can&#39;t cancel a JavaScript promise (except sometimes you can)</p>
+      <div class="meta-line">
+        <span>www.inngest.com</span>
+        <span>作者 goodoldneon</span>
+        <span>分数 78</span>
+        <span>评论 52</span>
+        <span>2026/04/07 21:34</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47675155" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.inngest.com/blog/hanging-promises-for-control-flow" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>您无法取消 JavaScript 承诺。没有 .cancel() 方法，没有 AbortController 集成，没有内置的方式来表示“没关系，停止”。 TC39委员会曾在2016年考虑增加取消，但该提案在激烈争论后被撤回。部分问题在于，在执行过程中取消任意代码可能会使资源处于脏状态（打开的句柄、半写入的数据），因此真正的取消需要协作清理，这破坏了人们希望从 .cancel() 方法获得的简单性。但你可以做一些更奇怪的事情：返回一个永远不会解析的承诺，等待它，然后让垃圾收集器清理挂起的函数。没有异常，没有 try/catch，没有特殊的返回值。该功能就停止了。这就是 Inngest TypeScript SDK 中断异步工作流程功能的方式。但该技术是通用的，其背后的 JavaScript 语义值得自己理解。为什么要中断函数 有时，您需要在某个特定点停止其他人的异步函数，而他们的代码不需要执行任何特殊操作。该函数的作者编写普通的异步/等待代码。您的运行时决定何时何地中断它。我们遇到的具体案例：在无服务器基础设施上运行工作流函数，其中每个调用都有硬超时。工作流可能有数十个步骤，需要数小时才能端到端完成，但每次调用只能运行几秒钟或几分钟。运行时（在我们的例子中是 SDK 本身）需要中断该函数，保存进度，并在稍后重新调用它以从中断的地方继续，所有这些都在用户代码不知道发生的情况下发生。这需要中断等待而不抛出。错误中断 在实现中断时，显而易见的方法是抛出异常。想象一个 run 函数执行回调，然后抛出一个特殊错误以阻止调用者继续： class InterruptError extends Error {}</li><li>异步函数运行（回调）{ const 结果=等待回调（）; // 将结果保存在某处，然后中断 throw new InterruptError(); }</li><li>异步函数 myWorkflow() { const data = wait run(() =&gt; fetchData());</li><li>// 如果 run() 抛出异常，我们永远不会到达这里await run(() =&gt; processData(data)); }</li><li>直到有人将他们的代码包装在 try/catch 中之前，这种情况才会起作用： async function myWorkflow() { let data;尝试{ 数据 = 等待运行(() =&gt; fetchData()); } catch { console.log(&quot;获取数据失败，使用默认值&quot;);数据=默认数据； }</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>You can&#39;t cancel a JavaScript promise. There&#39;s no .cancel() method, no AbortController integration, no built-in way to say &quot;never mind, stop.&quot; The TC39 committee considered adding cancellation in 2016, but the proposal was withdrawn after heated debate. Part of the problem is that cancelling arbitrary code mid-execution can leave resources in a dirty state (open handles, half-written data), so true cancellation requires cooperative cleanup, which undermines the simplicity people want from a .cancel() method. But you can do something weirder: return a promise that never resolves, await it, and let the garbage collector clean up the suspended function. No exceptions, no try/catch, no special return values. The function just stops. This is how the Inngest TypeScript SDK interrupts async workflow functions. But the technique is general-purpose, and the JavaScript semantics behind it are worth understanding on their own. Why you&#39;d want to interrupt a function Sometimes you need to stop someone else&#39;s async function at an exact point, without their code doing anything special. The function&#39;s author writes normal async/await code. Your runtime decides when and where to interrupt it. The concrete case we hit: running workflow functions on serverless infrastructure where each invocation has a hard timeout. A workflow might have dozens of steps that take hours to complete end-to-end, but each invocation can only run for seconds or minutes. The runtime (in our case, the SDK itself) needs to interrupt the function, save progress, and re-invoke it later to pick up where it left off, all without the user&#39;s code knowing it happened. That requires interrupting an await without throwing. Interrupting with errors When implementing interruption, the obvious approach is to throw an exception. Imagine a run function that executes a callback and then throws a special error to stop the caller from continuing: class InterruptError extends Error {}</li><li>async function run(callback) { const result = await callback(); // Save the result somewhere, then interrupt throw new InterruptError(); }</li><li>async function myWorkflow() { const data = await run(() =&gt; fetchData());</li><li>// If run() throws, we never get here await run(() =&gt; processData(data)); }</li><li>This works until someone wraps their code in a try/catch: async function myWorkflow() { let data; try { data = await run(() =&gt; fetchData()); } catch { console.log(&quot;Failed to fetch data, using default&quot;); data = defaultData; }</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pjc50</span>
+        <span class="meta-time">2026/04/07 22:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢 C# 处理这个问题的方式。您不会被迫支持取消，但我们强烈鼓励您这样做。这些 API 都采用 CancellationToken，该令牌由最终调用方的 CancellationTokenSource 驱动。然后可以手动检查这一点，或者当您调用库 API 时，它会注意到并抛出 OperationCancelledException。<p>编辑：请注意，也有一种“错误”的方法可以做到这一点。 Java线程库提供了stop()函数。但由于这是外源性的，因此不一定能得到适当的清理。在发现 GRPC 正在进行时停止线程会破坏所有线程未来的所有 GRPC 调用（可能是由于某些共享数据结构不一致）后，我们必须努力将其从代码库中清除。 “合作”（相对于抢占式）取消要干净得多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like how C# handles this. You're not forced to support cancellation, but it's strongly encouraged. The APIs all take a CancellationToken, which is driven by a CancellationTokenSource from the ultimate caller. This can then either be manually checked, or when you call a library API it will notice and throw an OperationCancelledException.<p>Edit: note that there is a "wrong" way to do this as well. The Java thread library provides a stop() function. But since that's exogenous, it doesn't necessarily get cleaned up properly. We had to have an effort to purge it from our codebase after discovering that stopping a thread while GRPC was in progress broke all future GRPC calls from all threads, presumably due to some shared data structure being left inconsistent. "Cooperative" (as opposed to preemptive) cancel is much cleaner.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">teraflop</span>
+        <span class="meta-time">2026/04/07 23:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很惊讶您不得不特意从现有 Java 代码中删除 Thread.stop。它自 1998 年起就已被弃用，并且 javadoc 页面非常清楚地解释了为什么它本质上不安全。<p>除非您实际上只是查看方法名称而不是其他内容，否则很难错过所有警告。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am surprised that you had to go out of your way to remove Thread.stop from existing Java code. It's been deprecated since 1998, and the javadoc page explains pretty clearly why it's inherently unsafe.<p>It's hard to miss all the warnings unless you're literally just looking at the method name and nothing else.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676704" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pjc50</span>
+        <span class="meta-time">2026/04/07 23:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我发现它时，我确实很惊讶。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was certainly surprised to see it when I found it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676742" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kelnos</span>
+        <span class="meta-time">2026/04/08 02:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更不用说我觉得现在在 Java 中自己创建和管理线程而不是使用线程池/执行器是很不寻常的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not to mention that I feel like it's pretty unusual to be creating and managing threads yourself in Java these days, instead of using a thread pool/executor.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679316" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wiseowise</span>
+        <span class="meta-time">2026/04/08 00:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这确实是一个不小的面试问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That’s barely-junior interview question indeed.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678184" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AtlasBarfed</span>
+        <span class="meta-time">2026/04/08 02:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Java 生态系统的基本平台之一是它的多线程。它已经经历了太多的模型。<p>由于 Java 拥有大量 2000 年代和 2010 年代的博客文章，因此许多搜索引擎会将您引导到较旧的模型。java 本身已经从绿色线程变为操作系统线程，现在又回到了绿色线程。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One of Java's the ecosystem fundamental platforms is that it's multi-threading. It's gone through too many models.<p>And since Java has a metric ton of blog posts from the 2000s and 2010s, a lot of search engines lead you to older models.java itself has gone from green threads to OS threads and back to green threads now.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679271" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">esprehn</span>
+        <span class="meta-time">2026/04/07 22:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AbortSignal 与 Web 上的情况相同。不幸的是 TC39 未能将 CancelToken 引入该语言以标准化浏览器之外的模式。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AbortSignal is same thing on the Web. It's unfortunate TC39 failed to ever bring a CancelToken to the language to standardize the pattern outside browsers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bakkoting</span>
+        <span class="meta-time">2026/04/08 03:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">浏览器表示，鉴于 AbortSignal 已经存在，他们不愿意提供任何新的取消机制，因此我们无法提供不同的 CancelToken。但我认为有一条途径可以标准化现有 AbortSignal 机制的子集 [1]。<p>（我在 TC39，虽然这不是我的最高优先级，但我确实在上次会议 [2] 上讨论了该主题，并且得到了委员会其他成员的支持。）</p><p>[1] <a href="https://github.com/tc39/proposal-concurrency-control/issues/14#issuecomment-2964580089" target="_blank" rel="noopener noreferrer">https://github.com/tc39/proposal-concurrency-control/issues/...</a></p><p>[2] <a href="https://github.com/bakkot/structured-concurrency-for-js" target="_blank" rel="noopener noreferrer">https://github.com/bakkot/structured-concurrency-for-js</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Browsers have said that they are unwilling to ship any new cancelation mechanisms given that AbortSignal already exists, so we can't ship a different CancelToken. But I think there's a path to standardizing a subset of the existing AbortSignal machinery [1].<p>(I am on TC39 and while this isn't my highest priority I did bring the topic for discussion at the last meeting [2], and there was support from the rest of committee.)</p><p>[1] <a href="https://github.com/tc39/proposal-concurrency-control/issues/14#issuecomment-2964580089" target="_blank" rel="noopener noreferrer">https://github.com/tc39/proposal-concurrency-control/issues/...</a></p><p>[2] <a href="https://github.com/bakkot/structured-concurrency-for-js" target="_blank" rel="noopener noreferrer">https://github.com/bakkot/structured-concurrency-for-js</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679819" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">esprehn</span>
+        <span class="meta-time">2026/04/08 10:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，最初的讨论期间我就在场。 AbortSignal 的存在是因为 TC39 花费的时间太长，并且取消 fetch() 是面向网络的平台（如 Web）的赌注。<p>这些线程是 TC39 中问题的一个很好的例子。本来可以添加一个简单的 AbortSignal，但当它与 SES、Governers 等大型投机 API 协调时，或者最初尝试添加并行抛出机制只是为了取消时，实际上什么也没完成。</p><p>自首次讨论 CancelToken 以来已经过去了 10 年，我们仍在争论它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, I was around during the original discussions. AbortSignal exists because TC39 was taking too long and cancelling fetch() is table stakes for a networking oriented platform like the web.<p>Those threads are a good example of what's wrong in TC39. A simple AbortSignal could have been added, but by the time it's reconciled with SES, large speculative APIs like Governers, or the original attempt to add a parallel throw mechanism just for cancellation, nothing actually gets done.</p><p>It's been 10 years since CancelToken was first discussed and  we're still debating it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684241" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">runarberg</span>
+        <span class="meta-time">2026/04/07 23:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过去 10 年来，TC39 似乎在很多事情上都失败了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">TC39 seems to be failing at many things for the past 10 years.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676522" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">notnullorvoid</span>
+        <span class="meta-time">2026/04/08 02:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很难不同意，TC39 在过去 10 年里做了很多工作。仅举几例：
+- 异步/等待
+- 休息/伸展
+- 异步迭代器
+- 弱引用
+- 显式资源管理
+- 颞叶<p>它的决定比 WHATWG 标准经过深思熟虑得多。从 EventTarget 扩展的 AbortSignal 是一个糟糕的调用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hard disagree, TC39 has done great work over the last 10 years. To name a few:
+- Async/await
+- Rest/spread
+- Async iterators
+- WeakRefs
+- Explicit Resource Management
+- Temporal<p>It's decisions are much more well thought out than WHATWG standards. AbortSignal extending from EventTarget was a terrible call.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679350" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">runarberg</span>
+        <span class="meta-time">2026/04/08 04:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很多事情！==所有事情<p>过去 10 年的更多优秀作品包括 .at()、nullish chaining、BigInt 等。</p><p>但您提到的大部分内容都已接近标准 10 年（Async/Await 是从 2017 年开始），这意味着完成的大部分工作都是 10 多年前完成的。</p><p>AbortSignal 的故障正是 TC39 最近大量发生的故障。我一直在关注将 Observables 添加到语言中的提案，这是第一阶段的提案（并且已经持续了 10 多年！！！）。 5 年前（！）曾进行过将 API 与 AbortSignal[1] 保持一致的会谈，我认为这确实说明了 TC39 无法达成可行的决定（至少就目前而言）。</p><p>我想举的另一个例子是管道运营商的失败[2]，四年前该项目已进入第二阶段，此后一直处于中断状态，几乎没有什么工作可以展示。经过多年的深思熟虑，该运营商的版本非常有争议，引起了社区的强烈反对。在他们提出之前，这是更受欢迎的提议之一，但现在，不是那么受欢迎了，而且我个人感觉对此功能的热情几乎消失了。换句话说，我认为他们花了五年的时间才做出了明显错误的决定，然后就放弃了。</p><p>由于管道运算符的失败，出现了一系列折衷的措施，例如数组分组和迭代器助手等。如果管道运算符的更多功能版本得到改进，这些措施可以很容易地在用户态库中实现。</p><p>1： <a href="https://github.com/tc39/proposal-observable/issues/209" target="_blank" rel="noopener noreferrer">https://github.com/tc39/proposal-observable/issues/209</a></p><p>2： <a href="https://github.com/tc39/proposal-pipeline-operator" target="_blank" rel="noopener noreferrer">https://github.com/tc39/proposal-pipeline-operator</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">many things !== all the things<p>More good works from the last 10 years includes .at(), nullish chaining, BigInt etc.</p><p>But most of what you mentioned is closing in on 10 years in the standard (Async/Await is from 2017) meaning the bulk of the work done is from over 10 years ago.</p><p>The failure of AbortSignal is exactly the kind of failure TC39 has been doing in bulk lately. I have been following the proposal to add Observables to the language, which is a stage 1 proposal (and has been for over 10 years!!!). There were talks 5 years ago (!) to align the API with AbortSignal[1] which I think really exemplifies the inability for TC39 to reach a workable decision (at least as it operates now).</p><p>Another example I like to bring up are the failure of the pipeline operator[2], which was advanced to stage-2 four years ago and has been in hiatus ever since with very little work to show for it. After years of deliberation very controversal version of the operator with a massive community backlash. Before they advanced it it was one of the more popular proposals, now, not so much, and personally I sense any enthusiasm for this feature has pretty much vanished. In other words I think they took half a decade to make the obviously wrong decision, and have since given up.</p><p>From the failure of the pipeline operator followed a bunch of half-measures such as array grouping, and iterator helpers etc. which could have easily been implemented in userland libraries if the more functional version of the pipeline operator would have advanced.</p><p>1: <a href="https://github.com/tc39/proposal-observable/issues/209" target="_blank" rel="noopener noreferrer">https://github.com/tc39/proposal-observable/issues/209</a></p><p>2: <a href="https://github.com/tc39/proposal-pipeline-operator" target="_blank" rel="noopener noreferrer">https://github.com/tc39/proposal-pipeline-operator</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680932" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">torginus</span>
+        <span class="meta-time">2026/04/08 01:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不喜欢它 - 你被迫传递这个令牌，不断管理取消源的生命周期 - 并且在异步上下文中非常容易出现错误，并且当你有多个令牌/源时，它很快就会变得非常混乱。<p>我理解他们为什么这样做——承诺本质上只是一些代码，以及由某人在某个时间点触发的回调——如果你取消承诺，你显然不会得到任何服务质量承诺，除非你作为开发人员小心地提供一些服务质量承诺。</p><p>同样明显的是，某些操作不一定设计为可取消的 - 想象一个“删除用户”请求 - 您取消了它，现在您还有用户吗？也许，也许你周围有一些垃圾。</p><p>但是，除了明显错误的解决方案 - C# 有一个类似于您提到的 stop() 函数的 Thread.Abort() 函数，该函数在十多年前基本上已从 .NET 中逐出，我仍然对正确的解决方案不满意。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't like it - you're forced to pass around this token, constantly manage the lifecycle of cancellation sources - and incredibly bug prone thing in async context, and it quickly gets very confusing when you have multiple tokens/sources.<p>I understand why they did it - a promise essentially is just some code, and a callback that will be triggered by someone at some point in time - you obviously get no quality of service promises on what happens if you cancel a promise, unless you as a dev take care to offer some.</p><p>It's also obvious that some operations are not necessarily designed to be cancellable - imagine a 'delete user' request - you cancelled it, now do you still have a user? Maybe, maybe you have some cruft lying around.</p><p>But still, other than the obvious wrong solution - C# had a Thread.Abort() similar to the stop() function that you mentioned, that was basically excommunicated from .NET more then a decade ago, I'm still not happy with the right one.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678569" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">CharlieDigital</span>
+        <span class="meta-time">2026/04/08 02:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>    &gt; ...constantly manage the lifecycle of cancellation sources
+</code></pre>
+除非你自己生成，否则非常罕见。<p>通常，您会传递运行时提供的令牌（例如 ASP.NET）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>    &gt; ...constantly manage the lifecycle of cancellation sources
+</code></pre>
+Very rare unless you are spawning your own.<p>Usually, you are passing through a runtime provided token (e.g. ASP.NET).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679165" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">torginus</span>
+        <span class="meta-time">2026/04/08 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我的经验中，这种情况并不罕见，我经常需要编写这样的软件。不是每天，但它确实经常出现在我和其他人的代码中<p>哦，还有一件事 - 正是（开发人员管理的）复杂性使得人们不断出错，通常足以（就像线程的情况一样）它在 90% 的时间内运行良好，并且很难向管理层解释为什么我们应该投入精力来修复它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not that rare in my experience, I constantly had to write software like this. Not every day, but it certainly did come up quite often in my code and others'<p>Oh and oone more thing - the very (developer-managed) complexity makes it that people constantly got it wrong, usually just enough (as often with the case of threading) that it worked fine 90% of the time, and was very hard to make a case to management why we should invest effort into fixing it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679330" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">estimator7292</span>
+        <span class="meta-time">2026/04/08 06:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一点也不罕见。 C# 用于 <i>很多</i> 那些不是网络并且没有堆积额外框架的地方。<p>如果您正在为桌面部署编写一个裸 C# 库，那么您正在管理自己的取消源。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not rare in the slightest. C# is used in a <i>lot</i> of places that aren't the web and don't have extra frameworks piled on.<p>If you're writing a bare C# library for desktop deployment, you're managing your own cancellation sources.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682020" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">estimator7292</span>
+        <span class="meta-time">2026/04/08 06:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">取消令牌不会立即中止基础任务。该任务的执行情况取决于 <i>轮询</i> 令牌并主动决定何时中止。<p>在您的示例中，您将设计删除任务，以便如果您希望它可以取消，则只能在修改数据之前取消它。您只需不要在数据库事务中间中止即可。</p><p>此外，由于取消令牌的工作方式，您 <i>不能</i> 中止阻塞函数调用，除非您也传递令牌。除非您明确地努力实现这一点，否则没有一种机制可以中断长时间的 IO 操作或其他操作。</p><p>与 Thread.Abort() 相比，取消标记更像是“请在您愿意的时候停止您正在做的事情”的概念。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cancelling a token doesn't immediately abort the underlying Task. It is up to the implementation of that task to <i>poll</i> the token and actively decide when to abort.<p>In your example, you'd design your delete task such that if you want it to be cancelable, it can only be canceled before data is modified. You simply don't abort in the middle of a database transaction.</p><p>Moreover, because of the way cancellation tokens work, you <i>can't</i> abort blocking function calls unless you also pass the token along. There just isn't a mechanism that can interrupt a long IO operation or whatever unless you explicitly go to the effort to make that happen.</p><p>A cancellation token is more of a "pretty please stop what you're doing when you feel like it" concept than Thread.Abort().</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CharlieDigital</span>
+        <span class="meta-time">2026/04/07 22:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C#对此有很好的支持。<p>您甚至可以将取消标记链接在一起并具有不同的取消“根”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">C# has very good support for this.<p>You can even link cancellation tokens together and have different cancellation "roots".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676222" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wiseowise</span>
+        <span class="meta-time">2026/04/08 00:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; “合作”（相对于抢占式）取消要干净得多。<p>这是 Thread.interrupt 的作用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; "Cooperative" (as opposed to preemptive) cancel is much cleaner.<p>Which what Thread.interrupt does.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678174" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mohsen1</span>
+        <span class="meta-time">2026/04/07 23:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">早在 2012 年，我就在开发 Windows 8 应用程序。 Promise 实际上只在 Windows 生态系统中有用，因为浏览器支持几乎不存在。我在谷歌上搜索了“如何取消承诺”，第一个结果是关于如何不能取消对上帝的承诺等的基督教博客。从那以后事情没有太大变化，仍然不可能取消承诺（我知道 AbortSignal 存在！）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Back in 2012 I was working on a Windows 8 app. Promises were really only useful on the Windows  ecosystem since browser support was close to non existent. I googled "how to cancel a promise" and the first results were Christian blogs about how you can't cancel a promise to god etc. Things haven't changes so much since, still impossible to cancel a promise (I know AbortSignal exists!)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676512" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">eithed</span>
+        <span class="meta-time">2026/04/07 22:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; Promise 本身没有用于取消的一流协议，但您也许可以直接取消底层异步操作，通常使用 AbortController。<p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refe...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Promise itself has no first-class protocol for cancellation, but you may be able to directly cancel the underlying asynchronous operation, typically using AbortController.<p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refe...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676205" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thomasnowhere</span>
+        <span class="meta-time">2026/04/08 00:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">永不解决的承诺技巧很聪明，但让我措手不及的是 GC 行为是多么干净。总是假设悬而未决的承诺会在长期存在的应用程序中泄漏，但只要您删除引用，显然就不会泄漏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The never-resolving promise trick is clever but what caught me off guard is how clean the GC behavior is. Always assumed hanging promises would leak in long-lived apps but apparently not as long as you drop the references.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cush</span>
+        <span class="meta-time">2026/04/07 22:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">GC 可能会非常慢。依靠它来控制流程是一个大胆的举动</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">GC can be very slow. Relying on it for control flow is a bold move</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676114" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">BlueGreenMagick</span>
+        <span class="meta-time">2026/04/07 23:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不认为控制流依赖于GC。<p>控制流停止，因为 `await new Promise(() =&gt; {});` 之后的语句永远不会运行。</p><p>GC 仅依赖于不造成内存泄漏，但您可能会认为这对于所有其他对象都是相同的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't think the control flow relies on GC.<p>The control flow stops because  statements after `await new Promise(() =&gt; {});` will never run.</p><p>GC is only relied upon to not create a memory leak, but you could argue it's the same for all other objects.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677179" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dominicrose</span>
+        <span class="meta-time">2026/04/08 00:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">只要没有泄漏打断承诺，就应该有利于整体性能，不一定是前端，而是整个链。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">as long as there's no leak interrupting a promise should be good for performance overall, not necessarily for the front-end but for the whole chain.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677580" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">augusto-moura</span>
+        <span class="meta-time">2026/04/08 00:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是 <i>那个非常</i> 对于 Web 应用程序来说速度很慢。也许适用于实时或时间敏感的应用程序。对于大多数日常网络应用程序来说，GC 暂停大多是不易察觉的，除非你做了一些非常错误的事情</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not <i>that very</i> slow for web applications. Maybe for real time or time-sensitive applications. For most day to day web apps GC pauses are mostly unnoticeable, unless you are doing something very wrong</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677404" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 22:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675929" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cowboyd</span>
+        <span class="meta-time">2026/04/08 02:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“停止在生成器上调用 next()”是否安全？就像帖子建议的那样？<p>对我来说，这听起来就像把任务扔到地板上一样。具体来说，这不会调用任何 finally {} 块：</p><p>更正确的是，您应该在生成器上调用 `return()` 。否则，您将无法提供执行保证。 Effection 就是这样做的。异步函数中没有等效项，因此听起来同样的问题也适用于 GC 技术。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it safe to just "stop calling next() on a generator?" like the post suggest?<p>To me that sounds like dropping the task on the floor. Specifically, this will not invoke any finally {} blocks:</p><p>More correctly, you should invoke `return()` on the generator. Otherwise, you won't provide execution guarantees. This is how Effection does it. There is no equivalent in async functions, so it sounds like the same problem would apply to the GC technique.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">abraxas</span>
+        <span class="meta-time">2026/04/07 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">三十年前的黑客马拉松仍在继续……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">and so the thirty year old hackathon continues...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676834" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bastawhiz</span>
+        <span class="meta-time">2026/04/08 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不过，要小心这一点。如果一个 Promise 预计会解析但它从未解析，并且该 Promise 需要解析或拒绝以清理全局引用（例如事件侦听器或间隔），那么您将创建内存泄漏。很容易导致几乎无法追踪的泄漏，因为没有明显的东西可以查找。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Be careful with this, though. If a promise is expected to resolve and it never does, and the promise needs to resolve or reject to clean up a global reference (like an event listener or interval), you'll create a memory leak. It's easy to end up with a leak that's almost impossible to track down, because there isn't something obvious you can grep for.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677821" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hungryhobbit</span>
+        <span class="meta-time">2026/04/08 00:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个问题在文章末尾有阐述：<p></p><pre><code>  The catch
+
+  You're relying on garbage collection, which is nondeterministic. You don't get to know when the suspended function is collected. For our use case, that's fine. We only need to know that it will be collected, and modern engines are reliable about that.
+
+  The real footgun is reference chains. If anything holds a reference to the hanging promise or the suspended function's closure, the garbage collector can't touch it. The pattern only works when you intentionally sever all references.</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is addressed at the end of the article:<p></p><pre><code>  The catch
+
+  You're relying on garbage collection, which is nondeterministic. You don't get to know when the suspended function is collected. For our use case, that's fine. We only need to know that it will be collected, and modern engines are reliable about that.
+
+  The real footgun is reference chains. If anything holds a reference to the hanging promise or the suspended function's closure, the garbage collector can't touch it. The pattern only works when you intentionally sever all references.</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677886" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bastawhiz</span>
+        <span class="meta-time">2026/04/08 02:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">老实说，这应该更高、更清楚地阐明。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That should honestly be much higher up and much more clearly spelled out.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679185" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">stevefan1999</span>
+        <span class="meta-time">2026/04/08 08:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我还认为 Rust 也未能取消 Future，考虑到我来自 C++ 和 C# 背景，我对 async/await 了解更多，而且 Tokio 中缺少“取消令牌”真是令人恼火。<p>我必须一路将它附加到 Future，因为 Rust 没有任何默认参数，我的意思是我必须从上到下提供取消标记。</p><p>但事后看来，Golang 的上下文实际上在某种程度上模仿了取消令牌，但在某种程度上，取消是通过在取消器或截止日期中使用完成来级联和递归的，这意味着它对时间和延迟敏感。</p><p>如果您确实想要取消标记样式，则需要使用信号量或显式轮询取消通道（这是您可以对上下文执行的操作），如果您没有足够的线程余量，这可能会造成伤害。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would also argue that Rust failed to cancel a Future too, considering I came from a C++ and C# background where I know a lot more about async/await and the missing of "cancellation token" in Tokio is so infuriating.<p>I have to came all the way to attach it to a Future, that because Rust doesn't have any default argument, I mean I have to supply cancellation token from the top to bottom.</p><p>But in hindsight, Golang's context actually do mimick cancellation token in some sort, but in a way that the cancellation is cascaded and recursive by using done in canceler or deadline which means it is timing and latency sensitive.</p><p>If you truly want cancellation token style, you need to use semaphores or by explicitly polling the cancellation channel (which is what you can do with context) which can hurt if you don't have enough thread slack.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683012" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">notnullorvoid</span>
+        <span class="meta-time">2026/04/08 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说，反对拒绝取消的论点似乎有些牵强。如果您将取消视为错误条件，那完全没问题，如果您愿意，它允许您从取消中恢复（吞掉捕获的错误）或传播它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The argument against rejecting to cancel seems like a stretch to me. It's completely fine if you view cancellation as a error condition, it allows you to recover from a cancellation if you want (swallow the error w catch) or to propagate it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679813" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shadowgovt</span>
+        <span class="meta-time">2026/04/08 01:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我感觉每隔五年就会有人尝试重新发明可取消的线程，并立即得出相同的结论：“取消”线程的含义问题是如此特定于领域，以至于您永远不会在线程框架中保存任何尝试“支持”它的内容；你试图让人们省去做一些临时的事情来模拟取消和构建一些东西的精力 <i>至少</i> 与他们临时构建的内容一样复杂，因为线程取消与线程正在操作的问题域密切相关，无法概括它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I soft of feel like every five years someone comes along and tries to re-invent cancellable threads and immediately arrives back at the same conclusion: the problem of what it means to "cancel" a thread is so domain-specific that you never save anything trying to "support" it in your threading framework; you try and save people the effort of doing something ad-hoc to simulate cancellation and build something at <i>least</i> as complicated as what they would build ad-hoc, because thread cancellation is too intimately tied to the problem domain the threads are operating on to generalize it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/08 02:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但是如果我们添加呢？ <i>其他</i> 间接层。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But what if we add <i>another</i> layer of indirection.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679385" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">runarberg</span>
+        <span class="meta-time">2026/04/08 07:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">软件工程的基本定理。<p><a href="https://en.wikipedia.org/wiki/Fundamental_theorem_of_software_engineering" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Fundamental_theorem_of_softwar...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The fundamental theorem of software engineering.<p><a href="https://en.wikipedia.org/wiki/Fundamental_theorem_of_software_engineering" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Fundamental_theorem_of_softwar...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">game_the0ry</span>
+        <span class="meta-time">2026/04/07 22:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">偏离主题，但该网站的设计非常好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Off topic, but that site has really nice design</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675844" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">williamdclt</span>
+        <span class="meta-time">2026/04/07 22:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呃，对比度太大，我无法阅读，只好切换到阅读模式，所以……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Mh, I couldn't read due to the huge contrast and had to switch to reader mode, so...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676266" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jazzypants</span>
+        <span class="meta-time">2026/04/07 22:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我个人认为它完全可读。我听说有人对黑底白字有问题，但我并不完全理解。你有散光吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I personally find it to be perfectly readable. I've heard of people with issues with white text on a black background, but I don't fully understand it. Do you have astigmatism?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">seattle_spring</span>
+        <span class="meta-time">2026/04/07 23:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你看到了什么颜色？对我来说，它是黑色背景上的浅白色文本——既非常常见，又具有很强的可读性。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What colors were you seeing? It's light white text on a black background for me-- both super common and plenty readable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Pay08</span>
+        <span class="meta-time">2026/04/08 02:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真的吗？我通常非常喜欢有很多对比度，但太多肯定会伤害我的眼睛。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Really? I generally very much like to have a lot of contrast, but too much can definitely hurt my eyes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679132" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">game_the0ry</span>
+        <span class="meta-time">2026/04/07 23:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，我不是设计师，但它很有趣，值得一提。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean, I'm not a designer but it was interesting enough to call out.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dimitropoulos</span>
+        <span class="meta-time">2026/04/07 22:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 像 Effect 这样的库提高了生成器的受欢迎程度，但对于绝大多数 JavaScript 开发人员来说，它仍然是一种不寻常的语法。<p>我已经听腻了这些。  我喜欢这篇文章，它是有趣的东西，但是还要几十年才能人们接受生成器作为原始？</p><p>过去经常听到关于尾随逗号、解构、类（而不是 iife）等等的相同内容。  然而。由于某种原因，发电机仍然没有跨越魔法屏障。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Libraries like Effect have increased the popularity of generators, but it's still an unusual syntax for the vast majority of JavaScript developers.<p>I'm getting so tired of hearing this.  I loved the article and it's interesting stuff, but how many more decades until people accept generators as a primitive??</p><p>used to hear the same thing about trailing commas, destructuring, classes (instead of iife), and so many more.  yet. generators still haven't crossed over the magic barrier for some reason.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675738" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">horsawlarway</span>
+        <span class="meta-time">2026/04/07 22:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">普通 js 开发人员实际上需要接触生成器的地方并不多。<p>我确实没有看到生成器以与您比较的其他功能相同的方式进入主流用途。  大多数时候......你只是不需要它们。  其他语言工具以更广泛可访问的方式解决该问题。</p><p>在（非常有限和利基的）点子集中，您确实需要一个生成器，它们很高兴拥有，但它主要是一个“库作者”工具，即使在这个范围内，它的使用也并不经常得到保证。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There just aren't that many spots where the average js dev actually needs to touch a generator.<p>I don't really see generators ever crossing into mainstream usage in the same way as the other features you've compared them to.  Most times... you just don't need them.  The other language tools solve the problem in a more widely accessible manner.</p><p>In the (very limited &amp; niche) subset of spots you do actually need a generator, they're nice to have, but it's mostly a "library author" tool, and even in that scope it's usage just isn't warranted all that often.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676276" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">no_wizard</span>
+        <span class="meta-time">2026/04/08 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">主要是因为他们在两个方面搞砸了实施。这当然是我的意见。<p>第一个是返回的迭代器上的 `.next()` 。如果你向它传递一个参数，它的行为就会很奇怪。它第一次运行时，实际上并没有捕获参数，然后您可以通过将 `yield` 分配给变量来捕获参数，并执行任何操作，但从人体工程学的角度来看，它确实很笨重。这意味着用它来控制副作用很笨拙。</p><p>第二个问题是它不是 Promise 的一流替代品。异步生成器并不是世界上最符合人体工程学的东西，因为你有上述问题，而且你必须等待一切。我明白为什么，但是因为生成器不能用来代替 Promise，所以使用它们时您会得到这些笨重的用例。</p><p>它们实际上仅在创建自定义迭代器模式或“无限流”返回形式时有用。除此之外，它们并不是那么出色，通常需要组合几个生成器才能真正从中获得有用的东西。</p><p>这是我的经验，我曾多次尝试在一些库中广泛采用生成器，我觉得该模式很适合，但大多数时候效果并不好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">mainly because they messed up on implementation, in two ways. This is of course my opinion.<p>The first being `.next()` on the returned iterators. If you pass an argument to it, the behavior is funky. The first time it runs, it actually doesn't capture the argument, and then you can capture the argument by assigning `yield` to a variable, and do whatever, but its really clunky from an ergonomic perspective. Which means using it to control side effects is clunky.</p><p>The second one how it is not a first class alternative to Promise. Async Generators are not the most ergonomic thing in the world to deal with, as you have the issues above plus you have to await everything. Which I understand why, but because generators can't be used in stead of Promises, you get these clunky use cases for using them.</p><p>They're really only useful as a result, for creating custom iterator patterns or for a form of 'infinite stream' returns. Beyond that, they're just not all that great, and it often takes combining a couple generators to really get anything useful out of them.</p><p>Thats been my experience, and I've tried to adopt generators extensively a few times in some libraries, where I felt the pattern would have been a good fit but it simply didn't turn out most of the time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677777" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cowboyd</span>
+        <span class="meta-time">2026/04/08 03:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为自己编写一个效果库是一个艰巨的任务，但其中一些已经变得非常非常好。他们给你带来的东西是根本不可能实现的。如果您想要更普通的 javascript 语法，请查看 Effection；如果您真的喜欢用函数式表达事物，请查看 Effect。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think writing an effect library yourself is a tough ask, but some of them have gotten really, really good. And they get you things that are simply not possible with promise. Check out Effection if you want a more vanilla javascript syntax, or Effect if you're really into expressing things functionally.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gbuk2013</span>
+        <span class="meta-time">2026/04/07 23:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是一种专门的工具，但也是一种有用的工具：批处理和查询分页是生成器的一流用例，可以真正简化业务逻辑代码。流处理是另一个问题，事实上 Node.js 流现在已经有多个版本的生成器 API 了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is a specialised instrument but a useful one: batch processing and query pagination are first class use cases for generators that can really simplify business logic code. Stream processing is another and in fact Node.js streams have had a generator API for several releases now.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677165" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/07 22:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676167" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yeittrue</span>
+        <span class="meta-time">2026/04/07 22:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我们广泛支持 async/await 之前，生成器在 redux-saga 和 thunk 中达到顶峰。<p>你是对的，现在我们无论如何都可以等待异步函数，大多数语法（以及 Promise）都是毫无意义的，特别是现在使用 for .. of 来使用 .map 等数组方法</p><p>但它仍然有一些用例，比如 Promise。例如，在您想要阻止执行的地方创建自定义迭代器/过程或自定义延迟函数（同步）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Generators peaked in redux- saga and thunk days before we had widespread support for async/await.<p>You're right, mostly pointless syntax (along with Promise) now that we can await an async function anyway, especially now with for .. of to work with Array methods like .map</p><p>But there are still some use cases for it, like with Promise. Like for example, making custom iterators/procedures or a custom delay function (sync) where you want to block execution.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675905" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">littlestymaar</span>
+        <span class="meta-time">2026/04/08 02:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">十年前，我是 tc39（EcmaScript 标准委员会）邮件列表的忠实读者，可取消的 Promise 曾一度成为热门话题。<p>我在某个时候取消了订阅，因为我没有那么多地使用 JavaScript，但令人失望的是，这项工作在此期间却毫无进展。</p><p>我喜欢 Rust 期货如何通过丢弃它们来取消，尽管它也是一把枪（尽管恕我直言，这更多是一个问题） <i>选择！</i> 模式比直接取消模式要好）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ten years ago, I was an acid reader of the tc39 (EcmaScript standard committee) mailing list and cancelable promises used to be the hot topic for a while.<p>I unsubscribed at some point because I wasn't working with JavaScript this much, but it's disappointing to see that this work has gone nowhere in the meantime.</p><p>I like how Rust futures are canceled by dropping them, even though it's also a footgun (though IMHO this is more of a problem with the <i>select!</i> pattern than with drop-to-cancel proper).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679087" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">afarah1</span>
+        <span class="meta-time">2026/04/07 23:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您还可以与另一个承诺竞争，例如超时解决。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can also race it with another promise, which e.g. resolves on timeout.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676872" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Keyframe</span>
+        <span class="meta-time">2026/04/08 00:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可以，但仍然不会被取消。当我尝试对通话实施硬性时间限制时，我发现了这一点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can but it still won't get cancelled. I found out when I tried to implement a hard time limit to a call.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ryguz</span>
+        <span class="meta-time">2026/04/08 02:22</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679303" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">TZubiri</span>
+        <span class="meta-time">2026/04/07 23:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">seattle_spring</span>
+        <span class="meta-time">2026/04/08 00:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 如果我了解 javascript 生态系统，并且我想我了解<p>你认为你这样做，但是...</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; If I know the javascript ecosystem, and I think I do<p>You think you do, but...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677355" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

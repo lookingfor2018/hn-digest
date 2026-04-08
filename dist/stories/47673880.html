@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：Pion/handoff – 将 WebRTC 从浏览器移至 Go 中 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-08-1046/">返回本批次</a>
+      <h1>显示 HN：Pion/handoff – 将 WebRTC 从浏览器移至 Go 中</h1>
+      <p class="subtitle">Show HN: Pion/handoff – Move WebRTC out of browser and into Go</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 Sean-Der</span>
+        <span>分数 93</span>
+        <span>评论 17</span>
+        <span>2026/04/07 20:01</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47673880" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/pion/handoff" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>在浏览器中创建 WebRTC 会话 - 在其他地方运行它</li><li>为什么WebRTC是用于实时媒体流的实时通信技术。用于网络上的 Google Meet、Discord 和 Zoom 等。通过 Handoff，您可以在浏览器中创建 WebRTC 会话，然后将其移至您控制的进程。这可以让你做一些有趣的事情。</li><li>录制 - 通过切换加入 Zoom 通话并在通话过程中保存媒体。发送 - 使用 FFmpeg 或发送外部源。不受浏览器质量/捕获代码的限制。逆向工程 - 捕获 ICE/DTLS 和解密的 RTP/RTCP/SCTP 流量</li><li>序列图参与者 切换参与者 浏览器参与者 网站</li><li>浏览器-&gt;&gt;网站：正常认证并使用网站 网站-&gt;&gt;浏览器：WebRTC 浏览器信令注释：WebRTC API 被模拟 浏览器-&gt;&gt;切换：转发信令 切换-&gt;&gt;网站：建立 WebRTC 会话</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Create WebRTC session in the browser—run it somewhere else</li><li>Why WebRTC is the real-time communication technology used for real-time media streaming. Used for things like Google Meet, Discord and Zoom on the web. With Handoff you create your WebRTC session in the browser, but then move it to a process you control. This lets you do a few interesting things.</li><li>Record - Join the Zoom call via handoff and save media as it passes through. Send - Use FFmpeg or send an external source. Not limited by browser quality/capture code. Reverse Engineer - Capture ICE/DTLS and decrypted RTP/RTCP/SCTP traffic</li><li>sequenceDiagram participant Handoff participant Browser participant Website</li><li>Browser-&gt;&gt;Website: Authenticate and use the site normally Website-&gt;&gt;Browser: WebRTC Signaling Note over Browser: WebRTC API is mocked Browser-&gt;&gt;Handoff: Forward Signaling Handoff-&gt;&gt;Website: Establish WebRTC session</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/07 20:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我写这篇文章是为了让 WebRTC 服务的逆向工程变得更容易。还可以让您从 WebRTC 会话保存/发送任意媒体。这个想法是你在浏览器中完成所有身份验证/交互，然后在 Go 中完成所有 WebRTC。所以你有更多的控制权。与之相关的还有更多，但至少已经足够分享了。<p>在自述文件中是发送我的网络摄像头的屏幕截图，但用 ffmpeg 测试源替换传出视频。切换位于两者之间，因此它可以替换任何任意视频。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wrote this to make Reverse Engineering WebRTC services easier. Will also let you save/send arbitrary media from WebRTC sessions. The idea is you do all your auth/interaction in the browser, but then do all WebRTC in Go. So you have lots more control. More to do with it, but it is far enough along to share at least.<p>In the README is an screenshot of sending my webcam, but replacing outgoing video with a ffmpeg testsrc. Handoff sits between so it can replace with any arbitrary video.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47673905" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">czbond</span>
+        <span class="meta-time">2026/04/07 21:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣而新颖的项目。我没有什么建设性的补充，但做得很好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting and novel project. I don't have anything constructive to add, but well done.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47674980" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/07 21:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢 ：）<p>致力于某件事并听到它很新颖的感觉没有比这更好的了！很多我认为有用的项目都没有达到目标。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks :)<p>No better feeling to work on something and hear it is novel! So many projects that I think will be useful miss the mark.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675212" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">irq-1</span>
+        <span class="meta-time">2026/04/08 04:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">将其连接到人工智能说话头，您就拥有了一个客户服务中心——浏览商店的用户可以点击与“某人”交谈。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Connect it to an AI talking head and you have a customer service center - users browsing a store can click to talk with 'someone'.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681036" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ericmcer</span>
+        <span class="meta-time">2026/04/08 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我是一个 WebRTC 菜鸟，但是...这意味着在我定义输入通道（音轨、视频等）并建立对等连接后，我可以从不同的源发送数据吗？<p>这是否有任何复杂性，或者我是否不想通过发送意外的格式来迷惑其他同行？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am kind of a WebRTC noob but... this means after I define my input channel (audio track, video, etc.) and establish a peer connection I can send data from a different source?<p>Are there any complications with that or is it kind of on me to not confuse the other peer by sending unexpected formats?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681799" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/08 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，正是如此！启动后，您可以切入任何您想要的媒体。<p>您需要确保发送的编解码器与遥控器期望的编解码器相同，否则什么都没有！您可以设置不同的分辨率、比特率等...</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep exactly! After it starts you can slice in any media you want.<p>You need to make sure you are sending the same codec that the remote expects, otherwise nothing else! You can do a different resolution, bitrate etc...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ikety</span>
+        <span class="meta-time">2026/04/08 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几年前我已经为你的项目添加了书签，尝试用一种利基编程语言完全实现 webrtc。但我想我可能大大低估了这有多困难。<p>你有没有遇到过 <a href="https://github.com/elixir-webrtc/ex_webrtc" target="_blank" rel="noopener noreferrer">https://github.com/elixir-webrtc/ex_webrtc</a> ？</p><p>不确定他们是否使用 Pion 作为指南</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've bookmarked your project years ago to attempt implementing webrtc fully in a niche programming language. But I think I may have vastly underrated how difficult this is.<p>Have you come across <a href="https://github.com/elixir-webrtc/ex_webrtc" target="_blank" rel="noopener noreferrer">https://github.com/elixir-webrtc/ex_webrtc</a> ?</p><p>Wasn't sure if they used Pion as a guide</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/08 10:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">什么语言？很乐意提供帮助:)尤其是人工智能编码，我认为现在它会更容易访问。<p>ex_webrtc 非常酷。他们有一个很酷的内置仪表板/分析流程。它看起来比 Pion 更加“操作友好”。不过我自己并没有大量使用它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What language? Would love to help :) especially with AI Coding I think it would be a lot more accessible these days.<p>ex_webrtc is super cool. They have a cool built-in dashboard/analytics flow. It is way more 'operations friendly' then Pion it seems. I haven't used it heavily myself though.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684084" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Hakkin</span>
+        <span class="meta-time">2026/04/07 21:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，这很有趣。我一直在摆弄一个 WebExtension，通过拦截 RTCPeerConnection.addTrack 上的流来转储编码的 WebRTC 媒体流，但它不能可靠地工作，因为当前的 WebRTC 编码流 API(s) 仅支持单个读取器，因此如果实际网站也使用 API，它要么会破坏网站，要么无法拦截媒体。
+这似乎是一个很好的解决方法，我曾短暂考虑过某种代理，但由于 WebRTC 流量是加密的，所以我将其注销，我从未考虑过代理对等连接 API 调用自身。相当聪明。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, this is interesting. I have been messing around with a WebExtension for dumping encoded WebRTC media streams by intercepting streams on RTCPeerConnection.addTrack, but it doesn't work reliably since the current WebRTC encoded stream API(s) only supports a single reader, so if the actual website is also using the API, it either breaks the site or it's impossible to intercept the media.
+This seems like a nice workaround, I had briefly considered some kind of proxy but I wrote it off since WebRTC traffic is encrypted, I never considered proxying the peer connection API calls themselves. Pretty clever.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675009" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/07 21:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我等不及了 <a href="https://w3c.github.io/webrtc-rtptransport/" target="_blank" rel="noopener noreferrer">https://w3c.github.io/webrtc-rtptransport/</a> 当你谈论拉出视频时，这似乎是完美的选择。<p>我最终选择了代理，因为 Google Meet 根本不允许我连接任何 RTCPeerConnection API。我想发送合成媒体，但无法正常工作。最终在 Linux 上做了一个虚拟网络摄像头。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can’t wait for <a href="https://w3c.github.io/webrtc-rtptransport/" target="_blank" rel="noopener noreferrer">https://w3c.github.io/webrtc-rtptransport/</a> when you talk about pulling vide out seems like the perfect fit.<p>I ended up doing proxy because Google Meet doesn’t let me hook at any RTCPeerConnection APIs at all. I wanted to send synthetic media in, but couldn’t get it working. Ending up doing a virtual webcam on Linux.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675391" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hparadiz</span>
+        <span class="meta-time">2026/04/07 21:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 Wayland DM 来说，捕捉到这一点并绘制到画中画叠加层会很有趣</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would be interesting for a Wayland DM to catch this and draw to a picture in picture overlay</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675114" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/07 21:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦是的！我将制作一个演示。<p>通过“media-send”，我可以将其发送到 ffmpeg/GStreamer，这会完成所有繁重的工作</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh yes! I will pull together a demo.<p>With ‘media-send’ I can send it out to ffmpeg/GStreamer and that does all the heavy lifting</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675238" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hparadiz</span>
+        <span class="meta-time">2026/04/07 21:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近用我的 Google Home 相机使用官方 API 做了一个演示 <a href="https://github.com/hparadiz/camera-notif" target="_blank" rel="noopener noreferrer">https://github.com/hparadiz/camera-notif</a><p>但您获取流的方式要简单得多。</p><p>覆盖层在 KDE 中是超级新的 Plasma 是唯一的问题。您还可以执行 v4l2loopback 并将其设为虚拟相机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I made a demo recently with my Google home camera using the official API <a href="https://github.com/hparadiz/camera-notif" target="_blank" rel="noopener noreferrer">https://github.com/hparadiz/camera-notif</a><p>But your way of grabbing the stream is so much simpler.</p><p>Overlay layer is super new in KDE Plasma is the only problem. You can also do v4l2loopback and make it a virtual camera.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675345" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/07 22:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您尝试过使用视频+管道线吗？<p>我也在使用 v4l2loopback，但是玩弄 /dev/video* 设备很烦人。我想在 docker 容器中做视频，如果我可以在每个容器中做 pipeline 并且没有全局状态，那就太棒了。</p><p>我无法在 Chromium 中找到任何东西。 FireFox 看到了该设备，但没有看到视频。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you tried doing video + pipewire yet?<p>I am also using v4l2loopback, but its annoying to juggle /dev/video* devices. I wanted to do video stuff in docker containers, and it would be amazing if I could do pipewire in each container and have no global state.</p><p>I couldn't get anything to work in Chromium. FireFox saw the device, but video didn't come across.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hparadiz</span>
+        <span class="meta-time">2026/04/08 02:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当你说+pipewire时你的意思只是音频播放？如果您将视频推送到画中画叠加层，用户可能会期望如此，所以您可以像任何其他程序一样写入管道套接字。通常情况下，您可以完全开放这样做。<p>我经常将 v4l2 与 OBS 结合使用。为了让 Chrome/Chromium 看到它，您需要在启动 Chrome/Chromium 之前制作设备。您可以通过为内核设置 modprobe 配置来自动启动 v4l2 设备。</p><p>我的 v4l2 笔记可能会有所帮助 <a href="http://technex.us/2022/06/v4l2-notes-for-linux/" target="_blank" rel="noopener noreferrer">http://technex.us/2022/06/v4l2-notes-for-linux/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When you say +pipewire you mean just audio playback? If you are pushing video to a picture-in-picture overlay a user might expect that so yea you could write to the pipewire socket like any other program. It's usually fully open for you to do just that.<p>I use v4l2 regularly with OBS. In order for Chrome/Chromium to see it you need to make the device before launching Chrome/Chromium. You can start v4l2 devices automatically by setting a modprobe config for your kernel.</p><p>My v4l2 notes might be helpful <a href="http://technex.us/2022/06/v4l2-notes-for-linux/" target="_blank" rel="noopener noreferrer">http://technex.us/2022/06/v4l2-notes-for-linux/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/07 22:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是提高性能（帧速率、延迟、CPU 负载）的好方法吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is this a good way to improve performance (frame rate, latency, CPU load) ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675797" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Sean-Der</span>
+        <span class="meta-time">2026/04/07 22:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的！<p>* 在浏览器之外进行视频播放。您可以渲染帧的子集，使用不同的管道进行解码等......</p><p>* 从不同来源提取视频。在当前计算机上加入 Google Meet，但从另一台主机进行流式传输。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yea!<p>* Do video playback out of the browser. You can render a subset of frames, use a different pipeline for decode etc...</p><p>* Pull video from a different source. Join Google Meet on current computer, but stream from another host.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676119" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

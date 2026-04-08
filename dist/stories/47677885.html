@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>使用通过 USB/IP 桥接到 WebUSB 的浏览器内 Linux VM 来拯救旧打印机 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-08-1046/">返回本批次</a>
+      <h1>使用通过 USB/IP 桥接到 WebUSB 的浏览器内 Linux VM 来拯救旧打印机</h1>
+      <p class="subtitle">Rescuing old printers with an in-browser Linux VM bridged to WebUSB over USB/IP</p>
+      <div class="meta-line">
+        <span>printervention.app</span>
+        <span>作者 gmac</span>
+        <span>分数 151</span>
+        <span>评论 70</span>
+        <span>2026/04/08 00:33</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47677885" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://printervention.app/details" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>&lt;&lt; 首页</li><li>我有一台旧照片打印机</li><li>我们的故事始于我意外地购买了一台佳能 SELPHY 照片打印机。我买了一台新的 3D 打印机，并问我的朋友马克是否想要旧的。他答应了，并问我是否想要这台照片打印机作为回报。他在 eBay 上买了一张备用的，里面有纸张和墨水，价格还低于纸张和墨水本身的价值！</li><li>我也答应了，因为全家人都会喜欢的新玩意让我很兴奋。然后我发现为什么这些旧打印机的价格这么低。 Mac 已经有一段时间不支持它们了，Windows 也不支持。 Mark 使用 Linux：他没有遇到过这个问题。</li><li>令人高兴的是，我的办公桌上已经有了一个 Manjaro 盒子。这是一个小型 Lenovo ThinkCenter，我主要用它来测试。碰巧的是，这些也适用于 eBay 上的一首歌。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>&lt;&lt; Home</li><li>I got an old photo printer</li><li>Our story begins as I unexpectedly acquire a Canon SELPHY photo printer. I’d bought a new 3D printer, and asked my friend Mark if he’d like the old one. He said yes, and asked if I’d like this photo printer in return. He’d picked up a spare one on eBay, with paper and ink, for less than the value of the paper and ink alone!</li><li>I also said yes, excited by a new gadget the whole family might appreciate. Then I discovered why these old printers go for so little. Macs haven’t supported them for quite some time, and Windows hasn’t either. Mark uses Linux: he hadn’t encountered this issue.</li><li>Happily, I already have a Manjaro box on my desk. It’s a tiny Lenovo ThinkCenter, which I use mainly for testing. As it happens, these also go for a song on eBay.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">morpheuskafka</span>
+        <span class="meta-time">2026/04/08 01:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您正在使用 LLM，那么让 LLM 找到相关的 CUPS 驱动程序反编译或仅捕获 USB 流量，然后用 Go 或本机重写它不是更容易吗？ （无需处理系统打印框架，目标只是一个接受 JPEG 输入的应用程序。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you are using an LLM, wouldn't it have been a lot easier to just have the LLM find the relevant CUPS driver decompile or just capture the USB traffic, and rewrite it in Go or something native? (No need to deal with the system printing framework, the goal was just an app that accepts JPEG input.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678873" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gmac</span>
+        <span class="meta-time">2026/04/08 02:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的建议：我想那是可能的。另一方面，我认为这是一个更通用的解决方案，并且它几乎不需要重新发明轮子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting suggestion: I guess that would have been possible. On the other hand I think this is a more general solution, and it does minimal reinventing-the-wheel.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 07:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于接受 CUPS 光栅数据输入的更简单的驱动程序（CUPS 过滤器）来说，这绝对是可能的。这是旧打印机的大部分驱动程序。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's definitely possible for simpler drivers (CUPS filters) which accept CUPS-raster data for input. That's a majority of drivers for old printers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dolmen</span>
+        <span class="meta-time">2026/04/08 02:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者要求代理编写一个 Dockerfile（以抽象构建环境），直接在 WASM 中构建 CUPS 以及围绕它的所有内容，而不是针对 x86，然后使用 WASM 模拟 x86。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Or ask the agent to write a Dockerfile (to abstract the build environment) that builds CUPS and all your stuff around it directl in WASM, instead of targeting x86 and then emulating x86 with WASM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jojomodding</span>
+        <span class="meta-time">2026/04/08 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是否存在 Docker 到 WASM 管道，它与模拟 x86 有何不同？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a Docker-to-WASM pipeline, and how does it do anything differently from emulating x86?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679930" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">huflungdung</span>
+        <span class="meta-time">2026/04/08 03:01</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679820" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Fnoord</span>
+        <span class="meta-time">2026/04/08 08:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我用树莓派做了这个。有问题的打印机只有 WiFi 和 USB，没有以太网（WiFi 不稳定，而且我无论如何也不信任 TCP/IP 堆栈）。所以我所做的就是通过 USB 将它连接到 Raspberry Pi，然后通过以太网将其连接到客厅。我添加了AirPrint和brscan，并且可以通过usbip共享设备。<p>例如，您可以使用 USB SDR 并通过 usbip 连接到它。</p><p>最初，我还必须实际使用 qemu x86-64 作为扫描仪部分，这并不理想。</p><p>唯一使用它的 UI 计算机是 Apple（iPhone 和 iPad）。在网络就是计算机的世界中，usbip 和 iSCSI 是非常酷的技术。</p><p>我选择 Raspberry Pi 的原因是它已经充当了 Valetudo 的接口。所以无论如何它已经在使用了。另外，我想添加用于物联网扫描的蓝牙，考虑在其上运行家庭助理。</p><p>但是，是的，它缺少的是用户界面。我正在考虑添加一些带有反向代理的东西，但我不知道是什么，而且整个项目并不在我的房子里。这是在我母亲的公寓里。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did this with a Raspberry Pi. The printer in question only has WiFi and USB, no ethernet (the WiFi wasn't stable, and I don't trust the TCP/IP stack anyway). So what I did was I connected it to a Raspberry Pi via USB which is connected via ethernet to the living room. I added AirPrint and brscan, and the device can be shared via usbip.<p>For example, you can use a USB SDR and connect to it via usbip.</p><p>Initially, I also had to actually use qemu x86-64 for the scanner part which wasn't ideal.</p><p>The only UI computers which use it, are Apple's (iPhone and iPad). In a world where the network is the computer, usbip and iscsi are very cool tech.</p><p>The reason I went with a Raspberry Pi is since it already acts as an interface for Valetudo. So it was already in use anyway. Also, I want to add Bluetooth for IoT scanning, considering to run Home Assistant on it.</p><p>But yes, what it does lack is a UI. I was thinking of adding something with a reverse proxy, but I have no idea what, and this whole project isn't residing in my house. It is in my mother's apartment.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 08:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;也许我可以将 Raspberry Pi 设置为打印服务器？但这样一来，它的价格就不那么便宜了。不管怎样，我不相信他们会购买额外的插头和电线。<p>35 美元，它就是你的了，包括技术支持和 CUPS/SANE 开发资金，并且全部开源： <a href="https://printserver.ink" target="_blank" rel="noopener noreferrer">https://printserver.ink</a></p><p>借助“IEC320 3 针 C14 TO 公头 C13+2”电缆，可以消除额外的插头： <a href="https://ae-pic-a1.aliexpress-media.com/kf/S4c8681fb1283499b8b5ae15be3937030G.jpg" target="_blank" rel="noopener noreferrer">https://ae-pic-a1.aliexpress-media.com/kf/S4c8681fb1283499b8...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Perhaps I could set them up a Raspberry Pi as a print server? But that would make it not so cheap. And anyway, I’m not convinced they’d go for the extra plugs and wires.<p>$35 and it's yours, with tech support and CUPS/SANE development funding included, and all open source: <a href="https://printserver.ink" target="_blank" rel="noopener noreferrer">https://printserver.ink</a></p><p>Extra plugs could be eliminated with the help of "IEC320 3 pin C14 TO Male C13+2" cable: <a href="https://ae-pic-a1.aliexpress-media.com/kf/S4c8681fb1283499b8b5ae15be3937030G.jpg" target="_blank" rel="noopener noreferrer">https://ae-pic-a1.aliexpress-media.com/kf/S4c8681fb1283499b8...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683108" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sublinear</span>
+        <span class="meta-time">2026/04/08 09:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 1 GiB LPDDR4<p>尝试打印带有图像或超过一两页的任何内容（例如大多数 PDF），这不是一个大问题吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; 1 GiB LPDDR4<p>Wouldn't this be a huge problem trying to print anything with images or more than a page or two (most PDFs for example)?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683394" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bityard</span>
+        <span class="meta-time">2026/04/08 02:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，这真是天才。我周围有不少 USB 设备，它们要么足够旧，要么太小众，无法在现代_任何设备_上运行，甚至在 Linux 上也无法运行。其中之一是 GameBoy Advance 闪存卡带。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Okay, this is reasonably genius. I have quite a few USB devices lying around that are either old enough or were niche enough that they don't work on modern _anything_, even Linux. One of them is a GameBoy Advance flash cartridge.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679525" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/08 02:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，有一个想法 - v86 也支持许多旧的 DOS/Windows 版本，因此假设您可以通过正确的端口（对于任何 USB 可能很容易，也许对于其他东西也可能？）您可能可以使用您选择的旧驱动程序:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, there's a thought - v86 supports lots of old DOS/Windows versions too, so assuming you could get the right port through (probably easy with anything USB, maybe possible with other things?) you could probably use your choice of old drivers:)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679595" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Gabrys1</span>
+        <span class="meta-time">2026/04/08 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我必须道歉，到目前为止我还没有开源任何我不需要的部分。主要是因为我认为对于打印机耗材公司来说，这将是一个非常具有粘性的网络资产，可以与其销售网站集成。我更希望他们付钱给我为他们贴上白标签，而不是仅仅分叉一个回购协议并免费获得所有内容。<p>如果他们关心打印机的易用性，他们可能会感兴趣</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I must apologise that I haven’t so far open-sourced any part of this that I don’t have to. Mainly that’s because I think this would be an awesomely sticky web property for a printer consumables firm to integrate with their sales site. And I’d much prefer it if they paid me to white-label it for them, rather than just forking a repo and getting it all for free.<p>They might be interested if they cared at all about the ease of use of their printers</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680558" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zamadatix</span>
+        <span class="meta-time">2026/04/08 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最困难的部分可能是说服某人付费购买白标产品，而该产品的大部分关键设计选择和实现都来自一位不熟悉的开发人员，并要求他花费 18 英镑订阅 Claude Code。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The hardest part would probably be convincing someone to pay to white label something for which most of the key design choices and implementation came from one unfamiliar dev prompting an £18 Claude Code subscription.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681814" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeroenhd</span>
+        <span class="meta-time">2026/04/08 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这些打印机制造商拥有源代码和编写固件的能力。如果他们想支持 WebUSB，他们可以而且愿意。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">These printer makers have the source code and the ability to write firmware. If they wanted to support WebUSB, they could and would.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 08:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Xerox 刚刚删除了大多数旧型号（甚至是实际型号，您仍然可以购买）的所有 Linux 驱动程序，其次删除了选定型号（尚未）的 Windows 和 macOS 驱动程序。<p><a href="https://discussion.fedoraproject.org/t/xerox-removed-linux-drivers-from-the-website-for-older-printers/182194" target="_blank" rel="noopener noreferrer">https://discussion.fedoraproject.org/t/xerox-removed-linux-d...</a></p><p><a href="https://forum.support.xerox.com/community?id=community_question&amp;sys_id=ceb0a87a97d772101b263f21f053af40" target="_blank" rel="noopener noreferrer">https://forum.support.xerox.com/community?id=community_quest...</a></p><p>佳能、奔图、兄弟、京瓷、惠普，他们仍然在旧硬件基础上生产新设备，这些设备需要驱动程序，并且甚至通过 USB 也不支持 AirPrint/Mopria。他们只是不在乎，他们重复使用 20 年前写的东西并发布它。施乐和惠普使用三星打印引擎和驱动程序，奔图使用利盟。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Xerox just removed all the Linux drivers first for the majority of older models (even actual ones, which you can still buy), Windows and macOS drivers second for selected models (yet).<p><a href="https://discussion.fedoraproject.org/t/xerox-removed-linux-drivers-from-the-website-for-older-printers/182194" target="_blank" rel="noopener noreferrer">https://discussion.fedoraproject.org/t/xerox-removed-linux-d...</a></p><p><a href="https://forum.support.xerox.com/community?id=community_question&amp;sys_id=ceb0a87a97d772101b263f21f053af40" target="_blank" rel="noopener noreferrer">https://forum.support.xerox.com/community?id=community_quest...</a></p><p>Canon, Pantum, Brother, Kyocera, HP, they all still produce new devices on older hardware base, which require driver and does not support AirPrint/Mopria even over USB. They just don't care, they reuse what they wrote 20 years ago and ship it. Xerox and HP use Samsung printing engine and drivers, Pantum uses Lexmark.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kube-system</span>
+        <span class="meta-time">2026/04/08 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们指的是售后墨盒公司，而不是打印机 OEM。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They are referring to aftermarket ink cartridge companies, not the printer OEM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680679" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">CodeWriter23</span>
+        <span class="meta-time">2026/04/08 07:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以。这种方法是否意味着有人可以在您的浏览器中秘密启动运行 Wireguard 的 Linux 虚拟机，并通过 chrome.sockets API 进入您的防火墙？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So. Does this methodology mean someone can surreptitiously boot up a Linux VM running Wireguard in your browser and be inside your firewall via chrome.sockets API?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682468" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bastawhiz</span>
+        <span class="meta-time">2026/04/08 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不？它仍然是一个网页。在某些情况下，除 ChromeOS 用户外，Chrome 套接字 API 已被弃用并删除。最接近的方法是安装一个公开套接字的 Chrome 扩展，但如果有人能够做到这一点，他们就不需要浏览器的帮助。<p>此外，您甚至不需要 Linux 和 Wireguard。 WebRTC无需库即可完成p2p加密流量。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No? It's still a web page. And the chrome socket API was deprecated and removed for everyone except ChromeOS users in certain cases. The closest you can get is installing a Chrome extension that exposes sockets, but if someone is able to do that, they don't need the browser for help.<p>Moreover, you don't even need Linux and Wireguard. WebRTC accomplishes p2p encrypted traffic without libraries.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hexmiles</span>
+        <span class="meta-time">2026/04/08 05:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我知道这是一个重量级解决方案，但对于旧驱动程序/设备/应用程序的某些情况可能很有用。我有一些旧硬件仅与 WinNT 之前的操作系统兼容，我可以做类似的事情来为最终用户提供简单的解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I know that it is a heavyweight solution, but it could be useful for some situations with old driver/devices/applications. I have some old hardware that is compatible only with pre-WinNT OS, and I could do something similar to provide a simple solution for the end user.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681506" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Narishma</span>
+        <span class="meta-time">2026/04/08 05:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如此旧的硬件是否能够运行所需的现代浏览器？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would such old hardware even be able to run a modern browser needed for this?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681705" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hexmiles</span>
+        <span class="meta-time">2026/04/08 06:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，我没说清楚。我所说的旧硬件是指通过串行或 USB 连接到计算机的外围设备。我们所处的性能水平是，将整个虚拟机作为驱动程序运行是可行的，尽管有些浪费。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry, I wasn't clear. By old hardware, I meant peripherals connected to the computer via serial or USB. We are at a level of performance where running an entire VM as a driver is kind of feasible, if wasteful.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">CodeWriter23</span>
+        <span class="meta-time">2026/04/08 07:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您在浏览器中运行旧操作系统作为网关。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You run old operating system in browser as a gateway.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682436" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aesopturtle</span>
+        <span class="meta-time">2026/04/08 07:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在这里欣赏的一件事是，它将旧硬件视为值得保存的东西，而不是视为绕行的麻烦。软件中有很多隐藏的价值，可以延长功能完善的设备的使用寿命，特别是当替代方案由于生态系统漂移而取代它们时。这是一种很好的荒谬。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One thing I appreciate here is that it treats old hardware as worth saving, not as a nuisance to route around. There’s a lot of hidden value in software that extends the life of perfectly functional devices, especially when the alternative is replacing them for reasons that are mostly ecosystem drift. This is the good kind of absurd.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682568" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ale42</span>
+        <span class="meta-time">2026/04/08 05:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 Windows 11 上使用古老的 Canon Selphy 照片打印机，没有任何问题。使用 Windows 7 64 位驱动程序，基本上开箱即用。它绝对没有得到官方支持，但到目前为止它工作得很好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm using an ancient Canon Selphy photo printer... on Windows 11 without any issues. Using the Windows 7 64-bit driver, worked basically out-of-the-box. It's definitely not officially supported, but to date it works totally fine.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681337" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gmac</span>
+        <span class="meta-time">2026/04/08 05:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呵呵，有趣。驱动程序是 Windows 内置的、从 Canon 下载的还是通过其他方式获取的？<p>老实说，Windows 上的 Web 应用程序并不理想，因为您必须安装 Zadig 才能运行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Huh, interesting. Is the driver built in to Windows, downloaded from Canon, or acquired some other way?<p>TBH the web app story on Windows isn’t ideal anyway because you have to install Zadig before it will work.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681374" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ale42</span>
+        <span class="meta-time">2026/04/08 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想我是5-6年前从佳能下载的。我想它应该仍然存在，但如果需要的话我可以分享它。<p>编辑：您可以在这里找到它，例如： <a href="https://asia.canon/en/support/0100304802" target="_blank" rel="noopener noreferrer">https://asia.canon/en/support/0100304802</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think I downloaded it from Canon 5-6 years ago. It should still be around I guess, but I can share it if needed.<p>EDIT: you can find it here for example: <a href="https://asia.canon/en/support/0100304802" target="_blank" rel="noopener noreferrer">https://asia.canon/en/support/0100304802</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681716" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">juancn</span>
+        <span class="meta-time">2026/04/08 02:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你，喜欢这个，它让我“呃！”。<p>我有一台运行良好的老式三星激光打印机，家里有一台 Linux 文件服务器，但该打印机不再支持 AirPrint。</p><p>我从来没有想过使用 Linux 盒子作为 AirPrint 服务器！
+这将使我摆脱孩子们提出的所有奇怪的打印请求！ （大概）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you, loved this and it made me "duh!".<p>I have an old-ish Samsung laser printer that works perfectly and a Linux file server at home and the printer no longer supports AirPrint.</p><p>I never thought about using the Linux box as an AirPrint server!
+This will free me from all the odd print requests from my kids! (probably)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">NegativeLatency</span>
+        <span class="meta-time">2026/04/08 07:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">多年来一直使用三星打印机和 CUPS 做类似的事情，这很棒<p>发现这对于生成一些配置文件很有帮助： <a href="https://github.com/tjfontaine/airprint-generate" target="_blank" rel="noopener noreferrer">https://github.com/tjfontaine/airprint-generate</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Been doing something similar with a Samsung printer and CUPS for years, it’s great<p>Found this helpful for generating some of the config files: <a href="https://github.com/tjfontaine/airprint-generate" target="_blank" rel="noopener noreferrer">https://github.com/tjfontaine/airprint-generate</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682824" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">asteroidburger</span>
+        <span class="meta-time">2026/04/08 04:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你能让驱动程序全部正确对齐，那就太好了。我曾多次尝试将我 12 岁的 Brother 激光设备设置成这样，但每次我最终都认输了。<p>也许有一天我会在法学硕士的协助下再试一次。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’ll work great if you can get the drivers all aligned properly. I’ve tried a few times to get my 12 year old Brother laser setup like that, and each time I end up throwing in the towel.<p>Maybe I’ll try it again someday with an LLM assisting.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680608" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mikepurvis</span>
+        <span class="meta-time">2026/04/08 03:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有一台三星 ML-1740 还在用，我实在舍不得放弃；我一直想将它实现 RasPi 化，但它是那些感觉最终会变成兔子洞的项目之一。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have a Samsung ML-1740 kicking around still that I just can't bear to part with; I've been meaning forever to RasPi-ify it, but it's one of those projects that feels like it's going to end up being a rabbit hole.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679848" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 07:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但这是那些感觉最终会成为一个兔子洞的项目之一。<p>我知道你的感受。我已经开始了 <a href="https://printserver.ink" target="_blank" rel="noopener noreferrer">https://printserver.ink</a> 因为我想购买零售打印服务器但找不到。我原以为所有事情都需要半年的时间，但修复所有与打印机相关的错误已经三年了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;but it's one of those projects that feels like it's going to end up being a rabbit hole.<p>I know your feelings. I've started <a href="https://printserver.ink" target="_blank" rel="noopener noreferrer">https://printserver.ink</a> because I wanted to buy a retail print server and could not find any. I was expecting half a year overall work for everything, but fixing all printer-related bugs for 3 years already.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682880" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">HeyMeco</span>
+        <span class="meta-time">2026/04/08 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ML-1740 由此处提供的驱动程序支持： <a href="https://www.bchemnet.com/suldr/index.html" target="_blank" rel="noopener noreferrer">https://www.bchemnet.com/suldr/index.html</a>
+在我的 arm64 sbc 上工作，作为另一台三星打印机的杯子打印机</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ML-1740 is supported by the driver available here: <a href="https://www.bchemnet.com/suldr/index.html" target="_blank" rel="noopener noreferrer">https://www.bchemnet.com/suldr/index.html</a>
+Works on my arm64 sbc as a cups printer for another samsung printer</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681315" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 07:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是三星 SPL 设备，受 SpliX 支持： <a href="https://github.com/OpenPrinting/splix" target="_blank" rel="noopener noreferrer">https://github.com/OpenPrinting/splix</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a Samsung SPL device, it's supported by SpliX: <a href="https://github.com/OpenPrinting/splix" target="_blank" rel="noopener noreferrer">https://github.com/OpenPrinting/splix</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682863" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PunchyHamster</span>
+        <span class="meta-time">2026/04/08 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Apple 不是一开始就直接使用 CUPS 吗？他们刚刚删除了版本中的旧驱动程序吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn't Apple outright uses CUPS in the first place ? Did they just removed old drivers in their version ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681394" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 08:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能会认为打印这样重要且历史悠久的功能无疑会得到大公司的支持。直到 2019 年，它得到了苹果的支持，情况一直如此。然而目前，CUPS 和所有相关项目都是由志愿者支持的，包括我自己。<p>Apple 几年前就放弃了 CUPS，最近在 github 上存档了该存储库： <a href="https://github.com/apple/cups" target="_blank" rel="noopener noreferrer">https://github.com/apple/cups</a></p><p>当前所有开发都在 OpenPrinting github 中运行： <a href="https://github.com/OpenPrinting" target="_blank" rel="noopener noreferrer">https://github.com/OpenPrinting</a>，并且主要关注较新的项目，例如 CUPS v3、PAPPL、打印机应用程序。</p><p>不过，最新版本的 CUPS v2 仍在 Chrome OS 和 Chromebook 中使用（除了所有 Linux）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You might think that such an important and long-standing feature as printing would undoubtedly be backed up by a large company. This was true until 2019, when it was backed by Apple. Currently, however, CUPS and all related projects are supported by volunteers, including myself.<p>Apple abandoned CUPS years ago, and recently have archived the repo on github: <a href="https://github.com/apple/cups" target="_blank" rel="noopener noreferrer">https://github.com/apple/cups</a></p><p>All the current development runs in OpenPrinting github: <a href="https://github.com/OpenPrinting" target="_blank" rel="noopener noreferrer">https://github.com/OpenPrinting</a>, and mostly focused on newer projects, such as CUPS v3, PAPPL, Printer Applications.</p><p>Recent versions of CUPS v2 are still used in Chrome OS and Chromebooks though (apart from all Linuxes).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683038" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nubinetwork</span>
+        <span class="meta-time">2026/04/08 07:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很好奇 cups 是否也适用于 wsl...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd be curious if cups works on wsl as well...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682488" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ValdikSS</span>
+        <span class="meta-time">2026/04/08 08:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它确实： <a href="https://openprinting.github.io/wsl-printer-app/" target="_blank" rel="noopener noreferrer">https://openprinting.github.io/wsl-printer-app/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It does: <a href="https://openprinting.github.io/wsl-printer-app/" target="_blank" rel="noopener noreferrer">https://openprinting.github.io/wsl-printer-app/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682990" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SoftTalker</span>
+        <span class="meta-time">2026/04/08 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的衣柜里有一台旧的 Epson MX80 点阵打印机，考虑过买一个 Raspberry Pi 并对其进行设置，以便我们可以无线打印到它。但是……谁会真正想要这样呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have an old Epson MX80 dot-matrix printer in the closet, have thought about getting a Raspberry Pi and setting that up so we can wirelessly print to it. But... who would really want that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679337" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mrighele</span>
+        <span class="meta-time">2026/04/08 02:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于像 Epson MX80 这样的打印机，esp32 应该足以在端口 9100 上的原始 TCP 接口（我认为该协议已命名为 AppSocket）上共享打印机。Windows 和 CUPS 支持它。<p>实施非常简单，因为它本质上只是将数据转发到打印机。由于它是原始接口，因此您需要正确的驱动程序，但幸运的是 Epson 为 Epson MX-80 提供了 Windows 10 驱动程序（！）[1] CUPS 没有 MX-80 的驱动程序，但它有许多通用的 Epson 驱动程序，我的猜测是其中一个可以工作。</p><p>最困难的部分可能是并行接口（除非您有一台带有串行接口的打印机，在这种情况下会容易得多）</p><p>[1] <a href="https://epson.com/Support/Printers/Impact-Printers/MX-Series/Epson-MX-80/s/SPT_M80?review-filter=Windows+10+64-bit" target="_blank" rel="noopener noreferrer">https://epson.com/Support/Printers/Impact-Printers/MX-Series...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For a printer like an Epson MX80 an esp32 should be enough to share the printer on a raw TCP interface (AppSocket I think the protocol is named) on port 9100. It is supported by Windows and CUPS.<p>Very easy implementation as it essentially it just forwards the data to the printer. Since it's a raw interface you need the proper driver, but luckily Epson provides a Windows 10 driver for the Epson MX-80 (!) [1] CUPS doesn't have driver for the MX-80 but it has a number of generic Epson drivers and my guess is that one of those will work.</p><p>The most difficult part is probably the parallel interface (unless you have a printer with a serial interface in which case it will be much easier)</p><p>[1] <a href="https://epson.com/Support/Printers/Impact-Printers/MX-Series/Epson-MX-80/s/SPT_M80?review-filter=Windows+10+64-bit" target="_blank" rel="noopener noreferrer">https://epson.com/Support/Printers/Impact-Printers/MX-Series...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679752" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hahn-kev</span>
+        <span class="meta-time">2026/04/08 01:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太酷了！感谢分享。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is pretty cool! Thanks for sharing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678996" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/08 02:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">cups不是事实上的苹果项目吗？  VM 给你带来什么？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Isn't cups a de facto apple project?  What's the VM getting you?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/08 02:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">支持特定打印机的 gutenprint 驱动程序不支持 darwin</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The gutenprint drivers to support the specific printer don't support darwin</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679505" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/08 03:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Gutenprint 支持 Macos 作为一等公民，包括这款特殊的打印机 AFAICT。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Gutenprint supports macos as a first class citizen, including this particular printer AFAICT.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679897" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gmac</span>
+        <span class="meta-time">2026/04/08 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从 Gutenprint 主页上， <a href="https://gimp-print.sourceforge.io/" target="_blank" rel="noopener noreferrer">https://gimp-print.sourceforge.io/</a>:<p>自 2024 年 7 月 7 日起，Gutenprint 项目已正式弃用 MacOS 支持。这意味着不会再生成与 MacOS 兼容的二进制文件。</p><p>Gutenprint 已经三年多没有活跃的 MacOS 维护者了，剩下的开发人员缺乏生成 MacOS 二进制文件的技术能力，更不用说承担在较新的（Mojave/10.14 之后）MacOS 版本上生成、测试和支持二进制文件所需的大量工作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the Gutenprint home page, <a href="https://gimp-print.sourceforge.io/" target="_blank" rel="noopener noreferrer">https://gimp-print.sourceforge.io/</a>:<p>As of July 7, 2024 the Gutenprint project has formally deprecated MacOS support. This means that no further MacOS-compatible binaries will be produced.</p><p>Gutenprint has not had an active MacOS maintainer for over three years, and the remaining developers lack the technical ability to produce MacOS binaries, much less undertake the substantial amount of work necessary to produce, test, and support binaries on newer (post-Mojave/10.14) MacOS releases.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679927" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/08 03:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来这只是因为他们没有办法测试，也没有带宽来处理它。  但一旦任何问题（听起来像应用程序通知）得到解决，大部分情况下应该仍然可以工作。<p>似乎更好的选择是修复两年前阻碍他们的一切，而不是在浏览器选项卡中模拟的 Linux 虚拟机的野蛮戈德堡机器。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It looks like it's just because they had no way to test, and bandwidth to deal with it.  But should still mostly work, once whatever issue (that sounds like app notrization) is fixed.<p>It seems like the better option would have been to fix whatever was blocking them just two years ago, rather than this wild rube goldberg machine of a Linux VM emulated in a browser tab.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680048" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gmac</span>
+        <span class="meta-time">2026/04/08 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，欢迎任何人这样做！但我想用 JS 编写 Rube Goldberg 机器（以突破网络的界限）是我真正喜欢的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean, anyone is welcome to do just that! But I guess coding Rube Goldberg machines in JS (to push the boundaries of the web) is a thing I really kind of enjoy.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680165" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">merb</span>
+        <span class="meta-time">2026/04/08 02:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不会。现在大多数杯子的变化都发生在 <a href="https://github.com/openprinting/cups?tab=readme-ov-file" target="_blank" rel="noopener noreferrer">https://github.com/openprinting/cups?tab=readme-ov-file</a><p>请参阅此处了解详细信息： <a href="https://openprinting.github.io/achievements/#cups-upstream-home-is-openprinting-now" target="_blank" rel="noopener noreferrer">https://openprinting.github.io/achievements/#cups-upstream-h...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No. Most cups changes nowadays happen in <a href="https://github.com/openprinting/cups?tab=readme-ov-file" target="_blank" rel="noopener noreferrer">https://github.com/openprinting/cups?tab=readme-ov-file</a><p>See here for the details: <a href="https://openprinting.github.io/achievements/#cups-upstream-home-is-openprinting-now" target="_blank" rel="noopener noreferrer">https://openprinting.github.io/achievements/#cups-upstream-h...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679510" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/08 03:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">噢，好的，新信息，谢谢！<p>但该驱动程序比来自 Apple CUPS 的 OpenPrinting 分支更旧。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, OK, new information, thanks!<p>But this driver is older than OpenPrinting's fork from Apple CUPS.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679864" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">DeathArrow</span>
+        <span class="meta-time">2026/04/08 03:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我会要求克劳德写一个驱动程序。但这也有效。 :)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would have asked Claude to write a driver. But this works, too. :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680090" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/08 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">遗憾的是，Apple 仍在阻止 WebUSB 规范的标准化。他们甚至不会提出建议以使其通过委员会，因为 WebUSB 可能会切入他们的本地应用程序商店。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Too bad Apple is still preventing the WebUSB spec from being standardized. They won't even make suggestions to get it through committee because WebUSB might cut into their native app store.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679597" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">davsti4</span>
+        <span class="meta-time">2026/04/08 03:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从： <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebUSB_API" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/WebUSB_API</a>
+“WebUSB 为这些非标准化 USB 设备服务提供了一种向网络公开的方式。这意味着硬件制造商将能够提供一种从网络访问其设备的方式，而无需提供自己的 API。”<p>这听起来一点也不安全！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From: <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebUSB_API" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/WebUSB_API</a>
+"WebUSB provides a way for these non-standardized USB device services to be exposed to the web. This means that hardware manufacturers will be able to provide a way for their device to be accessed from the web, without having to provide their own API."<p>That doesn't sound secure at all!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680209" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/08 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是为什么 Firefox 也不支持它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Which is why Firefox doesn't support it either.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680906" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/08 07:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Firefox 的无理由和苹果的无理由一样蹩脚。这些 API 不存在安全风险，用户必须在每个请求 USB 访问的网站上明确选择加入，就像网站请求的所有其他有隐私风险的 API 一样，例如麦克风和摄像头访问。 WebUSB 也不例外。<p>自从允许访问摄像头和麦克风以来，唯一发生的变化是，苹果现在考虑将网络应用程序切入其应用程序商店业务，因此他们不愿意让任何新的 API 获得批准，以使网络应用程序与本机应用程序一样强大。这包括 WebBluetooth 和其他 API。</p><p>苹果也因这种不正当的商业行为而被美国司法部起诉。</p><p>而且我真的不认为 Firefox 说的是相关的，他们是如此缺钱，我毫不怀疑苹果会付钱给他们，让他们对新的 Web API 提出负面意见，这样像你这样的人就可以说“Firefox 也不想要它”。</p><p>事实上，没有充分的理由阻止 WebUSB 和 WebBluetooth 成为标准。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Firefox's non-reasons are just as lame as Apple's non-reasons. These APIs aren't security risks, the user has to explicitly opt-in on every website that requests USB access, just like every other privacy-risky API that a website requests, like microphone and camera access. WebUSB is no different.<p>The only thing that has changed since camera and microphone access was allowed is that Apple now considers web apps to cut into their app store business, so they are unwilling to let any new APIs get approved that would make a web app as capable as a native app. This includes WebBluetooth and other APIs.</p><p>Apple is also getting sued by the DOJ for exactly this type of shady business practice.</p><p>And I don't really think what Firefox says is relevant, they are so cash-strapped I would not doubt that Apple pays them to have a negative opinion about new web APIs just so people like you can say "Firefox doesn't want it either".</p><p>The truth is there is no good reason to block WebUSB and WebBluetooth from becoming standards.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682801" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Gigachad</span>
+        <span class="meta-time">2026/04/08 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">用户每天都会收到一百万个权限弹出窗口的垃圾邮件，并且不知道他们实际上接受什么或存在什么风险。看起来相同的权限弹出窗口通常意味着一些极其琐碎的事情，例如通知或摄像头，而 webusb 规范使您面临硬件损坏或数据盗窃的潜在高风险。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The user gets spammed with a million permissions popups a day and has no idea what they are actually accepting or what the risks are. The same looking permissions popup usually means something incredibly trivial like notifications or camera, while the webusb spec is exposing you to potentially high risks of damage to hardware or data theft.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683002" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/08 10:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;用户每天都会收到一百万个权限弹出窗口的垃圾邮件，并且不知道他们实际上接受什么或存在什么风险。<p>“一百万”实在是太夸张了。那么我们就不要再做任何事情了，因为这可能会导致权限弹出窗口？或者因为某些白痴可能会信任诈骗网站？这就是你的论点？抱歉，这不是一个好的论据。</p><p>&gt;而 webusb 规范使您面临硬件损坏或数据被盗的潜在高风险。</p><p>请解释一个网站的现实场景 &gt;<i>有人信任的</i>&lt; 将“损坏硬件或导致数据被盗”。</p><p>我会等待。</p><p>我不在乎你那愚蠢的祖父会以某种方式被黑客攻击——他不是阻止我们其他人的好理由。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;The user gets spammed with a million permissions popups a day and has no idea what they are actually accepting or what the risks are.<p>"A million" is quite the hyperbole. So let's just not do anything anymore because it might cause a permission popup? Or because some idiot might trust a scam website? That's your argument? Sorry, it's not a good argument.</p><p>&gt;while the webusb spec is exposing you to potentially high risks of damage to hardware or data theft.</p><p>Please explain a realistic scenario where a website &gt;<i>that someone trusts</i>&lt; is going to "damage hardware or cause data theft".</p><p>I'll wait.</p><p>I don't care about your stupid grandfather that is going to get hacked one way or another - he's not a good reason to hold the rest of us back.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684334" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/08 07:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那是无稽之谈。 <i>您必须选择加入任何请求 USB 访问的网站，就像其他有用但存在潜在隐私风险的浏览器一样 API</i>。<p>许多网站都要求访问相机，而这通常是 USB 设备。许多网站都要求访问麦克风，这可以是 USB 设备。即使这些设备并不总是 USB 设备，它们仍然存在浏览器都允许的隐私风险。 USB 访问也不例外，网站不能为所欲为，您必须先授予其使用权限。而且它也不必是全有或全无，它可以实现为允许浏览器仅访问特定的 USB 设备。</p><p>苹果为了利润而推迟了进展。当开发者被迫创建一款原生应用程序时，苹果可以通过该应用程序抽取 30% 的收入，他们就会从中获利。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's nonsense. <i>You have to opt-in on any website that is requesting USB access, just like every other useful but potentially privacy-risky browser API</i>.<p>Plenty of sites ask for camera access, and that is typically a USB device. Plenty of sites ask for microphone accesss, which can be a USB device. And even if those aren't always USB devices, they are still very much a privacy risk that browsers all allow. USB access is no different, a website can't just do whatever it wants, you have to give it permission to use it first. And it doesn't have to be all-or-nothing either, it could be implemented to allow the browser to access only specific USB devices.</p><p>Apple is holding back progress in favor of profit. They profit when developers are forced to create a native app where Apple can extract 30% of revenue through the app.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682767" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Gigachad</span>
+        <span class="meta-time">2026/04/08 08:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这与相机是否是 USB 设备无关，而与所公开的功能有关。 Web 浏览器不仅将网络摄像头作为任意 USB 设备移交，而且还呈现来自摄像头的媒体流。这意味着它们无法发送任意命令、刷新固件或执行 USB 设备可能提供的任何无限操作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not about if the camera is a USB device or not, it's about what the capabilities being exposed is. Web browsers aren't just handing over the webcam as an arbitrary USB device, they are presenting a media stream from them. Which means they can't for example send arbitrary commands, flash firmware, or do any of the infinite things a USB device might present.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683020" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/08 10:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不在乎？<p>我不会让任何旧网站访问我的所有 USB 设备。我期望给予 <i>我信任的网站</i> 访问 <i>特定USB设备</i>。我不知道为什么你认为这必须是一个无论愿意与否都可以免费访问所有功能的功能。</p><p>是的，我想向从网站 XYZ 购买的产品授予对网站 XYZ 的访问权限，以便通过 WebUSB 完成令人惊奇的事情。</p><p>如果这不是当前的规格，则更改规格即可。</p><p>但苹果根本不会提出任何改变，因为这样做只会稍微损害他们宝贵的应用程序商店。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't care?<p>I'm not giving any old website access to all of my USB devices. I'd expect to give <i>a website I trust</i> access to <i>specific USB device</i>. I'm not sure why you think this has to be a willy-nilly free-access-to-everything feature.</p><p>Yes, I want to give access to site XYZ to a product purchased from site XYZ to do amazing things over WebUSB.</p><p>If that isn't the current spec, then change the spec so it's good.</p><p>But Apple just doesn't give a single shit to propose any changes because doing so would hurt their precious app store just a little bit.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cosmic_cheese</span>
+        <span class="meta-time">2026/04/08 04:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Mozilla 也不想要它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Mozilla doesn’t want it either.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680719" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/08 07:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的不认为 Mozilla 说的是相关的，他们是如此缺钱，我毫不怀疑苹果会付钱给他们，让他们对新的 Web API 提出负面意见，这样像你这样的人就可以说“Mozilla 也不想要它”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't really think what Mozilla says is relevant, they are so cash-strapped I would not doubt that Apple pays them to have a negative opinion about new web APIs just so people like you can say "Mozilla doesn't want it either".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682811" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">randusername</span>
+        <span class="meta-time">2026/04/08 03:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">到底我们已经不在 web 1.0 中了，是吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what the heck we're not in web 1.0 anymore are we</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680544" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simoncion</span>
+        <span class="meta-time">2026/04/08 05:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，整洁。 FOSDEM 2025 幻灯片 [0] 中提到了 QEMU 的另一个 wasm 端口 v86。有趣的是，v86 无法运行 x86 可执行文件的问题并没有让你感到惊讶。<p>我想知道为什么没有决定使用 SANE 和 CUPS 的网络共享功能，而是由于 WebUSB 依赖性而要求使用 Chrome。在我看来，你会有一个 <i>方式</i> 如果您可以有效地将虚拟机部署在 <i>任何</i> 主要网络浏览器并作为独立程序。</p><p>[0] &lt;<a href="https://archive.fosdem.org/2025/events/attachments/fosdem-2025-6290-running-qemu-inside-browser/slides/238760/slides_1dDtpcS.pdf" target="_blank" rel="noopener noreferrer">https://archive.fosdem.org/2025/events/attachments/fosdem-20...</a>&gt;</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh neat. v86 is mentioned in the FOSDEM 2025 slides [0] for another wasm port of QEMU. Interesting that what appears to be v86's inability to run x86 executables didn't fuck you.<p>I wonder why the decision wasn't made to use the network sharing features of SANE and CUPS, instead of requiring one to use Chrome due to the WebUSB dependency. Seems to me that you'd have a <i>way</i> more general solution if you could usefully deploy your VM both in <i>any</i> major web browser and as a standalone program.</p><p>[0] &lt;<a href="https://archive.fosdem.org/2025/events/attachments/fosdem-2025-6290-running-qemu-inside-browser/slides/238760/slides_1dDtpcS.pdf" target="_blank" rel="noopener noreferrer">https://archive.fosdem.org/2025/events/attachments/fosdem-20...</a>&gt;</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gmac</span>
+        <span class="meta-time">2026/04/08 05:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能否详细说明如何使用 CUPS 的网络共享功能在任何主要 Web 浏览器中实现相同的功能（打印到旧的 USB 打印机）？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you elaborate on how using the network sharing features of CUPS would let you achieve the same thing (printing to old USB printers) in any major web browser?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681690" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simoncion</span>
+        <span class="meta-time">2026/04/08 06:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">鉴于您的商业愿望，我很高兴作为付费承包商就您的项目提供咨询。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Given your commercial aspirations, I'm happy to consult on your project as a paid contractor.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681912" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gmac</span>
+        <span class="meta-time">2026/04/08 06:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很公平！我只是认为我不完全理解你的建议。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fair enough! I just don’t think I fully understand what you’re suggesting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681996" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simoncion</span>
+        <span class="meta-time">2026/04/08 08:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我只是认为我不完全理解你的建议。<p>当然，当然。</p><p>就像我说的，考虑到您的商业（和闭源）愿望，我很高兴作为付费承包商就您的项目提供咨询。在闭源营利项目上免费工作既无趣，也不符合我的兴趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I just don’t think I fully understand what you’re suggesting.<p>Sure, sure.</p><p>Like I said, given your commercial (and closed-source) aspirations, I'm happy to consult on your project as a paid contractor. Doing work for free on a closed-source for-profit project is neither interesting nor in my interest.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682970" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hulitu</span>
+        <span class="meta-time">2026/04/08 01:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一个AI添加。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Another AI add.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678876" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">minutesmith</span>
+        <span class="meta-time">2026/04/08 05:41</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681712" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">redeeman</span>
+        <span class="meta-time">2026/04/08 01:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">像 osx 这样辉煌的操作系统肯定不会不支持 linux 支持的硬件吗？ osx 桌面年什么时候到来？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">surely a glorious OS like osx would not be without support for hardware that linux supports? when will it be year of osx desktop?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678815" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/04/08 02:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抽烟？<p>OSX 实际上一直只在非常有限的硬件上受支持，那么它如何支持其他硬件呢？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">wdym?<p>OSX has literally always been supported only on very limited hardware so how would it support anything else?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679412" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">redeeman</span>
+        <span class="meta-time">2026/04/08 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你读过这是关于什么的吗？支持人们在商店购买的打印机。人们期望的那种工作？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">did you read what this is about? support for a printer people buy in stores. the kinda thing people expect working?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680111" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">akdev1l</span>
+        <span class="meta-time">2026/04/08 10:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，我以为你指的是 VM 部分<p>无论如何，Apple 创建了 CUPS，所以它应该支持 Linux 在打印方面所做的任何事情</p><p>编辑：看起来他们没有创造它，他们只是雇佣了创造并运送它的人</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh I thought you were referring to the VM part<p>Anyway Apple created CUPS so it should support anything Linux does when it comes to printing</p><p>edit: looks like they didn’t create it, they just hired the guy who did and shipped it</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684303" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

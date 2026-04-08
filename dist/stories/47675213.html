@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>谷歌开源实验代理编排测试床 Scion | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-08-1046/">返回本批次</a>
+      <h1>谷歌开源实验代理编排测试床 Scion</h1>
+      <p class="subtitle">Google open-sources experimental agent orchestration testbed Scion</p>
+      <div class="meta-line">
+        <span>www.infoq.com</span>
+        <span>作者 timbilt</span>
+        <span>分数 162</span>
+        <span>评论 46</span>
+        <span>2026/04/07 21:39</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47675213" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.infoq.com/news/2026/04/google-agent-testbed-scion/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>Scion 旨在管理跨本地和远程计算的容器中运行的并发代理，它是一个实验性编排测试台，使开发人员能够运行具有隔离身份、凭据和共享工作空间的专用代理组。</li><li>Google 将 Scion 描述为“代理的管理程序”，能够将代理内存、聊天室和任务管理等多代理系统组件集成为正交关注点。</li><li>Scion 将“深层代理”（Claude Code、Gemini CLI、Codex 等）编排为隔离的并发进程。每个代理都有自己的容器、git 工作树和凭证——这样他们就可以在项目的不同部分工作，而不会互相干扰。代理在本地、远程虚拟机上或跨 Kubernetes 集群运行。</li><li>Scion 使开发人员能够管理动态发展并并行执行的任务图，以追求不同的目标，例如编码、审计和测试。它不依赖于一组固定的代理，而是支持不同的代理生命周期，其中一些代理是专门的且长期存在的，而另一些代理则是短暂的并且与单个任务相关。</li><li>Scion 的基本原则之一是更喜欢隔离而不是约束，以确保代理运行安全。这意味着，Scion 不是通过定义规则并将其嵌入到上下文中来限制代理的行为，而是选择让代理做任何他们需要做的事情来完成任务，同时强制执行外部边界和护栏：</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Designed to manage concurrent agents running in containers across local and remote compute, Scion is an experimental orchestration testbed that enables developers to run groups of specialized agents with isolated identities, credentials, and shared workspaces.</li><li>Google describes Scion as a &quot;hypervisor for agents&quot; that enables to integrate multi-agent system components like agent memory, chatrooms, and task management as orthogonal concerns.</li><li>Scion orchestrates &quot;deep agents&quot; (Claude Code, Gemini CLI, Codex, and others) as isolated, concurrent processes. Each agent gets its own container, git worktree, and credentials — so they can work on different parts of your project without stepping on each other. Agents run locally, on remote VMs, or across Kubernetes clusters.</li><li>Scion enables developers to manage a graph of tasks that evolve dynamically and execute in parallel pursuing distinct goals, such as coding, auditing, and testing. Rather than relying on a fixed set of agents, it support distinct agent lifecycles, with some agents being specialized and long-lived, while others are ephemeral and tied to one single task.</li><li>One basic tenet of Scion is preferring isolation over constraints to make agents operation safe. This means that instead of constraining an agent&#39;s behavior by defining rules and embedding them into its context, Scion opts for letting agents do whatever they need to do to complete their tasks while enforcing outside boundaries and guardrails:</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sowbug</span>
+        <span class="meta-time">2026/04/08 01:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很期待尝试这个。我在《煤气镇》[1] 中获得了积极但差异很大的体验，该游戏属于同一类型。希望赛恩能做得更好。<p>我对 Gastown 的主要抱怨是（1）它很昂贵，部分原因是（2）尽管我进行了配置尝试，它拒绝使用除克劳德模型之外的任何东西，（3）我不知道如何备份或添加远程到它的珠子/多尔特错误数据库，这让我害怕接触安装，以及（4）升级它经常导致牦牛剃须和丢失上下文。这些可能都是我自己的技术问题，但我是做RTFM的。</p><p>但是哇，盖斯镇取得了成果。市长和鸡貂之间的对话和协调有一种神奇的魔力，比单独的克劳德·科德带来了更好的体验。</p><p>1. <a href="https://github.com/gastownhall/gastown/" target="_blank" rel="noopener noreferrer">https://github.com/gastownhall/gastown/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm looking forward to trying this. I've had a positive but high-variance experience with Gastown[1], which is in the same genre. I hope that Scion does better.<p>My main complaints with Gastown are that (1) it's expensive, partly because (2) it refuses to use anything but Claude models, in spite of my configuration attempts, (3) I can't figure out how to back up or add a remote to its beads/dolt bug database, which makes me afraid to touch the installation, and (4) upgrading it often causes yak shaving and lost context. These might all be my own skill issues, but I do RTFM.</p><p>But wow, Gastown gets results. There's something magic about the dialogue and coordination between the mayor and the polecats that leads to an even better experience than Claude Code alone.</p><p>1. <a href="https://github.com/gastownhall/gastown/" target="_blank" rel="noopener noreferrer">https://github.com/gastownhall/gastown/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nvader</span>
+        <span class="meta-time">2026/04/08 09:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你看过 Imbue 的 mngr 吗？有些相同的能量，你可能会发现它很有用。<p><a href="https://imbue.com/product/mngr/" target="_blank" rel="noopener noreferrer">https://imbue.com/product/mngr/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you looked at mngr by Imbue? Some of the same energy, you might find it useful.<p><a href="https://imbue.com/product/mngr/" target="_blank" rel="noopener noreferrer">https://imbue.com/product/mngr/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683857" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bormaj</span>
+        <span class="meta-time">2026/04/08 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为一个还没有开始同时与多个代理合作的人，像 Gastown 这样的工具在哪里对您帮助最大？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As someone who hasn't yet jumped into working with multiple agents simultaneously, where does a tool like gastown help you the most?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47683783" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">brynary</span>
+        <span class="meta-time">2026/04/08 10:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Scion 看起来很有趣，作为“代理的虚拟机管理程序”。它受到 Kubernetes 的影响，代理执行的基础是一个有用的原语。<p>Gastown 比 Scion 更进一步，它将代理链接到一个生态系统中。我的感觉是 Gastown 或类似的可以构建为 Scion 之上的一层。</p><p>Dan Shapiro 帮助我形成了对代理编排的两个最重要功能（并发性和循环）的思考。 Scion目前只提供并发性，Gastown也比循环更注重并发性。</p><p>Fabro 是我正在开发的一个新的 OSS 项目，它试图很好地实现循环和并发： <a href="https://github.com/fabro-sh/fabro" target="_blank" rel="noopener noreferrer">https://github.com/fabro-sh/fabro</a> （也许有一天它应该建立在 Scion 之上。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Scion looks interesting, as a “hypervisor for agents”. It has Kubernetes influences, and a substrate for agent execution is a useful primitive.<p>Gastown goes further than Scion in that it chains agents together into an ecosystem. My sense is that Gastown or similar could be built as a layer on top of Scion.</p><p>Dan Shapiro helped shape my thinking on the two most important capabilities for agent orchestration as concurrency and loops. Scion provides concurrency only at present, and Gastown is also more concurrency-oriented than loops.</p><p>Fabro is a new OSS project I am working on which attempts to do both loops and concurrency well: <a href="https://github.com/fabro-sh/fabro" target="_blank" rel="noopener noreferrer">https://github.com/fabro-sh/fabro</a> (Maybe someday it should be built on top of Scion.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47684096" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/08 04:22</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680873" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jawiggins</span>
+        <span class="meta-time">2026/04/08 03:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看到谷歌的做法真的很有趣。
+最近我分享了我的方法Optio，它也是一个代理编排平台： <a href="https://news.ycombinator.com/item?id=47520220" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47520220</a><p>我更专注于与票务系统（Notion、Github Issues、Jira、Linear）集成，然后让编码代理专门致力于合并 PR。
+不过，Scion 对长时间运行的代理和容器间通信的支持看起来非常有趣。我想我必须围绕这个计划一些功能。他们的一些概念对我来说意义不大，我选择在 k8s 之上构建，而他们似乎试图制作一些重新创建控制平面的东西。有些怀疑是否需要娱乐和树林/中心，但也许当我第一次看到它们在行动时它们会更有意义。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Really interesting to see Google's approach to this.
+Recently I shared my approach, Optio, which is also an Agent Orchestration platform: <a href="https://news.ycombinator.com/item?id=47520220" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47520220</a><p>I was much more focused on integrating with ticketing systems (Notion, Github Issues, Jira, Linear), and then having coding agents specifically work towards merging a PR.
+Scion's support for long running agents and inter-container communication looks really interesting though. I think I'll have to go plan some features around that. Some of their concepts, make less sense to me, I chose to build on top of k8s whereas they seem to be trying to make something that recreates the control plane. Somewhat skeptical that the recreation and grove/hub are needed, but maybe they'll make more sense once I see them in action the first time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680281" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">BlueRock-Jake</span>
+        <span class="meta-time">2026/04/08 04:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">超越约束的隔离听起来是正确的哲学。容器为您提供了边界，但无法看到其中运行的内容。好奇 Scion 表面有多少执行上下文，但您仍然处于类似于 LiteLLM 攻击的位置，在您知道它发生之前，某些东西可能会运行并造成损害。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Isolation over constraints sounds like the right philosophy. Containers give you a boundary but not vis into what ran inside them. Curious how much execution context Scion surfaces, w/o that you're still in a position similar to the LiteLLM attack where something can run and cause damage before you know it happened.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680883" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ptone</span>
+        <span class="meta-time">2026/04/08 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[scion的主要作者和架构师在这里] 
+状态和遥测有多个层 - 首先由大多数线束中可用的钩子系统提供，然后对于那些提供 OpenTelemetry 的系统 - 进行标准化并原始转发（保留两者）到云收集器。最后 - 代理使用内置工具集“自我报告”一些活动，这些活动可以反映在控制平面中</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[primary author and architect of scion here] 
+There are several layers of state and telemetry - first is provided by the hook system available in most harnesses, then for those that provide OpenTelemetry -that is normalized and forwarded raw (preserving both) to a cloud collector. Finally - some activities are "self reported" by agents using a built-in toolset that can be reflected in the control plane</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simple10</span>
+        <span class="meta-time">2026/04/08 00:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们将代码深埋在他们的文档中：<p><a href="https://github.com/GoogleCloudPlatform/scion" target="_blank" rel="noopener noreferrer">https://github.com/GoogleCloudPlatform/scion</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They kinda buried the code deep in their docs:<p><a href="https://github.com/GoogleCloudPlatform/scion" target="_blank" rel="noopener noreferrer">https://github.com/GoogleCloudPlatform/scion</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678103" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hatmanstack</span>
+        <span class="meta-time">2026/04/08 08:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确切地说，我实际上在三月下旬就主演了这个节目，但还没有回来。  很高兴有人发帖，看起来很有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly, I actually starred this in late March and hadn't made my way back to it yet.  Glad somebody posted, looks very interesting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kvanbeek</span>
+        <span class="meta-time">2026/04/08 01:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这似乎是朝着煤气镇的方向发展，但缺少一些核心功能。拥有公式已经改变了游戏规则。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This seems to be in the direction of Gas Town but missing some of the core features. Having formulas has been game changing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ptone</span>
+        <span class="meta-time">2026/04/08 04:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[这里是 scion 的主要作者和架构师] 缺失的功能主要是设计造成的 - 这更接近煤气镇计划的“gascity” - 带上你自己的编排字符和定义。<p>如果你看一下这个编排示例</p><p><a href="https://github.com/ptone/scion-athenaeum" target="_blank" rel="noopener noreferrer">https://github.com/ptone/scion-athenaeum</a></p><p>它只是降价 - Scion 是游戏引擎</p><p>（在 scion 上运行的 Gastown 端口正在进行中）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[primary author and architect of scion here] The missing features are mostly by design - this is closer to what the gastown plans as "gascity" - bring your own orchestration characters and definition.<p>If you look at this orchestration example</p><p><a href="https://github.com/ptone/scion-athenaeum" target="_blank" rel="noopener noreferrer">https://github.com/ptone/scion-athenaeum</a></p><p>its just markdown - Scion is the game engine</p><p>(a port of gastown to run on scion is in progress)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">armanj</span>
+        <span class="meta-time">2026/04/08 01:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 该项目是早期的实验性项目。核心概念已经确定，但仍有一些粗糙的地方。本地模式：相对稳定 - 基于集线器的工作流程：约 80% 已验证 - Kubernetes 运行时：早期已知粗糙边缘<p>我想目前煤气镇是更好的选择？ idk 我对“相对稳定”感觉不太好</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; This project is early and experimental. Core concepts are settled, but expect rough edges. Local mode: relatively stable - Hub-based workflows: ~80% verified - Kubernetes runtime: early with known rough edges<p>i guess gastown is a better choice for now? idk i don't feel good about "relatively stable"</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678956" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">carverauto</span>
+        <span class="meta-time">2026/04/08 08:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">想象一下，认为煤气镇是一个比_字面上任何其他地方都更好的选择</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">imagine thinking gas town is a better choice over _literally anything else_</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682929" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aleph_minus_one</span>
+        <span class="meta-time">2026/04/08 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">读到这个标题，我宁愿想到一个不同的 SCION：<p>&gt; <a href="https://en.wikipedia.org/wiki/SCION_(Internet_architecture)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/SCION_(Internet_architecture)</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Reading this headline, I rather thought of a different SCION:<p>&gt; <a href="https://en.wikipedia.org/wiki/SCION_(Internet_architecture)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/SCION_(Internet_architecture)</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678729" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cedws</span>
+        <span class="meta-time">2026/04/08 01:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想与代理进行更多实验，但我的雇主只支付 Claude Code 的费用，并且 TOS 不允许将订阅 API 用于其他目的。还有其他人在同一条船上吗？基于代币的定价也很快变得昂贵。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I want to experiment more with agents but my employer only pays for Claude Code, and TOS disallows using the subscription API for other purposes. Anyone else in the same boat? Token based pricing also gets expensive fast.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678593" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ptone</span>
+        <span class="meta-time">2026/04/08 04:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这在容器中运行库存克劳德代码，对于 TOS 来说应该完全没问题</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This runs stock Claude Code in containers, should be completely fine for TOS</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681007" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">infiniteregrets</span>
+        <span class="meta-time">2026/04/08 03:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太酷了！我最近黑了类似的东西 <a href="https://github.com/s2-streamstore/parallax" target="_blank" rel="noopener noreferrer">https://github.com/s2-streamstore/parallax</a><p>并且还写了相关内容 <a href="https://s2.dev/blog/distributed-ai-agents" target="_blank" rel="noopener noreferrer">https://s2.dev/blog/distributed-ai-agents</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this is very cool! i recently hacked on something similar <a href="https://github.com/s2-streamstore/parallax" target="_blank" rel="noopener noreferrer">https://github.com/s2-streamstore/parallax</a><p>and also wrote about it <a href="https://s2.dev/blog/distributed-ai-agents" target="_blank" rel="noopener noreferrer">https://s2.dev/blog/distributed-ai-agents</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679854" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mahadillah-ai</span>
+        <span class="meta-time">2026/04/08 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">代理编排是问题的一方面。另一边
+  是：数据去哪儿了？<p></p><pre><code>  When agents process EU user data (names, emails, IBANs) and
+  route it to US model providers, that's a GDPR violation.
+
+  I open sourced a routing layer that detects PII in prompts and
+  forces EU-only inference when personal data is found:
+  https://github.com/mahadillahm4di-cyber/mh-gdpr-ai.eu</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agent orchestration is one side of the problem. The other side
+  is: where does the data go?<p></p><pre><code>  When agents process EU user data (names, emails, IBANs) and
+  route it to US model providers, that's a GDPR violation.
+
+  I open sourced a routing layer that detects PII in prompts and
+  forces EU-only inference when personal data is found:
+  https://github.com/mahadillahm4di-cyber/mh-gdpr-ai.eu</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681522" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/08 02:22</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679300" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bitwize</span>
+        <span class="meta-time">2026/04/08 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的大脑一直想把它读成古墓丽影风格，比如 /ˈskiː ɒn/。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My brain keeps wanting to pronounce it Tomb Raider style, like /ˈskiː ɒn/.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hackerman70000</span>
+        <span class="meta-time">2026/04/08 00:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677763" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stego-tech</span>
+        <span class="meta-time">2026/04/08 03:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">超级整洁！就像 Kubernetes 的功能也非常出色一样。  它超级整洁，主要是因为消费它是如此 <i>简单的</i>，前提是您的基础设施中已经拥有所有相同的抽象层。<p>你...<i>做</i> 具有相同的抽象层，对吧？  不？哦。好吧，别担心，如果您不想支付 IT 人员的费用来支持您，Google/Amazon/Microsoft 可以向您出售这些产品。</p><p>---</p><p>瞧，撇开讽刺不谈，你的看法是正确的。  谷歌的解决方案是 <i>惊人的</i>，但它们也是为像 Google 这样庞大而复杂的组织而构建的。  时间会告诉我们这是一个行业标准抽象（如 S3 API）还是只是一个用于类似 Google 组织/功能的 Google 产品（如 K8s）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's super neat! Just like Kubernetes is also super neat at what it can do.  It's super neat primarily because consuming it is so <i>easy</i>, provided you already have all the same abstraction layers in place in your infra.<p>You...<i>do</i> have all the same abstraction layers, right?  No? Oh. Well, don't worry, Google/Amazon/Microsoft can sell you those if you don't want to pay your IT staff to prop it up for you.</p><p>---</p><p>Look, snark aside, yours is the correct take.  Google's solutions are <i>amazing</i>, but they're also built for an organization as large and complex as Google.  Time will tell if this is an industry-standard abstraction (a la S3 APIs) or just a Google product for Google-like orgs/functions (a la K8s).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680416" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ptone</span>
+        <span class="meta-time">2026/04/08 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[这里是 scion 的主要作者和架构师]其中一部分将是将认知开销越来越多地推给代理。 Scion 在这里要探索的内容是多少、何时。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[primary author and architect of scion here] Part of this will be pushing that cognitive overhead increasingly onto agents. By how much and when is what Scion is here to explore.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680940" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">repelsteeltje</span>
+        <span class="meta-time">2026/04/08 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">像库伯内特斯一样？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Like Kubernetes?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678382" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjmarr</span>
+        <span class="meta-time">2026/04/08 02:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为大多数可以从 Kubernetes 中受益的传统公司都没有使用它，而大多数使用它的公司都是为了简历而使用它的初创公司。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think most of the legacy companies that can benefit from Kubernetes don't use it, while most of the companies that are using it are startups doing it for the résumé.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679061" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dvfjsdhgfv</span>
+        <span class="meta-time">2026/04/08 03:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这与我的经历完全相反。也许10年前确实如此，当时K8s还很新，很流行，所以很多工程师都想尝试一下。现在，在大型组织中，这只是无聊的技术。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is the exact opposite of my experience. Maybe it was true 10 years ago when K8s was new and trendy so many engineers wanted to try it out. Now it's just boring tech at large orgs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680141" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">permalac</span>
+        <span class="meta-time">2026/04/08 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很自豪地说，我退役的 k8s 集群比我创建的还要多。我已经创建了 5 个生产版本，仍在生产中。<p>我退役的一个用于服务 ftp（以及其他传输内容），ftp 是所有东西，它需要打开端口并从客户端路由回来。为了额外加分，他们将 Pod 的 CPU 上限限制为 1 个。我必须向肇事者和他们的老板解释这件事，疯狂。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm proud to say I retired more k8s clusters than I created. And I've created 5 production ones, still in production.<p>One that I retired was used for serving ftp(among other transfer stuff), ftp of all things, it needs to have ports open and routed back from the client. And for extra points they had the pods capped at 1 cpu. And I had to explain the thing to the perpetrator and their boss, madness.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">verdverm</span>
+        <span class="meta-time">2026/04/08 06:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如今，通过 GKE、EKS 和 AKS 等托管产品实现上线也变得更加容易。<p>我不喜欢从开发机器启动集群的原始 bash 脚本。</p><p>现在我们还有 k3s，它是自托管一些简单内容（例如家庭实验室）的简单选择。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's also much easier to bring online these days with managed offerings like GKE, EKS, and AKS.<p>I have no love for the original bash scripts that booted the cluster from your dev machine.</p><p>Now we also have k3s that is a easy option for self hosting something simple (like homelab).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682012" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">manojlds</span>
+        <span class="meta-time">2026/04/08 02:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是2015年。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is not 2015.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679240" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">otabdeveloper4</span>
+        <span class="meta-time">2026/04/08 01:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，而且讽刺的是。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, and unironically.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678412" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">verdverm</span>
+        <span class="meta-time">2026/04/08 06:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">稍微偏离了你的注意力，但希望有同样的情绪（k8s 很好，尽管是一个例外）<p>我更愿意将 Google ADK 与 Kubernetes 结合起来，而不是这个项目，因为它设计良好的抽象、控制平面以及处理每个替代方案成熟时都会遇到的无聊部分。</p><p>我可以看到代理框架对容器类比对内部运行内容的无知。 ADK 缺乏运行任何代理工具的能力，但您可以以最少的努力在其上构建该项目的大部分控制平面，大部分簿记工作已经存在。更多的是关于你想要拥有什么体验。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Slightly trailing off from your focus, but hopefully within the same sentiment (that k8s was good, albeit an exception)<p>I would place Google ADK in alignment with Kubernetes more than this project, for the well designed abstractions, the controlplane, and handling the boring parts that every alternative will at maturity.</p><p>I can see the agent framework ignorance to the container analogy about what's running inside. ADK lacks the ability to run any agent tool, but you can build most of this projects controlplane on top of it with minimal effort, most of the bookkeeping is there already. It's more about what experience you want to have.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">conception</span>
+        <span class="meta-time">2026/04/08 01:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">而且有棱有角。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And angular.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678407" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sieabahlpark</span>
+        <span class="meta-time">2026/04/08 02:45</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679620" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hhh</span>
+        <span class="meta-time">2026/04/08 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Kubernetes 并不难</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">kubernetes isnt difficult</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hujun</span>
+        <span class="meta-time">2026/04/08 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">k8s 很简单，因为它将一些关键任务卸载给第三方，例如网络和存储； a) 设置和维护一个 k8s 集群，其中包含来自至少十几个不同来源的所有必要组件 b) 将您的应用程序设计为 k8s 原生并不容易</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">k8s is simple because it offload some key tasks to 3rd party like network and storage; it is not easy to: a) setup and maintain a k8s cluster with all necessary components from at least a dozen different sources b) design your application to be k8s native</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679876" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stego-tech</span>
+        <span class="meta-time">2026/04/08 03:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这。  K8s 易于使用，并且是真正的 PITA，可以从 IT 角度实际设置和支持。<p>如果有人想要生产 K8，我会引导他们（及其预算）使用来自主要云提供商之一的托管控制平面。  尝试在本地支撑它 <i>真的</i> 讨厌直接使用裸机工作不会激发快乐。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This.  K8s is easy to consume, and a real PITA to actually setup and support from an IT perspective.<p>If someone wants production K8s, I'm steering them (and their budget) to a managed control plane from one of the major cloud providers.  Trying to prop it up locally when it <i>really</i> hates having to work directly with bare metal does not spark joy.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680349" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Mond_</span>
+        <span class="meta-time">2026/04/08 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">真的吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">really?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678642" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">scottyah</span>
+        <span class="meta-time">2026/04/08 02:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">linux 则不然。它很容易上手，所有基本修改/配置都相当简单，如果您发现自己深入了解使用它的自定义方式，它是开源的，并且有一个大型社区有很好的文档记录。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The same way linux isn't. It's easy to start, all the base modifications/configurations are fairly simple, and if you find yourself deep into custom ways of using it, it's open source and fairly well documented with a large community.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679248" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">popalchemist</span>
+        <span class="meta-time">2026/04/08 00:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">100%。很棒的评价。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">100%. Great assessment.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677880" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/08 05:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681564" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">minutesmith</span>
+        <span class="meta-time">2026/04/08 03:11</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679962" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">meidad_g</span>
+        <span class="meta-time">2026/04/08 02:05</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679071" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kumardeepanshu</span>
+        <span class="meta-time">2026/04/08 01:33</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678683" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aplomb1026</span>
+        <span class="meta-time">2026/04/08 01:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">studio-m-dev</span>
+        <span class="meta-time">2026/04/08 04:54</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681247" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ptone</span>
+        <span class="meta-time">2026/04/08 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[这里是 scion 的主要作者和架构师]这是一个测试平台，因为这是一个新兴领域，用纯粹的代理指令取代 langraph 等工具中的编码图，其中代理以更多的自主权管理代理。  这些模式尚未得到很好的探索，并且在大多数情况下还没有准备好用于生产。  测试平台的目标是提供一种简单快速的方法来尝试其中 N 个模式。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[primary author and architect of scion here] The reason this is a testbed is because this is a new and emerging area of replacing things like codified graphs in tools like langraph with pure agent instruction where agents manage agents with a lot more autonomy.  These patterns are not well explored, and are not ready for production in most cases.  The goal of a testbed is to have an easy and quick way to try out N of these patterns.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682287" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bambushu</span>
+        <span class="meta-time">2026/04/08 05:29</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Sattyamjjain</span>
+        <span class="meta-time">2026/04/08 01:58</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678978" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ninjahawk1</span>
+        <span class="meta-time">2026/04/08 02:15</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47679200" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">verdverm</span>
+        <span class="meta-time">2026/04/08 00:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们的代理工具正在成为众所周知的产品取消问题。他们现在对此有多少不同的看法？ （gemini-cli、反重力、AI studio、这个、Gemini 应用程序）<p>我对他们中的任何一个都没有留下深刻的印象。我确实在我的自定义代理堆栈中使用他们的 ADK 作为核心运行时。我觉得那个很好，有腿，可以长寿。</p><p>这里的主要企业问题是让各种代理框架发挥良好作用。工具和/或员工之间应该如何共享运行时、会话克隆、沙箱、内存等？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Their agent tooling is shaping up to be the well known issue of product cancellation. They have how many different takes on this now? (gemini-cli, antigravity, AI studio, this, Gemini app)<p>I've not been impressed with any of them. I do use their ADK in my custom agent stack for the core runtime. That one I think is good and has legs for longevity.</p><p>The main enterprise problem here is getting the various agent frameworks to play nice. How should one have shared runtimes, session clones, sandboxes, memory, etc between the tooling and/or employees?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677768" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">otabdeveloper4</span>
+        <span class="meta-time">2026/04/08 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这只是幕后的系统提示，仅此而已。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's all just system prompts under the hood and nothing more.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ptone</span>
+        <span class="meta-time">2026/04/08 04:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[这里是scion的主要作者和架构师]实际上-还有另外两个大部分：CLI和控制平面</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[primary author and architect of scion here] Actually - there are two other big parts: a CLI and a control plane</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47681010" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">verdverm</span>
+        <span class="meta-time">2026/04/08 01:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你定制的话就不是了，你有无限的自由度，例子......<p>我修改了 file_read/write/edit 以将内容放入系统提示符中。这可以节省上下文空间，即当它在编辑失败后重新读取文件时，即使它具有最新的内容。它也不需要从读取+编辑推断修改的内容。它仍然将编辑视为消息，但当前的实际内容始终存在。</p><p>我的 AGENTS.md 加载程序。代理不会做出决定，它是根据它与之交互的其他文件/目录来确定的。它仍然可以要求阅读它们，但现在很少这样做。</p><p>我还使用 Dagger 支持代理环境或沙箱，它带来了许多功能，例如能够进入同一环境中的 shell，进行更改，并将这些更改传播回会话。时间旅行、克隆/分叉和 VS Code 虚拟 FS 是其他一些。我可以在会话历史记录中的任何时刻进入 shell。  如果我的代理删除了不应删除的文件，我可以通过单击按钮来撤消它。</p><p>我还可以同时从 VS Code、TUI 或 API 与同一会话进行交互。不同的模式适合不同的任务（例如，用于代码审查/编辑的 VS Code 多差异；用于会话管理/清理的 TUI）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not if you go custom, you have unlimited latitude, examples...<p>I modified file_read/write/edit to put the contents in the system prompt. This saves context space, i.e. when it rereads a file after failed edit, even though it has the most recent contents. It also does not need to infer modified content from read+edits. It still sees the edits as messages, but the current actual contents are always there.</p><p>My AGENTS.md loader. The agent does not decide, it's deterministic based on what other files/dirs it has interacted with. It can still ask to read them, but it rarely does this now.</p><p>I've also backed the agents environment or sandbox with Dagger, which brings a number of capabilities like being able to drop into a shell in the same environment, make changes, and have those propagate back to the session. Time travel, clone/fork, and a VS Code virtual FS are some others. I can go into a shell at any point in the session history.  If my agent deletes a file it shouldn't, I can undo it with the click of a button.</p><p>I can also interact with the same session, at the same time, from VS Code, the TUI, or the API. Different modalities are ideal for different tasks (e.g. VS Code multi-diff for code review / edits; TUI for session management / cleanup).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678936" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">IncreasePosts</span>
+        <span class="meta-time">2026/04/08 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不要忘记 while 循环和 TODO.md</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Don't forget a while loop and a TODO.md</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678717" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jFriedensreich</span>
+        <span class="meta-time">2026/04/08 03:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人失望的谷歌所有地方都使用 git 工作树而不是 jj 工作区。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Disapointing google of all places uses git worktrees instead of jj workspaces.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47680403" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">verdverm</span>
+        <span class="meta-time">2026/04/08 06:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 git interop 得到改进并且有足够大的胜利来改变核心工作工具之前，jj 不会实现有意义的采用。缺乏 git-lfs 是我工作的一个障碍，并要求所有开发人员改变他们的 git 习惯，以适应一家不使用 rebase 的商店（据我了解，jj 的主要问题是要做得更好）……投资回报率似乎不存在。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">jj will not achieve meaningful adoption until git interop is improved and there is a big enough win to change a core work tool. Lack of git-lfs is a blocker where I work and asking all the devs to change their git habits for a shop that doesn't use rebase (as I understand the main issue jj aims to make better)... the ROI just doesn't appear to be there.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47682074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tornikeo</span>
+        <span class="meta-time">2026/04/08 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发誓在 TensorFlow 之后不再被 google 烧伤。这看起来很酷，我会将其交给我的 Codex，供其仔细研究并解释它是否适合（或者可以适合我现在正在构建的内容 - msx.dev），然后继续。我不信任 Google 会维护我所依赖的工具。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I swore to not be burned by google ever again after TensorFlow. This looks cool, and I will give this to my Codex to chew on and explain if it fits (or could fit what I am building right now -- the msx.dev) and then move on. I don't trust Google with maintaining the tools I rely on.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">forsalebypwner</span>
+        <span class="meta-time">2026/04/08 01:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不错的插头</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">nice plug</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678673" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

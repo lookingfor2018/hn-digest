@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeiMOS – MOS 6502 的超级优化器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-08-1046/">返回本批次</a>
+      <h1>DeiMOS – MOS 6502 的超级优化器</h1>
+      <p class="subtitle">DeiMOS – A Superoptimizer for the MOS 6502</p>
+      <div class="meta-line">
+        <span>aransentin.github.io</span>
+        <span>作者 Aransentin</span>
+        <span>分数 76</span>
+        <span>评论 17</span>
+        <span>2026/04/07 19:10</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47673379" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://aransentin.github.io/deimos/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>MOS 6502 超级优化器</li><li>到底什么是超级优化器？超级优化器是一种旨在为给定计算任务生成最佳机器代码序列的工具，旨在实现最短或最快的实现。与应用一组预定义优化规则和启发式方法来提高代码效率的传统编译器不同，超级优化器会详尽地搜索整个可能的指令序列空间，以找到完美满足指定功能且具有最佳性能的指令序列。这种详尽的搜索允许超级优化器发现高效的代码序列。正如您可以想象的那样，这并不是特别快，而且随着程序变长，扩展性也很差。 DeiMOS 就是这样一个程序，针对 MOS 6502。</li><li>为什么是 6502？ MOS 6502 是 1975 年推出的 8 位微处理器，在当时的视频游戏机和计算机（例如游戏机）中非常流行。 NES 和 Commodore 64。由于其简单性和重要性，它是超级优化器的一个不错的目标。它的指令集相对较小且定义明确，由有限数量的操作码和寻址模式组成。这种简单性降低了程序需要探索的搜索空间的复杂性，使得彻底分析可能的指令序列以获得最佳性能变得更加可行。此外，6502 缺乏现代 CPU 中的一些高级功能，例如广泛的寄存器或分支预测，这意味着超级优化器更有可能发现不明显的、可证明高效的代码序列。</li><li>测试生成和验证首先，我们需要某种方式来描述我们想要找到的算法。这相当简单——用户提供两个功能；一种是生成初始系统状态，另一种是验证输出状态对于任何给定的输入状态是否正确。生成候选程序后，我们对输入的每个可能的变化运行一次测试生成、模拟和验证，如果有任何变化被证明是错误的，则中止。在现代的 CPU 上，这实际上是行不通的——即使检查单个 64 位整数的每个可能值也会非常慢。然而，由于 6502 是 8 位 CPU，我们通常只需要运行最多 256 次测试来验证我们找到的函数是否正确。在大多数情况下，程序在第一次测试后就会被拒绝，因此它根本不会减慢进程。</li><li>最初的简单尝试 超级优化器最简单的实现就是简单地生成所有字节组合，然后按顺序模拟它们中的每一个。对于长度为 4 的程序，有 256^4 个可能的程序，或者说大约 40 亿个。对于现代计算机来说，可以在“合理”的时间内检查所有这些内容，但不超过 4 字节的有趣程序的数量并不是很大。该方法的唯一优点是它易于实现，并且您可以确定您找到的程序实际上是最小的程序（假设您的模拟器编写正确）。除此之外，它的速度慢得令人无法接受。第一个简单的优化是认识到，虽然 6502 汇编器中的所有字节都代表执行某些操作的指令，但其中很多字节都没有记录，并且其中大多数只是堵塞了 CPU。如果候选程序的第一个字节导致 CPU 停止，则检查以此字节开头的任何程序都是没有意义的。现在我们不必查看其余的 256^3 程序。该逻辑并不完全像“如果我们崩溃，将当前字节加 1 并将此字节之后的所有字节设置为零”那么简单，因为由于分支和跳转，程序可能已经访问了此字节之前的更深字节。相反，我们存储模拟器迄今为止达到的最深点并增加该点。另一种优化是甚至不生成您知道无用的指令。这样，您基本上只提供实际完成的模拟器程序。我通过编写一个查找表来做到这一点，其中键是当前操作码，值是下一个有效操作码。总而言之，这使我能够生成略多于 4 个字节的最佳程序。不伟大，也不可怕。但我们可以做得更好！</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>A MOS 6502 Superoptimizer</li><li>What is a Superoptimizer Anyway? A superoptimizer is a tool that seeks to generate the optimal machine code sequence for a given computational task, aiming for the shortest or fastest possible implementation.Unlike traditional compilers that apply a set of predefined optimization rules and heuristics to improve code efficiency, a superoptimizer exhaustively searches the entire space of possible instruction sequences to find the one that perfectly meets the specified functionality with optimal performance. This exhaustive search allows superoptimizers to discover highly efficient code sequences. As you can imagine, this isn&#39;t particularly fast and scales very poorly as the programs grow longer. DeiMOS is one such program, targeting the MOS 6502.</li><li>Why the 6502? The MOS 6502 is an 8-bit microprocessor from 1975, and was extremely popular in video game consoles and computers of the time, e.g. the NES and Commodore 64. It&#39;s a nice target for a superoptimizer due to its simplicity and significance. Its instruction set is relatively small and well-defined, consisting of a limited number of opcodes and addressing modes. This simplicity reduces the complexity of the search space that the program needs to explore, making it more feasible to exhaustively analyze possible instruction sequences for optimal performance. Additionally, the 6502 lacks some of the advanced features found in modern CPUs, such as extensive registers or branch prediction, which means that there is a greater potential for a superoptimizer to uncover non-obvious, provably highly efficient code sequences.</li><li>Test Generation and Verification First, we need some way of describing the algorithm we would like to find. This is fairly straightforward – the user supplies two functions; one that generates an initial system state, and one that verifies that the output state is correct for any given input state. After a candidate program has been generated, we run the test generation, emulation, and verification once for every possible variation of the input, aborting if any should prove to be wrong. On a modern CPU this wouldn&#39;t really have worked – checking each possible value of even a single 64-bit integer would have been prohibitively slow. Since the 6502 is an 8-bit CPU however, we commonly only have to run at most 256 tests to verify that the function we&#39;ve found is correct. In the majority of cases the program is rejected after the first test, so it doesn&#39;t really slow down the process at all.</li><li>An Initial Naïve Attempt The most naïve implementation possible of a superoptimizer is simply generating all combinations of bytes, and then emulating each of them in order. For a program of length 4, there are 256^4 possible programs, or about 4 billion of them. For a modern computer it is possible to check all of these in &quot;reasonable&quot; time, but the number of interesting programs no longer than 4 bytes isn&#39;t very large. The only things this method has going for it are that it&#39;s easy to implement, as well as the fact you can be certain that the program you found is actually the smallest one (assuming your emulator is written correctly). Other than that, it is unacceptably slow. The first straightforward optimization is to realize that while all bytes in 6502 assembler represents an instruction that does something, a whole lot of them are undocumented, and most of those just jam the CPU. If the first byte of a program candidate causes the CPU to halt, there&#39;s no point in checking any program that starts with this byte. Now we don&#39;t have to look at the rest of these 256^3 programs. The logic isn&#39;t exactly as straightforward as &quot;if we crash, increase the current byte by 1 and set all the bytes after this one to zero&quot;, as the program might have visited deeper bytes before this one, due to branches and jumps. Instead, we store the deepest point the emulator has reached so far and increase that one. Another optimization is to not even generate an instruction that you know is useless. That way, you mostly only feed the emulator programs that will actually complete. I did this by writing a lookup table, where the key is the current opcode and the value the next valid one. All in all, this resulted in me being able to generate optimal programs of a bit more than 4 bytes. Not great, not terrible. But we can do better!</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">russellsprouts</span>
+        <span class="meta-time">2026/04/07 23:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷！<p>我过去做了一些相关的事情： <a href="https://github.com/RussellSprouts/6502-enumerator" target="_blank" rel="noopener noreferrer">https://github.com/RussellSprouts/6502-enumerator</a>。它使用 C++ 模板在 z3 支持的符号执行和实际执行之间共享模拟器实现。它的目的是找到随机指令序列之间的等效性以进行窥视孔优化，而不是优化特定的输入序列。</p><p>影子指令很有趣，也很受诅咒。我见过它们在非常有限的情况下用于 NOP 幻灯片的计时代码： <a href="https://www.pagetable.com/?p=669" target="_blank" rel="noopener noreferrer">https://www.pagetable.com/?p=669</a>。看到它应用于其他正常代码中会很有趣。我的枚举器不支持这一点——它没有从字节执行实际的 6502 条指令——它有自己的 `the first arbitrary absolute pointer` 或 `the second arbitrary immediate constant` 内部表示。这些可以使用随机具体值或 z3 变量进行初始化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool!<p>I did something related in the past: <a href="https://github.com/RussellSprouts/6502-enumerator" target="_blank" rel="noopener noreferrer">https://github.com/RussellSprouts/6502-enumerator</a>. It uses C++ templates to share an emulator implementation between z3-powered symbolic execution and actual execution. It was meant to find equivalence between random instruction sequences for peephole optimization, rather than optimizing a specific input sequence.</p><p>Shadow instructions are very interesting and cursed. I've seen them used in very limited circumstances for NOP-slides for timing code: <a href="https://www.pagetable.com/?p=669" target="_blank" rel="noopener noreferrer">https://www.pagetable.com/?p=669</a>. It would be fun to see it applied in otherwise normal code. My enumerator wouldn't support this -- it didn't execute actual 6502 instructions from bytes -- it had its own internal representation for `the first arbitrary absolute pointer` or `the second arbitrary immediate constant`. These would either be initialized with random concrete values or z3 variables.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676588" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Aransentin</span>
+        <span class="meta-time">2026/04/07 23:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你的项目是我在设计这个项目时所研究的内容！很高兴看到你发表评论。<p>但是，是的，不同的目标。我确实研究过使用 z3，但很快发现与仅检查测试用例在运行候选程序时是否通过相比，它相当慢。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Your project was very much something I looked into when designing this! Fun to see you commenting.<p>But yes, different goals. I did look into using z3, but quickly found out that it's pretty slow compared to just checking if a test case passes when ran through the candidate program.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676885" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">guenthert</span>
+        <span class="meta-time">2026/04/07 23:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的项目而且写得很好。  但这只会让我更多地错过一些与现有技术的链接。<p>iirc，九十年代初有一个针对 M68k 的超级优化器（我相信该术语是在那篇文章中创造和激发的）。  <a href="https://dl.acm.org/doi/pdf/10.1145/36206.36194" target="_blank" rel="noopener noreferrer">https://dl.acm.org/doi/pdf/10.1145/36206.36194</a> 可能就是这样。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting project and well written.  That only made me miss some links to prior art more though.<p>iirc, there was a superoptimizer (I belief the term was coined and motivated in that article) in the early nineties for M68k.  <a href="https://dl.acm.org/doi/pdf/10.1145/36206.36194" target="_blank" rel="noopener noreferrer">https://dl.acm.org/doi/pdf/10.1145/36206.36194</a> might have been that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676972" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">adunk</span>
+        <span class="meta-time">2026/04/07 23:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">本文中描述的 max(A, X) 运算符的实现非常聪明。显然不是超级实用，因为它需要分配一个特定的零页位置才能工作（8A 美元），但这种类型的要求对于像这样的可爱技巧来说是非常典型的！这里的美妙之处在于技巧，而不在于它是否有实际应用。<p>但这也提出了一个问题：是否有一些巧妙的方法来使用未记录的 SAX 指令（该指令在 A 和 X 寄存器之间执行 AND 操作）来实现类似的效果？有一个老技巧可以不使用分支来计算最小值和最大值，但这并不立即适用（<a href="https://graphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax" target="_blank" rel="noopener noreferrer">https://graphics.stanford.edu/~seander/bithacks.html#Integer...</a>） - 但也许还有其他的技巧隐藏在那里？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That implementation of the max(A, X) operator that is described in the article is very clever. Obviously not super practical, since it needs to allocate one specific zeropage location for it to work ($8A), but that type of requirement is pretty typical for lovely tricks like this one! And the beauty here is in the trick, not whether or not there may be some practical application of it.<p>But this also raises the question: is there some clever way to use the undocumented SAX instruction, which does an AND between the A and the X registers, to achieve something similar? There is and old trick to compute min and max using no branches, which is not immediately applicable (<a href="https://graphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax" target="_blank" rel="noopener noreferrer">https://graphics.stanford.edu/~seander/bithacks.html#Integer...</a>) - but maybe there is some other trick hiding in there?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47677133" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ashdnazg</span>
+        <span class="meta-time">2026/04/08 01:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用 nand2tetris 组件进行了一些手动打高尔夫球，并开发了与 max() 实现类似的 hack，其中可以使用任意的、方便放置的内存地址。<p>不过，读完这篇文章后，我觉得我绝对需要一个超级优化器，看看有什么可以改进的:)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did some manual golfing with nand2tetris assembly and developed similar hacks to the max() implementation, where one appropriates  an arbitrary, conveniently placed, memory address.<p>After reading the article, though, I feel like I definitely need a superoptimiser, to see what could be improved :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kstrauser</span>
+        <span class="meta-time">2026/04/07 21:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是非常聪明和有趣的读物。干得好！<p>我想象很多演示编码员会在该文章和他们自己精心手工调整的程序集之间来回浏览。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That’s incredibly clever and a fun read. Well done!<p>I imagine lots of demo coders glancing back and forth between that writeup and their own carefully hand-tuned assembly.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47674793" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Aransentin</span>
+        <span class="meta-time">2026/04/07 21:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！<p>演示编码确实是其主要用例，也是我首先开始修改它的原因。制作自制 NES / C64 视频游戏的人们应该会发现它对于优化紧密循环等相当有用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you!<p>Demo coding is indeed the primary usecase for this, and the reason for why I started tinkering on it in the first place. That, and people who make homebrewed NES / C64 video games should find it fairly useful for optimizing tight loops and such.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47674884" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">HarHarVeryFunny</span>
+        <span class="meta-time">2026/04/07 21:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您假设 A * 10 不会溢出，因此 ASL A 将 0 移入进位标志（因此不需要 CLC），那么您可以执行以下操作，而不是使用未记录的 RRA 操作码：<p>员工 $00</p><p>阿斯拉</p><p>阿斯拉</p><p>ADC $00</p><p>阿斯拉</p><p>这也是 7 个字节，但速度更快，因为 adc $00 是 3 个周期，而 rra $00 是 5 个周期。</p><p>A = max(A, X) 示例当然很有趣，但不是很有用，因为它循环代码两次（非常慢）并假设 $8a 可用。更快的明显版本仅添加一个字节：</p><p>00 美元</p><p>CMP $00</p><p>BC完成</p><p>什么</p><p>完毕：</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you assume that A * 10 isn't going to overflow, so that ASL A moves 0 into the carry flag (so no need for CLC), then instead of using the undocumented RRA opcode, you can just do:<p>sta $00</p><p>asl a</p><p>asl a</p><p>adc $00</p><p>asl a</p><p>This is also 7 bytes, but is faster since adc $00 is 3 cycles, vs rra $00 being 5 cycles.</p><p>The A = max(A, X) example is certainly interesting, but not very useful since it loops through the code twice (very slow) and assumes that $8a is available. The much faster obvious version only adds one byte:</p><p>stx $00</p><p>cmp $00</p><p>bcs done</p><p>txa</p><p>done:</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675148" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Aransentin</span>
+        <span class="meta-time">2026/04/07 21:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然。请注意，我选择这些示例是为了演示优化器往往会发现的两类相当古怪的事物。如果程序员有不同的要求，他们可以指定这一点，并且它会吐出您给出的示例（或等效的内容）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure. Note that I picked those examples to demonstrate the two fairly quirky classes of things the optimizer tends to find. If the programmer has different requirements they can specify that, and it'll spit out the examples you gave (or something equivalent).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675424" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">HarHarVeryFunny</span>
+        <span class="meta-time">2026/04/07 22:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢穷举搜索的想法，6502 的简单性似乎非常适合这种搜索，但搜索速度似乎有点有限。我想知道是否没有更多的生成限制（例如代码只能使用零页的特定 N 字节）和大量搜索修剪来加快速度？如果它能够在半合理的时间内生成最佳的 20-30 个操作序列，那么它就会非常有用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like the idea of exhaustive search, which the simplicity of the 6502 seems ideally suited for, but the search speed seems a bit limiting. I wonder if there's not potential for more generation restriction (e.g. code can only use a specific N bytes of zero page) and heavy search pruning to speed it up? If it could generate optimal 20-30 op sequences in semi-reasonable time that'd make it  very useful.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675658" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aransentin</span>
+        <span class="meta-time">2026/04/07 22:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">已经支持仅使用使用一组特定零页地址的操作，是的！<p>不幸的是，20-30 次操作可能是不可能的。组合爆炸实在是太大了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Having it only use operations that use a specific set of zero-page addresses is already supported, yep!<p>20-30 ops is probably impossible, unfortunately. The combinatorial explosion is just too enormous.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675766" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">peterfirefly</span>
+        <span class="meta-time">2026/04/07 22:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几十年来，电子图表为了多种目的而被反复改造。  其中之一是超级优化。<p><a href="https://en.wikipedia.org/wiki/E-graph" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/E-graph</a></p><p><a href="https://www.cs.cornell.edu/courses/cs6120/2025sp/blog/superopt/" target="_blank" rel="noopener noreferrer">https://www.cs.cornell.edu/courses/cs6120/2025sp/blog/supero...</a></p><p><a href="https://github.com/philzook58/awesome-egraphs" target="_blank" rel="noopener noreferrer">https://github.com/philzook58/awesome-egraphs</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">e-graphs have been repeatedly reinvented across decades for many purposes.  One of them is superoptimization.<p><a href="https://en.wikipedia.org/wiki/E-graph" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/E-graph</a></p><p><a href="https://www.cs.cornell.edu/courses/cs6120/2025sp/blog/superopt/" target="_blank" rel="noopener noreferrer">https://www.cs.cornell.edu/courses/cs6120/2025sp/blog/supero...</a></p><p><a href="https://github.com/philzook58/awesome-egraphs" target="_blank" rel="noopener noreferrer">https://github.com/philzook58/awesome-egraphs</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675872" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">potus_kushner</span>
+        <span class="meta-time">2026/04/07 22:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让我想起了一点 <a href="https://pubby.games/codegen.html" target="_blank" rel="noopener noreferrer">https://pubby.games/codegen.html</a> 只是它的方法似乎更加精致和有用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">reminds me a bit of <a href="https://pubby.games/codegen.html" target="_blank" rel="noopener noreferrer">https://pubby.games/codegen.html</a> just that its approach seems  way more refined and useful.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676282" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">HarHarVeryFunny</span>
+        <span class="meta-time">2026/04/07 23:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“虽然NESFab性能不错，但手工编写汇编显然可以超越它”<p>这些项目显然有不同的目标。 DeiMOS 适合那些已经在编写汇编程序并需要最佳汇编程序的人。</p><p>NESFab 是一个编译器 - 显然是一个非常好的编译器（对于 6502 来说很难做到），但尽管如此，它并不能与手工编写汇编器并希望保存每个字节和/或周期的人直接竞争。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Although NESFab performance is good, writing assembly by hand can obviously surpass it"<p>These project obviously have different goals. DeiMOS is for people already writing assembler that want optimal assembler.</p><p>NESFab is a compiler - apparently a very good one (hard to do for 6502), but nonetheless not directly competing with people hand writing assembler and looking to save every byte and/or cycle.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47676675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rbanffy</span>
+        <span class="meta-time">2026/04/07 22:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">读起来有趣又有趣——我们已经深入了解了当时完全不可能做到的事情。现在我迫不及待地想看到更快的 AppleSoft ROM ;-)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting and fun read - we are well into the terrain of what was completely impossible to do back then. Now I can't wait to see a faster AppleSoft ROM ;-)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675965" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zackmorris</span>
+        <span class="meta-time">2026/04/08 01:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">只是想提一下约翰·科扎（John Koza）等人推广的遗传算法（GA）。<p>这篇文章使用 4 指令程序作为示例，大约有 256^4 或 40 亿种组合。大多数有趣的程序都有 10、100、1000 多个指令长，这对于通过暴力探索来说太大了。</p><p>因此，遗传算法使用许多技巧通过爬山来研究搜索空间，而不会陷入局部最优。他们通过将搜索空间视为一个位串，然后随机翻转位（突变）或交换位（有性繁殖）以跳跃到搜索空间中的相关山来实现这一点。然后，将位串转换回指令并进行测试，看看它是否执行所需的算法。</p><p>位串通常对 Lisp 程序的树形形式进行编码，以最小化语法。我们可以将其视为每个标记都以位进行编码（就像受莫尔斯电码启发的霍夫曼编码）。例如， (+ 1 2) 表达式中的标记可能具有编码 00、01 和 10，因此位串将为 000110，并且我们可以快速探索所有 2^3 = 8 排列（如果我们天真地操作编码标记大小不同的未压缩位串，则 2^6 = 64）。</p><p>请注意，许多位字符串（例如 (+ + 1) 或 (2 1 +)）不会运行。因此，可以添加护栏来减少搜索空间，例如，当位字符串引发编译器异常时尽早进行突破，或者使用 SAT 求解器或缓存来清除不可行的位字符串。</p><p>我们可以使用 GA 构建超级优化器，然后在 MOS 6502 程序集和 Lisp 之间进行转译（甚至直接在沙箱中运行 MOS 6502 程序集），而无需了解处理器的工作原理。对我来说，这就是 GA 的真正魅力，因为它们使我们能够在不经过训练的情况下解决问题，但代价是效率。</p><p>我不认为法学硕士在设计算法时会转换为 Lisp。因此有趣的是，他们可以通过训练实现高复杂性和高效率，甚至无需内置验证。尽管法学硕士接受了在具有 GB 内存的万亿次浮点运算 GPU 上运行的数万亿个参数的训练，但可能被视为“高效”，也可能不被视为“高效”。</p><p>我怀疑有一天 GA 可能会被纳入反向传播中，通过找到梯度下降矩阵数学的近似值来大大减少学习时间。 2000 年左右，当我第一次了解 GA 时，它才刚刚开始用于伪随机生成神经网络的初始权重。</p><p>此外，量子计算 (QC) 可以在很短的时间内执行某些矩阵数学运算，甚至抢先过滤掉不可运行的位串。我怀疑，当 QC 成为主流时，人工智能将在 2030 年左右获得效率提升。这可能会引导我们找到最终的候选学习算法，该算法解释量子不确定性和突发行为如何让物理思维调整到意识并感到自我意识，但我离题了。</p><p>因为现代编译器不会做任何这些事情，而且我们也不习惯多核计算，所以从晶体管数量的角度来看，我们只能获得计算能力的一小部分，而如果我们使用现代技术从头开始设计芯片，我们可能会获得计算能力。这就是为什么我经常说今天的计算机运行速度比晶体管预算应有的速度慢数千倍。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just wanted to mention genetic algorithms (GAs), popularized by John Koza and others.<p>The post uses a 4 instruction program as an example having about 256^4 or 4 billion combinations. Most interesting programs are 10, 100, 1000+ instructions long, which is too large of a search space to explore by brute force.</p><p>So GAs use a number of tricks to investigate the search space via hill climbing without getting stuck at local optima. They do that by treating the search space as a bit string, then randomly flipping bits (mutation) or swapping bits (sexual reproduction) to hop to related hills in the search space. Then the bit string is converted back to instructions and tested to see if it performs the desired algorithm.</p><p>The bit string usually encodes the tree form of a Lisp program to minimize syntax. We can think of it as if every token is encoded in bits (like Huffman encoding inspired by Morse code) For example, the tokens in a (+ 1 2) expression might have the encoding 00, 01 and 10, so the bit string would be 000110, and we can quickly explore all 2^3 = 8 permutations (2^6 = 64 if we naively manipulate an uncompressed bit string whose encoded token sizes vary).</p><p>Note that many of the bit strings like (+ + 1) or (2 1 +) don't run. So guard rails can be added to reduce the search space, for example by breaking out early when bit strings throw a compiler exception, or using SAT solvers or caching to weed out nonviable bit strings.</p><p>We could build a superoptimizer with GAs, then transpile between MOS 6502 assembly and Lisp (or even run the MOS 6502 assembly directly in a sandbox) and not have to know anything about how the processor works. To me, this is the real beauty of GAs, because they allow us to solve problems without training, at the cost of efficiency.</p><p>I don't think that LLMs transpile to Lisp when they're designing algorithms. So it's interesting that they can achieve high complexity and high efficiency via training, without even having verification built-in. Although LLMs trained on trillions of parameters running on teraflops GPUs with GBs of memory may or may not be viewed as "efficient".</p><p>I suspect that someday GAs may be incorporated into backpropagation to drastically reduce learning time by finding close approximations to the matrix math of gradient descent. GAs were just starting to be used to pseudorandomly produce the initial weights of neural nets around 2000 when I first learned about them.</p><p>Also quantum computing (QC) could perform certain matrix math in a fraction of the time, or even preemptively filter out bit strings which aren't runnable. I suspect that AI will get an efficiency boost around 2030 when QC goes mainstream. Which will probably lead us to a final candidate learning algorithm that explains how quantum uncertainty and emergent behavior allow a physical mind to tune into consciousness and feel self-aware, but I digress.</p><p>Because modern compilers don't do any of this, and we aren't accustomed to multicore computing, then from a sheer number of transistors perspective, we're only getting a tiny fraction of the computing power that we might otherwise have if we designed chips from scratch using modern techniques. This is why I often say that computers today run thousands of times slower than they should for their transistor budgets.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47678588" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vibecoderking93</span>
+        <span class="meta-time">2026/04/07 21:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">伟大的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47675226" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
