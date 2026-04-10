@@ -1,0 +1,2408 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：我为 C/C++ 构建了一个类似 Cargo 的构建工具 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>显示 HN：我为 C/C++ 构建了一个类似 Cargo 的构建工具</h1>
+      <p class="subtitle">Show HN: I built a Cargo-like build tool for C/C++</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 randerson_112</span>
+        <span>分数 124</span>
+        <span>评论 112</span>
+        <span>2026/04/10 00:04</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47705413" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/randerson112/craft" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>用于 C 和 C++ 项目的轻量级构建工具 - 想想 Cargo，但针对 C/C++。 C 和 C++ 开发始终需要使用 CMake、配置构建系统以及手动管理依赖项。工艺消除了这种摩擦。您可以在一个简单的 craft.toml 文件中描述您的项目，Craft 会通过生成 CMake 配置、管理依赖项以及提供现代而流畅的干净命令行界面来处理其余部分。</li><li>工艺如何运作</li><li>在 craft.toml 中定义您的项目 Craft 生成 CMakeLists.txt 自动获取依赖项 CMake 在幕后构建您的项目</li><li>快速示例 # 创建一个新项目 craft 项目 my_app cd my_app</li><li># 添加依赖 craft add --git https://github.com/raysan5/raylib.git --links raylib</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>A lightweight build tool for C and C++ projects — think Cargo, but for C/C++. C and C++ development has always required wrestling with CMake, configuring build systems, and manually managing dependencies. Craft eliminates that friction. You describe your project in a simple craft.toml file and Craft handles the rest by generating CMake configuration, managing dependencies, and providing a clean command-line interface that feels modern and smooth.</li><li>How Craft Works</li><li>Define your project in craft.toml Craft generates CMakeLists.txt Dependencies are fetched automatically CMake builds your project behind the scenes</li><li>Quick Example # Create a new project craft project my_app cd my_app</li><li># Add a dependency craft add --git https://github.com/raysan5/raylib.git --links raylib</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">adev_</span>
+        <span class="meta-time">2026/04/10 01:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">曾经用 C / C++ / Fortran / Python / Rust / 等管理大型（&gt;1500）软件堆栈的人的反馈：<p>- (1) 提供无需联网即可编译的方式，并手动指定关联的依赖路径。这绝对是至关重要的。</p><p>出于安全原因和可重复性原因，大多数“严肃的”多语言包管理器和集成系统都是在没有互联网访问的沙箱中构建的。</p><p>如果您的构建系统不允许离线构建并使用手动指定的依赖项，那么您将使集成商和包管理器的生活变得悲惨，他们将避开您的项目。</p><p>(2) <i>绝不</i> <i>曾经</i> 默认情况下构建为“-03 -march=native”。这始终是一个危险信号，也是不成熟的标志。人们期望代码是可移植和可交付的。</p><p>好的默认选项应该是 CMake 相当于“RelWithDebInfo”（意思是： -O2 -g -DNDEBUG ）。</p><p>-O3 可以争论。 -march=native 总是一个错误。</p><p>- (3) 允许您的构建工具由其他构建工具（例如 CMake）构建。</p><p>任何关心可重复性的人都会希望从源代码开始，而不是从预编译的二进制文件开始。这对于交叉编译也很重要。</p><p>- (4) 请提供与 pkg-config 的兼容性（<a href="https://en.wikipedia.org/wiki/Pkg-config" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Pkg-config</a>) 以及如果可能的话 CPS (<a href="https://cps-org.github.io/cps/overview.html" target="_blank" rel="noopener noreferrer">https://cps-org.github.io/cps/overview.html</a>）用于消费和发电。</p><p>它们将允许您的系统和其他构建系统之间的互操作性。</p><p>- (5) 最后但并非最不重要的一点：认真考虑交叉编译用例。</p><p>交叉编译在嵌入式系统领域很常见。任何不支持交叉编译的构建系统实际上都将被禁止进入嵌入式领域。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Feedback of someone who is used to manage large (&gt;1500) software stack in C / C++ / Fortran / Python / Rust / etc:<p>- (1) Provide a way to compile without internet access and specify the associated dependencies path manually. This is absolutely critical.</p><p>Most 'serious' multi-language package managers and integration systems are building in a sandbox without internet access for security reasons and reproducibility reasons.</p><p>If your build system does not allow to build offline and with manually specified dependencies, you will make life of integrators and package managers miserable and they will avoid your project.</p><p>(2) <i>Never</i> <i>ever</i> build in '-03 -march=native' by default. This is always a red flag and a sign of immaturity. People expect code to be portable and shippable.</p><p>Good default options should be CMake equivalent of "RelWithDebInfo" (meaning: -O2 -g -DNDEBUG ).</p><p>-O3 can be argued. -march=native is always always a mistake.</p><p>- (3) Allow your build tool to be built by an other build tool (e.g CMake).</p><p>Anybody caring about reproducibility will want to start from sources, not from a pre-compiled binary. This also matter for cross compilation.</p><p>- (4) Please offer a compatibility with pkg-config (<a href="https://en.wikipedia.org/wiki/Pkg-config" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Pkg-config</a>) and if possible CPS (<a href="https://cps-org.github.io/cps/overview.html" target="_blank" rel="noopener noreferrer">https://cps-org.github.io/cps/overview.html</a>) for both consumption and generation.</p><p>They are what will allow interoperability between your system and other build systems.</p><p>- (5) last but not least: Consider seriously the cross-compilation use case.</p><p>It is common in the world of embedded systems to cross compile. Any build system that does not support cross-compilation will be de facto banned from the embedded domain.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706887" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Teknoman117</span>
+        <span class="meta-time">2026/04/10 06:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为一个花了二十年时间研究 C/C++ 代码库的人，我完全同意这里的每一个陈述。<p>不过，我对交叉编译有更强烈的看法 - 在任何构建系统中，我认为“交叉”和“非交叉”编译之间的区别是一种反模式。</p><p>始终在假设交叉编译的情况下设计构建系统。如果您的主机和目标平台/架构最终是相同的，这也没什么坏处，并且如果您还需要为其他东西构建二进制文件，则可以节省您的一切。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As someone who has also spent two decades wrangling C/C++ codebases, I wholeheartedly agree with every statement here.<p>I have an even stronger sentiment regarding cross compilation though - In any build system, I think the distinction between “cross” and “non-cross” compilation is an anti-pattern.</p><p>Always design build systems assuming cross compilation. It hurts nothing if it just so happens that your host and target platform/architecture end up being the same, and saves you everything down the line if you need to also build binaries for something else.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711067" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bsder</span>
+        <span class="meta-time">2026/04/10 07:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在任何构建系统中，我认为“交叉”和“非交叉”编译之间的区别是一种反模式。<p>这是 Zig 的巨大胜利之一。  任何 Zig 主机编译器都可以为任何受支持的目标生成输出。  交叉编译变得简单。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; In any build system, I think the distinction between “cross” and “non-cross” compilation is an anti-pattern.<p>This is one of the huge wins of Zig.  Any Zig host compiler can produce output for any supported target.  Cross compiling becomes straightforward.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711567" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 02:46</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707906" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tgma</span>
+        <span class="meta-time">2026/04/10 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; <i>-march=native 总是一个错误</i><p><i>Gentoo用户</i>: 拿着我的啤酒。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; <i>-march=native is always always a mistake</i><p><i>Gentoo user</i>: hold my beer.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708163" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">CarVac</span>
+        <span class="meta-time">2026/04/10 03:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Gentoo 二进制文件不是这样发送的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Gentoo binaries aren't shipped that way</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">greenavocado</span>
+        <span class="meta-time">2026/04/10 06:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根图...... <i>分发二进制文件</i>？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Gentoo..... <i>distributes binaries</i>?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710816" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rascul</span>
+        <span class="meta-time">2026/04/10 06:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的<p><a href="https://wiki.gentoo.org/wiki/Gentoo_Binary_Host_Quickstart" target="_blank" rel="noopener noreferrer">https://wiki.gentoo.org/wiki/Gentoo_Binary_Host_Quickstart</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes<p><a href="https://wiki.gentoo.org/wiki/Gentoo_Binary_Host_Quickstart" target="_blank" rel="noopener noreferrer">https://wiki.gentoo.org/wiki/Gentoo_Binary_Host_Quickstart</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710848" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">digitalPhonix</span>
+        <span class="meta-time">2026/04/10 10:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但不是与 March=native ？<p>分布式二进制文件使用两种用于 x86-64 的标准指令集和一种用于 ARM 的标准指令集，例如“march=x86-64-v3”</p><p><a href="https://wiki.gentoo.org/wiki/Gentoo_binhost/Available_packages_and_configurations#amd64_x86-64-v3_variant" target="_blank" rel="noopener noreferrer">https://wiki.gentoo.org/wiki/Gentoo_binhost/Available_packag...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But not with march=native?<p>The distirbuted binaries use two standard instruction sets for x86-64 and one for arm like “march=x86-64-v3”</p><p><a href="https://wiki.gentoo.org/wiki/Gentoo_binhost/Available_packages_and_configurations#amd64_x86-64-v3_variant" target="_blank" rel="noopener noreferrer">https://wiki.gentoo.org/wiki/Gentoo_binhost/Available_packag...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712920" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjmarr</span>
+        <span class="meta-time">2026/04/10 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它也是 NixOS 上的一个选项，但我没能像 Gentoo 那样让它工作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's also an option on NixOS but I haven't managed to get it working unlike Gentoo.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708281" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CoastalCoder</span>
+        <span class="meta-time">2026/04/10 04:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 默认情况下，永远不要构建“-03 -march=native”。这始终是一个危险信号，也是不成熟的标志。<p>也许您可以看到该声明中包含了一些假设。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Never ever build in '-03 -march=native' by default. This is always a red flag and a sign of immaturity.<p>Perhaps you can see how there are some assumptions baked into that statement.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eqvinox</span>
+        <span class="meta-time">2026/04/10 04:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那会是什么假设？<p>运送任何使用 -march=native 构建的东西都是一个可怕的主意。  即使是在像一朵云这样的同质目标上，你也永远不知道它们是否会发生变化。切换 CPU 供应商。</p><p>正确的做法是使用微架构级别（例如 x86-64-v2），或者如果目标架构没有 MA 级别，则构建完全通用的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What assumptions would that be?<p>Shipping anything built with -march=native is a horrible idea.  Even on homogeneous targets like one of the clouds, you never know if they'll e.g. switch CPU vendors.</p><p>The correct thing to do is use microarch levels (e.g. x86-64-v2) or build fully generic if the target architecture doesn't have MA levels.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709942" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tempest_</span>
+        <span class="meta-time">2026/04/10 06:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我构建的硬件正是我打算将软件部署到的硬件，并将其运送到另一台与构建它的规格相同的机器上。<p>我愿意听到对其他方法的争论。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I build on the exact hardware I intend to deploy my software to and ship it to another machine with the same specs as the one it was built on.<p>I am willing to hear arguments for other approaches.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zahllos</span>
+        <span class="meta-time">2026/04/10 06:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是OP，而是： -march 表示编译器可以假设可以依赖特定 CPU 架构系列的功能（按代划分）。在最坏的情况下，编译器理论上可能会生成无法在同一系列或不同供应商的旧 CPU 上运行的代码。<p>-mtune 表示“生成针对该架构优化的代码”，但它不会触发架构特定的功能。</p><p>这些是否正确取决于你在做什么。如果你在笔记本电脑上构建 gentoo，你绝对应该使用 -mtune=native 和 -march=native。这就是重点：您可以获得适合您的硬件的最优化代码。</p><p>如果您正在为各种架构传送代码，并且最重要的是传送方法是二进制形式，那么您需要更多地考虑您可能想要支持的内容。您可以执行以下任一操作：如果您正在发布标准软件，请选择一个合理的基线（检查您的发行版在其 cflags 中使用的内容）。然而，如果您要交付计算密集型软件，也许您可​​以为每个 CPU 系列加载一个共享对象，或者就地构建引擎以获得最佳性能。 Intel 编译器对每个系列进行了著名的优化，包括输出中的所有副本，并选择 AMD 上最差的一个;)(<a href="https://medium.com/codex/fixing-intel-compilers-unfair-cpu-dispatcher-part-1-2-4a4a367c8919" target="_blank" rel="noopener noreferrer">https://medium.com/codex/fixing-intel-compilers-unfair-cpu-d...</a>）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not the OP, but: -march says the compiler can assume that the features of that particular CPU architecture family, which is broken out by generation, can be relied upon. In the worst case the compiler could in theory generate code that does not run on older CPUs of the same family or from different vendors.<p>-mtune says "generate code that is optimised for this architecture" but it doesn't trigger arch specific features.</p><p>Whether these are right or not depends on what you are doing. If you are building gentoo on your laptop you should absolutely -mtune=native and -march=native. That's the whole point: you get the most optimised code you can for your hardware.</p><p>If you are shipping code for a wide variety of architectures and crucially the method of shipping is binary form then you want to think more about what you might want to support. You could do either: if you're shipping standard software pick a reasonable baseline (check what your distribution uses in its cflags). If however you're shipping compute-intensive software perhaps you load a shared object per CPU family or build your engine in place for best performance. The Intel compiler quite famously optimised per family, included all the copies in the output and selected the worst one on AMD ;) (<a href="https://medium.com/codex/fixing-intel-compilers-unfair-cpu-dispatcher-part-1-2-4a4a367c8919" target="_blank" rel="noopener noreferrer">https://medium.com/codex/fixing-intel-compilers-unfair-cpu-d...</a>)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711200" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tom_</span>
+        <span class="meta-time">2026/04/10 09:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我参与的每个项目中，我所拥有的 PC 都比最低 PC 要求要好得多。仅仅因为我正在编写可以在慢速 PC 上运行良好的代码，并不意味着我需要使用同一台慢速 PC 来构建它！<p>然后，最终用户收到的二进制文件实际上是在 CI 系统之一上构建的。我敢打赌它们的规格并不完全相同。无论如何，上述论点都适用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On every project I've worked on, the PC I've had has been much better than the minimum PC required. Just because I'm writing code that will run nicely enough on a slow PC, that doesn't mean I need to use that same slow PC to build it!<p>And then, the binary that the end user receives will actually have been built on one of the CI systems. I bet they don't all have quite the same spec. And the above argument applies anyway.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712635" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eqvinox</span>
+        <span class="meta-time">2026/04/10 06:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我愿意听听对你的方法的争论吗？<p>当您需要支持更大的部署时，它肯定会存在规模问题。</p><p>[PS：我理解这些词的方式，“运输”意味着“将其传递给其他人，可能跨越组织边界”，而你正在做的事情我称之为“部署”]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm willing to hear arguments for your approach?<p>it certainly has scale issues when you need to support larger deployments.</p><p>[P.S.: the way I understand the words, "shipping" means "passing it off to someone else, likely across org boundaries" whereas what you're doing I'd call "deploying"]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711022" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dijit</span>
+        <span class="meta-time">2026/04/10 07:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">什么？！严重地？！<p>我从来没有听说过有人这样做。</p><p>如果您使用云提供商并使用远程开发环境（VSCode 远程/Jetbrains Gateway），那么您就错了：云提供商会在不通知您的情况下更换 CPU，并且如果对较新 CPU 的需求较少，则可以以较旧的价格出售较新的 CPU；你不能依赖这一点。</p><p>按照旧的命名约定，即使 E3-Xeon CPU 也不等同于同一代的 E5。我敢打赌它大部分都能工作，但你的说法“我是在我所搭载的硬件上构建的”要严格得多。</p><p>我认识的大多数人都使用配备 Xeon 工作站或 Threadripper CPU 的笔记本电脑或工作站，但部署后它将是 Xeon 可扩展数据中心 CPU 或 Epyc。</p><p>天哪，我在游戏开发部门工作，我们基本上交叉编译了控制台的所有内容。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What?! seriously?!<p>I’ve never heard of anyone doing that.</p><p>If you use a cloud provider and use a remote development environment (VSCode remote/Jetbrains Gateway) then you’re wrong: cloud providers swap out the CPUs without telling you and can sell newer CPUs at older prices if theres less demand for the newer CPUs; you can’t rely on that.</p><p>To take an old naming convention, even an E3-Xeon CPU is not equivalent to an E5 of the same generation. I’m willing to bet it mostly works but your claim “I build on the exact hardware I ship on” is much more strict.</p><p>The majority of people I know use either laptops or workstations with Xeon workstation or Threadripper CPUs— but when deployed it will be a Xeon scalable datacenter CPU or an Epyc.</p><p>Hell, I work in gamedev and we cross compile basically everything for consoles.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711467" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ninkendo</span>
+        <span class="meta-time">2026/04/10 07:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">…不是每个人都使用云？<p>有些人， <i>喘气</i>，运行他们购买的物理硬件。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">… not everyone uses the cloud?<p>Some people, <i>gasp</i>, run physical hardware, that they bought.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711534" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lkjdsklf</span>
+        <span class="meta-time">2026/04/10 09:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们在工作中使用物理硬件，但这仍然不是您构建/部署的方式，除非它用于工作站/笔记本电脑类型的东西。<p>如果您将二进制文件部署到多台计算机上，您很快就会遇到 CPU 不同的问题，并且需要为每台计算机进行重建。如果您有几台通常一起升级的机器，但在稍微多于 2 台机器时很快就会崩溃，这是可行的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We use physical hardware at work, but it's still not the way you build/deploy unless it's for a workstation/laptop type thing.<p>If you're deploying the binary to more than one machine, you quickly run into issues where the CPUs are different and you would need to rebuild for each of them. This is feasible if you have a couple of machines that you generally upgrade together, but quickly falls apart at just slightly more than 2 machines.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712522" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">PufPufPuf</span>
+        <span class="meta-time">2026/04/10 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我唯一一次使用 -march=native 是为了在同一台服务器上构建和评估的大学作业，它可以提高额外的性能。使用它基本上意味着仅将程序锁定到当前的 CPU 。<p>不过我不确定-O3。我知道它可以使二进制文件更大，但不确定其他缺点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The only time I used -march=native was for a university assignment which was built and evaluated on the same server, and it allowed juicing an extra bit of performance. Using it basically means locking the program to the current CPU only.<p>However I'm not sure about -O3. I know it can make the binary larger, not sure about other downsides.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710139" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adev_</span>
+        <span class="meta-time">2026/04/10 07:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我唯一一次使用-march=native<p>使用 -march=native 完全没问题，只需这样做 <i>不是</i> 使其成为构建您的项目的人的默认值。</p><p>这应该始终是选择加入的事情。</p><p>主要原因是软件 <i>是</i> （许多）组件的组合。如果某个地方的任何小型库试图潜入“-march=native”，这很快就会成为可维护性的一个难题，这将使最终的二进制文件在执行时随机崩溃并出现非法指令错误 <i>任何</i> CPU 与主机不完全相同。</p><p>当您设计构建系统配置时，请首先考虑其他人（软件的用户），然后才是您自己。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The only time I used -march=native<p>It is completely fine to use -march=native, just do <i>not</i> make it the default for someone building your project.</p><p>That should always be something to opt-in.</p><p>The main reason is that software <i>are</i> a composite of (many) components. It becomes quickly a pain in the ass of maintainability if any tiny library somewhere try to sneak in '-march=native' that will make the final binary randomly crash with an illegal instruction error if executed on <i>any</i> CPU that is not exactly the same than the host.</p><p>When you design a build system configuration, think for the others first (the users of your software), and yourself after.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hmry</span>
+        <span class="meta-time">2026/04/10 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">-O3 还使构建时间更长（有时显着），并且有时生成的程序实际上比 -O2 稍慢。<p>仅当您的基准测试显示 -O3 实际上可以为您的特定代码库带来加速时，才应使用 IME -O3。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">-O3 also makes build times longer (sometimes significantly), and occasionally the resulting program is actually slightly slower than -O2.<p>IME -O3 should only be used if you have benchmarks that show -O3 actually produces a speedup for your specific codebase.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">izacus</span>
+        <span class="meta-time">2026/04/10 05:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是假设，是经验。<p>作为一个维护生产中使用的 C++ 代码库的人，我完全同意整篇文章。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not assumptions, experience.<p>I fully concur with that whole post as someone who also maintained a C++ codebase used in production.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">moralestapia</span>
+        <span class="meta-time">2026/04/10 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;15000<p>15000什么？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;15000<p>15000 what?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">adev_</span>
+        <span class="meta-time">2026/04/10 02:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">1500 个 C/C++ 独立软件组件。<p>15000 是我这边的拼写错误。固定的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">1500 C/C++ individual software components.<p>The 15000 was a typo on my side. Fixed.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707178" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moralestapia</span>
+        <span class="meta-time">2026/04/10 02:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我明白了，谢谢。我不介意这个数字，只是不清楚它是什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I see, thanks. I didn't mind the number it just wasn't clear what was it about.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707511" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">looneysquash</span>
+        <span class="meta-time">2026/04/10 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除了 Cargo 之外，您可能还想看看 
+Python 的 pyproject.toml 标准。 <a href="https://packaging.python.org/en/latest/guides/writing-pyproject-toml/" target="_blank" rel="noopener noreferrer">https://packaging.python.org/en/latest/guides/writing-pyproj...</a><p>它很相似，但专为现有生态系统而设计。显然，Cargo 是为 `cargo` 设计的。</p><p>但 `pyproject.toml` 是为所有最终采用的现有工具而设计的。 （当然，还有新工具。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Besides Cargo, you might want to take a look at 
+Python's pyproject.toml standard. <a href="https://packaging.python.org/en/latest/guides/writing-pyproject-toml/" target="_blank" rel="noopener noreferrer">https://packaging.python.org/en/latest/guides/writing-pyproj...</a><p>It's similar, but designed for an existing ecosystem. Cargo is designed for `cargo`, obviously.</p><p>But `pyproject.toml` is designed for the existing tools to all eventually adopt. (As well as new tools, of course.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706707" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gavinray</span>
+        <span class="meta-time">2026/04/10 01:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我用过的最不痛苦的 C/C++ 构建工具是 xmake<p><a href="https://github.com/xmake-io/xmake" target="_blank" rel="noopener noreferrer">https://github.com/xmake-io/xmake</a></p><p>我喜欢它的原因（不仅仅是易用性）是因为它可以输出 CMakeLists.txt 和compile_commands.json 用于 IDE/LSP 集成，并且还支持安装 Conan/vcpkg 库甚至 Git 存储库。</p><p></p><pre><code>    set_project("myapp")
+    set_languages("c++20")
+
+    add_requires("conan::fmt/11.0.2", {alias = "fmt"})
+    add_requires("vcpkg::fmt", {alias = "fmt"})
+    add_requires("git://github.com/fmtlib/fmt v11.0.2", {alias = "fmt"})
+
+    target("myapp")
+        set_kind("binary")
+        add_files("src/*.cpp")
+        add_packages("fmt")
+</code></pre>
+然后你像这样使用它<p></p><pre><code>  # Generate compile_commands.json and CMakeLists.txt
+  $ xmake project -k compile_commands
+  $ xmake project -k cmake
+
+  # Build + run
+  $ xmake &amp;&amp; xmake run myapp</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The least painful C/C++ build tool I've used is xmake<p><a href="https://github.com/xmake-io/xmake" target="_blank" rel="noopener noreferrer">https://github.com/xmake-io/xmake</a></p><p>The reason why I like it (beyond ease-of-use) is that it can spit out CMakeLists.txt and compile_commands.json for IDE/LSP integration and also supports installing Conan/vcpkg libraries or even Git repos.</p><p></p><pre><code>    set_project("myapp")
+    set_languages("c++20")
+
+    add_requires("conan::fmt/11.0.2", {alias = "fmt"})
+    add_requires("vcpkg::fmt", {alias = "fmt"})
+    add_requires("git://github.com/fmtlib/fmt v11.0.2", {alias = "fmt"})
+
+    target("myapp")
+        set_kind("binary")
+        add_files("src/*.cpp")
+        add_packages("fmt")
+</code></pre>
+Then you use it like<p></p><pre><code>  # Generate compile_commands.json and CMakeLists.txt
+  $ xmake project -k compile_commands
+  $ xmake project -k cmake
+
+  # Build + run
+  $ xmake &amp;&amp; xmake run myapp</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706326" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ethin</span>
+        <span class="meta-time">2026/04/10 01:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果它有更多详细的文档并且它支持 CMake 功能的一半，我会很高兴立即切换到它。<p>作为我的意思的一个例子，假设我想链接到 FMOD 库（或任何我在法律上不能作为 SDK 重新分发的库）。或者我想在 Windows 上启用自动检测，我知道该库/SDK 是一个安装程序包。我在 CMake 中的解决方案是仅询问注册表。在 XMake 中我仍然不知道如何实现这一点。我知道这很小众，但仍然如此。</p><p>文档差距是最大的障碍。许多功能/做事方式的记录很少（如果有的话）。例如，包括任何包管理器中都不存在的 CMake 库。它还有一些奇怪的怪癖：自动/魔术作用域（这不是一个奖励）以及 hack“导入”功能而不是使用本机 require。</p><p>综上所述，当它确实有效时，它确实会很好地发挥作用。特别是对于模块。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would happily switch to it in a heartbeat if it was a lot more well-documented and if it supported even half of what CMake does.<p>As an example of what I mean, say I want to link to the FMOD library (or any library I legally can't redistribute as an SDK). Or I want to enable automatic detection on Windows where I know the library/SDK is an installer package. My solution, in CMake, is to just ask the registry. In XMake I still can't figure out how to pull this off. I know that's pretty niche, but still.</p><p>The documentation gap is the biggest hurtle. A lot of the functions/ways of doing things are poorly documented, if they are at all. Including a CMake library that isn't in any of the package managers for example. It also has some weird quirks: automatic/magic scoping (which is NOT a bonus) along with a hack "import" function instead of using native require.</p><p>All of this said, it does work well when it does work. Especially with modules.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706584" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">NekkoDroid</span>
+        <span class="meta-time">2026/04/10 04:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与 premake 类似，我从来不喜欢用全局状态来定义目标。给我一个对象或一些我调用函数/传递给函数的句柄。 CMake 在某些时候最终在基于目标的定义方面有点正确，因为我真正学会了它，所以我对它感到有点满意。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Similar to premake I have never been a fan of the global state for defining targets. Give me an object or some handle that I call functions on/pass to functions. CMake at some point ended up somewhat right with that to going to target based defining for its stuff and since I've really learned it I have been kinda happy with it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709713" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">delta_p_delta_x</span>
+        <span class="meta-time">2026/04/10 01:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意，xmake 似乎经过深思熟虑，并且支持最现代的用例（C++20 命名模块、标头单元模块和 `import std`，CMake 仍然有很多仪式）。我应该切换到它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed, xmake seems very well-thought-out, and supports the most modern use-cases (C++20 named modules, header unit modules, and `import std`, which CMake still has a lot of ceremony around). I should switch to it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706384" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">eqvinox</span>
+        <span class="meta-time">2026/04/10 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际上看起来与介子非常相似[<a href="https://mesonbuild.com/" target="_blank" rel="noopener noreferrer">https://mesonbuild.com/</a>]，这在 FOSS 中获得了很大的关注[<a href="https://mesonbuild.com/Users.html" target="_blank" rel="noopener noreferrer">https://mesonbuild.com/Users.html</a>]<p>例如来自他们的文档：</p><p></p><pre><code>  project('sdldemo', 'c',
+          default_options: 'default_library=static')
+  
+  sdl2_dep = dependency('sdl2')
+  sdl2_main_dep = dependency('sdl2main')
+  
+  executable('sdlprog', 'sdlprog.c',
+             win_subsystem: 'windows',
+             dependencies: [sdl2_dep, sdl2_main_dep])</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">actually looks very similar to Meson [<a href="https://mesonbuild.com/" target="_blank" rel="noopener noreferrer">https://mesonbuild.com/</a>], which is getting a lot of traction in FOSS [<a href="https://mesonbuild.com/Users.html" target="_blank" rel="noopener noreferrer">https://mesonbuild.com/Users.html</a>]<p>e.g. from their docs:</p><p></p><pre><code>  project('sdldemo', 'c',
+          default_options: 'default_library=static')
+  
+  sdl2_dep = dependency('sdl2')
+  sdl2_main_dep = dependency('sdl2main')
+  
+  executable('sdlprog', 'sdlprog.c',
+             win_subsystem: 'windows',
+             dependencies: [sdl2_dep, sdl2_main_dep])</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709980" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cassepipe</span>
+        <span class="meta-time">2026/04/10 05:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Meson 是 ninja 构建器之上的一个 Python 层，就像 cmake 一样。 xmake 既是一个构建工具，又是一个像 ninja 一样快速的包管理器，并且没有 DSL，构建文件只是 lua。它更像是货物而不是介子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Meson is a python layer over the ninja builder, like cmake can be. xmake is both a build tool and a package manager fast like ninja and has no DSL, the build file is just lua. It's more like cargo than meson is.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710784" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eqvinox</span>
+        <span class="meta-time">2026/04/10 06:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我并没有声称它是一个包管理器，只是看起来很相似。  根帖子说“构建工具”，Meson 也是如此。<p>除此之外，“python 层”和“over the ninja builder”在技术上都是错误的。  “python 层”已关闭，因为现在有第二个实现 Muon [<a href="https://muon.build/" target="_blank" rel="noopener noreferrer">https://muon.build/</a>]，在 C 中。“over the ninja builder”已关闭，因为它还可以在 Windows 上使用 Visual Studio 的构建功能。</p><p>有趣的是，我不知道其他与构建相关的系统有多种实现，除了 Make（它实际上是 POSIX.1 标准的一部分）。很想知道是否还有其他实现。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I didn't claim it was a package manager, just that it looked similar.  The root post said "build tool", and that's what Meson is as well.<p>Other than that, both "python layer" and "over the ninja builder" are technically wrong.  "python layer" is off since there is now a second implementation, Muon [<a href="https://muon.build/" target="_blank" rel="noopener noreferrer">https://muon.build/</a>], in C.  "over the ninja builder" is off since it can also use Visual Studio's build capabilities on Windows.</p><p>Interestingly, I'm unaware of other build-related systems that have multiple implementations, except Make (which is in fact part of the POSIX.1 standard.)  Curious to know if there are any others.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710924" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">IshKebab</span>
+        <span class="meta-time">2026/04/10 02:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对此有一些经验，但它似乎相当慢，非常小众，而且我看不出有什么理由在 CMake 上使用它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've had some experience with this but it seems to be rather slow, very niche and tbh I can't see a reason to use it over CMake.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708059" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 03:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢大家迄今为止的反馈！我只是想说，我知道这并不是一个针对每种边缘情况的完全凝聚力和功能性的项目。这是向公众发布的第一天，也只是旅程的开始。我并不指望自己能够完全解决如此规模的问题，Craft 是开源的，并向社区开放进行开发。我希望作为一个社区，它可以发展成为一种更先进、更广泛采用的工具。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you everyone for the feedback so far! I just wanted to say that I understand this is not a fully cohesive and functional project for every edge case. This is the first day of releasing it to the public and it is only the beginning of the journey. I do not expect to fully solve a problem of this scale on my own, Craft is open source and open to the community for development. I hope that as a community this can grow into a more advanced and widely adopted tool.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bluGill</span>
+        <span class="meta-time">2026/04/10 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">任何人都可以制作一个工具来解决一小部分问题。  然而，此类工具尚未流行的原因是，在它发挥作用之前，您需要处理所有奇怪的特殊情况。  即使你将支持限制在桌面：OS/X 和 Windows，这个问题也会很困难，添加各种 Linux 风格就更困难了，更不用说 BSD 了。  以上是常见/主流的选择，俳句将会非常不同，这些年来我见过很多其他的俳句，其中一些在他们的利基市场有追随者。  然后有人构建嵌入式 - QNX、vxworks，甚至没有操作系统，只是裸机 - 每个都增加了奇怪性（并且意味着交叉编译，这使一切变得更加困难，因为你的假设总是错误的）。<p>抱歉，我必须成为一个沮丧的人，但事实是，如果您可以使用“我”这个词，那么您的包管理器显然对于现实世界来说不够强大。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anyone can make a tool that solves a tiny part of the problem.  however the reason no such tool has caught on is because of all the weird special cases you need to handle before it can be useful.  Even if you limit your support to desktop: OS/X and Windows that problem will be hard, adding various linux flavors is even more difficult, not to mention BSD.  The above is the common/mainstream choices, there Haiku is going to be very different, and I've seen dozens of others over the years, some of them have a following in their niche.  Then there are people building for embedded - QNX, vxworks, or even no OS just bare metal - each adding weirdness (and implying cross compiling which makes everything harder because your assumptions are always wrong).<p>I'm sorry I have to be a downer, but the fact is if you can use the word "I" your package manager is obviously not powerful enough for the real world.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706302" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">the__alchemist</span>
+        <span class="meta-time">2026/04/10 01:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我将其归类为我所见过的导致停滞的模式，或者至少是旨在实现停滞的模式。通常这些是建立在一个或多个不成立的假设之上的。该模式的流程：<p></p><pre><code>  - Problem exists
+  - Proposals of solutions, (varying quality), or not
+  - "You can't just solve this. It's complicated! This problem must exist". (The post I'm replying to
+  - Problem gets solved, hopefully.
+</code></pre>
+我根据与这个特定问题的接近程度来选择轶事：紫外线和货物。 uv 是因为人们对 python 打包也说了同样的话，而 Cargo 是因为它与 C 和 C++ 相邻，是一种用于系统编程、嵌入式/裸机等的低级编译语言。<p>世界充满了复杂性、微妙性和分类的例外情况。我认为这不应该妨碍我们解决问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I will categorize this as a pattern I've seen which leads to stagnation, or is at least aiming for it. Usually these are built on one or more assumption which doesn't hold. The flow of this pattern:<p></p><pre><code>  - Problem exists
+  - Proposals of solutions, (varying quality), or not
+  - "You can't just solve this. It's complicated! This problem must exist". (The post I'm replying to
+  - Problem gets solved, hopefully.
+</code></pre>
+Anecdotes I'm choosing based on proximity to this particular problem: uv and cargo. uv because people said the same thing about python packaging, and cargo because its adjacent to C and C++ in terms of being a low-level compiled language used for systems programming, embedded/bare-metal etc.<p>The world is rich in complexity, subtlety, and exceptions to categorization. I don't think this should block us from solving problems.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706427" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bluGill</span>
+        <span class="meta-time">2026/04/10 02:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我并没有说问题无法解决。  我说这个问题不是一个人能解决的。  有一个区别。 （也许一个人几十年就能解决）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I didn't say the problem couldn't be solved.  I said the problem can't be solved by one person.  There is a difference. (maybe it can be solved by one person over a few decades)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707997" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是真实的。我无法独自解决如此规模的问题。这就是为什么这是一个开源项目并开放给所有人进行更改。还有很多需要改进的地方，这只是向公众发布的第一天。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is true. There is no way I could solve a problem of this scale by myself. That is why this is an open source project and open to everyone to make changes on. There is still much more to improve, this is only day 1 of release to the public.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708534" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tekne</span>
+        <span class="meta-time">2026/04/10 03:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，如果我要加入一个团队来解决 20% 的困难问题，我希望看到这个想法首先针对 80% 的简单问题得到验证。<p>如果真的很糟糕，至少也有简单的20%。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean -- if I'm going to join a team to solve the hard 20%, I'd like to see the idea validated against the easy 80% first.<p>If it's really bad, at least the easy 20%.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708389" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">omcnoe</span>
+        <span class="meta-time">2026/04/10 05:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C/C++ 构建系统陷入困境的原因有很多，但在我看来，权力是最后一个。 “强大的”和“可编写脚本的”构建系统让我们陷入了困境！<p>* 标准委员会对标准化语言本身之外的任何东西都过敏：构建工具、依赖管理，甚至“文件”的概念也是有争议的！</p><p>* 构建系统现有的不良状态正在蔓延 - 任何新的构建系统都比洁净室设计复杂 10 倍，因为您必须处理以前构建工具的所有遗留“功能”。构建系统缺陷会传播 - 当您在构建中需要进行黑客攻击时，您也开始将这些黑客攻击强加给库的下游用户。</p><p>即使 CMake 应该是比现在更好的体验 - 但在现实世界中，主要项目不会将其 CMake 构建维护到可以完全依赖它们的程度。比如使用原始 MY_LIB_DIR 变量而不是目标、hacky/损坏的功能检测标志等。 Microsoft 试图通过 vcpkg 解决这个问题，最终不得不修补 90% 的包的构建才能使其正常工作，而且仍然是一个糟糕的体验，一半的构建都被破坏了。</p><p>我的观点是，新的 C/C++ 构建/打包系统实际上是现在人工智能可以解决的问题。因为你可以将 Opus 4.6 或任何人指向大量的开源依赖项，并告诉每个依赖项“使用我的新构建系统为这个包编写一个构建配置”，这解决了生态系统问题的棘手问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are so many reasons why C/C++ build systems struggle, but imo power is the last of them. "Powerful" and "scriptable" build systems are what has gotten us into the swamp!<p>* Standards committee is allergic to standardizing anything outside of the language itself: build tools, dependency management, even the concept of a "file" is controversial!</p><p>* Existing poor state of build systems is viral - any new build system is 10x as complex as a clean room design because you have to deal with all the legacy "power" of previous build tooling. Build system flaws propagate - the moment you need hacks in your build, you start imposing those hacks on downstream users of your library also.</p><p>Even CMake should be a much better experience than it is - but in the real world major projects don't maintain their CMake builds to the point you can cleanly depend on them. Things like using raw MY_LIB_DIR variables instead of targets, hacky/broken feature detection flags etc. Microsoft tried to solve this problem via vcpkg, ended up having to patch builds of 90% of the packages to get it to work, and it's still a poor experience where half the builds are broken.</p><p>My opinion is that a new C/C++ build/package system is actually a solvable problem now with AI. Because you can point Opus 4.6 or whoever at the massive pile of open source dependencies, and tell it for each one "write a build config for this package using my new build system" which solves the gordian knot of the ecosystem problem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710535" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">looneysquash</span>
+        <span class="meta-time">2026/04/10 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好的。我一直在考虑制作类似的东西。现在希望我不必这样做！<p>不确定你的计划有多大。</p><p>我的想法是从 cmake 生成器开始，但最终取代它。也许可选。</p><p>并集成对现有包管理器（如 vcpkg）的支持。</p><p>同时，我希望保持足够的模块化，这不是全有或全无。  我也不喜欢锁。</p><p>但现在包管理和构建系统是完全解耦的。它们与其他生态系统中的情况不同。</p><p>例如，Cmake 可以使用 vcpkg 来安装软件包，但我仍然需要编写更多的 cmake 来实际查找和使用它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice. I have been thinking of making something similar. Now hopefully I don't have to!<p>Not sure how big your plans are.</p><p>My thoughts would be to start as a cmake generator but to eventually replace it. Maybe optionally.</p><p>And to integrate suppoet for existing package managers like vcpkg.</p><p>At the same time, I'd want to remain modular enough that's it's not all or nothing.  I also don't like locking.</p><p>But right now package management and build system are decoupled completely. And they are not like that in other ecosystems.</p><p>For example, Cmake can use vcpkg to install a package but then I still have to write more cmake to actually find and use it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706234" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">psyclobe</span>
+        <span class="meta-time">2026/04/10 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 例如，Cmake 可以使用 vcpkg 来安装软件包，但我仍然需要编写更多的 cmake 才能真正找到并使用它。<p>我公司已经解决这个问题了我们有一个基于 vcpkg 构建的工具，用于管理内部+外部依赖项。我们的 cmake 链接器逻辑利用端口名称，因此您真正要做的就是声明您的清单文件 (vcpkg.json)，然后声明您将公开导出其中哪一个。</p><p>之后的一切都是自动的，包括为您的库导出的 cmake 配置。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; For example, Cmake can use vcpkg to install a package but then I still have to write more cmake to actually find and use it.<p>I have this solved at our company. We have a tool built on top of vcpkg, to manage internal + external dependencies. Our cmake linker logic leverages the port names and so all you really do is declare your manifest file (vcpkg.json) then declare which one of them you will export publicly.</p><p>Everything after that is automatic including the exported cmake config for your library.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706308" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Surac</span>
+        <span class="meta-time">2026/04/10 01:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用 CMAKE，抱歉不适合我。可以说我是老的，但我更喜欢好的旧品牌或批次。也许是因为我能理解那些工具。调试 CMAKE 构建问题让我讨厌它。我还为嵌入式 CPU 编写了代码，大多数时候 CMAKE 都太过分了，并且不能很好地发挥所提供的编译器/binutils 的作用。在这些环境中，平台独立性并没有发生。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Uses CMAKE, Sorry not for me. Call me old but i prefere good old make or batch. Maybe it's because i can understand those tools. Debugging CMAKE build problems made me hate it. Also i code for embedded CPU and most of the time CMAKE is just overkill and does not play well the compiler/binutils provided. The Platform independency is just not happening in those environments.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706189" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">delta_p_delta_x</span>
+        <span class="meta-time">2026/04/10 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 大多数时候 CMAKE 都有点矫枉过正，并且不能很好地发挥所提供的编译器/binutils 的作用<p>您需要定义一个 CMake 工具链 [1] 并在命令行中使用 --toolchain /path/to/file 或在 CMake 预设中使用键 `toolchainFile` 将其传递到预设文件中。我已经使用 CMake 为 QNX 和 ARM32 板进行了编译，没有问题，但这需要完成。</p><p>[1]： <a href="https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html" target="_blank" rel="noopener noreferrer">https://cmake.org/cmake/help/latest/manual/cmake-toolchains....</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; most of the time CMAKE is just overkill and does not play well the compiler/binutils provided<p>You need to define a CMake toolchain[1] and pass it to CMake with --toolchain /path/to/file in the command-line, or in a preset file with the key `toolchainFile` in a CMake preset. I've compiled for QNX and ARM32 boards with CMake, no issues, but this needs to be done.</p><p>[1]: <a href="https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html" target="_blank" rel="noopener noreferrer">https://cmake.org/cmake/help/latest/manual/cmake-toolchains....</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706565" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">vnorilo</span>
+        <span class="meta-time">2026/04/10 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当您需要配置步骤时，cmake 实际上会节省您大量时间，特别是如果您跨平台甚至交叉编译。我和其他人一样讨厌 cmake，而且很难设计出更糟糕的脚本语言，但我会随时接受它而不是 autoconf。一些较新的工具可能会更方便 - 我尝试过 Bazel，但它肯定不是（对我来说）。<p>如果您乐意在 makefile 中烘焙一个配置，那么 cmake 不会为您做任何事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When you need a configuration step, cmake will actually save you a lot of time, especially if you work cross platform or even cross compile. I love to hate cmake as much as the next guy, and it would be hard to design a worse scripting language, but I'll take it any time over autoconf. Some of the newer tools may well be more convenient - I tried Bazel, and it sure wasn't (for me).<p>If you're happy to bake one config in a makefile, then cmake will do very little for you.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707884" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Night_Thastus</span>
+        <span class="meta-time">2026/04/10 02:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于玩具项目来说，老式的 Make 没问题……但在某些时候，项目变得足够大，您需要更强大的东西。如果您需要能够处理多层嵌套子存储库、第三方和第一方依赖项、远程和本地项目、多个构建配置、处理文档等非代码资产等的东西 - Make 还不够。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For toy projects good old Make is fine...but at some point a project gets large enough that you need something more powerful. If you need something that can deal with multiple layers of nested sub-repositories, third-party and first-party dependencies, remote and local projects, multiple build configurations, dealing with non-code assets like documentation, etc, etc, etc - Make just isn't enough.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bluGill</span>
+        <span class="meta-time">2026/04/10 01:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于简单的项目。  我同意，让简单的事情变得更容易。  然而，当你的项目变得非常复杂时，make 就会变得非常痛苦，而 cmake 就会变得容易得多。<p>Cmake 有很多缺点，但他们也投入了大量精力来查找和修复所有这些奇怪的特殊情况。  如果您的项目使用 CMake，那么它将在任何地方构建。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For simple projects.  Make is easier for simple things I will grant.  However when your projects gets complex at all make becomes a real pain and cmake becomes much easier.<p>Cmake has a lot of warts, but they have also put a lot of effort into finding and fixing all those weird special cases.  If your project uses CMake odds are high it will build anywhere.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706332" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lkjdsklf</span>
+        <span class="meta-time">2026/04/10 10:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另外，无论好坏，cmake 几乎是当今 C/C++ 的“标准”。<p>与标准作斗争通常会带来一系列不值得的问题和噩梦。在 C++ 中尤其如此，您经常需要与其他项目及其构建系统集成。如果你像其他人一样使用 cmake 会更容易。</p><p>即使是旧的坚持者，boost 和 google 开源，现在也使用 cmake 来开发他们的开源东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also, for better or worse, cmake is pretty much the "standard" for C/C++ these days.<p>Fighting the standard often creates it's own set of problems and nightmares that just aren't worth it. Especially true in C++ where yhou often have to integrate with other projects and their build systems. Way easier if you just use cmake like everyone else.</p><p>Even the old hold outs, boost and google open source, now use cmake for their open source stuff.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712742" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tosti</span>
+        <span class="meta-time">2026/04/10 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">发行版维护者在打包时很可能会掉头发</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Odds are high the distro maintainer will lose hair trying to package it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706474" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lgtx</span>
+        <span class="meta-time">2026/04/10 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">将 `curl | sh` 写入用户的 bashrc 的安装说明不会激发信心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The installation instructions being a `curl | sh` writing to the user's bashrc does not inspire confidence.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706008" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ori_b</span>
+        <span class="meta-time">2026/04/10 00:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们确实说它是受到货物的启发，货物通常是使用 rustup 安装的：<p></p><pre><code>    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They did say it was inspired by cargo, which is often installed using rustup as such:<p></p><pre><code>    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bikelang</span>
+        <span class="meta-time">2026/04/10 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也不喜欢这种方法（这真是一场安全噩梦……）——但对于用户和开发人员来说这很容易做到。必须为不同的发行版处理一堆类似 apt 的存储库是一个巨大的时间消耗，并且增加了构建的复杂性。 Brew 对其公式、水龙头、木桶、地窖的不同以及相关的 ruby​​ 脚本感到厌烦……然后还有窗口 - 呃。<p>我希望有一个非常简单的安装程序 TUI，它具有通用的 API 规范，以便您可以在 your.domain.com/install.json 上托管安装程序规范 - 将这个 TUI 指向它，它会理解所需的细粒度权限，处理所需的二进制签名验证、清单/sbom 验证，让用户自由地自定义安装位置/方式等。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don’t love this approach either (what a security nightmare…) - but it is easy to do for users and developers alike. Having to juggle a bunch of apt-like repositories for different distros is a huge time sink and adds a bunch of build complexity. Brew is annoying with its formulae vs tap vs cask vs cellar - and the associated ruby scripting… And then there’s windows - ugh.<p>I wish there was a dead simple installer TUI that had a common API specification so that you could host your installer spec on your.domain.com/install.json - point this TUI at it and it would understand the fine grained permissions required, handle required binary signature validation, manifest/sbom validation, give the user freedom to customize where/how things were installed, etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706561" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">maccard</span>
+        <span class="meta-time">2026/04/10 02:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">假设您要运行二进制文件，那么情况不会比这更糟糕。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Given you're about to run a binary, it's no worse than that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707741" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hyperhopper</span>
+        <span class="meta-time">2026/04/10 02:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">情况肯定更糟。至少二进制是恒定的，在你的系统上，可以被分析。 Curl|sh 可以给你带来与单纯卷曲不同的反应。还差得远</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is definitely worse. At leas a binary is constant, on your system, can be analyzed. Curl|sh can give you different responses than just curling. Far far worse</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707989" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">maccard</span>
+        <span class="meta-time">2026/04/10 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">只有当你下载分析它。您可以免费下载安装脚本并以相同的方式进行分析。该脚本的优点是它是人类可读的，不像您要盲目执行的二进制文件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Only if you download an analyse it. You’re free to download the install script and analyze that too in the same way. The advantage that the script has is it’s human readable unlike the binary you’re about to execute blindly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">uecker</span>
+        <span class="meta-time">2026/04/10 01:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这非常适合模拟货物，而货物本身就是一个巨大的供应链风险。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is fitting for something simulating cargo, which is a huge supply chain risk itself.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706520" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jjgreen</span>
+        <span class="meta-time">2026/04/10 00:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706036" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Bjartr</span>
+        <span class="meta-time">2026/04/10 00:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你不说“去他妈的”，即使真的发生了，你最终也不会被否决。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you'd just left off "to fuck" you'd end up way less downvoted, if it even happened at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706085" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjgreen</span>
+        <span class="meta-time">2026/04/10 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有操，没有操，在五音步抑扬格中，任何含糊地批评 Rust 的东西都会被否决。  如你看到的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With fucks, without fucks, in iambic pentameter, anything vaguely critical of Rust will be downvoted.  As you can see.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706743" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">KPGv2</span>
+        <span class="meta-time">2026/04/10 01:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706172" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jvanderbot</span>
+        <span class="meta-time">2026/04/10 01:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">知道某件事被认为不好的原因并不会立即改变它被认为不好的事实。<p>社交/情感信号仍然存在于这个词周围。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Knowing the reason something is considered bad does not immediately change that fact that it is considered bad.<p>Social / emotional signals still exist around that word.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706276" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">seniorThrowaway</span>
+        <span class="meta-time">2026/04/10 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">每天都要处理大型 C++ 软件项目，祝你好运。  我们使用 conan2，虽然使用起来非常具有挑战性，但我还没有找到更好的东西可以处理作为依赖项合并的古老项目，这些项目仍然使用 autoconf 甚至自定义构建工具。  它也非常擅长检测和执行 ABI 兼容性，尽管仍然存在一些差距。  这个问题空间非常困难，改进它是创建 C/C++ 之后的许多语言的主要驱动力</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Having to work around a massive C++ software project daily, I wish you luck.  We use conan2, and while it can be very challenging to use, I've yet to find something better that can handle incorporating as dependencies ancient projects that still use autoconf or even custom build tooling.  It's also very good at detecting and enforcing ABI compatibility, although there are still some gaps.  This problem space is incredibly hard and improving it is a prime driver for the creation of many of the languages that came after C/C++</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706306" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mgaunard</span>
+        <span class="meta-time">2026/04/10 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现 conan2 主要是 ABI 带来的痛苦。 GCC 的二进制文件都向后兼容，C++ 标准版本也是如此。例外是 C++11 ABI 中断。<p>然而它会坚持只给你完全匹配的二进制文件。值得庆幸的是，有一些实验性扩展可以让它自动回退。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find that conan2 is mostly painful with ABI. Binaries from GCC are all backwards compatible, as are C++ standard versions. The exception is the C++11 ABI break.<p>And yet it will insist on only giving you binaries that match exactly. Thankfully there are experimental extensions that allow it to automatically fall back.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708474" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">linzhangrun</span>
+        <span class="meta-time">2026/04/10 09:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">干得好，但这是一场斗争。 C++有着如此沉重的历史，2026年已经太晚了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well done, but it's been a struggle. C++ has such a heavy history, and 2026 is already too late.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712398" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nesarkvechnep</span>
+        <span class="meta-time">2026/04/10 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">只要它是针对 C/C++ 而不是 C 或 C++，我就持怀疑态度。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As long as it's for C/C++ and not C or C++, I'm skeptical.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707568" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 03:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么这么说呢？我尊重它，我只是好奇。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do you say this? I respect it, I'm just curious.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708461" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">avadodin</span>
+        <span class="meta-time">2026/04/10 08:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C/C++ 是 20 世纪 90 年代的 HR 新闻用语（当时还不清楚是否有人仍想使用 C，而且 MSVC 确实将其编译器移至 C++）。<p>它表明说话者不明白这两种语言是不同社区的不同语言。</p><p>我真的不认为 C 用户完全不受依赖地狱的影响，如果这就是 OP 的意思的话。它是正交的。</p><p>作为一名用户，我确实相信，当您依赖于所有目标平台上默认情况下未包含的某些内容时（并且您未能将其包含在源树中并将其维护*），这很糟糕。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">C/C++ is HR-newspeak out of the 1990s(at the time it was not clear that anyone would still want to use C and MSVC did move their compiler to C++).<p>It signals that the speaker doesn't understand that the two are different languages with very different communities.</p><p>I don't really think that C users are entirely immune to dependency hell, if that's what OP meant, though. It is orthogonal.</p><p>As a user, I do believe it sucks when you depend on something that is not included by default on all target platforms(and you fail to include it and maintain it within your source tree*).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">unclad5968</span>
+        <span class="meta-time">2026/04/10 09:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C 的构建过程的哪些部分有所不同？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What part of the build process is different for C?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712501" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">avadodin</span>
+        <span class="meta-time">2026/04/10 10:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我解释了为什么 C/C++ 会以错误的方式摩擦 op。它与构建过程无关。<p>不过，与 C++ 相比，使用普通 Makefile 甚至不使用 Makefile 来构建更多的普通 C 程序可能确实如此。</p><p>当然，在构建普通的独立 C 程序时，您可以添加对配置脚本、m4、cmake、go、python 或 rust 的依赖项，而且确实很多人都这样做。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I explained why C/C++ rubbed op the wrong way. It has nothing to do with a build process.<p>It is probably true that more average C programs can be built with plain Makefiles or even without a Makefile than C++, though.</p><p>You can of course add dependencies on configure scripts, m4, cmake, go, python or rust when building a plain self-contained C program and indeed many do.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712879" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">flohofwoe</span>
+        <span class="meta-time">2026/04/10 00:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呵呵，看起来 cmake-code-generators 这些天很流行;)<p>这是我使用 Deno 作为基础的无力尝试（它是 <i>极其</i> 虽然固执己见，主要用于我的爱好项目中的个人用途）：</p><p><a href="https://github.com/floooh/fibs" target="_blank" rel="noopener noreferrer">https://github.com/floooh/fibs</a></p><p>我无法解决的一个有趣的先有鸡还是先有蛋的问题是如何找出将要使用的 C/C++ 工具链，而无需首先在“虚拟项目文件”上运行 cmake。对于某些工具链/IDE 组合（尤其是 Xcode 和 VStudio），cmake 的工具链检测需要 <i>很多</i> 不幸的是时间。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heh, looks like cmake-code-generators are all the rage these days ;)<p>Here's my feeble attempt using Deno as base (it's <i>extremely</i> opinionated though and mostly for personal use in my hobby projects):</p><p><a href="https://github.com/floooh/fibs" target="_blank" rel="noopener noreferrer">https://github.com/floooh/fibs</a></p><p>One interesting chicken-egg-problem I couldn't solve is how to figure out the C/C++ toolchain that's going to be used without running cmake on a 'dummy project file' first. For some toolchain/IDE combos (most notably Xcode and VStudio) cmake's toolchain detection takes a <i>lot</i> of time unfortunately.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705850" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">apparatur</span>
+        <span class="meta-time">2026/04/10 02:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对用与目标应用程序/游戏相同的语言编写自己的自定义构建系统的想法很感兴趣；它可能不是超级便携或通用的，但对于较小的项目来说很酷且易于维护： <a href="https://mastodon.gamedev.place/@pjako/115782569754684469" target="_blank" rel="noopener noreferrer">https://mastodon.gamedev.place/@pjako/115782569754684469</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm intrigued by the idea of writing one's own custom build system in the same language as the target app/game; it's probably not super portable or general but cool and easy to maintain for smaller projects: <a href="https://mastodon.gamedev.place/@pjako/115782569754684469" target="_blank" rel="noopener noreferrer">https://mastodon.gamedev.place/@pjako/115782569754684469</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">delduca</span>
+        <span class="meta-time">2026/04/10 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与柯南相比，有哪些优势呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Compared to Conan, what are the advantages?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706282" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 04:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Craft 具有项目管理功能并生成启动项目结构。您可以使用样板起始代码生成头文件和源文件。 Craft 管理项目的构建，因此您不需要编写太多 CMake。您还可以将项目结构保存为模板，并在准备就绪的新项目中实例化这些模板。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Craft has project management and generates starter project structure. You can generate header and source files with boilerplate starter code. Craft manages the building of the project so you don’t need to write much CMake. You can also save project structures as templates and instantiate those templates in new projects ready to go.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709630" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">delduca</span>
+        <span class="meta-time">2026/04/10 07:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如何比 CMake 更好？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How you can be better than CMake?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cherryteastain</span>
+        <span class="meta-time">2026/04/10 01:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎解决了与 Conan 或 vcpkg 非常相似的问题，但没有自己的包存档或构建脚本。一般来说，与 Cargo/Rust 不同，许多 C/C++ 项目动态链接库，并且通常需要复杂的 Makefile/shell 脚本等魔法来发现并选择性地构建它们的依赖项。<p>craft 如何处理这些“钻石”模式，其中 2 个依赖项可能依赖于同一库的版本作为传递依赖项（静态或动态链接或仅包含标头），而无需像柯南方法那样自定义构建脚本？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems to solve a problem very similar to Conan or vcpkg but without its own package archive or build scripts. In general, unlike Cargo/Rust, many C/C++ projects dynamically link libraries and often require complex Makefile/shell script etc magic to discover and optionally build their dependencies.<p>How does craft handle these 'diamond' patterns where 2 dependencies may depend on versions of the same library as transitive dependencies (either for static or dynamic linking or as header-only includes) without custom build scripts like the Conan approach?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706163" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/04/10 01:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来当然没有典型的 C 构建过程那么糟糕。<p>我一直在以一种不会让我感到太沮丧的方式管理依赖项，这就是 Nix flakes，它允许我使用非常简单的 `nix build` 并内置正确的依赖项。</p><p>不过我只是有点好奇；许多 C 库是系统范围的，通常需要系统包管理器（例如 libsdl2-dev），这是否有一种优雅的方法来处理这些库？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This certainly seems less awful than the typical C building process.<p>What I've been doing to manage dependencies in a way that doesn't depress me much has been Nix flakes, which allows me a pretty straightforward `nix build` with the correct dependencies built in.</p><p>I'm just a bit curious though; a lot of C libraries are system-wide, and usually require the system package manager (e.g. libsdl2-dev) does this have an elegant way to handle those?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706265" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 03:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，许多图书馆都是系统范围的，这是事实。这是我要添加的功能列表中的内容。系统依赖性。感谢您的反馈！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, many libraries are system wide that is true. This is something I had on the list of features to add. System dependencies. Thank you for the feedback!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708500" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">wild_pointer</span>
+        <span class="meta-time">2026/04/10 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么cmkr呢？<p><a href="https://cmkr.build/" target="_blank" rel="noopener noreferrer">https://cmkr.build/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What about cmkr?<p><a href="https://cmkr.build/" target="_blank" rel="noopener noreferrer">https://cmkr.build/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708626" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kjksf</span>
+        <span class="meta-time">2026/04/10 01:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在人工智能时代，这样的工具毫无意义。特别是新的，考虑到 make、cmake、premake 和其他一些东西的存在。<p>C++ 构建系统的核心，归结为调用 gcc foo.c -o foo.obj / link foo.obj foo.exe （如果我的语法错误，请原谅）。</p><p>当然，您有更多 .c 文件，并且传递了一些标志，但这就是核心。</p><p>我最近从头开始了一个新的 C++ 程序。</p><p>我写了什么构建系统？</p><p>我没有。我告诉克劳德：</p><p>“编写一个 Bun typescript 脚本 build.ts，使用 cl 编译 .cpp 文件并创建 foo.exe。创建发布和调试版本，使用 -release 命令行标志触发发布版本”。</p><p>几分钟之内就完成了，而且很有效。我可以用类似的说明来扩展它。我可以要求发布带有所有清理标志的版本，克劳德将添加它。</p><p>细节并不重要。我本可以要求一个 makefile、cmake 文件或 ninja，或者用 python、ruby、Go 或 rust 编写的脚本。我只是喜欢使用bun来编写脚本。</p><p>重点是，过去我尝试学习 cmake 和天哪，花了几天时间学习一些我会花 1 小时使用的东西。</p><p>鉴于克劳德可以让我在几分钟内使用任何构建系统，学习这些工具中的任何一个都是没有意义的。</p><p>创建新的构建工具就更没有意义了。即使你创建了最令人惊叹的工具，我仍然会选择花一分钟询问克劳德，而不是花几天时间学习新工具的任意语法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the age of AI tools like this are pointless. Especially new ones, given existence of make, cmake, premake and a bunch of others.<p>C++ build system, at the core, boils down to calling gcc foo.c -o foo.obj / link foo.obj foo.exe (please forgive if I got they syntax wrong).</p><p>Sure, you have more .c files, and you pass some flags but that's the core.</p><p>I've recently started a new C++ program from scratch.</p><p>What build system did I write?</p><p>I didn't. I told Claude:</p><p>"Write a bun typescript script build.ts that compiles the .cpp files with cl and creates foo.exe. Create release and debug builds, trigger release build with -release cmd-line flag".</p><p>And it did it in minutes and it worked. And I can expand it with similar instructions. I can ask for release build with all the sanitize flags and claude will add it.</p><p>The particulars don't matter. I could have asked for a makefile, or cmake file or ninja or a script written in python or in ruby or in Go or in rust. I just like using bun for scripting.</p><p>The point is that in the past I tried to learn cmake and good lord, it's days spent learning something that I'll spent 1 hr using.</p><p>It just doesn't make sense to learn any of those tools given that claude can give me working any build system in minutes.</p><p>It makes even less sense to create new build tools. Even if you create the most amazing tool, I would still choose spending a minute asking claude than spending days learning arbitrary syntax of a new tool.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706769" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 02:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个公平且有效的观点。但是，当您可以在工作区中运行简单的命令时，为什么要让工作流程向 AI 写入提示呢？此外，您很可能付费使用人工智能，而 Craft 是免费且开源的，并且只会不断改进。不过我尊重您的反馈，谢谢！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a fair and valid point. However, why leave your workflow to write a prompt to an AI when you can run simple commands in your workspace. Also you are most likely paying to use the AI while Craft is free and open source and will only continue to improve. I respect your feedback though, thank you!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708079" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 02:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707110" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">duped</span>
+        <span class="meta-time">2026/04/10 01:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您缺少查找库/包含路径、构建配置（用于条件编译的 `-D` 标志）、从远程存储库获取这些路径以及版本控制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You're missing finding library/include paths, build configuration (`-D` flags for conditional compilation), fetching these from remote repositories, and versioning.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707010" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">littlestymaar</span>
+        <span class="meta-time">2026/04/10 04:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“Show HN”在过去 6 个月里确实成为了 Claude 代码展示，也许现在是时候取消这种格式了……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">“Show HN” has really become a Claude code showcase in the last 6 months, maybe it's time to sunset the format at this point …</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bangaladore</span>
+        <span class="meta-time">2026/04/10 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我读到“——想想 Cargo，但针对 C/C++”。并关闭选项卡。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yup, I read "— think Cargo, but for C/C++." and closed the tab.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709285" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">singpolyma3</span>
+        <span class="meta-time">2026/04/10 07:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">接下来构建一个使用普通 Makefile 和 rust 的好方法</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Next build a nice way to use normal Makefile with rust</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thegrim33</span>
+        <span class="meta-time">2026/04/10 03:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">项目描述是 AI 生成的，即使 HN 帖子也是 AI 生成的，当你所做的只是将 AI 扔来扔去而懒得为自己付出任何努力时，我为什么要花精力研究你的项目呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Project description is AI generated, even the HN post is AI generated, why should I spend any energy looking into your project when all you're doing is just slinging AI slop around and couldn't be bothered to put any effort in yourself?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708709" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">wg0</span>
+        <span class="meta-time">2026/04/10 00:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">昨天我不得不与 CMake 进行斗争。<p>但是这个工具如何确定包含的库的头文件和构建指令在哪里呢？有什么预期布局或业界共识吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yesterday I had to wrestle with CMake.<p>But how this tool figures out where the header files and build instructions for the libraries are that are included? Any expected layout or industry wide consensus?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705645" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">integricho</span>
+        <span class="meta-time">2026/04/10 00:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信它只支持具有有效 cmake 设置的项目，没有额外的魔法</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I believe it supports only projects having a working cmake setup, no extra magic</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705946" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">flohofwoe</span>
+        <span class="meta-time">2026/04/10 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我怀疑这取决于特定的目录结构，例如查看生成的 cmake 文件：<p><a href="https://github.com/randerson112/craft/blob/main/CMakeLists.txt" target="_blank" rel="noopener noreferrer">https://github.com/randerson112/craft/blob/main/CMakeLists.t...</a></p><p>...并且为了满足自定义要求，手动创建 CMakeLists.extras.txt 作为逃生舱口。</p><p>我不清楚如何处理更有趣的场景，例如特定于编译器和平台的构建选项（启用/禁用警告、定义等）、通过 cmake 工具链文件进行交叉编译（例如通过 Emscripten SDK、WASI SDK 或 Android SDK/NDK）。例如。只是一些琐碎的事情，比如“编译 Emscripten 时，包含这些源文件，但不包含其他文件”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I suspect it depends on a specific directory structure, e.g. look at this generated cmake file:<p><a href="https://github.com/randerson112/craft/blob/main/CMakeLists.txt" target="_blank" rel="noopener noreferrer">https://github.com/randerson112/craft/blob/main/CMakeLists.t...</a></p><p>...and for custom requirements a manually created CMakeLists.extras.txt as escape hatch.</p><p>Unclear to me how more interesting scenarios like compiler- and platform-specific build options (enable/disable warnings, defines, etc...), cross-compilation via cmake toolchain files (e.g. via Emscripten SDK, WASI SDK or Android SDK/NDK) would be handled. E.g. just trivial things like "when compiling for Emscripten, include these source files, but not those others".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705978" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">eliemichel</span>
+        <span class="meta-time">2026/04/10 01:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">CMake 堆积了各代的习惯用法，因此有多种方法可以实现，但就我个人而言，我已经学会了避开 find_package() 和其他神奇的函数。将所有依赖项获取为子目录（无论您喜欢哪种方式）并使用 add_subdirectory()。仅在所谓的“配置”模式下使用 find_package()，在该模式下，您明确指示 cmake 在哪里查找大型预编译依赖项的配置</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">CMakes piles up various generations of idioms so there are multiple ways of doing it, but personally I’ve learned to steer away from find_package() and other magical functions. Get all your dependencies as subdirectories (whichever way you prefer) and use add_subdirectory(). Use find_package() only in so-called "config" mode where you explicitly instruct cmake where to find the config for large precompiled dependencies only</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706235" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 00:48</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705988" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sebastos</span>
+        <span class="meta-time">2026/04/10 06:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">残酷的事实是，已经有 C/C++ 的货物：Conan2。我知道，蟒蛇，恶心。我知道，conanfile.py，恶心。尽管有缺陷，柯南基本上可以处理一般问题的各个部分。其他人都做不到。用于管理主机与目标配置的配置文件？查看。足够详细的 ABI 建模以允许本地和远程预编译二进制缓存？检查，检查，检查。离线与在线工作模式？查看。通过任何相关的构建系统（包括 Meson）构建任何相关项目，而不需要更改项目本身？查看。支持拉动构建方需求吗？查看。版本范围？查看。锁文件？查看。闭源、仅二进制依赖项？查看。<p>一旦您认识到问题的严重性，您就会发现拥有一个由不同竞争的包管理器组成的充满活力的生态系统很糟糕。在这个问题上，一个可以处理所有情况的标准比许多只解决部分问题的不同解决方案要好得多。我不在乎 craft 的 toml 文件有多简洁 - 如果它不能交叉编译，它对我来说就没用。所以我的项目永远不能使用你的工具，这意味着其他项目也会有同样的问题，这意味着你不是唯一的包管理器/构建系统，这意味着你是问题的一部分，而不是解决方案。正确的做法是对所有项目采用一项单方面标准。如果您对包管理器的工作感兴趣，那么帮助人类的最佳方法就是修复《柯南》中所有阻碍其成为“一件事”的突出问题。它是最接近“一件事”的，但仍然存在许多悬而未决的问题：</p><p>- 其书面文档非常糟糕</p><p>- 对可编辑包的支持不完整</p><p>- 它对“工作空间”的唯一新生支持</p><p>- 缺乏 NVIDIA 配方</p><p>如果您确实无法忍受在柯南上工作（我不会责怪您），另一个可以提供帮助的努力是通用包规范格式（CPS）。做到这一点也将是一个巨大的进步。事实上，如果它成功了，那么你就可以自由地与柯南的“前端”人体工程学竞争，而不必与生态系统竞争。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The tough truth is that there already is a cargo for C/C++: Conan2. I know, python, ick. I know, conanfile.py, ick. But despite its warts, Conan fundamentally CAN handle every part of the general problem. Nobody else can. Profiles to manage host vs. target configuration? Check. Sufficiently detailed modeling of ABI to allow pre-compiled binary caching, local and remote? Check, check, check. Offline vs. Online work modes? Check. Building any relevant project via any relevant build system, including Meson, without changes to the project itself? Check. Support for pulling build-side requirements? Check. Version ranges? Check. Lockfiles? Check. Closed-source, binary-only dependencies? Check.<p>Once you appreciate the vastness of the problem, you will see that having a vibrant ecosystem of different competing package managers sucks. This is a problem where ONE standard that can handle every situation is incalculably better than many different solutions which solve only slices of the problem. I don't care how terse craft's toml file is - if it can't cross compile, it's useless to me. So my project can never use your tool, which implies other projects will have the same problem, which implies you're not the one package manager / build system, which means you're part of the problem, not the solution. The Right Thing is to adopt one unilateral standard for all projects. If you're remotely interested in working on package managers, the best way to help the human race is to fix all of the outstanding things about Conan that prevent it from being the One Thing. It's the closest to being the One Thing, and yet there are still many hanging chads:</p><p>- its terribly written documentation</p><p>- its incomplete support for editable packages</p><p>- its only nascent support for "workspaces"</p><p>- its lack of NVIDIA recipes</p><p>If you really can't stand to work on Conan (I wouldn't blame you), another effort that could help is the common package specification format (CPS). Making that a thing would also be a huge improvement. In fact, if it succeeds, then you'd be free to compete with conan's "frontend" ergonomics without having to compete with the ecosystem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711072" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">looneysquash</span>
+        <span class="meta-time">2026/04/10 06:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 残酷的事实是，已经有 C/C++ 的货物了：Conan2<p>是吗？</p><p>当我阅读教程时： <a href="https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html" target="_blank" rel="noopener noreferrer">https://docs.conan.io/2/tutorial/consuming_packages/build_si...</a></p><p>它说要手写一个 `CMakeLists.txt` 文件。这是在它让我创建 `conanfile.txt` 之前。</p><p>我对 vcpkg 也有同样的抱怨。</p><p>似乎需要：`(conan | vcpkg) + (cmake | autotools) + (ninja | make)`
+做货物所做的基础工作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The tough truth is that there already is a cargo for C/C++: Conan2<p>Is it though?</p><p>When I read the tutorial: <a href="https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html" target="_blank" rel="noopener noreferrer">https://docs.conan.io/2/tutorial/consuming_packages/build_si...</a></p><p>It says to hand write a `CMakeLists.txt` file. This is before it has me create a `conanfile.txt` even.</p><p>I have the same complaint about vcpkg.</p><p>It seems like it takes: `(conan | vcpkg) + (cmake | autotools) + (ninja | make)`
+to do the basics what cargo does.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711385" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dima55</span>
+        <span class="meta-time">2026/04/10 01:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你认为 cmake 不是很好，解决方案不是在 cmake 周围添加更多的垃圾，而是替换它。 Cmake 本身的存在是因为很多人没有费心去阅读 gnu make 手册，并且添加了更多的东西来管理它。请不要添加这个问题。这是一种疾病</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you think cmake isn't very good, the solution isn't to add more layers of crap around cmake, but to replace it. Cmake itself exists because a lot of humans haven't bothered to read the gnu make manual, and added more cruft to manage this. Please don't add to this problem. It's a disease</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706529" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dymk</span>
+        <span class="meta-time">2026/04/10 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就像 cmake 一样，“只使用 make！”并没有解决 cmake 尝试解决的许多问题。这就像说去写汇编程序而不是 C，因为 C 有这么多的枪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As much of a dog as cmake is, "just use make!" does not solve many of the problems that cmake makes a go at. It's like saying go write assembler instead of C because C has so many footguns.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706552" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dima55</span>
+        <span class="meta-time">2026/04/10 03:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">GNU Make 有一个调试器。仅此一点就使其远远优于我见过的所有其他构建工具。 cmake 调试体验是“运行谷歌搜索，并尝试其他人推荐的随机东西，但他们也不知道它是如何工作的”。这不应该被接受。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">GNU Make has a debugger. This alone makes it far superior to every other build tool I've ever seen. The cmake debugging experience is "run a google search, and try random stuff recommended by other people that also have no idea how the thing works". This shouldn't be acceptable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">beckford</span>
+        <span class="meta-time">2026/04/10 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">至少几年来情况并非如此。 <a href="https://www.jetbrains.com/help/clion/cmake-debug.html" target="_blank" rel="noopener noreferrer">https://www.jetbrains.com/help/clion/cmake-debug.html</a> 从 cmake 3.27 开始就有 CMake 调试。对于 vscode 以及我不熟悉的其他 C IDE 也是如此。 Gradle for Java 也是如此。 GNU make 并不是唯一的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That hasn't been true for a few years at least. <a href="https://www.jetbrains.com/help/clion/cmake-debug.html" target="_blank" rel="noopener noreferrer">https://www.jetbrains.com/help/clion/cmake-debug.html</a> is has had CMake debugging since cmake 3.27. Ditto for vscode and probably other C IDEs I am not familiar with. So does Gradle for Java. GNU make is hardly exclusive.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709417" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是非常正确的。我的思考过程是，由于大多数项目已经在 CMake 上运行，我将简单地以此为基础并利用 CMake 的优势，同时使更困难的操作变得更容易。感谢您的反馈！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is very true. My thought process was that since majority of projects already run on CMake, I would simply build off of that and take advantage of what CMake is good at while making the more difficult operations easier. Thank you for your feedback!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708155" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wiseowise</span>
+        <span class="meta-time">2026/04/10 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我完全赞成对 CMake 进行攻击，但是天哪，建议使用 Make 作为替代/改进是一种精神错乱的想法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm all for shitting on CMake, but Jesus, to suggest Make as a replacement/improvement is an unhinged take.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dima55</span>
+        <span class="meta-time">2026/04/10 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我建议创建构建系统的人们阅读 make 手册。这肯定没有争议吧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm suggesting that people creating build systems read the make manual. Surely this isn't controversial?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708232" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mutkach</span>
+        <span class="meta-time">2026/04/10 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请考虑添加 `cargo watch` - 这将是一个杀手级功能！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please consider adding `cargo watch` - that would be a killer feature!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706571" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">randerson_112</span>
+        <span class="meta-time">2026/04/10 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的！这绝对是在要添加的功能列表中。感谢您的反馈！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes! This is definitely on the list of features to add. Thank you for the feedback!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708098" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">duped</span>
+        <span class="meta-time">2026/04/10 00:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FWIW：元元构建系统存在根本性错误。我认为您不应该费心生成或包装 CMake，您应该替换它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FWIW: there is something fundamentally wrong with a meta-meta build system. I don't think you should bother generating or wrapping CMake, you should be replacing it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705770" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">flohofwoe</span>
+        <span class="meta-time">2026/04/10 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Cmake 在幕后做了很多未被充分重视的工作，这些工作很难在其他工具中复制，为所有不同的主机操作系统、编译器工具链和 IDE 积累了大量的解决方法，它也是少数几个正确支持 Windows 和 Visual Studio 的构建工具之一。<p>单独对每个 IDE 版本的 Xcode 和 Visual Studio 项目文件格式进行逆向工程并不有​​趣，但这种“无聊”的繁重工作使 cmake 如此有价值。</p><p>这 <i>核心思想</i> cmake 都是健全的，只是脚本语言很糟糕。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cmake is doing a lot of underappreciated work under the hood that would be very hard to replicate in another tool, tons of accumulated workarounds for all the different host operating systems, compiler toolchains and IDEs, it's also one of few build tools which properly support Windows and Visual Studio.<p>Just alone reverse engineering the Xcode and Visual Studio project file formats for each IDE version isn't fun, but this "boring" grunt work is what makes cmake so valuable.</p><p>The <i>core ideas</i> of cmake are sound, it's only the scripting language that sucks.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706070" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SleepyMyroslav</span>
+        <span class="meta-time">2026/04/10 01:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一个你不喜欢的新例子：
+<a href="https://www.youtube.com/watch?v=ExSlx0vBMXo" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=ExSlx0vBMXo</a> 构建 C++：不一定很痛苦！ - Nicole Mazzuca - 会议 C++ 2025<p>构建系统不打算在未来聚合 =)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Another fresh example of what you don't like:
+<a href="https://www.youtube.com/watch?v=ExSlx0vBMXo" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=ExSlx0vBMXo</a> Building C++: It Doesn't Have to be Painful! - Nicole Mazzuca - Meeting C++ 2025<p>Build systems don't plan to converge in the future =)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706576" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SpaceNoodled</span>
+        <span class="meta-time">2026/04/10 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的想法完全正确。  我认为这将是一个新事物，但这只是我坚持使用 Makefile 的另一个原因。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My thoughts exactly.  I thought this was going to be some new thing, but it's just yet another reason that I'll stick with Makefiles.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706014" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">flohofwoe</span>
+        <span class="meta-time">2026/04/10 00:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您的 Makefile 是否可以跨 Linux、macOS 和 Windows（没有 WSL 或 MingW）、GCC、Clang 和 MSVC 工作，或者允许将项目加载到 IDE（如 Xcode 或 Visual Studio）中？这就是为什么像 cmake 这样的元构建系统被创建，而不是为了成为更好的 GNU Make。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do your Makefiles work across Linux, macOS and Windows (without WSL or MingW), GCC, Clang and MSVC, or allow loading the project into an IDE like Xcode or Visual Studio though? That's why meta-build-systems like cmake were created, not to be a better GNU Make.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706139" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">uecker</span>
+        <span class="meta-time">2026/04/10 01:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Windows 或 Visual Studio 有一个根本性的错误，它需要丑陋的解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is something fundamentally wrong with Windows or Visual Studio that it requires ugly solutions.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706551" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">delta_p_delta_x</span>
+        <span class="meta-time">2026/04/10 01:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Windows 和 Visual Studio 解决方案非常好。 MSBuild 是 XML 中的声明性构建语法，它与 makefile 没有太大区别。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Windows and Visual Studio solutions are perfectly fine. MSBuild is a declarative build syntax in XML, it's not very different from a makefile.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706597" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">uecker</span>
+        <span class="meta-time">2026/04/10 01:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">XML 已经很糟糕了。但主要问题似乎是他们创建了类似但不兼容的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">XML is already terrible. But the main problem seems to be that they created something similar but incompatible to make.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706982" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">flohofwoe</span>
+        <span class="meta-time">2026/04/10 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好的，那么只需 cl.exe 而不是 gcc 或 clang。与 gcc 和 clang 完全不同的命令行选项集，但这很好。 C/C++ 构建工具需要能够处理不同的工具链。 C/C++ 工具链的多样性是一种优势，而不是劣势:)<p>MSVC 的一个很好的功能是，您可以在源文件中描述链接器依赖项（通过 #pragma comment(lib, ...)），这使得无需构建系统即可轻松构建相当复杂的单文件工具，如下所示：</p><p></p><pre><code>   cl mytool.c
+</code></pre>
+...无需在命令行上指定系统依赖项，例如 kernel32 等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ok, then just cl.exe instead of gcc or clang. Completely different set of command line options from gcc and clang, but that's fine. C/C++ build tooling needs to be able to deal with different toolchains. The diversity of C/C++ toolchains is a strength, not a weakness :)<p>One nice feature of MSVC is that you can describe the linker dependencies in the source files (via #pragma comment(lib, ...)), this enables building fairly complex single-file tools trivially without a build system like this:</p><p></p><pre><code>   cl mytool.c
+</code></pre>
+...without having to specify system dependencies like kernel32 etc... on the cmdline.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707928" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">forrestthewoods</span>
+        <span class="meta-time">2026/04/10 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">众所周知，Cmake 不是一个构建系统。它是一个构建系统生成器。<p>现在这是一个构建系统生成器生成器。恕我直言，这是错误的解决方案。正确的解决方案是构建一个不糟糕的构建系统。 Cmake 很糟糕。恕我直言，产生吸吮是错误的角度。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cmake is infamously not a build system. It is a build system generator.<p>This is now a build system generator generator. This is the wrong solution imho. The right solution is to just build a build system that doesn’t suck. Cmake sucks. Generating suck is the wrong angle imho.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708837" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">einpoklum</span>
+        <span class="meta-time">2026/04/10 03:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际尝试之前的印象：<p>CMake 是规范语言的疣猪和处理无数特殊情况和各种极端情况的机制的组合。</p><p>我怀疑 &lt; 10,000 行 C 代码能否涵盖大部分内容。</p><p>我还怀疑开发人员是否能够表达他们想要的确切关系和语义细微差别，而不是对许多项目（但不是所有项目）可能有意义的默认值。</p><p>不过，如果它可以帮助人们开始更简单或更直接的项目，那就太好了:-)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Impression before actually trying this:<p>CMake is a combination of a warthog of a specification language, and mechanisms for handling a zillion idiosyncracies and corners cases of everything.</p><p>I doubt than &lt; 10,000 lines of C code can cover much of that.</p><p>I am also doubtful that developers are able to express the exact relations and semantic nuances they want to, as opposed to some default that may make sense for many projects, but not all.</p><p>Still - if it helps people get started on simpler or more straightforward projects - that's neat :-)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708286" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">spwa4</span>
+        <span class="meta-time">2026/04/10 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">只需切换到 bazel，复制我的密封构建配置并使用它......是的，你可以恨我知道。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just switch to bazel, copy my hermetic build config and just use it ... yes, you can hate me know.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706078" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 00:04</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705414" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mc-serious</span>
+        <span class="meta-time">2026/04/10 00:35</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705820" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shevy-java</span>
+        <span class="meta-time">2026/04/10 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C 语言的采用仅需 51 年。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Will take C only 51 years to adopt.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706343" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

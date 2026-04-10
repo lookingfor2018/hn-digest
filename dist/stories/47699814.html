@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>自主人工智能代理的流程管理器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>自主人工智能代理的流程管理器</h1>
+      <p class="subtitle">Process Manager for Autonomous AI Agents</p>
+      <div class="meta-line">
+        <span>botctl.dev</span>
+        <span>作者 ankitg12</span>
+        <span>分数 58</span>
+        <span>评论 21</span>
+        <span>2026/04/09 14:00</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47699814" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://botctl.dev/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>声明性配置 01 YAML frontmatter 用于设置，markdown body 用于提示。 --- 名称：代码审阅者 Interval_Seconds：60 max_turns：20 --- 审查开放的 PR 并发表评论... 自主执行 02 生成 Claude，并提供提示、工具和工作区。循环运行、记录和休眠。 $ botctl start code-reviewer -d ✓ Harness 已启动 (pid 48201) $ botctl logs code-reviewer -f [run #1] 审查 PR #49... 会话内存 03 每次运行都会保存其会话。从 Claude 中断的地方继续，或发送消息以重定向正在运行的机器人。 $ botctl start review --message &quot;focus on PR 51&quot; ✓ 消息排队，唤醒机器人...热重载 04 编辑 BOT.md，下一次运行将拾取更改。无需重新启动、无需部署、无需停机。 # 更改 BOT.md 中的 max_turns max_turns: 20 → max_turns: 50 # 下次运行自动使用新值 可扩展技能 05 从 GitHub 搜索、安装和共享可重用技能模块。技能将功能注入任何机器人的提示中。 $ botctl 技能搜索 slack $ botctl 技能添加所有者/存储库 --skill slack-notify $ botctl 技能列表 Web 仪表板 06 从浏览器监视和控制机器人。与 TUI 具有相同的功能 — 启动、停止、消息和流日志。 $ botctl --web-ui ✓ 仪表板位于 http://localhost:4444 $ botctl --web-ui --port 8080</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Declarative config 01 YAML frontmatter for settings, markdown body for the prompt. --- name: code-reviewer interval_seconds: 60 max_turns: 20 --- Review open PRs and post comments... Autonomous execution 02 Spawns Claude with your prompt, tools, and workspace. Runs, logs, and sleeps on a loop. $ botctl start code-reviewer -d ✓ Harness started (pid 48201) $ botctl logs code-reviewer -f [run #1] Reviewing PR #49... Session memory 03 Every run saves its session. Resume where Claude left off, or send messages to redirect a running bot. $ botctl start review --message &quot;focus on PR 51&quot; ✓ Message queued, waking bot... Hot reload 04 Edit BOT.md and the next run picks up changes. No restarts, no deploys, no downtime. # change max_turns in BOT.md max_turns: 20 → max_turns: 50 # next run uses new value automatically Extensible skills 05 Search, install, and share reusable skill modules from GitHub. Skills inject capabilities into any bot&#39;s prompt. $ botctl skills search slack $ botctl skills add owner/repo --skill slack-notify $ botctl skills list Web dashboard 06 Monitor and control bots from the browser. Same capabilities as the TUI — start, stop, message, and stream logs. $ botctl --web-ui ✓ Dashboard at http://localhost:4444 $ botctl --web-ui --port 8080</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">martypitt</span>
+        <span class="meta-time">2026/04/09 16:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以看到您正在对一些不同的英雄文本进行 A/B 测试。<p>我得到：</p><p>&gt; 编写配置，而不是对话</p><p>我的发现让我想知道——“这是什么东西？”
+我对这些变化进行了几次刷新，虽然有些更好，但我觉得你的英雄可以不那么简洁，对它是什么进行更简单的解释。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can see you're A/B testing some different hero text.<p>I got:</p><p>&gt; Write a config, not a conversation</p><p>Which I found let me wondering - "What is this thing?"
+I refreshed a few times to the variations, and while some were better, I feel like your hero could do with being less pithy, and more plain explanation of what it is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/09 23:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以我是 botctl 的创建者，我创建它是为了满足我在 cron 样式循环上运行多个代理的个人需求。整个前提是您不需要在那里与代理聊天即可完成其工作。<p>我绝对不会进行任何 A/B 测试，它只是循环浏览了几个我认为很好地传达了该项目的标题。正下方的副标题解释得很清楚，你同意吗？</p><p>&gt; 使用终端仪表板、Web UI 和声明性配置管理持久性 AI 机器人。</p><p>英雄中两个游戏的旁边还有一个 TUI 的交互式模拟。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So I'm the creator of botctl which I created to satisfy my personal need for running many agents on a cron style loop. The whole premise is you don't need to be there to chat with the agent for it to do it's job.<p>I'm definitely not A/B testing anything, it just cycles through a couple titles I thought conveyed the project well. The sub-title directly under it explains it pretty clearly, would you agree with that?</p><p>&gt; Manage persistent AI bots with a terminal dashboard, web UI, and declarative configuration.</p><p>There's also an interactive emulation of the TUI directly next to both titles in the hero.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705185" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">obilgic</span>
+        <span class="meta-time">2026/04/09 17:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果有人感兴趣的话，我已经在代理平台上工作了一段时间了。<p><a href="https://kern-ai.com/" target="_blank" rel="noopener noreferrer">https://kern-ai.com/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In case anyone is interested, agentic platform I have been working on for awhile.<p><a href="https://kern-ai.com/" target="_blank" rel="noopener noreferrer">https://kern-ai.com/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701464" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/10 00:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢分享，我认为这是一种不同类型的系统，尽管肯定有很多相似之处。<p>我明确地使 botctl 不必与我的代理交谈，我希望他们根据 BOT.md 文件的提示/目标/技能自主运行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for sharing, I think it's kind of a different type of system although a lot of similarities for sure.<p>I made botctl explicitly to not have to talk to my agents, I wanted them running autonomously based on their BOT.md file's prompt / goals / skills.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hrimfaxi</span>
+        <span class="meta-time">2026/04/09 20:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能否提供更多有关此问题的详细信息，为什么我们可能不得不尝试一下？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you give any more details about this, why we might be compelled to try it out?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703008" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">obilgic</span>
+        <span class="meta-time">2026/04/09 23:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://kern-ai.com/blog/why-your-agent-needs-one-session" target="_blank" rel="noopener noreferrer">https://kern-ai.com/blog/why-your-agent-needs-one-session</a><p>这是我创建这个的主要动机</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://kern-ai.com/blog/why-your-agent-needs-one-session" target="_blank" rel="noopener noreferrer">https://kern-ai.com/blog/why-your-agent-needs-one-session</a><p>This was my main motivation to create this</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704695" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/09 20:42</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47702955" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">farrukh23buttt</span>
+        <span class="meta-time">2026/04/10 02:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于任何想要完全自主的代理而不需要照看他们的人来说，看起来很方便——通过持续聊天进行声明性配置似乎是一个明智之举。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks handy for anyone wanting fully autonomous agents without babysitting them—declarative config over constant chat seems like a smart move.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/10 02:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当您提示他们更新 BOT.md 时，这真的很有趣，而且他们还可以访问以前的运行结果，以便不断从错误中“学习”或调查更改。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It gets really fun when you prompt them to update their BOT.md, also they get access to previous run results so they continually "learn" from mistakes or investigate changes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">RamblingCTO</span>
+        <span class="meta-time">2026/04/09 15:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来很酷，但正如所有人工智能登陆页面一样，它的对比度不够。您可能想要淡化较暗的文本阴影；）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">looks pretty cool, but as all AI landing pages do, it suffers from not enough contrast. you might want to lighten the darker text shades ;)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700392" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/09 23:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您的反馈，我会这样做！我认为不同的屏幕和系统设置对此影响很大，在我浏览过该网站的所有设备上，我觉得阅读起来很舒服，不会影响您的体验，我也会在将来牢记这一点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for the feedback, I'll do that! I think different screens and system settings affect this a lot, on all the devices I've looked at the site on I felt it was quite comfortable to read, not to discount your experience, I'll keep that in mind for the future as well.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705217" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">oliver236</span>
+        <span class="meta-time">2026/04/09 15:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么有这么多自主人工智能代理编排系统？太多了！我不明白！请解释一下</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">why are there so many autonomous ai agent orchestration systems? too much! I don't understand! Please explain</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lgas</span>
+        <span class="meta-time">2026/04/09 16:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有什么不明白的呢？  人工智能现在正在蓬勃发展。  人们试图参与淘金热和/或试图向矿工出售镐斧。  对于任何想要尝试某事的人来说，都有大量的沃土，所以它正在被探索。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What is there not to understand?  AI is booming right now.  People are trying to get in on the gold rush and/or trying to sell pick axes to the miners.  There is a ton of fertile ground for anyone that wants to try something, so it's being explored.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700607" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">exitb</span>
+        <span class="meta-time">2026/04/09 16:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人们希望以新发现的生产力来构建一些东西，但事实证明，软件开发总是对潜在影响具有很高的影响力——编码总是相对便宜。这意味着，如果我们只有 10 倍的生产力，实际上就不会出现积压的优秀产品。唯一能找到“缺失产品”的地方大多是人工智能本身。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">People want to build something with the newfound productivity, but it turns out that software development always had a high leverage against potential impact - coding was always relatively cheap. That means there is in fact no backlog of great products that could have been built if we only had 10x productivity. The only spots where "missing products" can be found are mostly around AI itself.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700977" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/09 23:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想反驳一下，编码历来并不便宜。长期以来，软件工程师一直是薪酬最高的职业之一。就我个人而言，在从事全职工作、养家糊口并试图拥有某种社交生活的同时，我的开源贡献急剧下降，直到最近随着编码代理的普及。我在过去 12 个月内创建的项目和软件比过去 10 年的总和还多。并不是说其中很多内容都不是完全的废话或提供的实用性很少，但这确实是一段有趣而令人兴奋的时光。<p>另一个有趣的点是，直到最近，大多数普通人都认为“代码”遥不可及，或者他们没有时间/精力来学习它。我妈妈前几天在claude代码的帮助下制作了一个webapp来生成书籍，她在学习终端、本地主机、端口、API等知识的同时，在三天的时间里思考并完成了这个项目。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'll take a counterpoint, coding has historically not been cheap. Software engineers have been one of the highest paid professions for a long time. Personally while working a full time job, raising a family and trying to have some semblance of a social life my open source contributions fell off a cliff until recently with the popularization of coding agents. I've created more projects and software in the last 12 months than the past 10 years combined. Not to say a lot of it wasn't total slop or provided little utility, but it's been a fun and exciting time.<p>Another interesting point is that until recently most average people thought "code" was out of reach or they didn't have time / energy to learn it. My mother made a webapp with the help of claude code the other day to generate books, which she thought of and completed in the course of 3 days all the while learning about terminals, localhost, ports, APIs and more.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705345" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">_pdp_</span>
+        <span class="meta-time">2026/04/09 17:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">恕我直言，原因是因为工程师可以编写软件，但并不总能解决实际问题。将东西放入代码中以使用计算机执行操作会更容易。这是舒适区。但想出解决有价值的最终用户问题的方法需要了解它是什么。<p>我已经多次经历过这个思考过程，但我仍然在挣扎（你可以查看我的个人资料了解原因）。</p><p>你也可以尝试一下。</p><p>人工智能自动化的最佳应用是什么？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">IMHO the reason is because engineers can write software but not always solve real problems. It is just easier to put stuff in code to do things with computers. This is the comfort zone. But coming up with something that solves a valuable end-user problem requires understanding what this is.<p>I've been through this thought process many times and I am still struggling (you can check my profile as to why).</p><p>You can try as well.</p><p>What are the best applications for AI automation?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bcjdjsndon</span>
+        <span class="meta-time">2026/04/09 17:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 人工智能自动化的最佳应用是什么？<p>一个机器人走来走去打扫你的房子，他永远不会疲倦，他可以去商店做你想做的事并自我修理</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; What are the best applications for AI automation?<p>A robot that walks round cleaning your house and he never gets tired and he can go the shops and do what you want and repairs his self</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701238" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hdgvhicv</span>
+        <span class="meta-time">2026/04/09 17:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 人工智能自动化的最佳应用是什么？<p>性爱机器人</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; What are the best applications for AI automation?<p>Sex bots</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701420" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cindyllm</span>
+        <span class="meta-time">2026/04/09 18:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701571" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ramon156</span>
+        <span class="meta-time">2026/04/09 19:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望我们大家共同致力于一个项目，特别是在协调器工具上，基础工作很重要。人们可以在它的基础上构建任何他们想要的东西，只是不要重新发明编排器！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish we all collectively worked on one project, especially on an orchestrator tool, where the groundwork is important. people can build on it whatever they want, just dont re-invent the orchestrator!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47702127" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/09 23:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">以下是两个流行的开源项目，它们拥有超过 20 万颗星和 1,300 多个贡献者，但目标略有不同：<p>- <a href="https://github.com/anomalyco/opencodeagents" target="_blank" rel="noopener noreferrer">https://github.com/anomalyco/opencodeagents</a></p><p>- <a href="https://github.com/OpenHands/OpenHands" target="_blank" rel="noopener noreferrer">https://github.com/OpenHands/OpenHands</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Here's two popular open-source projects that have combined 200k+ stars and 1,300+ contributors, with slightly different goals:<p>- <a href="https://github.com/anomalyco/opencodeagents" target="_blank" rel="noopener noreferrer">https://github.com/anomalyco/opencodeagents</a></p><p>- <a href="https://github.com/OpenHands/OpenHands" target="_blank" rel="noopener noreferrer">https://github.com/OpenHands/OpenHands</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">squirrellous</span>
+        <span class="meta-time">2026/04/09 18:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是现在很酷的孩子们所做的事情。一切都会过去的。此外，围绕代理构建事物并看着他们开始工作也非常有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s what the cool kids are doing these days. It’ll pass. Also it’s quite fun to build things around agents and watch them go off to work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47702020" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">anonfunction</span>
+        <span class="meta-time">2026/04/09 23:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为还有一些关于能够完全按照您想要的方式制作的东西。例如，我不喜欢 openclaw，我觉得它的设计过于过度，老实说，我什至在第一次尝试时都无法运行它。因此，我将 botctl 制作为一个通用版本，它不依赖于复杂的设置，并且具备所有功能，您只需安装它，创建一个包含 BOT.md 文件的目录，然后就可以了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think there's also something about being able to make it exactly how you want. For example I didn't like openclaw, I felt it was extremely over-engineered and I honestly couldn't even get it running on my first attempt. So I made botctl to be a generalized version where it doesn't rely on complex setup and have every bell and whistle, you just install it, create a directory with a BOT.md file and off it goes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705288" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">10keane</span>
+        <span class="meta-time">2026/04/09 18:50</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701960" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">quinndupont</span>
+        <span class="meta-time">2026/04/09 20:08</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47702615" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">techpulselab</span>
+        <span class="meta-time">2026/04/09 16:14</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700665" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/09 15:12</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47700299" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">eddie-wang</span>
+        <span class="meta-time">2026/04/09 17:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47701301" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

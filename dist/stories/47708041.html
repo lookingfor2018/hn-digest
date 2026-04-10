@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PicoZ80 – Z80 的替代品 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>PicoZ80 – Z80 的替代品</h1>
+      <p class="subtitle">PicoZ80 – Drop-In Z80 Replacement</p>
+      <div class="meta-line">
+        <span>eaw.app</span>
+        <span>作者 rickcarlino</span>
+        <span>分数 157</span>
+        <span>评论 25</span>
+        <span>2026/04/10 02:53</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47708041" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://eaw.app/picoz80/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>概述</li><li>picoZ80 延续了 tranZPUter 主题，用更快的 CPU、更多内存、虚拟设备、网络（WiFi、BT）、从 SD 卡快速加载应用程序和 WiFi 管理来取代主机或工业计算机中的物理 Z80。</li><li>它是一种定制 PCB，设计用于直接插入任何传统 Z80 计算机的 Z80 DIP-40 CPU 插座。该主板没有使用分立的 Z80 处理器，而是采用 RP2350B 微控制器（一种双核 150MHz Cortex-M33 器件，运行频率高达 300MHz），其可编程 I/O (PIO) 状态机对 Z80 地址、数据和控制总线进行全面、周期精确的控制。</li><li>picoZ80 不是一个简单的仿真器适配器。每个总线事务均由 RP2350 的 PIO 引擎实时处理，为主机系统提供与真实 Z80 完全相同的总线时序。同时，RP2350 的第二个内核和丰富的片上 SRAM 与 8MB 外部 PSRAM 和 16MB 闪存相结合，允许在原始 Z80 接口之上分层几乎无限的功能，包括加速执行、虚拟化内存、ROM 银行、虚拟磁盘驱动器和完整的机器角色仿真。</li><li>ESP32 协处理器提供 WiFi 和蓝牙连接、SD 卡大容量存储以及基于浏览器的管理界面。所有配置均由存储在 SD 卡上的单个人类可读的 config.json 文件驱动，这意味着无需重新编译即可重新配置主板的内存映射、ROM 映像或驱动程序选择。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Overview</li><li>The picoZ80 continues the tranZPUter theme, replacing a physical Z80 in a host or industrial computer with a faster CPU, more memory, virtual devices, networking (WiFi, BT), rapid application loading from SD card and WiFi management.</li><li>It is a custom PCB designed to drop directly into the Z80 DIP-40 CPU socket of any legacy Z80-based computer. Rather than using a discrete Z80 processor, the board hosts an RP2350B microcontroller — a dual-core 150MHz Cortex-M33 device capable of running at up to 300MHz — whose programmable I/O (PIO) state machines take full, cycle-accurate control of the Z80 address, data, and control buses.</li><li>The picoZ80 is not a simple emulator adapter. Every bus transaction is handled in real time by the RP2350&#39;s PIO engines, giving the host system exactly the same bus timing it would see from a real Z80. At the same time, the RP2350&#39;s second core and abundant on-chip SRAM, combined with 8MB of external PSRAM and 16MB of Flash, allow an almost unlimited range of capabilities to be layered on top of the raw Z80 interface — including accelerated execution, virtualised memory, ROM banking, virtual disk drives, and full machine-persona emulation.</li><li>An ESP32 co-processor provides WiFi and Bluetooth connectivity, SD-card mass storage, and a browser-based management interface. All configuration is driven from a single human-readable config.json file stored on the SD card, meaning no recompilation is required to reconfigure the board&#39;s memory map, ROM images, or driver selection.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Lerc</span>
+        <span class="meta-time">2026/04/10 04:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直在考虑对 6502 (6510) 做或多或少相同的事情。<p>是否将 CPU 从 C64 中拔出并像这样替换它，将其用作总线主控盒，还是替换 RAM，始终是一个两难的选择。</p><p>我一直倾向于墨盒计划以避免进行机器手术的要求。  如果你让 RP2350 假装成 RAM，那么视频硬件可以直接从中读取数据，这使得各种恶作剧成为可能（每行都是 BADLINE）。</p><p>在某些时候，它看起来就像只是将 VIC-II 和 SID 插入带有 RP2350 的板中，盒式方法意味着您必须传输到计算机的 RAM，但您也可以在每个 CPU 周期写入硬件寄存器，这将启用一些潜在的新模式，这些模式与 BADLINE 的每行不会完全不同。</p><p>现在我正在研究让 RP2350 输出视频，一次构建一条扫描线，使用尽可能少的 CPU 。  昨天我得到了三层图块和两层精灵，每层都有不同的像素格式。  对此非常满意。   CPU 计算每个扫描线的一些值，但获取图块地图数据，然后图块数据，然后转换为像素值、透明度和调色板查找都是 DMA 和 PIO。   每个像素为 1、2、4 和 8 位，每个图块/精灵/图像缓冲区层具有独立的 24 位调色板。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I had been pondering about doing more or less the same thing for 6502 (6510).<p>It was always the dilemma of whether to pull the CPU out of a C64 and replace it like this, do it as a bus mastering cartridge, or replace the RAM.</p><p>I have been leaning towards the cartridge plan to avoid the requirement of doing machine surgery.  If you get the RP2350 to pretend to be the RAM then the video hardware could read directly out of it which makes all sorts of shenanigans possible (every line a BADLINE).</p><p>At some point it would look like just plugging A VIC-II and a SID into a board with the RP2350 though,   The cartridge approach means you have to do transfers across into the computer's RAM, but you could also write to hardware registers every CPU cycle, which would enable some potentially new modes that would not be  entirely dissimilar to every line a BADLINE.</p><p>Right now I'm mucking around with getting the RP2350 to output video constructed a scanline at a time, using as little CPU as possible.  I got three layers of tiles and two layers of sprites each with different pixel formats working yesterday.  Quite pleased with that.   The CPU calculates a handful of values per scanline, but fetching tilemap data, then tile data, then conversion to pixel values, transparency and palette lookup are all DMA and PIO.   Does 1,2,4, and 8 bits per pixel, each tile/sprite/imagebuffer layer with independent 24 bit palettes.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709020" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">topspin</span>
+        <span class="meta-time">2026/04/10 04:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您和engineers@work有这样的共同思考：<p><a href="https://eaw.app/pico6502/" target="_blank" rel="noopener noreferrer">https://eaw.app/pico6502/</a></p><p>“调色板查找都是 DMA 和 PIO”</p><p>PIO 是一个启示。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You have such ponderings in common with engineers@work:<p><a href="https://eaw.app/pico6502/" target="_blank" rel="noopener noreferrer">https://eaw.app/pico6502/</a></p><p>"and palette lookup are all DMA and PIO"</p><p>PIO is a revelation.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709174" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Lerc</span>
+        <span class="meta-time">2026/04/10 06:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很棒，但我认为前几天的批评也很有效。并提供了替代方案。<p><a href="https://www.bunniestudios.com/blog/2026/bio-the-bao-i-o-coprocessor/" target="_blank" rel="noopener noreferrer">https://www.bunniestudios.com/blog/2026/bio-the-bao-i-o-copr...</a></p><p>我认为，对于我的使用来说，只要能够写入 DMA 寄存器就已经是一个很大的优势了。  让 DMA 等待 FIFO 只是为了将其获取的内容写入 DMA 寄存器以执行您真正想要的传输，这感觉很浪费。</p><p>查看架构图，似乎它可以允许这种情况并保留在 AHB5 分离器的同一侧。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's great, but I think the critique from the other day was also pretty valid. and offered an alternative.<p><a href="https://www.bunniestudios.com/blog/2026/bio-the-bao-i-o-coprocessor/" target="_blank" rel="noopener noreferrer">https://www.bunniestudios.com/blog/2026/bio-the-bao-i-o-copr...</a></p><p>I think, for my use, just having the ability to write to DMA registers would have been a big advantage.  It feels wasteful to have A DMA waiting on a FIFO just to write what it gets to DMA registers to do the transfer you actually wanted.</p><p>Looking at the Architecture diagram It seems like it could have allowed that and stayed on the same side of the AHB5 splitter.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710911" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">teaearlgraycold</span>
+        <span class="meta-time">2026/04/10 05:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的很喜欢PIO。我想把它展示给一位 80 年代的计算机工程师。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I do love the PIO. I want to show it to a computer engineer from the 80s.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710593" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zeckalpha</span>
+        <span class="meta-time">2026/04/10 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与 MCS-96 HSIO 没什么不同。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not all that different from the MCS-96 HSIO.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711040" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">boznz</span>
+        <span class="meta-time">2026/04/10 05:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">热门提示：忽略 RP2350 设计表并使用标准 1.2V LDO 来提供内部 vCore - 您无需使用那个奇怪的电感器，并且可以在 1.2V 下更可靠地以 300Mhz 对其进行计时。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hot tip: Ignore the RP2350 design sheet and use a standard 1.2V LDO in to provide the internal vCore - you save having to use that weird inductor and can clock it at a 300Mhz much more reliably at 1.2V.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Lerc</span>
+        <span class="meta-time">2026/04/10 05:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其背后的原因是什么？  该电感器是否有特定的功能导致他们选择它，或者他们选择它然后发现他们的一些设计依赖于非典型的通用电感器行为。<p>脱离设计表的问题是你不知道会发生什么变化。  通常，您很可能并不依赖于差异，但真正困扰您的是不知道。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What was the reasoning behind that?  Were there specific features of that inductor that led them to choose it, or did they choose it and then found some of their design relied on atypical generic inductor behaviour.<p>The problem with going off design sheet is you don't know what might change.  There's usually a good chance that you are not depending on the difference, but it's the not knowing that gets to you.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710657" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">phire</span>
+        <span class="meta-time">2026/04/10 07:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们建议绕过 RP2350 的内部开关稳压器（只需要一个外部线圈和一些电容），并用外部线性稳压器替换它（实际上数据表支持）<p>开关稳压器的功耗要低得多（这在电池耗尽时很重要）并且产生的热量更少，有时会导致占地面积更紧凑（尽管我不确定 RP2350 的核心使用足够的功率来发挥这一优势）</p><p>功率/热量节省对于这种用例来说并不重要，线性稳压器的优点是可以产生更稳定的功率，尽管您将其硬连线到 1.2v（一个小的过压），而不是使用内部稳压器动态调整其电压的能力（可从 0.55c 调整到 3.30v）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They are suggesting bypassing the RP2350's internal switching regulator (which only needs an external coil and some caps) and replacing it with an external linear regulator (which is actually supported by the datasheet)<p>Switching regulators have much lower power draw (which is important when running off batteries) and generate less heat, which sometimes leads to a more compact footprint (though I'm not sure the RP2350's core uses enough power for that benefit to kick in)</p><p>The power/heat savings don't really matter for this usecase, and linear regulators have the advantage of producing more stable power, though you are hardwiring it to 1.2v (a small overvolt) rather than using the ability of the internal regulator to adjust its voltage on the fly (adjustable from 0.55c to 3.30v)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711459" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jhassell</span>
+        <span class="meta-time">2026/04/10 09:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">移植到实际的 Tandy Radio Shack Model 3 计算机（基于 Z-80）？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ported to an actual Tandy Radio Shack Model 3 Computer (based on the Z-80)?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712643" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">YasuoTanaka</span>
+        <span class="meta-time">2026/04/10 04:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这与其说是“CPU 替代”，不如说是总线级别的参与者。<p>一旦您准确地控制了总线周期，CPU 抽象就会消失。
+您正在从外部有效地重新定义整个机器的行为。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is less of a “CPU replacement” and more of a bus-level participant.<p>Once you control the bus cycle-accurately, the CPU abstraction kind of disappears.
+You’re effectively redefining the whole machine behavior from the outside.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709301" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jhallenworld</span>
+        <span class="meta-time">2026/04/10 05:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想制作像这样的经典 CPU ICE，具有跟踪存储器、反汇编等（请注意，您需要适用于许多 CPU 的晶体振荡器电路 - 6802、8085 等）<p>它对于调试 Altair 8800 等经典计算机非常有用。您要做的就是获取工作机器的启动跟踪（记录前 100,000 条指令），并将其与损坏的机器进行比较。这会在大约 5 秒内找到问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I want to make something like this as a classic CPU ICE, with trace memory, disassembly, etc.  (note that you need a crystal oscillator circuit for many CPUs- 6802, 8085, etc.)<p>It would be useful for debugging classic computers like Altair 8800, etc.  What you do is get a boot trace (record the first 100,000 instructions) of a working machine and diff it with the one from your broken machine. This finds the problem in like 5 seconds.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jgrahamc</span>
+        <span class="meta-time">2026/04/10 04:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦哇。 Sharp MZ 系列的增强功能！精彩的。我在 20 世纪 80 年代花了很多时间使用这些机器，并拥有一些。能够模拟 Sharp MZ-80K 的 (<a href="https://blog.jgc.org/2009/08/in-which-i-switch-on-30-year-old.html" target="_blank" rel="noopener noreferrer">https://blog.jgc.org/2009/08/in-which-i-switch-on-30-year-ol...</a>) MZ80FD 会很酷。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh wow. Enhancements for the Sharp MZ line! Wonderful. I spent a lot of time with those machines in the 1980s and own a few. Being able to emulate the Sharp MZ-80K's (<a href="https://blog.jgc.org/2009/08/in-which-i-switch-on-30-year-old.html" target="_blank" rel="noopener noreferrer">https://blog.jgc.org/2009/08/in-which-i-switch-on-30-year-ol...</a>) MZ80FD would be cool.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709441" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SilentM68</span>
+        <span class="meta-time">2026/04/10 10:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个很酷的项目！<p>我使用 Z80 (Zilog80) 计算机套件（汇编编程学习模拟器）来完成大学数字课程。这实际上是一次很好的学习经历。忘记实际公司的名称，但您可以在实际板上对其进行编程，但犯一个错误就意味着重新开始，没有退格功能:)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a cool project!<p>I used a Z80 (Zilog80) Computer Kit (Assembly Programming learning simulator) for college digital coursework. That was actually a good learning experience. Forget the name of the actual company but you could program it on the actual board, but making one mistake meant starting over, no backspace function :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712922" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bilekas</span>
+        <span class="meta-time">2026/04/10 06:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我是“自制”硬件的新手，在具有不同要求的各种环境中拥有多年的 PLC 系统经验。<p>我喜欢我的 Teensy2 的原因可能是无法解释的。我也想要这个。我觉得这个爱好将会变得非常昂贵。我有一个老家族坦登（Tandon），我正在想办法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am a newbie to the 'homebrew' hw, have many years in plc systems in various environments with different requirements.<p>I love for reasons maybe unexplainable my Teensy2.. I want this one too. I feel this hobby is going to become very expensive. I have an old family Tandon and I'm getting ideas.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711309" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">JVIDEL</span>
+        <span class="meta-time">2026/04/10 04:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么这只是针对业余爱好者还是有任何工业应用？还有哪些机器仍在 Z80 上运行？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So is this just for hobbyists or it has any, say, industrial applications? are there any machines still running on a Z80?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">codebje</span>
+        <span class="meta-time">2026/04/10 10:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仅供爱好者使用。作为一个简单的 Z80 cpu 直接替代品，它的设计太过分了。<p>这并不是说我无法想象某个地方的某个人有一天会收到警报，发现某个控制板出现故障，而_只是_ CPU，停产组件的备件箱进水并被毁坏，系统停机时公司每小时损失数百万美元。我只是认为这不会是一个常见的故事。怀着对人性的充分信心，我喜欢想象负责此类系统的人员已计划在 Z80 因组件故障而无法使用而导致严重停电的风险之前，计划更换完整的控制板以供舒适使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just for hobbyists. It's very much over-engineered as a simple Z80 cpu drop-in replacement.<p>That's not to say I couldn't imagine that someone, somewhere, wakes up to an alert one day that some control board has failed, and it's _just_ the CPU, and the spare parts bin for out-of-production components got water in it and is ruined, and the company is losing millions per hour the system is down. I just don't think that'll be a common story. With full faith in humanity I like to imagine instead that the people responsible for such systems have planned for full control board replacements to be available for use comfortably before unavailability of the Z80 risks a significant outage due to component failure.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712950" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">brudgers</span>
+        <span class="meta-time">2026/04/10 04:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几乎所有旧的数字技术仍在工业中使用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Approximately every old digital technology is still in use industrially.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">emptybits</span>
+        <span class="meta-time">2026/04/10 08:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">TI-84+ 图形计算器仍然很受欢迎，并且是当前型号，它是基于 Z80 的。 （尽管我怀疑您能否找到一个用于交换的 DIP40 插座。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The TI-84+ graphing calculator is still popular and a current model and it is Z80 based. (Though I doubt you'll find a DIP40 socket in one for a swap.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711890" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">codebje</span>
+        <span class="meta-time">2026/04/10 10:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">TI-84+ 使用 TI REF 84PLUSB（或变体）ASIC，其中具有 Z80 兼容内核，而不是 Zilog Z80，并且正如您所说，绝对不是 DIP40 部件。<p>请参阅此处的 ASIC，在我看来像是 QFP-144 封装：
+ <a href="https://guide-images.cdn.ifixit.com/igi/e25cVO2avPxiMoXl.huge" target="_blank" rel="noopener noreferrer">https://guide-images.cdn.ifixit.com/igi/e25cVO2avPxiMoXl.hug...</a></p><p>CE 也使用 ASIC，但采用 eZ80 内核。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The TI-84+ uses a TI REF 84PLUSB (or variant) ASIC that has a Z80-compatible core in it, not a Zilog Z80, and, as you say, definitely not a DIP40 part.<p>See the ASIC here, in what looks to me like a QFP-144 package:
+ <a href="https://guide-images.cdn.ifixit.com/igi/e25cVO2avPxiMoXl.huge" target="_blank" rel="noopener noreferrer">https://guide-images.cdn.ifixit.com/igi/e25cVO2avPxiMoXl.hug...</a></p><p>The CE also uses an ASIC, but with an eZ80 core instead.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713033" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rahimnathwani</span>
+        <span class="meta-time">2026/04/10 04:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人物角色如何运作？主板是否将 Z80 定向到闪存中存储的备用 ROM？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How do the personas work? Does the board direct the Z80 to an alternate ROM stored in the flash?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">uticus</span>
+        <span class="meta-time">2026/04/10 04:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“tranZPuter”怎么不是“transputer”（<a href="https://en.wikipedia.org/wiki/Transputer" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Transputer</a>）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how is "tranZPuter" not "transputer" (<a href="https://en.wikipedia.org/wiki/Transputer" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Transputer</a>)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709587" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">uticus</span>
+        <span class="meta-time">2026/04/10 04:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在页面的其他地方，ZPU（基于 FPGA 的微处理器）听起来很像“ZipCPU”基于 FPGA 的微处理器 <a href="https://zipcpu.com/" target="_blank" rel="noopener noreferrer">https://zipcpu.com/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">and elsewhere on the page, ZPU (FPGA-based microprocessor) sounds a lot like "ZipCPU" FPGA-based microprocessor <a href="https://zipcpu.com/" target="_blank" rel="noopener noreferrer">https://zipcpu.com/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709737" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">unixhero</span>
+        <span class="meta-time">2026/04/10 03:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">齐洛格？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Zilog?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708591" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">monocasa</span>
+        <span class="meta-time">2026/04/10 03:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708720" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">chaosprint</span>
+        <span class="meta-time">2026/04/10 04:41</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709679" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Dwedit</span>
+        <span class="meta-time">2026/04/10 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使现代计算机比 80 年代计算机更快的一件事是 <i>缓存</i>。  如果没有缓存，您的计算机必须访问内存总线来获取每条指令和内存读取或写入，并且您的系统将等待取回字节，然后再采取任何操作。  您最终将达到 80 年代计算机的性能水平。<p>因此，您可以将 CPU 替换为具有内置缓存的更快的版本。  CPU 最终在其缓存中拥有自己的 RAM 和 ROM 私有副本。  但这还没有结束。</p><p>计算机有内存映射、内存组切换、内存映射 IO 和其他需要考虑的事情。  CPU 及其缓存必须与系统的实际内存映射保持同步。  CPU 和任何内存映射硬件都需要保持彼此同步。  内存映射 IO 读取和写入需要以本机总线速度进入实际内存总线。</p><p>然后您就剩下需要访问 RAM 的其他设备的问题。  这需要写入时刷新缓存，以及读取时缓存失效。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The one thing that makes a modern computer faster than an 80s computer is <i>cache</i>.  Without cache, your computer has to go to the memory bus to fetch every instruction and memory read or write, and your system will wait to get the bytes back before it takes any action.  You end up at the performance level of an 80s computer.<p>So you replace the CPU with a faster one with built-in cache.  CPU ends up with its own private copy of the RAM and ROM sitting in its cache.  But that's not the end.</p><p>Computers have a memory map, memory bank switching, memory-mapped IO, and other things to consider.  The CPU with its cache has to be kept in sync with the actual memory map of the system.  Both the CPU and any memory mapping hardware need to be kept in sync with each other.  Memory-mapped IO reads and writes need to go to the actual memory bus at native bus speed.</p><p>Then you're left with the issue of other devices that need to access the RAM.  This requires cache flushing for writes, and cache invalidation for reads.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710274" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

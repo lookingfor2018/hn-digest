@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>游戏引擎如何了解数据库忘记的数据 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>游戏引擎如何了解数据库忘记的数据</h1>
+      <p class="subtitle">What game engines know about data that databases forgot</p>
+      <div class="meta-line">
+        <span>nockawa.github.io</span>
+        <span>作者 speckx</span>
+        <span>分数 82</span>
+        <span>评论 51</span>
+        <span>2026/04/10 02:10</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47707269" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://nockawa.github.io/blog/what-game-engines-know-about-data/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026 年 4 月 5 日 - 阅读时间 14 分钟</li><li>标签: csharp 数据库 ecs gamedev Typhon</li><li>💡Typhon 是一个用 .NET 编写的嵌入式、持久性、ACID 数据库引擎，它使用游戏服务器和实时模拟的本地语言：实体、组件和系统。它通过 MVCC 快照隔离以亚微秒延迟提供全面的事务安全性，并由缓存行感知存储、零复制访问和可配置的持久性提供支持。</li><li>系列：像游戏引擎一样思考的数据库 为什么我要用 C# 构建数据库引擎 游戏引擎对数据库忘记的数据了解哪些（本文） 托管语言中的微秒延迟（即将推出）</li><li>游戏服务器位于一个不舒服的十字路口。他们需要游戏引擎的原始吞吐量——每次更新数以万计的实体。但他们还需要数据库提供的东西：不会破坏状态的事务、不会扫描所有内容的查询以及在崩溃后仍能幸存的持久性。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>05 April 2026 - 14 mins read time</li><li>Tags: csharp database ecs gamedev typhon</li><li>💡Typhon is an embedded, persistent, ACID database engine written in .NET that speaks the native language of game servers and real-time simulations: entities, components, and systems. It delivers full transactional safety with MVCC snapshot isolation at sub-microsecond latency, powered by cache-line-aware storage, zero-copy access, and configurable durability.</li><li>Series: A Database That Thinks Like a Game Engine Why I’m Building a Database Engine in C# What Game Engines Know About Data That Databases Forgot (this post) Microsecond Latency in a Managed Language (coming soon)</li><li>Game servers sit at an uncomfortable intersection. They need the raw throughput of a game engine — tens of thousands of entities updated every tick. But they also need what databases provide: transactions that don’t corrupt state, queries that don’t scan everything, and durability that survives crashes.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dpe82</span>
+        <span class="meta-time">2026/04/10 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来很酷，但是伙计，很难克服非常非常明显的人工智能写作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This seems cool but man it's hard to get over the very, very obvious AI writing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708103" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Tossrock</span>
+        <span class="meta-time">2026/04/10 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意这触发了我的人工智能写作感官。赞成点：<p>- “这不是偶然——它是由相同的物理原理驱动的。”经典的“这不是 x，这是 y”，为了更好地衡量，还添加了破折号</p><p>- “Typhon 将这些带入组件存储模型中 - 不是作为固定的解决方法，而是作为一等公民。”更多“不是 x，而是 y”，这次带有一个由破折号连接的前导子句</p><p>- “Blittable、非托管、固定大小、按类型连续存储 — 这就是 ECS 端。”简短而有力的例子列表，被冲到了毒刺中，这又是法学硕士写作的典型</p><p>- “代码中的架构，而不是 SQL。组件是带有属性的 C# 结构，而不是 DDL 语句。对于游戏开发人员来说很自然，但对于数据库管理员来说是陌生的领域。如果您的团队以 SQL 进行思考，那么这就是一种范式转变。”整个小段落是 x/y 风格，与三元组/三规则相结合，只是在句子尺度上。当然，还有最后的毒刺。</p><p>绝对的，不，但它确实有一种特殊的味道，对我来说就像是法学硕士的输出。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree that this triggered my AI writing senses. Points in favor:<p>- "It’s not an accident — it’s driven by the same physics." The classic "it's not x, it's y", with an em-dash thrown in for good measure</p><p>- "Typhon brings these into the component storage model — not as bolted-on workarounds, but as first-class citizens." More "not x, but y", this time with a leading clause joined by an emdash</p><p>- "Blittable, unmanaged, fixed-size, stored contiguously per type — that’s the ECS side." Short, punchy list of examples, emdash'd to a stinger, again typical of LLM writing</p><p>- "Schema in code, not SQL. Components are C# structs with attributes, not DDL statements. Natural for game developers, unfamiliar territory for database administrators. If your team thinks in SQL, this is a paradigm shift." This whole mini-paragraph is the x/y style, combined with the triplet / rule-of-three, just at the sentence scale. And then of course, the stinger at the end.</p><p>Definitive, no, but it certainly has a particular flavor that reads as LLM output to me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708833" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Lammy</span>
+        <span class="meta-time">2026/04/10 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">反对点：“两个领域，一个问题”:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Points against: “Two Fields, One Problem” :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708924" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">owlcompliance</span>
+        <span class="meta-time">2026/04/10 03:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我偶尔会阅读一篇地缘政治博客，它是谷歌搜索结果中排名最高的结果之一。老实说，我再也做不到了。其他每一个小标题都是这样的：“专家们正在谈论乌克兰——没有任何废话”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I occasionally read a geopolitics blog that is one of the top search results on Google. I honestly couldn't do it anymore. Every other subheading was something along the lines of, "The experts are saying about Ukraine--Without the Fluff".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708291" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">potsandpans</span>
+        <span class="meta-time">2026/04/10 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我今天读到的每条热门评论都是同样的抱怨人工智能写作的狗屎。<p>在某些时候，这对社区来说并不是积极的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Every top comment that I've read today is the same shit complaining about AI writing.<p>At some point this is not positive for the community.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712807" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">archagon</span>
+        <span class="meta-time">2026/04/10 10:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉——这种社区免疫反应是未来。停止发帖，否则就会被抛在后面。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry — this community immune response is the future. Quit posting slop or get left behind.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712895" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">vanderZwan</span>
+        <span class="meta-time">2026/04/10 03:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的没看到它。我的意思是，也许他们使用了聊天机器人来帮助他们编写它，但我不会立即觉得我正在阅读没有实际内容的填充废话，这很重要。我只是在博客上点击了一下，看看是否还有其他类似的东西，但它主要只是非常“预制”。这确实告诉我，作者显然之前也曾为 Unity 开发过 DOTS，因此他们至少拥有游戏引擎的实际实践经验。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not really seeing it tbh. I mean, maybe they used a chatbot to help them write it but I don't immediately feel like I'm reading padded slop without actual content, it's fairly to the point. I just clicked around on the blog to see if anything else feels like it, but it's mainly just very "prefab". That did teach me that the author apparently also worked on DOTS previously for Unity, so they at least have actual hands-on experience with game engines.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708297" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Tossrock</span>
+        <span class="meta-time">2026/04/10 03:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果有的话，这对我来说证实了这一点。在他的关于页面上，有这样的内容：<p>“大家好，我是 Loïc Baumann，来自法国巴黎地区
+我从 90 年代初开始开发，首先是汇编，然后是 C++，现在主要是 .net。</p><p>我感兴趣的领域是 3D 编程、低延迟/高可扩展性/高性能解决方案以及许多其他事物。”</p><p>将该风格与最新博客中的内容进行比较 - ESL 作家典型的稍微不语法的结构，直截了当的风格与令人窒息的、提要优化的“不是 x，而是 y”，三元组/三个结构的规则，完美的母语语法，但奇怪的空洞语气。或者看看2018年的这篇文章： <a href="https://nockawa.github.io/microservice-or-not-microservice/" target="_blank" rel="noopener noreferrer">https://nockawa.github.io/microservice-or-not-microservice/</a> 它只是完全不同（在具体的语法层面上，没有破折号）。我确信他有技术能力，而且他从事 DOTS 工作很酷，但我敢打赌，他花了很多钱写了描述这个项目的要点，然后促使 GPT 5.3 将它们扩展为博客文章以“节省时间”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If anything, this confirms it for me. On his about page, there's this:<p>"Hi there, I am Loïc Baumann, I’m from Paris area, France
+I develop, since early 90s, first assembly, then C++ and nowadays mostly .net.</p><p>My area of interest are 3D programming, low-latency/highly-scalable/performant solutions and many other things."</p><p>Compare that style to what's in this most recent blog - mildly ungrammatical constructions typical of an ESL writer, straightforward and plain style vs breathless, feed-optimized "not x, but y", triplet/rule of three constructions, perfect native speaker grammar but an oddly hollow tone. Or look at this post from  2018: <a href="https://nockawa.github.io/microservice-or-not-microservice/" target="_blank" rel="noopener noreferrer">https://nockawa.github.io/microservice-or-not-microservice/</a> It's just radically different (at a concrete syntactic level, no emdashes). I'm sure he has technical chops and it's cool that he worked on DOTS, but I would bet a very large amount of money he wrote the bullet points describing this project and then prompted GPT 5.3 to expand them to a blog post to "save time".</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708916" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">positron26</span>
+        <span class="meta-time">2026/04/10 03:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“非常非常明显”，但你的评论也可能是我的。  我们能停止这种农业评论吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"very, very obvious" and yet so could be your comment or mine.  Can we stop this kind of farming comment already?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708173" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cwnyth</span>
+        <span class="meta-time">2026/04/10 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当人工智能撰写的文章停止时，大声疾呼的评论也将停止。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When the AI-written articles stop, the comments calling it out will stop, too.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708258" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">devin</span>
+        <span class="meta-time">2026/04/10 03:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">吹毛求疵：一旦_显然_人工智能撰写的文章停止，批评它的评论也将（应该）停止。<p>人工智能撰写的文章更有可能变得更难被发现，而不是它们将停止被撰写。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nitpicking: Once articles which are _obviously_ AI-written stop, the comments calling it out will (should) stop.<p>It is far more likely that AI-written articles will become harder to spot, not that they will stop being written.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708326" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 03:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708516" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 03:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708604" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">positron26</span>
+        <span class="meta-time">2026/04/10 06:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 大声喊出来<p>叫出来做什么？  我们是否突然发明了一种可以持续六个月以上的持久图灵测试？  （我们不知道，但有些人“只是知道”）</p><p>唯一持久的衡量标准是文章是否好，想法是否好。  其他一切都在抱怨鲍勃·迪伦的电吉他。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; calling it out<p>Calling what out?  Did we suddenly invent a durable Turing test that will last more than six months?  (We didn't, but some people "just know")</p><p>The only durable metric is if the article is good, if the ideas are good.  Everything else is complaining about Bob Dylan's electric guitar.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711311" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nh23423fefe</span>
+        <span class="meta-time">2026/04/10 03:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">空洞的虚假并不是一个值得研究的有趣案例</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">vacuous falsity isn't an interesting case to examine</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708487" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">7bit</span>
+        <span class="meta-time">2026/04/10 03:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">意思就是哭声永远不会停止</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Means, the crying will never stop</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708503" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lelanthran</span>
+        <span class="meta-time">2026/04/10 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 非常非常明显”，但这可能是你的评论，也可能是我的评论。我们可以停止这种农业评论吗？<p>如果你想阅读聊天机器人的输出，你为什么来这里？有大量免费聊天机器人供您阅读。</p><p>毕竟，这里的观众知道去哪里获取聊天机器人的输出，但他们却来到这里。这告诉你什么？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; very, very obvious" and yet so could be your comment or mine. Can we stop this kind of farming comment already?<p>If you want to read chatbot output, why are you coming here? There's a ton of free chatbots for you to read.</p><p>After all, the audience here knows where to go to get chatbot output, but they're coming here instead. What does that tell you?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711700" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">red-iron-pine</span>
+        <span class="meta-time">2026/04/10 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“就接受人工智能的废话吧，平民”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"just accept the AI slop, pleb"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709798" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">RugnirViking</span>
+        <span class="meta-time">2026/04/10 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你是说你在一两段之后就无法识别默认风格的人工智能写作了吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">are you claiming that you can't recognize default style ai writing after a paragraph or two?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708527" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">7bit</span>
+        <span class="meta-time">2026/04/10 03:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">克服它</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Get over it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708494" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hedgehog</span>
+        <span class="meta-time">2026/04/10 02:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们根本没有提到面向列的数据库，这也有点奇怪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's also a bit odd they don't mention column-oriented databases at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708134" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dpe82</span>
+        <span class="meta-time">2026/04/10 03:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这是我的第二个想法。对于游戏实体，ECS 对数组结构的青睐优于传统结构数组，这可以归结为与列存储与行存储相同的动机和由此产生的物理布局。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah that was my second thought. ECS' favoring of structs-of-arrays over traditional arrays-of-structs for game entities boils down to the same motivations and resulting physical layout as column-stores vs row-stores.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zffr</span>
+        <span class="meta-time">2026/04/10 03:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么会提到面向列的数据库呢？我的理解是这些通常用于OLAP，但文章似乎只讨论OLTP。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why would column-oriented databases be mentioned? My understanding is that these are typically used for OLAP, but the article seems to talk only about OLTP.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708215" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jandrewrogers</span>
+        <span class="meta-time">2026/04/10 03:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现代数据库引擎倾向于使用 PAX 样式的存储布局，无论用例如何，它们都是列结构的。有一种新型的面向行的分析存储布局，它对于 OLTP 来说会更好，但它还没有广为人知，所以我不希望看到它被提及。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Modern database engines tend to use PAX-style storage layouts, which are column structured, regardless of use case. There is a new type of row-oriented analytic storage layout that would be even better for OLTP but it is not widely known yet so I wouldn't expect to see it mentioned.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708644" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SigmundA</span>
+        <span class="meta-time">2026/04/10 03:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为有一整节描述了基于列的存储，但没有提到某些数据库具有基于列的存储作为选项。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because there is a whole section that describes column based storage without mentioning that some databases have column based storage as an option.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708309" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">goalieca</span>
+        <span class="meta-time">2026/04/10 03:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是我对法学硕士的主要问题之一。它在文字中找到模式，但在内容中找不到。我在代码审查和最终的中断中看到了这一点。有些东西在微观层面上看起来很合理，但显然没有理解一些重要的东西（因为他们不理解），这会导致一个重大问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is one of the main problems I have with LLMs. It finds patterns in words but not content. I see this in code reviews and eventually outages. Something looks reasonable at the micro scale but clearly didn’t understand something important (because they don’t understand) and it causes a major issue.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708610" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cmontella</span>
+        <span class="meta-time">2026/04/10 03:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得这是一个提出“你尝试过在上面擦数据库吗？”的好地方。 conf，它处理这类主题。如果您想了解数据库和 X 之间的交集，其中 X 是游戏、机器人、用户界面、开发人员工具等。那里有一些很好的演讲，每个演讲只有 10 分钟，因此非常容易理解。与 TFA 不同的是，它们不是 AI 生成的。<p><a href="https://www.hytradboi.com" target="_blank" rel="noopener noreferrer">https://www.hytradboi.com</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like this is a good place to bring up the "Have You Tried Rubbing a Database on It?" conf, which deals with this sort of topic. If you'd like to read about the intersection between Databases and X, where X is games, robots, user interfaces, developer tools, etc. there are some good talks there, and they're only 10 minutes each so very easy to consume. Also unlike TFA they are not AI generated.<p><a href="https://www.hytradboi.com" target="_blank" rel="noopener noreferrer">https://www.hytradboi.com</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708354" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">trgn</span>
+        <span class="meta-time">2026/04/10 03:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Web 是一个前端环境，用户期望 60fps，但开发人员几乎违反了所有规则。<p>&gt; 零拷贝是默认的，不是优化的：</p><p>大量的松散映射、解构、临时范围创建……这对于 JS/TS 开发人员来说是现在的常态，令人难以忍受。这如何成为常态？做一次并不重要，但是应用程序中的每一层都这样做，事情就会变得紧张。你首先在创建时受到打击，然后在 GC 时受到打击。别再这样做了！将引用传递给对象，而不是每次在某个函数边界重新创建它们。</p><p>&gt; 作为纯粹身份的实体。</p><p>停止 json.stringifiyng 的一切！我见过多少 hashThing() 实现本质上是 Json.stringify。停下来！</p><p>&gt; 默认缓存位置。</p><p>对于网络开发来说不太清楚，在原语方面缺少很多东西。但请考虑一下。如果有的话，那就是良好的卫生习惯。固定类型数组确实有意义，不要在数组中混合和匹配类型，...</p><p>拯救网络，像视频游戏开发者一样思考！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The web is a front-end environment, where users expect 60fps, but where developers violate pretty much all the rules.<p>&gt; Zero-copy is the default, not the optimization:</p><p>the amount of fluffy mapping, destructuring, temp scope-creation, ... that is the norm now for JS/TS devs is excruciating. how did this become the norm? do it once it doesnt matter, but every single layer in the app doing this and things become jittery. you first take the hit at creation time, and then another time at GC. stop doing that! Pass references around to objects, not recreate them each time at some function boundary.</p><p>&gt; Entity as pure identity.</p><p>Stop json.stringifiyng every thing! how many hashThing() implementations i have seen that are essentially Json.stringify. stop it!</p><p>&gt; Cache locality by default.</p><p>a little less clear for web dev, much is missing in terms of primitives. but do think about it. if anything, it's good hygiene. fixed typed array does make sense, dont mix&amp;match types in your array, ...</p><p>Save the web, think like a videogame dev!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708563" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Sharlin</span>
+        <span class="meta-time">2026/04/10 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，考虑到大多数新的 Web 代码现在可能都是由法学硕士编写的，情况肯定不会变得更好。他们绝对没有接受过编写面向性能的 JS/TS 的训练。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, it's certainly not going to get better given that most of new Web code is by now probably written by LLMs. Which definitely aren't trained to write performance-oriented JS/TS.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708646" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">trgn</span>
+        <span class="meta-time">2026/04/10 04:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，这是事情总是变得更糟的另一个例子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">lol another example of how things can always get worse.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709820" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Sharlin</span>
+        <span class="meta-time">2026/04/10 04:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">任何人真正关心的唯一“绩效”是“KPI”中的“P”。<p>顺便说一句，“表演”也可以意味着“表演虚构的叙述”，这不是很有趣吗？只是一个想法……</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The only "performance" that anyone actually cares about is the "P" in "KPIs".<p>Isn’t it funny, btw, how "performance" can also meant "acting out a fictional narrative"? Just a thought…</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709934" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jbonatakis</span>
+        <span class="meta-time">2026/04/10 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">CMU 最近与 SpacetimeDB 的创始人举办了一场研讨会 [1]，非常有趣。我预计录音应该会在接下来的几天内完成<p>[1] <a href="https://db.cs.cmu.edu/events/pg-vs-world-spacetimedb-tyler-cloutier/" target="_blank" rel="noopener noreferrer">https://db.cs.cmu.edu/events/pg-vs-world-spacetimedb-tyler-c...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">CMU very recently had a seminar [1] with the founder of SpacetimeDB, which was very interesting. The recording should be up in the next few days I expect<p>[1] <a href="https://db.cs.cmu.edu/events/pg-vs-world-spacetimedb-tyler-cloutier/" target="_blank" rel="noopener noreferrer">https://db.cs.cmu.edu/events/pg-vs-world-spacetimedb-tyler-c...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kelseyfrog</span>
+        <span class="meta-time">2026/04/10 03:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 ECS 的早期，开发人员并没有失去 ECS 和 DB 之间的联系。我想起了 Scott Bilias 2002 年的 ECS 演讲：数据驱动
+游戏对象系统[1]明确表示：“这是一个数据库。”<p>在我看来，OOP 中存在教学差距，其中本体是使用类形成的，而这在现实生活中的应用程序中几乎永远不会起作用（就这一点而言，在现实生活中是不可能的）。我们几乎总是使用谓词而不是严格的层次结构来构建本体论关系。为此，ECS 往往非常灵活且具有足够的表现力，是一个务实的选择。</p><p>1. <a href="https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf" target="_blank" rel="noopener noreferrer">https://www.gamedevs.org/uploads/data-driven-game-object-sys...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The connection between ECS and DBs wasn't lost on developers in the early days of ECS. I'm reminded of Scott Bilias's 2002 ECS presentation: A Data-Driven
+Game Object System[1] which clearly says, "This is a database."<p>In my mind, there's a pedagogical gap in OOP where ontologies are formed using classes and this almost never works in real life applications (no in real life for that matter). We almost always construct ontological relations using predicates not rigid hierarchies. For this, ECS tends to be flexible, and expressive enough to be a pragmatic choice.</p><p>1. <a href="https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf" target="_blank" rel="noopener noreferrer">https://www.gamedevs.org/uploads/data-driven-game-object-sys...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708717" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">RandyRanderson</span>
+        <span class="meta-time">2026/04/10 02:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者从更一般的意义上来说：让您的代码尽可能接近您的数据</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Or in a more general sense: Get your code as close as you can to your data</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708122" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">boricj</span>
+        <span class="meta-time">2026/04/10 03:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在开发一个嵌入式项目，实际上我正在考虑在 STM32H5 上使用 ECS。这与缓存友好的局部性无关（与桌面或服务器级硬件上的 DRAM 延迟相比，MCU 内部 SRAM 上的等待状态基本上是一个舍入误差），但业务是如此复杂，以至于传统的继承/组合变得相当混乱。当您最终在 C++ 中使用虚拟继承和菱形继承时，您知道您遇到了麻烦......<p>遗憾的是，ECS 在游戏开发之外并没有更广为人知。它不仅有利于性能，而且本身也是一种解决问题的有用的架构设计。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm working on an embedded project where I'm actually thinking about using ECS on a STM32H5. It's not about cache-friendly locality (waitstates on internal SRAM for MCUs is basically a rounding error compared to the DRAM latency seen on desktop or server-class hardware), but the business is so complex that the traditional inheritance/composition is getting quite messy. When you end up using virtual and diamond inheritance in C++, you know you're in trouble...<p>It's too bad that ECS isn't more widely known outside of gamedev. It's not just good for performance, it's also legitimately a useful architecture design on its own to solve problems.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708766" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kwillets</span>
+        <span class="meta-time">2026/04/10 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这与列存储有很多共同点，但也有一些有趣的区别。<p>主要的一个是子行版本控制。列存储（至少在 OLAP 中）始终使用行级版本控制，这会妨碍小更新。对行的一次更改会放大为删除和重新插入整个内容，而添加或删除列等看似合理的操作会破坏以前的版本。这是我见过的第一个尝试解决该问题的方案。</p><p>另一个区别是缺乏压缩，因为它是零复制，因此操作压缩数据的性能增益会丢失。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This has a lot in common with a columnstore, but there are a few interesting differences.<p>The main one is subrow versioning. Column stores (in OLAP at least) have always used row-level versioning, which gets in the way of small updates. A single change to a row amplifies into deleting and re-inserting the whole thing, and operations that seem sensible like adding or dropping a column break previous versions. This scheme is the first I've seen that tries to fix that problem.</p><p>One other difference is a lack of compression, as it's zero-copy, so the performance gains of operating on compressed data are lost.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708482" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Garlef</span>
+        <span class="meta-time">2026/04/10 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">严肃的问题：<p>如果您采用 BDD/TDD 方法 - 这样的技术还能给您带来什么吗？</p><p>我已经涉足了一些类似的东西（SpacetimeDB），目的是为游戏创建一个无头后端。</p><p>但后来我意识到，我仍然需要定义在传统软件层中测试的接口，并且所有漂亮的数据库魔法似乎都毫无价值，因为我仍然必须以传统方式进行编排。</p><p>（简而言之：无论你的数据库魔法有多好，你仍然会把它藏在地下室/机房，对吧？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Serious question:<p>If you take a BDD/TDD approach - do technologies like this still give you something?</p><p>I've dabbled a bit into smth similar (SpacetimeDB) with the aim of creating a headless backend for a game.</p><p>But then I realized that I'd still need to define the interface that I was testing in the traditional software layer and that all the nice DB magic seemed worthless since I'd still have to orchestrate traditionally.</p><p>(In short: No matter how nice your DB magic is, you will still hide it away in the basement/engine room, right?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708087" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mamcx</span>
+        <span class="meta-time">2026/04/10 05:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">检查 dBase/FoxPro 系列。我的 <i>怀旧之情</i> 深情地记得它，一切的工作方式并没有脱节（例如：表单存储为表，所以你可以做类似的 `SELECT * FROM form_name WHERE widget=`），并且 ORM 为零。<p>这就是我的目标 <a href="https://tablam.org" target="_blank" rel="noopener noreferrer">https://tablam.org</a>。</p><p>顺便说一句，我在 SpacetimeDB 工作过，我自豪地说已经成功了:)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Check the dBase/FoxPro family. My <i>nostalgia</i> remember it fondly, and there was not disconnected in how everything worked (example: The forms were stored as tables, so you can do alike `SELECT * FROM form_name WHERE widget=`), and there was zero ORM.<p>This is my aim <a href="https://tablam.org" target="_blank" rel="noopener noreferrer">https://tablam.org</a>.</p><p>BTW I worked in SpacetimeDB and I proudly say is half-way :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ok_dad</span>
+        <span class="meta-time">2026/04/10 03:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">听起来我们需要 IDE 对数据库的支持，就像对编程运行时的支持一样。需要能够进行 lint、实时调试等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sounds like we need IDE support for databases like we have for programming runtimes. Need to be able to lint, debug live, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708180" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjordan</span>
+        <span class="meta-time">2026/04/10 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我总是被动地想知道为什么这不是一件更重要的事情。我想像 pgAdmin 这样的东西很好，但它总是让人感觉“勉强够好”，而不是一个沉浸式的强大工具来完成任务，并且做得很好。可能只是一个技能问题，但这是我的印象。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've always passively wondered why this wasn't more of a thing. Something like pgAdmin is fine I guess, but it's always felt like "just barely good enough" rather than an immersive power tool to get things done, and done well. Possibly just a skill issue, but that's been my impression.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708225" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ok_dad</span>
+        <span class="meta-time">2026/04/10 05:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，我明白了；这不是技能问题，因为使用适当的工具进行调试是一项技能，问题是缺乏这些工具意味着您甚至无法使用您的技能。我的上一份工作使用了很多奇特的内部 pg 东西，我们永远无法真正正确地推理它。我希望我可以像使用 delve 或在我的 IDE 中调试 Go 应用程序一样调试它。到处添加 NOTIFY 就是打印调试，在我看来这不是一个很好的调试策略。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No I get it; and it’s not a skill issue because debugging with proper tools is a skill and the issue is that lack of those tools means you lack the ability to even use your skill. My last job used a lot of fancy internal pg stuff and we could never really reason about it properly. I wish I could debug it like I do with a Go app with delve, or in my IDE. Adding NOTIFY everywhere is print debugging which in my opinion is not a very good debugging strategy.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710210" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SigmundA</span>
+        <span class="meta-time">2026/04/10 03:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;默认缓存位置。在传统的行存储中，读取所有玩家位置意味着加载整行——姓名、库存、生命值等一切。这些字节中的大部分都被浪费了。<p>没有提到专栏商店吗？这不是来自 ECS...</p><p><a href="https://en.wikipedia.org/wiki/Data_orientation" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Data_orientation</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;Cache locality by default. In a traditional row store, reading all player positions means loading entire rows — names, inventories, health, everything. Most of those bytes are wasted.<p>Not one mention of column stores? This didn't come from ECS...</p><p><a href="https://en.wikipedia.org/wiki/Data_orientation" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Data_orientation</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">scottcodie</span>
+        <span class="meta-time">2026/04/10 03:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不确定游戏是否需要交易。在我看来，实体流概念更适合：从事件队列中读取并随着时间的推移一致地协调状态。就像示例中排序的 top-n 一样，如果它是一个游戏并且查询是众所周知的，那么最好将其具体化为快速排名，这超出了他们建议的 IVM 风格具体化。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not sure a game needs transactions. It seems to me that entity streaming concepts are a better fit: reading from an event queue and consistently reconciling the state over time. Like the sorted top-n in the example, if it was a game and the query is generally known, it would be better to just materialize it as a fast rank, which goes beyond the IVM-style materialization they suggested.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hinkley</span>
+        <span class="meta-time">2026/04/10 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">诶诶诶。  你永远不能信任客户端，但服务器距离很远，因此大多数游戏都会推测执行操作，然后服务器可以告诉他们滚蛋并恢复/忽略该操作。<p>对我来说，这有点像交易。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Eeeeeh.  You can never trust the client, but the server is far away, so most games have speculative execution of actions and then the server can tell them to fuck off and revert/ignore the action.<p>That smells a bit like a transaction to me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dbt00</span>
+        <span class="meta-time">2026/04/10 03:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">许多游戏都有明显的库存重复利用，这是一个非常合理的解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Many games have obvious inventory dup exploits that this is a very reasonable solution for.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vmchale</span>
+        <span class="meta-time">2026/04/10 03:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">kdb 默认执行其中两个操作 - 列式并且它使用内存映射（无序列化/反序列化）<p>数据库世界并没有完全被遗忘！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">kdb does two of those by default—columnar and it uses memory mapping (no serialization/deserialization)<p>Not entirely forgotten in the database world!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708847" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">spullara</span>
+        <span class="meta-time">2026/04/10 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的！ FoundationDB 是在团队要构建一款大型多人游戏但找不到可以支持它的数据库后创建的......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">interesting! foundationdb was created after the team was going to build a massively multiplayer game and couldn't find a database that could support it...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708097" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Keyframe</span>
+        <span class="meta-time">2026/04/10 03:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对游戏引擎有所了解，对实时图形了解更多，对数据库及其实现了解更多。<p>虽然熟悉所有这些都是很好的事情，尤其是现在使用人工智能很容易做到这一点。我确实必须指出从一个角度看另一个角度时引起的近视之外的一些可见的事情。在这种情况下，从游戏开发到数据世界。在克里夫的笔记中，因为我没有太多时间，但我也不想给出一个路过的讽刺，因为在我看来，这有隐藏的价值，与我要说的相反。</p><p>近视眼所忽视的游戏开发观点是，排名不分先后。</p><p>持久性与吞吐量——数据管理的目标不仅仅是执行速度。 ACID、WAL 等都是核心功能，本身并不是开销。当然，有时您可以放弃这些。有时，如果你明白你在让位于什么。</p><p>柱状谬误，因为缺乏更好的词语 - DoD、SoA 并不是其他人已经忘记的游戏引擎使用的秘密。这尤其忽略了 OLAP 的存在。 Clickhouse、Snowflake、HN 的亲爱的 duckDB 已经使用 SoA _相当长一段时间了_。在 OLTP 中使用 AoS 是因为这样更新单个记录_更快_。为什么一个比另一个 - 请参阅 OLAP 与 OLTP</p><p>游戏引擎着迷于缓存层次结构（L1-L3），特别是通过避免缓存行打包、预取来避免缓存未命中。数据库在不同的现实中运行，即 I/O 边界；主要是磁盘和网络。数据库的瓶颈通常是光速（延迟）或总线（例如 NVME）。如果您等待 10 毫秒的网络数据包或磁盘读取，打包结构将为您带来边际收益。建议在全局系统的背景下进行微观优化。不同领域的执行流程。</p><p>ECS 很酷，每个人都同意这一点。不过，关系数据库是建立在关系代数之上的。因此，如果您准备在许多对象上运行相同的逻辑，那么 ECS 会很酷。如果您想允许复杂、任意的查询和基于集合的逻辑，您将需要一些一致性保证。在没有预定义 _system_ 的情况下，跨不同的 ECS 系统进行复杂的多对多连接，您就会放弃所承诺的性能。 DB 所做的是通用目的，ECS 不是那样。</p><p>最后，是的，游戏引擎管理本地 3D 空间中数千、数百万个实体。数据库管理着 PB 级分布式存储中的数十亿、数万亿条记录。那么，什么给出呢？由于 CAP 定理，实体模型无法扩展到分布式系统。在不违反物理原理或不牺牲可用性的情况下，全球分布式系统中不存在即时一致性。说实话，一些局限于机器的中间立场可能会让位于这个想法，但代价是什么？</p><p>但不要让它击垮你。如果在与 AI 交谈后仍然有一个想法的核心，那就继续开车穿过那堵 CAP 墙吧！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I know something about game engines, I know a lot more about real time graphics, and I do even more about databases and implementation of those.<p>While it's nice to get yourself acquainted with all, especially easy to do with AI these days.. I do have to point out few things visible outside of myopia induced when looking from one perspective into another. In this case from gamedev to data world. In Cliff's notes since I don't have much time but I also don't want to give a drive-by snark since there are hidden values to this, imo, contrary to what I'm going to say.</p><p>What gamedev perspective myopia kind of ignores is, in no particular order..</p><p>persistence vs throughput - goal of data management is not only about execution speed. ACID, WAL, etc all are core features, not an overhead per se. Sometimes you can forego these, of course. Sometimes, if you understand what you're giving way to.</p><p>columnar fallacy, for the lack of better words - DoD, SoA are not secrets game engines use which others have forgotten. This in-particular ignores existence of OLAP. Clickhouse, Snowflake, HN's darling duckDB have been using SoA for _quite awhile_. AoS in OLTP is used because updating a single record _is_ faster that way. Why one over the other - see OLAP vs OLTP</p><p>Game engines obsess over cache hierarchy (L1-L3), and in particular cache misses by avoiding those with cache line packing, prefetching. Databases operate in a different real, that of I/O boundaries; Disk and network primarily. Bottleneck of databases is often the speed of light (latency) or the bus (NVME for example). packing structs is going to give you marginal benefit if you're waiting for 10ms for a network packet or a disk read. Suggested are micro optimizations in the context of a global system. Different realms of execution flows.</p><p>ECS are cool, everyone agrees on that. Relational databases are built on top of relational algebra though. So if you're up for running the same logic over many objects, ECS is going to be cool. If you want to allow for complex, arbitrary queries and set based logic you will need some guarantees of consistency. Complex, many-to-many joins across disparate ECS ssystems without predefined _system_ and you're foregoing the promised performance. What DBs are doing is general purpose, ECS ain't that.</p><p>Finally, yes game engines manage thousands, millions, of entities in localized 3D space. Databases manage billions, trillions, of records across petabytes of distributed storage. So, what gives? Entity model does not scale to distributed systems because of CAP theorem. No such thing as instant consistency in a globally distributed system without violating physics or sacrificing availability. TBH, some middle ground, localized to a machine, might give way to the idea but at what cost?</p><p>Don't let it shoot you down though. If there is still a kernel of idea tingling after that chat with AI, go ahead and drive through that CAP wall!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708446" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 03:12</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708329" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bitwize</span>
+        <span class="meta-time">2026/04/10 03:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我了解 ECS 时，我意识到 Tablizer（Slashdot 的老家伙，坚持认为 OOP 是死胡同，而 FoxPro 中所做的“面向表的编程”才是正确的出路）可能是对的。在我的 Android 游戏中使用 ECS 有点麻烦，但由于能够创建新类型的实体、为它们实现熟悉的行为以及添加新实体，而无需代码复制或继承树纠缠，因此物有所值。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When I learned about ECS, I realized that Tablizer (old Slashdot guy who insisted that OOP was a dead end and "table oriented programming" as was done in FoxPro was the way to go) was probably right. Using an ECS for my Android game was a bit more cumbersome, but paid for itself many times over with the ability to create new kinds of entities, implement familiar behaviors for them, and add new ones without code copypasta or inheritance tree entanglement.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708208" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">samiv</span>
+        <span class="meta-time">2026/04/10 03:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">尽管这些都可以简单地通过组合来完成，但这些都不需要 ecs。<p>传统上称为实体和附件之类的东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">None of that requires ecs though it can be done simply with a composition.<p>Traditionally called something like entity and attachments.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708504" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bitwize</span>
+        <span class="meta-time">2026/04/10 03:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也尝试过，我称之为“代理”。 （这早在人工智能狂热之前。）代理是一个“代表”某个实体处理某些行为（如重力和碰撞物理）的对象，因此得名。我实际上搜索的词可能是“代表”，但我是一个愚蠢的 20 多岁的人。<p>对我来说，ECS 在概念上仍然更干净、更容易使用，尽管更加乏味和样板化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tried that too, I called it "agents". (This was long before AI-mania.) An agent was an object that handled some aspect of behavior (like gravity and collision physics) "on behalf of" some entity, hence the name. The word I was actually searching for was probably "delegate", but I was a stupid 20-something.<p>ECS is to me still conceptually cleaner and easier to work with, if more tedious and boilerplate-y.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708704" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 03:55</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708911" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">doctorpangloss</span>
+        <span class="meta-time">2026/04/10 02:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对“我与聊天机器人进行了对话，这是输出”的博客文章感到厌倦。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm getting fatigued out by "I had a conversation with a chatbot, here's the output" blog posts.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708116" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fireant</span>
+        <span class="meta-time">2026/04/10 03:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据 github 自述文件，作者自 2015 年以来就已经有了这个想法。也许你应该根据我认为你的问题是写作风格而不要那么轻视。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">According to the github readme the author has had the idea in mind since 2015. Perhaps you ought to be a little less dismissive based on, what I assume your issue is, the writing style.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708820" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

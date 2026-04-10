@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Snitch 来到 Linux，但核心逻辑是闭源的 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>Little Snitch 来到 Linux，但核心逻辑是闭源的</h1>
+      <p class="subtitle">Little Snitch comes to Linux, but the core logic is closed source</p>
+      <div class="meta-line">
+        <span>the.unknown-universe.co.uk</span>
+        <span>作者 TheIPW</span>
+        <span>分数 71</span>
+        <span>评论 25</span>
+        <span>2026/04/10 00:36</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47705834" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://the.unknown-universe.co.uk/privacy-security/little-snitch-linux/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>本周 Linux 社区引起了一些轰动。 Little Snitch，macOS 网络流量的受人尊敬的看门人，终于来到了我们的海岸。从纸面上看，这是一项令人印象深刻的工程。它利用 eBPF 进行高性能内核级监控，并用 Rust 编写，这足以让任何技术爱好者竖起耳朵。它甚至为那些喜欢鼠标而不是终端的人提供了一个精美的网络用户界面。但当我仔细观察时，光泽开始剥落。虽然该项目的部分内容是开放的，但核心逻辑，即实际决定阻止什么以及如何分析流量的“大脑”，是闭源的。对于 FOSS 爱好者来说，这完全是不可能的。我们迁移到 Linux 不仅仅是为了将一个专有黑匣子换成另一个。如果我无法审核二进制文件和互联网之间的代码，我就不感兴趣。要求盲目信任的安全工具是一个矛盾的说法。在我的家庭实验室中，如果代码不透明，则二进制文件不会被执行。就是这么简单。然而，除了专有代码的哲学“禁止”之外，我传递这一点还有一个更实际的原因：我已经解决了这个问题。正如我之前在 DNS Safety Net 中的博客中详细介绍的那样，我的主要防线是 AdGuard Home。通过在 DNS 级别处理隐私，我拥有了一个无声的全网络屏蔽，可以在绝大多数遥测、跟踪器和“回拨”尝试离开我的 Proxmox 节点之前捕获它们。运行中央 DNS 拦截器从根本上比在每个虚拟机和容器上管理应用程序防火墙更有效。每次系统进程需要检查更新时，我都不会被烦人的弹出窗口打扰。我在边缘设置规则后，我的整个网络（包括无法运行 Snitch 客户端的设备）都会受益。这是一个一劳永逸的解决方案，实际上尊重我的时间和隐私。即使在应用程序级别，我也已经有了更好的替代方案。对于这个博客，我使用 Wordfence。它充当本地防火墙，从源头监控恶意流量和未经授权的更改。在网络范围的 DNS 过滤和特定于应用程序的安全性之间，已经存在层次。在该组合中添加专有二进制文件会增加复杂性，但不会增加有意义的信任。现在，“安全专家”会告诉您 DNS 式拦截器“级别太高”。他们会指出它无法看到绕过 DNS 的直接 IP 连接。虽然技术上是正确的，但我不得不问：在精心策划的自由和开源软件环境中，这种情况实际发生的频率是多少？如果是，我真的想使用闭源工具来找到它吗？如果我需要追踪哪个特定应用程序正在建立可疑的出站连接，我会转向 OpenSnitch，这是一款完全开源、社区驱动的 Linux 应用程序防火墙。它不像新的 Little Snitch 移植版那么精美，但它的每一行代码都是开放的以供检查，并且不需要盲目信任。Little Snitch 在 Linux 上的到来标志着主流终于意识到现代软件的“闲聊”本质。但我们不需要导入 macOS 的专有文化来保证安全。我们有更好、更开放的方式来建造我们的墙。我的网络很安静，我的日志很干净，我的网守是我自己托管的一个透明软件。在出现一个既尊重我的隐私又尊重我所奉行的自由开源精神的工具之前，这一点不会改变。如果您认真对待自己的数据，则应该保持您的看门人开放，并将您的网络控制在边缘。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>There is a bit of a stir in the Linux community this week. Little Snitch, the venerable gatekeeper of macOS network traffic, has finally made its way to our shores. On paper, it is an impressive bit of engineering. It utilises eBPF for high-performance kernel-level monitoring and is written in Rust, which is enough to make any technical enthusiast’s ears perk up. It even sports a fancy web UI for those who prefer a mouse to a terminal.But as I looked closer, the gloss started to peel. While parts of the project are open, the core logic, the “brain” that actually decides what to block and how to analyse your traffic, is closed source.For a FOSS enthusiast, this is a total non-starter. We don’t migrate to Linux just to swap one proprietary black box for another. If I cannot audit the code that sits between my binaries and the internet, I am not interested. A security tool that asks for blind trust is an oxymoron. In my home lab, if the code isn’t transparent, the binary doesn’t get executed. It is that simple.However, beyond the philosophical “no-go” of proprietary code, there is a more practical reason I am passing on this: I have already solved this problem.As I’ve detailed before on this blog in The DNS Safety Net, my primary line of defence is AdGuard Home. By handling privacy at the DNS level, I have a silent, network-wide shield that catches the vast majority of telemetry, trackers, and “phone home” attempts before they even leave my Proxmox nodes.Running a central DNS blocker is fundamentally more efficient than managing an application firewall on every single VM and container. I don’t get interrupted by annoying pop-ups every time a system process needs to check for updates. I set the rules once at the edge, and my entire network, including devices that cannot run a Snitch client, benefits. It is a set-it-and-forget-it solution that actually respects my time and my privacy.Even at the application level, I already have better alternatives in place. For this blog, I use Wordfence. It acts as a localised firewall, monitoring for malicious traffic and unauthorised changes right at the source. Between network-wide DNS filtering and application-specific security, the layers are already there. Adding a proprietary binary into that mix adds complexity without adding meaningful trust.Now, the “security experts” will tell you that a DNS-style blocker is “too high level.” They will point out that it cannot see direct IP connections that bypass DNS. While technically true, I have to ask: in a well-curated FOSS environment, how often is that actually happening? And if it is, would I really want to use a closed-source tool to find it?If I ever needed to track down which specific application is making suspicious outbound connections, I would turn to OpenSnitch, the fully open-source, community-driven application firewall for Linux. It is not as polished as the new Little Snitch port, but every line of its code is open for inspection and it does not ask for blind trust.The arrival of Little Snitch on Linux is a sign that the mainstream is finally waking up to the “chatty” nature of modern software. But we do not need to import the proprietary culture of macOS to stay safe. We have better, more open ways to build our walls.My network is quiet, my logs are clean, and my gatekeeper is a piece of transparent software I host myself. Until a tool comes along that respects both my privacy and the FOSS ethos I live by, that is not going to change. If you are serious about your own data, you should keep your gatekeepers open and your network controlled at the edge.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">roscas</span>
+        <span class="meta-time">2026/04/10 02:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴您也谈论 OpenSnitch。安装它至关重要。<p>OpenSnitch 和 PiHole 是每个网络的必备品。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Glad you also talk about OpenSnitch. It is critical to have it installed.<p>OpenSnitch and PiHole are simply a must on every network.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707726" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">klueinc</span>
+        <span class="meta-time">2026/04/10 03:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于 Mac 上的用户来说，Lulu 也是一个不错的选择。 <a href="https://github.com/objective-see/LuLu" target="_blank" rel="noopener noreferrer">https://github.com/objective-see/LuLu</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">for folks on the mac, Lulu has been a great option too. <a href="https://github.com/objective-see/LuLu" target="_blank" rel="noopener noreferrer">https://github.com/objective-see/LuLu</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708546" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Barbing</span>
+        <span class="meta-time">2026/04/10 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Objective-see 对 Mac 用户来说意义重大<p>安全：BlockBlock、KnockKnock、RansomWhere...</p><p>系统/生产力：TaskExplorer...</p><p>是的 乘 4</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">objective-see is carrying an immense weight for Mac users<p>Security: BlockBlock, KnockKnock, RansomWhere...</p><p>System/Productivity: TaskExplorer...</p><p>Yes times 4</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709284" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">braingravy</span>
+        <span class="meta-time">2026/04/10 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们确实是……而且也只是一个人，对吧？<p>他们正在做主的工作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They really are… and it’s just one person too, right?<p>They’re doing the lord’s work.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710286" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mystraline</span>
+        <span class="meta-time">2026/04/10 05:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那是什么“主”？房东？<p>我不是封建主义者，也不是技术封建主义者。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What "lord" is that? A landlord?<p>I'm not a feudalist, nor a techno-feudalist.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">benf76</span>
+        <span class="meta-time">2026/04/10 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您能详细说明一下理想的配对吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you elaborate on ideal pairing?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">TheIPW</span>
+        <span class="meta-time">2026/04/10 03:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708946" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">senojsitruc</span>
+        <span class="meta-time">2026/04/10 04:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我大约 20 年前编写了 GlowWorm，复制了当时 LittleSnitch 的大部分功能。<p>我记得发现通过以太网进行远程内核调试；这太神奇了。</p><p><a href="https://glowworm.us" target="_blank" rel="noopener noreferrer">https://glowworm.us</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wrote GlowWorm ~20 years ago, duplicating much of the LittleSnitch functionality at the time.<p>I remember discovering remote kernel debugging across ethernet; it was magical.</p><p><a href="https://glowworm.us" target="_blank" rel="noopener noreferrer">https://glowworm.us</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709511" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">guessmyname</span>
+        <span class="meta-time">2026/04/10 04:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我单击“立即下载/购买”链接 [1] 时，Safari 会尝试下载它而不是访问该页面。我尝试使用 cURL，发现该页面返回一个“content-type: application/octet-stream”标头，这没有任何意义，因为该页面只是 HTML。另外，我可以在 HTTP 响应中看到原始 PHP 代码的某些部分，因此我认为您的 Web 服务器没有按预期解释 PHP，而是从 PHP 文件返回原始内容。<p>编辑：事实上，每个 PHP 文件都在被泄露，例如，这个文件 [2] 包含一个 $hash_salt ，据说它被用来 <i>“防止用户猜测文件名并使数据更安全”</i></p><p>[1] <a href="https://glowworm.us/securimage/download.php" target="_blank" rel="noopener noreferrer">https://glowworm.us/securimage/download.php</a></p><p>[2] <a href="https://glowworm.us/securimage/securimage.php" target="_blank" rel="noopener noreferrer">https://glowworm.us/securimage/securimage.php</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When I click on the “Download / Buy Now” link [1], Safari tries to download it instead of visiting the page. I tried with cURL and discovered that the page is returning a “content-type: application/octet-stream” header, which makes no sense because the page is just HTML. Also, I can see some portions of raw PHP code in the HTTP response, so I think your web server is not interpreting PHP as it is supposed to and instead returning the raw content from the PHP file.<p>edit: In fact, every PHP file is being leaked, for example, this file [2] contains a $hash_salt , which is supposedly being used to <i>“prevent[s] users guessing filenames and make data more secure”</i></p><p>[1] <a href="https://glowworm.us/securimage/download.php" target="_blank" rel="noopener noreferrer">https://glowworm.us/securimage/download.php</a></p><p>[2] <a href="https://glowworm.us/securimage/securimage.php" target="_blank" rel="noopener noreferrer">https://glowworm.us/securimage/securimage.php</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709568" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">senojsitruc</span>
+        <span class="meta-time">2026/04/10 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该网站因历史原因而得以保留。那里已经很久很久没有任何活动了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The website is preserved for historical reasons. Nothing there has been active in a long, long time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709849" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">guessmyname</span>
+        <span class="meta-time">2026/04/10 04:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我和下一个人一样偏执，但这篇文章的目的是什么？<p>如果您不喜欢闭源软件并且不信任开发人员，请不要使用该软件。为什么要浪费时间写一篇文章，它所做的只是批评开发人员的决定？</p><p>如果您非常关心计算机中运行的软件，那么请执行我所做的操作：打开反汇编程序并对代码进行逆向工程，检查每个 HTTP(S) 调用、每个网络数据包、每个系统调用，然后也许您会感到放心。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m as paranoid as the next person but what’s the purpose of this article?<p>If you don’t like closed source software and don’t trust the developer(s), then don’t use the software. Why waste time writing an article that all it does is critize the developer’s decision?</p><p>If you care so much about the software you run in your computer, then do what I do: open a disassembler and reverse engineer the code, inspect every single HTTP(S) call, every network packet, every system call, and then maybe you will feel at ease.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709817" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TheIPW</span>
+        <span class="meta-time">2026/04/10 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我写这些东西是因为透明度是平台的重点。大多数人没有时间或兴趣在每次想要尝试新工具时都打开反汇编，他们只是想知道它是否符合他们转向 Linux 的 FOSS 精神。<p>指出“隐私”工具具有闭源大脑并不是对开发人员的攻击，这只是对关心此类事情的人们的提醒。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I write these things because transparency is kind of the point of the platform. Most people don't have the time or the interest to open up a disassemble every time they want to try a new tool, they just want to know if it fits the FOSS ethos they moved to Linux for.<p>Pointing out that a "privacy" tool has a closed-source brain isn't an attack on the dev, it's just a heads-up for people who care about that sort of thing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710142" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">GeekyBear</span>
+        <span class="meta-time">2026/04/10 05:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Linux Steam 客户端是闭源的。<p>我们应该拒绝使用Steam吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Linux Steam client is closed source.<p>Should we refuse to use Steam?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710409" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">TheIPW</span>
+        <span class="meta-time">2026/04/10 05:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">运行闭源应用程序来玩游戏和信任闭源应用程序来保护整个系统之间存在很大差异。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There’s a big difference between running a closed-source app to play games and trusting a closed-source app to protect your whole system.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710480" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cxr</span>
+        <span class="meta-time">2026/04/10 07:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个奇怪的（而且奇怪地自信的）反驳。<p>您应该拒绝使用 Steam。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a strange (and strangely confident) rejoinder.<p>You should refuse to use Steam.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711422" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 05:17</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710273" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nslsm</span>
+        <span class="meta-time">2026/04/10 05:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果它是闭源的，那么它不符合 FOSS 精神。您不必拆卸它；你可以继续前进。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If it is closed source then it does not fit the FOSS ethos. You don't have to disassemble it; you can just move on.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710291" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zahlman</span>
+        <span class="meta-time">2026/04/10 05:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有 <a href="https://github.com/obdev/littlesnitch-linux" target="_blank" rel="noopener noreferrer">https://github.com/obdev/littlesnitch-linux</a>， 和 <a href="https://github.com/evilsocket/opensnitch" target="_blank" rel="noopener noreferrer">https://github.com/evilsocket/opensnitch</a> 可能还有许多其他人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's <a href="https://github.com/obdev/littlesnitch-linux" target="_blank" rel="noopener noreferrer">https://github.com/obdev/littlesnitch-linux</a>, and <a href="https://github.com/evilsocket/opensnitch" target="_blank" rel="noopener noreferrer">https://github.com/evilsocket/opensnitch</a> and probably many others.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710027" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cxr</span>
+        <span class="meta-time">2026/04/10 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">第一个链接中的项目指向“Little Snitch for Linux 的开源组件”，这就是本文的主题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The project in the very first link, which points to "Open Source components of Little Snitch for Linux", is what this article is about.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711441" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lapcat</span>
+        <span class="meta-time">2026/04/10 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请参阅“Linux 版小飞贼” <a href="https://news.ycombinator.com/item?id=47697870" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47697870</a><p>还：</p><p>&gt; Little Snitch 不会取代 OpenSnitch。这只是您可以选择的附加选项。有些人可能更喜欢它，有些人则不喜欢。</p><p><a href="https://news.ycombinator.com/item?id=47701918" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47701918</a></p><p>&gt; 但我目前无法将整个项目开源。我的另一个选择是将其完全保密（首先主要是为我自己写的）。</p><p>&gt; 我认为还是将其公开并仅部分开源更好，以便某些人可以从中受益。如果您不信任我们，这是完全合理的，请不要安装它。</p><p><a href="https://news.ycombinator.com/item?id=47701740" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47701740</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">See "Little Snitch for Linux" <a href="https://news.ycombinator.com/item?id=47697870" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47697870</a><p>Also:</p><p>&gt; Little Snitch is not there to replace OpenSnitch. It's just an additional option you can choose from. Some people might prefer it, others not.</p><p><a href="https://news.ycombinator.com/item?id=47701918" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47701918</a></p><p>&gt; But I currently can't make the entire project Open Source. My other option would be to keep it completely private (wrote it mostly for myself in the first place).</p><p>&gt; I think it's still better to make it public and only partially Open Source so that some people can benefit from it. If you don't trust us, that's completely reasonable, just don't install it.</p><p><a href="https://news.ycombinator.com/item?id=47701740" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47701740</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kelsey98765431</span>
+        <span class="meta-time">2026/04/10 04:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最不想做的就是在 Linux 上安装专有软件。更不用说是安全软件并直接与我的网络堆栈交互。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">last thing in the world i want is to install proprietary software on linux. even less so is something meant to be security software and interacting directly with my network stack.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709186" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bornfreddy</span>
+        <span class="meta-time">2026/04/10 04:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; ...我的主要防线是 AdGuard Home。通过在 DNS 级别处理隐私......<p>我想，每个人都有自己的想法，但这对我来说将是一个艰难的过程。来自移动设备的一个示例：Android 上的 FF 不断尝试连接到其各种服务（例如 firefox.settings.services.mozilla.net）。出于隐私原因，我使用 NetGuard 来阻止此域和其他类似域。但有一个问题：有些网站（如 Seekingalpha.com）如果访问这些相同的域被阻止，则拒绝加载 - 即使在完全不同的浏览器上也是如此！借助 NetGuard，我仍然可以在辅助浏览器中访问这些网站，同时阻止 Mozilla 跟踪。如果 DNS 阻塞，我将无法做到这一点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; ...my primary line of defence is AdGuard Home. By handling privacy at the DNS level...<p>To each their own, I guess, but that would be a hard pass from me. One example from mobile: FF on android keeps trying to connect to its various services (like firefox.settings.services.mozilla.net). For privacy reasons, I use NetGuard to block this and other similar domains. But there is a gotcha: there are sites (like seekingalpha.com) who refuse to load if access to these same domains is blocked - even on a completely different browser! With NetGuard I can still visit those sites in the secondary browser while blocking Mozilla tracking. With DNS blocking I wouldn't be able to do that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709354" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TheIPW</span>
+        <span class="meta-time">2026/04/10 04:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">NetGuard 是一款可靠的 Android 工具，但管理整个家庭实验室却是另一回事。我在 Proxmox 中藏有数十个虚拟机和容器；如果我尝试对每个应用程序的权限进行微观管理，我将永远无法完成任何其他事情。<p>如果这意味着我在 DNS 级别拥有单一、透明的“真相来源”，我更愿意接受那些罕见的破坏网站的边缘情况。这绝对是一种权衡，但我宁愿花时间构建东西，也不愿为我启动的每项新服务不断调整防火墙规则。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">NetGuard is a solid tool for Android, but managing a whole home lab is a different beast. I've got dozens of VMs and containers tucked away in Proxmox; if I tried to micro-manage per-app permissions for every single one of them, I’d never get anything else done.<p>I prefer to take the hit on those rare site-breaking edge cases if it means I have a single, transparent "source of truth" at the DNS level. It's definitely a trade-off, but I'd rather spend my time building things than perpetually tweaking firewall rules for every new service I spin up.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709486" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">knowaveragejoe</span>
+        <span class="meta-time">2026/04/10 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Linux 上的 LittleSnitch 的一大优点是它默认带有 Web UI。使用 OpenSnitch 的无头系统有类似的东西吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One nice thing about LittleSnitch on linux is that it comes with a web UI by default. Is there anything like that for headless systems using OpenSnitch?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TheIPW</span>
+        <span class="meta-time">2026/04/10 03:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我收到上诉；不可否认，Little Snitch UI 非常闪亮。但对于我的 Proxmox 设置中的无头 Linux 节点，我从来没有真正感觉到需要一个专有的仪表板来查看我的网络状态。我更愿意将日志导出到 Grafana 之类的地方，或者只是在边缘检查我的 AdGuard 仪表板。保持工具透明和开放比仅仅为了漂亮的图表而邀请神秘的二进制文件到我的系统上感觉更“Linux”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I get the appeal; the Little Snitch UI is undeniably shiny. But for the headless Linux nodes in my Proxmox setup, I’ve never really felt the need for a proprietary dashboard just to see my network state. I’d much rather export my logs to something like Grafana or just check my AdGuard dashboard at the edge. It feels more "Linux" to keep the tools transparent and open than to invite a mystery binary onto my system just for the sake of a pretty graph.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708958" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">melon_tusk</span>
+        <span class="meta-time">2026/04/10 03:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我无法理解怎么会有人信任 OpenSnitch。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How anyone could trust OpenSnitch is beyond me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708745" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">patrickdet</span>
+        <span class="meta-time">2026/04/10 03:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请详细说明</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please elaborate</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708953" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

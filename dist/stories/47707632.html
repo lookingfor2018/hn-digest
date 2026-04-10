@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Instant 1.0，AI 编码应用程序的后端 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>Instant 1.0，AI 编码应用程序的后端</h1>
+      <p class="subtitle">Instant 1.0, a backend for AI-coded apps</p>
+      <div class="meta-line">
+        <span>www.instantdb.com</span>
+        <span>作者 stopachka</span>
+        <span>分数 101</span>
+        <span>评论 62</span>
+        <span>2026/04/10 02:30</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47707632" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.instantdb.com/essays/architecture" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>4 年后，我们即将发布 Instant 1.0！ Instant 将您最喜欢的编码代理变成全栈应用程序构建器。我们是完全开源的。 [1] 我们声称 Instant 是可用于 AI 编码应用程序的最佳后端。在这篇文章中，我们将做两件事。首先我们将向您展示一系列演示，以便您自行判断。其次，我们将介绍架构。实时、关系和多租户后端背后的限制促使我们做出一些有趣的设计选择。我们在 Postgres 之上构建了一个多租户数据库，并在 Clojure 中构建了一个同步引擎。我们将介绍这一切是如何运作的以及到目前为止我们学到了什么。让我们开始吧。</li><li>演示 当您选择 Instant 时，您将获得三个好处：</li><li>您可以制作无限的应用程序，并且它们永远不会被冻结。您将获得同步引擎，因此您的应用程序可以离线工作、实时且快速。当您需要更多功能时，您可以使用内置服务：身份验证、文件存储、状态和流。</li><li>为了理解我们的意思，我将深入探讨每一点并向您展示它们的外观。无限的应用程序传统上，当您想要在线托管应用程序时，您要么为虚拟机付费，要么受到限制。许多服务都会限制您可以制作的免费应用程序的数量，并在它们空闲时冻结它们。解冻通常需要 30 秒以上，有时甚至需要整整几分钟。我们认为这很糟糕。因此，通过 Instant，您可以启动任意数量的项目，我们永远不会冻结它们。我们可以做到这一点，因为 Instant 被设计为多租户。当您创建新项目时，我们不会启动虚拟机。我们只需在多租户实例中插入一些数据库行。如果您的应用程序处于非活动状态，则根本没有计算或内存成本。当它处于活动状态时，只需要额外几千字节的 RAM 开销，而虚拟机则需要数百兆字节的内存。这意味着您可以真正创建无限的应用程序。事实上，这个过程非常高效，我们可以在本文中为您创建一个应用程序。无需注册。如果单击该按钮，您将获得一个隔离的后端：</li><li>这样我们就有了我们的后端。包括到计算机的往返，整个过程需要几百毫秒。实际时间：您将获得一个公共应用程序 ID 来识别您的后端，以及一个允许您进行特权更改的私有管理令牌。这为您提供了关系数据库、同步引擎以及我们提到的附加服务，例如身份验证和存储。将无限的应用程序与代理相结合，您将开始以不同的方式进行构建。如今，您已经可以使用代理来制作大量应用程序。有了 Instant，您将永远不会被阻止将它们推向生产。同步引擎 但是一旦您创建了一个应用程序，如何使其变得更好呢？构建传统的 CRUD 应用程序很容易。只需找一个代理来连接一些数据库迁移、后端端点和客户端存储。但要让这些应用程序变得令人愉快是很困难的。将传统 CRUD 应用程序与 Linear、Notion 和 Figma 等现代应用程序进行比较。现代应用程序是多人游戏的，它们可以离线工作，而且速度很快。如果您更改 Linear 中的待办事项，它会随处更改。如果您在 Notion 中离线，您仍然可以标记您的文档。当您在 Figma 中为形状着色时，它不会等待服务器，您只需看到它即可。此类应用程序需要自定义基础架构。为了实时，您添加有状态的 websocket 服务器。对于离线模式，您将缓存存储在 IndexedDB 中。对于乐观的更新，您需要弄清楚如何在客户端中应用和撤消突变。 Linear、Notion 和 Figma 都构建了自定义基础设施来处理这个问题。作为一个行业，我们将其称为基础同步引擎 [2]。开发人员编写 UI 并查询数据，就像数据在本地可用一样。同步引擎在后台处理所有数据管理。如果现代应用程序需要同步引擎，那么您不必每次都从头开始构建它们。因此我们在 Instant 中构建了一个通用的同步引擎。默认情况下，每个应用程序都带有多人游戏、离线模式和乐观更新。你可以自己尝试一下。既然我们已经创建了独立的后端，那么让我们继续使用它：启动一个后端来尝试现场演示。您看到的是两个呈现待办事项应用程序的 iframe。它们由您刚刚创建的后端提供支持（我们通过了您的应用程序 ID 的 iframe）。现在，如果您在一个 iframe 中添加待办事项，它将显示在另一个 iframe 中。如果您离线，您可以进行更改，并且它们会同步在一起。您可以尝试降低网络性能，并且更改仍然会感觉很快。以下是待办事项应用程序的后端代码：</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>After 4 years, we’re releasing Instant 1.0! Instant turns your favorite coding agent into a full-stack app builder. And we’re fully open source. [1] Our claim is that Instant is the best backend you could use for AI-coded apps. In this post we’ll do two things. First we’ll show you a series of demos, so you can judge for yourself. Second, we’ll cover the architecture. The constraints behind a real-time, relational, and multi-tenant backend pushed us towards some interesting design choices. We built a multi-tenant database on top of Postgres, and a sync engine in Clojure. We’ll cover how all this works and what we’ve learned so far. Let’s get into it.</li><li>Demos When you choose Instant you get three benefits:</li><li>You can make unlimited apps and they’re never frozen. You get a sync engine, so your apps work offline, are real-time, and feel fast. And when you need more features you have built-in services: auth, file storage, presence, and streams.</li><li>To get a sense of what we mean, I’ll dive into each point and show you how they look. Unlimited Apps Traditionally, when you want to host apps online you either pay for VMs, or you’re limited. Many services cap how many free apps you can make, and freeze them when they’re idle. Unfreezing can often take more than 30 seconds and sometimes a few whole minutes. We thought this sucked. So with Instant, you can spin up as many projects as you like and we’ll never freeze them. We can do this because Instant is designed to be multi-tenant. When you create a new project, we don’t spin up a VM. We just insert a few database rows in a multi-tenant instance. If your app is inactive, there are no compute or memory costs at all. And when it is active, it’s only a few kilobytes of extra RAM in overhead — as opposed to the many hundreds of megabytes required for VMs. This means you can truly create unlimited apps. In fact, the process is so efficient that we can create an app for you right inside this essay. No sign up required. If you click the button, you’ll get an isolated backend:</li><li>And with that we have our backend. Including the round-trip to your computer, the whole process takes a few hundred milliseconds. Actual time: You get a public App ID to identify your backend, and a private Admin Token that lets you make privileged changes. This gives you a relational database, sync engine, and the additional services we mentioned, like auth and storage. Combine limitless apps with agents, and you’ll start building differently. Today you can already use agents to make lots of apps. With Instant you’ll never be blocked from pushing them to production. Sync Engine But once you create an app, how do you make it good? It’s easy to build a traditional CRUD app. Just get an agent to wire up some database migrations, backend endpoints, and client-side stores. But it’s hard to make these apps delightful. Compare a traditional CRUD app to modern apps like Linear, Notion, and Figma. Modern apps are multiplayer, they work offline, and they feel fast. If you change a todo in Linear, it changes everywhere. If you go offline in Notion, you can still mark up your docs. When you color a shape in Figma, it doesn’t wait for a server, you just see it. These kinds of apps need custom infrastructure. For real-time you add stateful websocket servers. For offline mode you store caches in IndexedDB. And for optimistic updates, you figure out how to apply and undo mutations in the client. Linear, Notion, and Figma all built custom infra to handle this. As an industry we’ve called their infra sync engines [2]. Developers write UIs and query their data as though it was locally available. The sync engine handles all the data management under the hood. If modern apps need sync engines, then you shouldn’t have to build them from scratch each time. So we built a generalized sync engine in Instant. Every app comes with multiplayer, offline mode, and optimistic updates by default. You can try it yourself. Since we’ve created our isolated backend, let’s go ahead and use it: Spin up a backend to try the live demo. What you’re seeing are two iframes that render a todo app. They’re powered by the backend you just created (we passed the iframes your App ID). Now if you add a todo in one iframe, it will show up in the other. If you go offline, you can make changes and they will sync together. You can try degrading your network, and changes will still feel fast. And here’s what the todo app’s backend code is like:</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dalmo3</span>
+        <span class="meta-time">2026/04/10 09:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">恭喜上线！<p>使用 InstantDB 是一种乐趣。当然，我只用它构建过小型玩具项目，但它是我的首选。比我在这个领域尝试过的任何其他方法都要简单得多。</p><p>核心产品太好了，以至于对人工智能的强调感觉很奇怪。希望这只是营销而不是支点。不幸的是，如果这就是当今获得资金所需要的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Congrats on the launch!<p>InstantDB is a joy to work with. Granted, I've only ever built small toy projects with it, but it's my go-to. Just so much simpler than anything else I've tried in this space.</p><p>The core product is so good that the AI emphasis feels weird. Hopefully that's just marketing and not a pivot. Unfortunate if that's what it takes to get funding these days.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712469" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 09:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！<p>我们上次更新网站是在 2024 年 8 月开源时 <a href="https://news.ycombinator.com/item?id=41322281" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=41322281</a></p><p>当时大多数人还没有使用人工智能构建完整的应用程序。</p><p>从那时起，我们看到很多人通过有关使用人工智能创建应用程序的内容找到了我们。我们觉得之前的消息并没有说明这一点，我们认为是时候进行更新了。</p><p>我们还投入了大量资金，让 Instant 的代理体验变得愉快！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you!<p>We last updated our website when open sourced back in August 2024 <a href="https://news.ycombinator.com/item?id=41322281" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=41322281</a></p><p>Back then most folks weren't building full-on apps with AI yet.</p><p>Since then we've seen a large number of people find us through content on creating apps with AI. We felt our previous messaging didn't speak to that and we thought it was time for a refresh.</p><p>We also invested a lot to make the agent experience with Instant a delight!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712530" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 09:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你的客气话。<p>&gt; 人工智能重点</p><p>这不完全是营销或支点。我们刚刚注意到，我们的大多数用户都在使用人工智能进行编码，并且也确实为此进行了优化。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you for the kind words.<p>&gt; AI emphasis</p><p>It's not quite marketing or a pivot. We've just noticed that most of our users are coding with AI, and really optimized for that too.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712513" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">storus</span>
+        <span class="meta-time">2026/04/10 07:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一个诚实的问题 - 为什么我们需要任何振动编码应用程序的框架？我可以告诉编码代理在前端使用纯 HTML5/Vanilla JS/CSS，在后端使用纯 HTML5/Vanilla JS/CSS，它就会做到这一点。不需要数百/数千个依赖项。对于部署，我可以要求编码代理执行相同的操作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">An honest question - why would we need any frameworks at all for vibe coded apps? I can just tell the coding agent to use pure HTML5/Vanilla JS/CSS on the frontend and pure whatever on the backend and it would do it. No need for hundreds/thousands dependencies. For deployment I can ask the coding agent to do the same.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711760" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有几个原因：<p>1. 无限的项目：当您启动传统后端时，通常使用虚拟机。启动其中许多项目的成本很高。使用 Instant，您可以创建无限的项目</p><p>2.用户体验：传统的CRUD应用程序可以工作，但感觉并不令人愉快。如果你想支持多人游戏、离线模式或乐观更新等功能，你将不得不编写更多的自定义基础设施。 Instant 为您提供开箱即用的这些，并且代理发现它比 CRUD 代码更容易编写</p><p>3.更丰富的功能：有时您想要添加的不仅仅是一个后端。例如，也许您想要存储文件、共享游标或跨机器传输令牌。这些通常需要更多定制系统（S3、Redis 等）。 Instant 已经附带了这些开箱即用的产品，并且代理知道如何使用它们。</p><p>帖子中有几个演示部分展示了这一点。例如，您可以单击按钮，您将获得一个后端，而无需注册。只需大约 25 行代码，您就可以创建一个实时待办事项应用程序。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A few reasons:<p>1. Unlimited projects: when you spin up traditional backends, you usually use VMs. It's expensive to start many of them. With Instant, you create unlimited projects</p><p>2. User experience: traditional CRUD apps work, but they don't feel delightful. I you want to support features like multiplayer, offline mode, or optimistic updates, you'll have to write a lot more custom infra. Instant gives you these out of the box, and the agents find it easier to write than CRUD code</p><p>3. Richer features: sometimes you'll want to add more than just a backend. For example, maybe you want to store files, or share cursors, or stream tokens across machines. These often need more bespoke systems (S3, Redis, etc). Instant already comes with these out of the box, and the agents know how to use them.</p><p>There are a few demo sections in the post that show this off. For example, you can click button and you'll get a backend, without needing to sign up. And in about 25 lines of code, you'll make a real-time todo app.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711803" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">boxedemp</span>
+        <span class="meta-time">2026/04/10 09:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;多人游戏<p>它与光子网络相比如何？我主要使用 photon 和 webrtc。我没有遇到任何问题，但我总是对寻找更好的解决方案感兴趣！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;multiplayer<p>How does it compare to photon networking? I've been using photon and webrtc mostly. I haven't had any issues, but I'm always interested in finding better solutions!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712502" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">calvinmorrison</span>
+        <span class="meta-time">2026/04/10 09:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人类这样做的原因相同。上下文和抽象。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">same reasons human do. context and abstraction.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712433" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">storus</span>
+        <span class="meta-time">2026/04/10 10:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以通过这种方式摆脱不相关的抽象膨胀，并使代码完美地满足需要。传统上这是昂贵的，导致抽象被打包在框架中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can get rid of irrelevant abstraction bloat that way and make code perfectly tailored for what is needed. This was traditionally expensive which led to abstraction being packaged in frameworks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712989" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">IncreasePosts</span>
+        <span class="meta-time">2026/04/10 09:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你不一定，但是每个代币都需要钱让人工智能吐出来。当该输出稍后用作输入时，可能会赚更多钱。委托给图书馆在经济上是有意义的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You don't necessarily, but each token costs money for the AI to spit out. And probably more money when that output is used as input later. Delegating to a library makes sense financially.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712453" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">storus</span>
+        <span class="meta-time">2026/04/10 10:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">通过我们现在拥有的相当不错的本地模型（Qwen-3.5 及更好）的本地推理，这不再是一个问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With local inference on pretty decent local models we have nowadays (Qwen-3.5 and better) it's not much of a concern anymore.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712996" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">d0100</span>
+        <span class="meta-time">2026/04/10 10:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">后端有更复杂的例子吗？<p>我们是否应该公开所有实体和关系并依赖行级安全性？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Any example more complex in the backend?<p>Are we supposed to expose all entities and relationships and rely on row level security?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712897" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nharada</span>
+        <span class="meta-time">2026/04/10 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太酷了，我认为这正是我一直在寻找的个人项目。我想尝试一下，但“代理”部分可能会更加无缝。我的编码代理如何知道如何工作？<p>我建议为此添加一项技能，或者如果博客上已经有一个链接到它！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is super cool and exactly what I've been looking for for personal projects I think. I wanna try it out, but the "agent" part could be more seamless. How does my coding agent know how to work this thing?<p>I'd suggest including a skill for this, or if there's already one linking to it on the blog!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711179" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好主意！我继续更新了这篇文章：<p><a href="https://github.com/instantdb/instant/pull/2530" target="_blank" rel="noopener noreferrer">https://github.com/instantdb/instant/pull/2530</a></p><p>几分钟后就会上线。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good idea! I went ahead and updated the essay:<p><a href="https://github.com/instantdb/instant/pull/2530" target="_blank" rel="noopener noreferrer">https://github.com/instantdb/instant/pull/2530</a></p><p>It should be live in a few minutes.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711416" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们确实有一技之长！<p>npx 技能添加 instantdb/技能</p><p>也建议使用 `bunx/pnpx/npx create-instant-app` 来搭建项目！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We do have a skill!<p>npx skills add instantdb/skills</p><p>Would recommend doing `bunx/pnpx/npx create-instant-app` to scaffold a project too!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711230" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LoganDark</span>
+        <span class="meta-time">2026/04/10 06:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以查看该技能的源代码/手动安装吗？我非常不喜欢这类东西的自动安装程序。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can I view the source code of this skill / install it manually? I am incredibly not a fan of automated installers for this type of stuff.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你可以！技能就在这里<p><a href="https://github.com/instantdb/skills" target="_blank" rel="noopener noreferrer">https://github.com/instantdb/skills</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can! The skill lives here<p><a href="https://github.com/instantdb/skills" target="_blank" rel="noopener noreferrer">https://github.com/instantdb/skills</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711333" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">asdev</span>
+        <span class="meta-time">2026/04/10 06:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道人们是否真的需要这个。有多少人真正在构建 Figma、Linear 等多人游戏应用程序？我猜 99% 都是 CRUD，我怀疑这种情况会改变。即使是这样，您是否希望供应商锁定某些专有技术，而不是使用经过尝试和测试的开源组件进行构建？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder if people really need this. How many people are really building multiplayer apps like Figma, Linear etc? I'm guessing 99% are CRUD and I doubt that will change. Even if so, would you want to vendor lock into some proprietary technology rather than build with tried and tested open source components?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711118" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 06:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 真正构建像 Figma、Linear 这样的多人应用程序<p>我认为这有两个令人惊讶的地方：</p><p>1. 如果让应用程序多人游戏更容易，我敢打赌会有更多应用程序。例如，我不明白为什么 Linear 必须是多人游戏，但其他 CRUD 应用程序则不然。</p><p>2. 当抽象正确时，使用同步引擎构建应用程序比构建传统的 CRUD 应用程序更容易。 Linear 团队自己在这里提到了这一点： <a href="https://x.com/artman/status/1558081796914483201" target="_blank" rel="noopener noreferrer">https://x.com/artman/status/1558081796914483201</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; really building multiplayer apps like Figma, Linear<p>I think there's two surprises about this:</p><p>1. If it was easier to make apps multiplayer, I bet more apps would be. For example, I don't see why Linear has to be multiplayer, but other CRUD apps don't.</p><p>2. When the abstraction is right, building apps with sync engines is easier than building traditional CRUD apps. The Linear team mentioned this themselves here: <a href="https://x.com/artman/status/1558081796914483201" target="_blank" rel="noopener noreferrer">https://x.com/artman/status/1558081796914483201</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 06:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">无论如何，Instant 是 100% 开源的！<p><a href="https://github.com/instantdb/instant" target="_blank" rel="noopener noreferrer">https://github.com/instantdb/instant</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For what it's worth, Instant is 100% open source!<p><a href="https://github.com/instantdb/instant" target="_blank" rel="noopener noreferrer">https://github.com/instantdb/instant</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711136" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">risyachka</span>
+        <span class="meta-time">2026/04/10 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我有点同意。考虑到当今大部分代码都是 llms 编写的，对先进技术的需求比以往任何时候都低。一个好的旧的 CRUD 应用程序看起来非常适合人工智能 - 它简单、重复，而且人工智能非常擅长 sql。后端采用二进制，前端采用 React - 覆盖 99.9% 的用例，资源使用量基本为零。 5 美元节点可以毫不费力地处理 100k MAU。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah I kinda agree. Considering llms write most of the code today, the need for fancy tech is lower than ever. A good old crud app looks like a perfect fit for ai - its simple, repetitive and ai is great at sql. Go binary for backend and react for frontend - covers 99.9% use cases with basically zero resource usage. 5 usd node will handle 100k mau without breaking a sweat.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 5 美元节点将毫不费力地处理 100k MAU。<p>5美元节点可能会遇到一个问题：如何处理多个项目？您可以将它们全部放在一个虚拟机中，但这种设置可能会变得深奥，并且当您寻求更多隔离时，这些进程将不适合这么小的机器。</p><p>使用 Instant，您可以制作无限的项目。你的应用程序还有一个同步引擎，这对你的用户来说都有好处，而且至少在我们的实验中，人工智能更喜欢用它来构建。</p><p>如果您想摆脱 Instant，整个系统都是开源的。</p><p>不过，我仍然对一个好的 Hetzner 盒子产生共鸣，自我托管或使用更多经过验证的技术是有意义的。</p><p>无论如何，使用 Instant，您将为简单的项目获得更多支持。至少在我们的基准测试中，人工智能</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; 5 usd node will handle 100k mau without breaking a sweat.<p>One problem you may encounter with the 5 usd node: how do you handle multiple projects? You could put them all in one VM, but that set up can get esoteric, and as you look for more isolation, the processes won't fit on such a small machine.</p><p>With Instant, you can make unlimited projects. Your app also gets a sync engine, which is both good for your users, and at least in our experiments, the AIs prefer building with it.</p><p>And if you ever want to get off Instant, the whole system is open source.</p><p>I still resonate with a good Hetzner box though, and it can make sense to self-host or to use more tried-and-true tech.</p><p>For what it's worth, with Instant you would get a lot more support for easy projects. At least in our benchmarks, AI</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711483" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">owenthejumper</span>
+        <span class="meta-time">2026/04/10 08:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这基本上是一个奇特的 Pocketbase / Supabase？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is basically a fancy Pocketbase / Supabase?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712241" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 09:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 苏帕巴斯<p>我们与 SUPABASE 类似，都支持关系数据库。我们的不同之处在于，在我们这里，您可以获得实时查询、离线模式和开箱即用的乐观更新。</p><p>&gt; 袖珍底座</p><p>我对 Pocketbase 不太熟悉。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Supabase<p>We are similar to supabase in the sense that we support a relational database. We're different in that with us, you get real-time queries, offline mode, and optimistic updates out of the box.</p><p>&gt; Pocketbase</p><p>I am not too familiar with Pocketbase.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712467" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 09:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们认为这是一种进化:)<p>斯托帕在这里也给出了答案！ <a href="https://news.ycombinator.com/item?id=47711866" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47711866</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We think this is an evolution :)<p>Stopa also gave an answer here! <a href="https://news.ycombinator.com/item?id=47711866" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47711866</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ghm2199</span>
+        <span class="meta-time">2026/04/10 07:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直想做的一件事是取消我启动的远程执行的 AI 代理，因为它逐部分传输响应（部分可以是单词、url 列表或您希望 FE 显示的任何内容）。一个很好的例子是网络研究代理，它远程搜索和获取网页并将其发送回本地子代理以总结结果。这是终端中的克劳德代码没有完全提供的。在 Instant 中，构建起来会很简单吗？<p>以下是我在 WUI 中构建它的方法：我从服务器发送 SSE 事件 -&gt; 客户端流式传输 Web 搜索进度，但随后客户端可以使用简单的 REST 调用，使用来自 SSE 事件的 `id` 来更新“父”小部件上的 `x` 框。 `id` 可能属于父网络搜索或正在获取的某些 URL。
+然后，无论产生什么结果，您的 SSE 行都会检查数据库是否会取消发送（假设它尚未发送所有单词）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One thing I have always wanted  to do is cancel an AI Agent executing remotely that I kicked off as it streamed its part by part response(part could words, list of urls or whatever you want the FE to display). A good example is web-researcher agent that searches and fetches web pages remotely and sends it back to the local sub-agent to summarize the results. This is something claude-code in the terminal does not quite provide. In Instant would this be trivial to build?<p>Here is how I built it in a WUI: I sent SSE events from Server -&gt; Client streaming web-search progress, but then the client could update a `x` box on "parent" widget using the `id` from a SSE event using a simple REST call. The `id` could belong to parent web-search or to certain URLs which are being fetched.
+And then whatever is yielding your SSE lines would check the db would cancel the send(assuming it had not sent all the words already).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我理解正确的话：<p>你踢掉一个特工。它将工作报告给用户。用户可以单击“取消”，代理将被终止。</p><p>你是对的，这种用户体验在 Instant 中非常自然地出现。如果代理将数据写入 Instant，它将立即显示给用户。如果用户单击 `X` 按钮，它将传播到代理。</p><p>基本的同步引擎可以处理这里的很多复杂性。如果数据流变得更加复杂，您可能需要使用即时流。例如，如果您想逐个字符地传达更新，您可以使用即时流作为包含的服务，这可以非常有效地完成此操作。</p><p>有关同步引擎的更多信息： <a href="https://www.instantdb.com/product/sync" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/product/sync</a>
+有关流的更多信息： <a href="https://www.instantdb.com/docs/streams" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/docs/streams</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If I understood you correctly:<p>You kick off an agent. It reports work back to the user. The user can click cancel, and the agent gets terminated.</p><p>You are right, this kind of UX comes very naturally with Instant. If an agent writes data to Instant, it will show up right away to the user. If the user clicks an `X` button, it will propagate to the agent.</p><p>The basic sync engine would handle a lot of the complexity here. If the data streaming gets more complicated, you may want to use Instant streams. For example, if you want to convey updates character by character, you can use Instant streams as an included service, which does this extremely efficiently.</p><p>More about the sync engine: <a href="https://www.instantdb.com/product/sync" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/product/sync</a>
+More about streams: <a href="https://www.instantdb.com/docs/streams" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/docs/streams</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711512" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ghm2199</span>
+        <span class="meta-time">2026/04/10 06:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于像我这样熟悉 React/jetpack compose/flutter 等框架如何工作的人来说，我记得使用过 React-widget/composables，它们在注册以接收底层数据模型的更新时无缝更新。这些应用程序中的持久性边界是其运行的应用程序/设备。数据模型是本地的。您仍然需要担心将数据更新到服务器并返回到其他设备/应用程序。<p>即时跨越持久性边界，您的应用程序可以将更新传播给订阅了抽象数据存储的任何人 - 该抽象数据存储位于服务器上的某个位置，因此您作为工程师不必编写该代码。正确的？</p><p>但这与我想说的 vercel/nextjs 或托管类似基础设施的类似内容有何不同/更好？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For people like me — who are kind of familiar with how react/jetpack compose/flutter like frameworks work — I recall using react-widget/composables which seamlessly update when these register to receive updates to the underlying datamodel. The persistence boundary in these apps was the app/device where it was running. The datamodel was local. You still had to worry about making the data updates to servers and back to get to other devices/apps.<p>Instant crosses that persistence boundary, your app can propagate updates to any one who has subscribed to the abstract datastore — which is on a server somewhere, so you the engineer don't have to write that code. Right?</p><p>But how is this different/better than things like, i wanna say, vercel/nextjs or the like that host similar infra?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 06:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想说 NextJS 更多地关注服务器渲染。如果您使用应用程序路由器，默认路径是在服务器上渲染尽可能多的内容。<p>这可以很好地工作，但您会失去一些好处：您的页面将无法离线工作，它们不会是实时的，如果您进行更改，则必须等待服务器确认它们。</p><p>即时推送可以处理前端的更多工作。您直接在前端进行查询，Instant 处理所有离线缓存、实时和乐观更新。</p><p>不过，您可以两全其美。我们有一个实验性的 SSR 包，据我们所知，它是第一个将 SSR 和实时相结合的包。它的工作原理：</p><p>1.下一个SSR页面</p><p>2. 但是当它加载时，Instant 会拾取它并使每个查询都响应。</p><p>更多详细信息请参见此处： <a href="https://www.instantdb.com/docs/next-ssr" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/docs/next-ssr</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would say NextJS focuses a lot more on server-rendering. If you use the app router, the default path is to render as much as you can on the server.<p>This can work great, but you lose some benefits: your pages won't work offline, they won't be real-time, and if you make changes, you'll have to wait for the server to acknowledge them.</p><p>Instant pushes handles more of the work on the frontend. You make queries directly in your frontend, and Instant handles all the offline caching, the real-time, and the optimistic updates.</p><p>You can have the best of both worlds though. We have an experimental SSR package, which to our knowledge is the first to combine _both_ SSR and real-time. The way it works:</p><p>1. Next SSRs the page</p><p>2. But when it loads, Instant picks it up and makes every query reactive.</p><p>More details here: <a href="https://www.instantdb.com/docs/next-ssr" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/docs/next-ssr</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jamest</span>
+        <span class="meta-time">2026/04/10 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们实际上兑现了“关系查询&amp;&amp;实时”的承诺，这是一个不小的壮举。<p>不过，他们的控制台感觉并没有像基础设施/网站的其他部分那样受到人们的喜爱。</p><p>恭喜 1.0 发布！我很高兴能够继续使用 Instant 进行开发。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They actually deliver on the promise of "relational queries &amp;&amp; real-time," which is no small feat.<p>Though, their console feels like it didn't get the love that the rest of the infra / website did.</p><p>Congrats on the 1.0 launch! I'm excited to keep building with Instant.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711084" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 06:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！我们花了很多时间在主页、论文页面上的演示以及升级文档上。<p>我们将在接下来的几周内重新设计仪表板。</p><p>我们的用户观察到一个有趣的现象：尽管他们在某些方面较少使用仪表板（人工智能代理启动应用程序并为它们进行架构更改），但我们发现人们在其他方面更多地使用它们。 Instant 附带一个 Explorer 组件，可让您查询数据。我们发现用户更愿意参与其中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you! We spent a lot of time with the demos on the home page, the essays page, and upgrading the docs.<p>We're going to redesign the dashboard in the next few weeks.</p><p>One interesting observation from our users: though they use the dashboard less in some ways (the AI agents spin up apps and make schema changes for them), we found people use them _more_ in other ways. Instant comes with an Explorer component, which lets you query your data. We found users want to engage with that a lot more.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711210" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nl</span>
+        <span class="meta-time">2026/04/10 09:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“每个应用 X 团队成员”是什么意思？这是您可以注册的用户数量还是“团队成员”有特殊含义？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What does "X Team Members per app" mean? Is this the number of users you can have registered or does "Team Member" have special meaning?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712393" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 09:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以将其视为开发人员的数量。因此，如果您作为一个团队开发应用程序，那么大家都可以使用仪表板和 CLI 工具来管理该应用程序。<p>您构建的产品的最终用户数量没有限制</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can think of this as the number of devs. So if you're working on an app as a team you all can use the dashboard and CLI tools to manage the app.<p>No limit on number of end users for what you build</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nl</span>
+        <span class="meta-time">2026/04/10 10:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢，那太好了。恭喜发布。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks, that's great. Congrats on the launch.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712720" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">chrysoprace</span>
+        <span class="meta-time">2026/04/10 06:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">InstantDB 不再是本地优先还是 AI 角度只是一个营销问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is InstantDB no longer about local-first or is the AI angle just a marketing thing?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711024" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 06:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们构建 Instant 是为了优化两件事：<p>我们希望制作一款工具，(a) 能够轻松构建令人愉悦的应用程序，(b) 构建者会发现易于使用。</p><p>这让我们开始制作既涉及本地优先又涉及人工智能的东西。</p><p>在本地优先方面，我们解决了离线模式、实时和优化更新等问题。</p><p>在 AI 方面，我们构建了多租户抽象，因此您可以启动任意数量的应用程序，并专注于出色的 DX/AX，因此客服人员发现 Instant 也易于使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We built Instant to optimize for two things:<p>We wanted to make a tool that (a) would make it easy to build delightful apps, and that (b) builders would find easy to use.</p><p>This got us into making things that touch both local-first and AI.</p><p>On the local-first side, we took on problems like offline-mode, real-time, and optimisitc updates.</p><p>On the AI side, we built a multi-tenant abstraction, so you can spin up as many apps as you like, and focused on great DX/AX so agents found Instant easy to use too.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711284" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dghlsakjg</span>
+        <span class="meta-time">2026/04/10 06:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来像是一篇博客文章，强调这可以用于 vivicoded 应用程序，而不一定是产品的枢纽。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This looks like a blog post highlighting that this can be used for vibecoded apps, not necessarily a pivot on the product.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pugio</span>
+        <span class="meta-time">2026/04/10 08:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢，这可能正是我正在寻找的。<p>我看到你支持 vanilla js 和 svelte，但不清楚如果你不使用 React 是否可以获得所有相同的功能。 React 是这个堆栈中唯一的一等公民吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks, this might be exactly what I'm looking for.<p>I see you have support for vanilla js and svelte, but it's unclear whether you can get all the same functionality if you don't use React. Is React the only first class citizen in this stack?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712030" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 08:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢。<p>&gt; React 是这个堆栈中唯一的一等公民吗？</p><p>每个系统都具有相同的功能。我们将客户端 SDK 的关键逻辑集中在“@instantdb/core”中。 React、Svelte、Tanstack、React Native 等都是该核心库的包装器。</p><p>它缺少一点的地方是文档。我们为每个库都有特定的文档，但许多其他示例都假设使用 React。</p><p>正如我们所说，我们正在改进这一点。目前，文档中对 React 的假设相当简单，因此可以相对简单地弄清楚您选择的库需要发生什么。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you.<p>&gt; Is React the only first class citizen in this stack?</p><p>Each system gets the same functionality. We centralize the critical logic for the client SDK in "@instantdb/core". React, Svelte, Tanstack, React Native et al are wrappers around that core library.</p><p>The one place where it's lacking a bit is the docs. We have specific docs for each library, but a lot of other examples assume React.</p><p>We are improving this as we speak. For now, the assumption on React is quite light in the docs, so it's relatively straightforward to figure out what needs to happen for the library of your choice.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712093" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aboodman</span>
+        <span class="meta-time">2026/04/10 09:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">恭喜，即时团队。真心为大家感到高兴。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Congrats, Instant team. Genuinely happy for y'all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712664" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 10:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！与零的合作非常棒，自从在本地第一个播客上收听您的剧集以来，我一直是您的粉丝！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you! Awesome work with Zero, been a fan of you since listening to your episode on the local first podcast!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712884" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jgeurts</span>
+        <span class="meta-time">2026/04/10 09:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有没有办法将其与现有的（Postgres）数据库配对？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a way to pair this with an existing (Postgres) database?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712417" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 09:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">目前还没有，但我们已经开始探索了！<p>我们的想法是首先让 DX/AX + 功能集与 Instant 结合在一起，然后让人们带上自己的 Postgres</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not at the moment but something that we've started exploring!<p>Our thinking was to first get the DX/AX + feature set solid with Instant and then let folks bring their own Postgres</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jvalencia</span>
+        <span class="meta-time">2026/04/10 07:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">安全和隔离如何发挥作用？如果其他人的帐户被盗用，我怎么知道我不会被盗用？如果 Instant 受到损害，我怎么知道我不会受到损害？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How does security and isolation work? If someone else's account is compromised, how do I know I won't be? If instant is compromised, how do I know I won't be?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711728" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果其他人的帐户受到损害，您也不会受到损害，因为应用程序在逻辑上是分开的。受损或未受损的帐户将无法看到您的数据。<p>如果 Instant 受到损害，那就危险得多。我们遵循安全最佳实践来最大限度地降低这种风险：保持数据静态加密、在创建时对秘密进行哈希处理等。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If someone else's account is compromised, you would not be, because apps are logically separated. There would be no way for the compromised or uncompromised account to ever see your data.<p>If Instant is compromised, then that's a lot more dangerous. We minimize this risk following security best practices: keeping data encrypted at rest, keeping secrets hashed at creation time, etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711765" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shay_ker</span>
+        <span class="meta-time">2026/04/10 07:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">拥有庞大的多租户数据库，如何应对吵闹的邻居？索引肯定是必要的，这会带来不小的成本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">with a huge multi-tenant database, how do you deal with noisy neighbors? indexes are surely necessary, which impose a non-trivial cost at scale.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">分组队列是一种很有帮助的数据结构。<p>我在这里的文章中对此进行了介绍：</p><p><a href="https://www.instantdb.com/essays/architecture#:~:text=is%20to%20parallelize.-,Grouped%20Queues,-Since%20our%20database" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/essays/architecture#:~:text=is%20t...</a></p><p>总结一下：</p><p>在我们处理吞吐量的地方，我们通常会坚持一个分组队列和一个从中获取的线程池。该队列的机制使得如果有一个嘈杂的邻居，它就无法占用所有线程。</p><p>还有更多（运行手册、速率限制系统、缓冲区、隔离实例），但我认为这种特定的数据结构分享起来非常有趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One data structure that helps a lot is the grouped queue.<p>I cover it in the essay here:</p><p><a href="https://www.instantdb.com/essays/architecture#:~:text=is%20to%20parallelize.-,Grouped%20Queues,-Since%20our%20database" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/essays/architecture#:~:text=is%20t...</a></p><p>To summarize:</p><p>In places where we process throughput, we generally stick a grouped queue and a threadpool that takes from it. The mechanics for this queue make it so that if there's one noisy neighbor, it can't hog all the threads.</p><p>There's more too (runbooks, rate limiting systems, buffers, isolated instances), but I thought this particular data structure was really fun to share.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711671" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zbiggistardust</span>
+        <span class="meta-time">2026/04/10 08:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">即时和凸有什么区别？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What's the difference between Instant and Convex?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712224" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想说：<p>我们都提供开箱即用的实时查询。我不是100%确定，但我认为Convex也建立了一个多租户数据库；所以他们可以很好地提供大量的免费项目。</p><p>我区分 Instant 的方式：</p><p>使用 Convex，您可以将查询编写为 Javascript 函数。这意味着您必须强制执行连接等操作。使用 Instant，您可以以声明方式编写查询。</p><p>截至目前，Convex 无法离线工作，您必须手动编写乐观更新。 Instant 可以离线运行，并提供开箱即用的乐观更新。</p><p>Convex 和 Instant 支持开箱即用的文件。但使用 Instant，您可以编写 CASCADE 删除规则，并且您还可以获得其他服务，例如状态和流。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would say:<p>We both offer a real-time queries out of the box. I am not 100% sure, I but think Convex also set up a multi-tenant database; so they can offer a good number of free projects well.</p><p>The way I would differentiate Instant:</p><p>With Convex you write your queries as Javascript functions. This means you have to do joins for example imperatively. With Instant, you can write queries declaratively.</p><p>As of today Convex doesn't work offline, and you have to write optimistic updates manually. Instant can run offline and comes with optimistic updates out of the box.</p><p>Both Convex and Instant support files out of the box. But with Instant you can write CASCADE delete rules, and you also get other services, like presence and streams.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712263" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">taoh</span>
+        <span class="meta-time">2026/04/10 09:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">恭喜您上线！ 4年的工作，确实是非凡的毅力。<p>同步引擎功能对我来说看起来非常有趣。目前市场上已有不少产品，但尚未占据主导地位。因此，如果这是您的主要优势，我希望首先看到更多本地构建的演示。</p><p>很好奇您是否考虑将引擎本身作为独立的基础设施进行运输。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Congratulations on your launch! 4 years of work is certainly remarkable perseverance.<p>The sync engine feature looks very interesting to me. There have been quite a few products available on the market today, but none has achieved a dominant share yet. So if this is your main strength, I'd like to see more demos built local first.</p><p>Curious if you considered shipping the engine itself as a standalone infra piece.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712345" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 09:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢。<p>&gt; 很好奇您是否考虑将引擎本身作为独立的基础设施进行运输。</p><p>我们正在考虑支持“自带 Postgres”之类的东西，这将允许人们选择只使用同步引擎部分。</p><p>现在我们专注于集成系统，因为我们真的想优化以在绿地项目上获得令人愉快的开发人员体验。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you.<p>&gt; Curious if you considered shipping the engine itself as a standalone infra piece.</p><p>We are thinking about supporting something like "Bring Your Own Postgres", which would allow folks to opt into just the sync engine piece.</p><p>Right now we focused on the integrated system, because we really wanted to optimize for a delightful developer experience on greenfield projects.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712505" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yoavshai</span>
+        <span class="meta-time">2026/04/10 09:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说（如果我错了，请纠正我，Instant 团队）最大的区别和尝试 Instant 的挫败感的主要来源是你没有后端。您将获得一个带有 RLS 和同步引擎的实时数据库。您无需运行业务逻辑。只要查询形状匹配，您就不必按名称编写查询并获得迁移架构的能力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For me (and please correct me if I'm wrong, Instant team) the largest difference and a major source of frustration in trying Instant is that you don't have a backend. You get a real-time database with RLS and a sync engine. You don't get to run business logic. You don't get to write queries by name and gain the ability to migrate the schema as long as the query shapes match.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712464" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 09:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您所说的后端指的是函数，那么您是对的，我们还不支持此功能！我们为您提供了一个 Admin SDK，您可以在 NextJS 等框架中运行，或者在 CF Worker 等系统内运行。我们肯定会考虑将其作为一等公民。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If by backend you mean functions, you are right, we don't support this just yet! We give you an Admin SDK, which you can run in frameworks like NextJS, or inside systems like CF workers. We are definitely thinking about bringing this as a first-class citizen.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712498" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ladon86</span>
+        <span class="meta-time">2026/04/10 06:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来很不错！我将尝试一下原型。<p>很想查看 /docs 但目前是 404。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks very nice! I'll give it a spin for prototypes.<p>Would love to check out /docs but it's currently a 404.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710979" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 06:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">文档现在应该可以工作了！如果其他人有问题，请告诉我们！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Docs should be working now! If anyone else has issues please let us know!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711123" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">singpolyma3</span>
+        <span class="meta-time">2026/04/10 07:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来像是 SUPABASE 的竞争对手？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems like a supabase competitor?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711851" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stopachka</span>
+        <span class="meta-time">2026/04/10 07:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个公平的说法！我想说我们与 SUPABASE 类似，因为我们提供了一个关系后端。我们在两个方面有所不同：<p>1. Supabase运行在虚拟机上，因此仅支持2个免费项目。我们将后端构建为多租户，因此我们可以为您提供无限的免费项目。</p><p>2. Supabase不支持离线模式或乐观更新。 Instant 为您提供了一个同步引擎。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's a fair statement! I would say we are similar to supabase in that we offer a relational backend. We are different in two ways:<p>1. Supabase runs on VMs, so only supports 2 free projects. We built the backend to be multi-tenant, so we can give you unlimited free projects.</p><p>2. Supabase doesn't support offline mode or optimistic updates. Instant gives you a sync engine which does.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711866" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">truetraveller</span>
+        <span class="meta-time">2026/04/10 08:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">麋鹿来了，恭喜！这是真正的“firebase 替代品”，而不是 Supabase。 Supabase 很好，但它只是托管 Postgres + 用户登录。那些问“为什么我需要这个”的人并没有意识到使用用户权限进行可扩展数据存储有多么困难。如果好的话绝对会推荐这个。在这个领域工作了大约 7 年，并且还制作了一个高性能的实时数据库。会直接联系你们。为了每个人的利益而担心的一些问题：<p>1) 定价透明度：这可以增强信心。需要确切地知道我为额外的出口/操作（读/写）支付的费用。 “无限”对于提供商（您）来说是不可持续的。例如，Firestore 具有详细的定价，使他们能够可持续扩展。看 <a href="https://cloud.google.com/firestore/pricing" target="_blank" rel="noopener noreferrer">https://cloud.google.com/firestore/pricing</a>。</p><p>2）限制透明度：请求/秒、最大属性、最大值长度等。查询非本地非索引数据（例如通过服务器端调用）怎么样，这对你们来说成本很高。那么，极限是多少呢？</p><p>3）总体上文档/示例中的代码更简单。目前，它们还不错，但也不是很好。例如，将到处使用的“i”更改为“inst”或“idb”。假设开发者是个菜鸟！</p><p>4) 更改所使用的简化/术语。这可能是最重要但也是最难的事情。在内部，保持相同的三重结构。但开发人员只关心表/键/值。或者表+行。命名空间/实体令人困惑。另外，要保持一致/清晰。例如：“命名空间相当于关系数据库中的“表””..也许您的意思是“命名空间只是表/实体的列表”..略有不同，但我认为更清晰？ “属性是与命名空间关联的属性”...我虽然属性与实体关联？请记住，我对 InstantDB 完全陌生，因此需要更多地研究架构。</p><p>5) 大幅简化文档。并添加 API REFERENCE （非常重要）。现在，您拥有：教程、示例、食谱、文档、论文。这些本质上都是“文档”。</p><p>6) 简化“关于”部分。应该是 1/10 大小。现在，它就像文档的水果沙拉，并重申其功能/优点。相反，放上两位创始人的照片。也许是投资者名单。你办公室的照片？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Moose here, congrats! This is the real "firebase alternative", not Supabase. Supabase is good, but it's just hosted Postgres + user login. People who are asking "why would I need this" don't get how difficult scalable data storage is with user permissions. Would absolutely recommend this if it's good. Been in this space for ~7 years, and made a high-perf realtime DB as well. Will contact you guys directly. Some concerns for everyone's benefit:<p>1) Transparency on pricing: This builds confidence. Need to know exactly what I pay for additional egress/ops (read/write). "unlimited" is not sustainable for the provider (you). For example, Firestore has detailed pricing that makes scaling sustainable for them. see <a href="https://cloud.google.com/firestore/pricing" target="_blank" rel="noopener noreferrer">https://cloud.google.com/firestore/pricing</a>.</p><p>2) Transparency on limits: Req/s, max atrributes, max value length, etc. What about querying non-local non-indexed data (e.g. via server-side call), that's costly for you guys. So, what's the limit?</p><p>3) Simpler code in the docs/examples overall. Currently, they're not bad, but not great. For example, change the "i" used everywhere to "inst" or "idb". Assume dev is a noob!</p><p>4) Change simplify/terminology used. This is probably the most important, but hardest thing. Internally, keep the same triple structure. But dev just cares about tables/key/val. Or tables+rows. Namespaces/entities are confusing. Also, be consistent/clear. For example: "Namespaces are equivalent to "tables" in relational databases"..Perhaps you meant "namespaces are just a list of tables/entities"..slighly different, but far clearer I think? "Attributes are properties associated with namespaces"...I though attributes are associated with entities? Please keep in mind, I am completely new to InstantDB, so need to study the architecture more.</p><p>5) Simplify docs BIG TIME. And add an API REFERENCE (super important). Right now, you have: Tutorials, Examples, Recipes, Docs, Essays. These are all essentially "docs".</p><p>6) Simplify the "About" section. Should be 1/10th the size. Right now, it's like a fruit salad of docs, and re-iterating the features/benefits. Instead, put pics of both founders. Maybe investor list. Pics of your office?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712185" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 10:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您对穆斯的深刻反馈！<p>同意有很多简化的机会。这个空间有很多背景。</p><p>在谈论为什么同步时，我们提到乐观更新、多人游戏和离线模式。为了提高同步的复杂性，我们讨论 websockets、乐观队列和 IndexedDB。为了解释我们的工作原理，我们讨论三元组、数据记录和 CTE。</p><p>我们试图提供一个干净的界面，这样开发人员就不需要担心这种复杂性，但是，是的，这是一个持续的迭代，使理解变得更容易和透明！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you for the deep feedback Moose!<p>Agreed lots of opportunity for simplification. There’s so much context in this space.</p><p>When talking about why sync we mention optimistic updates, multiplayer, and offline mode. To motivate the complexity of sync we talk about websockets, optimistic queues, and IndexedDB. To explain how we work we talk about triples, datalog, and CTEs.</p><p>We try to give a clean interface so devs don’t need to worry about this complexity, but yea it’s been an ongoing iteration to make both easier and transparent to understand!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713018" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">minantom</span>
+        <span class="meta-time">2026/04/10 06:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这比 vercel 好在哪里？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how is this better than vercel?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711280" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 06:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">斯托帕在这里回答了这个问题 <a href="https://news.ycombinator.com/item?id=47711254" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47711254</a><p>但将 Instant 与 Vercel 搭配起来效果也很棒！我们在此处提供了有关如何使用 Instant 构建应用程序并将其部署到 vercel 的教程</p><p><a href="https://www.instantdb.com/tutorial" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/tutorial</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Stopa answers this here <a href="https://news.ycombinator.com/item?id=47711254" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47711254</a><p>But pairing Instant with Vercel works great too! We have a tutorial on how you can build an app with Instant and deploy it to vercel here</p><p><a href="https://www.instantdb.com/tutorial" target="_blank" rel="noopener noreferrer">https://www.instantdb.com/tutorial</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711384" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rylan-talerico</span>
+        <span class="meta-time">2026/04/10 07:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">恭喜！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">congrats!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711792" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nezaj</span>
+        <span class="meta-time">2026/04/10 09:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712678" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sanghyunp</span>
+        <span class="meta-time">2026/04/10 08:21</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712045" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tayk47999</span>
+        <span class="meta-time">2026/04/10 08:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

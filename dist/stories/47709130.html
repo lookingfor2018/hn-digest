@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>逆向工程 Gemini 的 SynthID 检测 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>逆向工程 Gemini 的 SynthID 检测</h1>
+      <p class="subtitle">Reverse engineering Gemini&#39;s SynthID detection</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 _tk_</span>
+        <span>分数 117</span>
+        <span>评论 43</span>
+        <span>2026/04/10 04:10</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47709130" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/aloshdenny/reverse-SynthID" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>通过光谱分析发现、检测并彻底删除 Google 的 AI 水印</li><li>概述 该项目对 Google 的 SynthID 水印系统进行逆向工程 - 将隐形水印嵌入到 Google Gemini 生成的每张图像中。仅使用信号处理和频谱分析（无法访问专有编码器/解码器），我们：</li><li>发现了水印与分辨率相关的载波频率结构 构建了一个能够以 90% 准确度识别 SynthID 水印的检测器 开发了多分辨率频谱旁路 (V3)，可在任何图像分辨率下实现 75% 的载波能量下降、91% 的相位相干性下降和 43+ dB PSNR</li><li>🚨 招募贡献者：帮助扩展代码本 我们正在积极收集 Nano Banana Pro 生成的纯黑和纯白图像，以改进多分辨率水印提取。如果您可以生成这些：</li><li>分辨率：任意（种类越高 = 越好） 内容：全黑 (#000000) 或全白 (#FFFFFF) 来源：仅 Nano Banana Pro 输出</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Discovering, detecting, and surgically removing Google&#39;s AI watermark through spectral analysis</li><li>Overview This project reverse-engineers Google&#39;s SynthID watermarking system - the invisible watermark embedded into every image generated by Google Gemini. Using only signal processing and spectral analysis (no access to the proprietary encoder/decoder), we:</li><li>Discovered the watermark&#39;s resolution-dependent carrier frequency structure Built a detector that identifies SynthID watermarks with 90% accuracy Developed a multi-resolution spectral bypass (V3) that achieves 75% carrier energy drop, 91% phase coherence drop, and 43+ dB PSNR on any image resolution</li><li>🚨 Contributors Wanted: Help Expand the Codebook We&#39;re actively collecting pure black and pure white images generated by Nano Banana Pro to improve multi-resolution watermark extraction. If you can generate these:</li><li>Resolution: any (higher variety = better) Content: fully black (#000000) or fully white (#FFFFFF) Source: Nano Banana Pro outputs only</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">coppsilgold</span>
+        <span class="meta-time">2026/04/10 06:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">将无法检测到的 1 位水印插入到数百万像素图像中并不是特别困难。<p>如果你假设谷歌有能力，他们可能有两个不同的水印。他们为一个草率的人提供在线预言机，并为自己保留一个（以及执法请求）。</p><p>另外，考虑到我们在这里处理的是谷歌，他们可能会保存生成的每一张图像（或者至少是它的神经散列），并将其与您在数据库中的帐户关联起来。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Inserting an undetectable 1-bit watermark into a multi megapixel image is not particularly difficult.<p>If you assume competence from Google, they probably have two different watermarks. A sloppy one they offer an online oracle for and one they keep in reserve for themselves (and law enforcement requests).</p><p>Also given that it's Google we are dealing with here, they probably save every single image generated (or at least its neural hash) and tie it to your account in their database.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711070" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Tiberium</span>
+        <span class="meta-time">2026/04/10 06:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看起来像是一个质量非常低的人工智能辅助研究库，它甚至没有针对谷歌自己的 SynthID 检测器进行正确的测试。对网络请求进行逆向工程以能够在没有浏览器实例或 Gemini 访问的情况下进行 SynthID 检测并不困难（例如，在一些 LLM 帮助下​​），然后您就会得到一个基本事实。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems like a very low-quality AI-assisted research repo, and it doesn't even properly test against Google's own SynthID detector. It's not hard at all (with some LLM assistance, for example) to reverse-engineer network requests to be able to do SynthID detection without a browser instance or Gemini access, and then you'd have a ground truth.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710958" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ddtaylor</span>
+        <span class="meta-time">2026/04/10 06:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 HN 上读到了很多评论，这些评论说有些事情并不难，但没有提供他们自己的 POC 或他们所了解的研究的链接。<p>我还读到了很多关于 HN 的评论，这些评论首先攻击信息来源，比如说这是人工智能辅助的，而不是工作的实际优点。</p><p>HN 社区变得脾气暴躁，并使用人工智能工具作为理由。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I read a lot of comments on HN that say something is not hard, yet don't provide a POC of their own or link to research they have knowledge of.<p>I also read a lot of comments on HN that start by attacking the source of the information, such as saying it was AI assisted, instead of the actual merits of the work.</p><p>The HN community is becoming curmudgeonly and using AI tooling as the justification.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711193" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">love2read</span>
+        <span class="meta-time">2026/04/10 07:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">成为？在大多数帖子中，即使顺便提到使用人工智能工具，也有很多人扬起鼻子谈论他们有多么讨厌人工智能的使用</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">becoming? under most posts that even in passing mention using AI tools there are multiple people raising their noses talking about how much they hate AI use</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711685" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pixl97</span>
+        <span class="meta-time">2026/04/10 08:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，就是那些一直在扼杀技术论坛并关闭堆栈溢出帖子的人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Eh, just the same people that have been killing tech forums and closing posts on stack overflow for like ever.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711888" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">armanj</span>
+        <span class="meta-time">2026/04/10 05:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有点讽刺的是，你可以清楚地看到克劳德的迹象，因为它在自述文件中显示了未对齐的桌墙</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">kinda ironic you can clearly see signs of Claude, as it shows misaligning table walls in the readme doc</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710193" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rafram</span>
+        <span class="meta-time">2026/04/10 05:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">带括号、逗号分隔的列表，没有“and”，这是一个更强有力的说明。克劳德喜欢那些。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Parenthesized, comma-separated lists with no “and” is an even stronger tell. Claude loves those.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TacticalCoder</span>
+        <span class="meta-time">2026/04/10 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 有点讽刺的是，你可以清楚地看到克劳德的迹象，因为它在自述文件中显示了未对齐的桌墙<p>这真是一个巨大的 clusterfuck...他们使用不同长度的 Unicode 字符来模仿 ASCII 表，有时还会出现差一错误。但该模型（不是 Claude，而是其下面的模型）能够生成 ASCII 表。</p><p>P.S：我看到了未来......今年是 2037 年，我们的 Unicode 表仍未正确对齐。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; kinda ironic you can clearly see signs of Claude, as it shows misaligning table walls in the readme doc<p>This one is such a gigantic clusterfuck... They're mimicking ASCII tables using Unicode chars of varying length and, at times, there's also an off-by-one error. But the model (not Claude, but the model underneath it) is capable of generating ASCII tables.</p><p>P.S: I saw the future... The year is 2037 and we've got Unicode tables still not properly aligned.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710757" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dgellow</span>
+        <span class="meta-time">2026/04/10 06:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是，只要阅读自述文件内容，很明显这是克劳德</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean, just reading the readme content it is pretty obvious it is Claude</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">huflungdung</span>
+        <span class="meta-time">2026/04/10 06:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710906" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">khernandezrt</span>
+        <span class="meta-time">2026/04/10 05:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，我知道最终有人会这样做，但为什么我们要故意删除检测图像是否是人工智能生成的唯一方法之一......？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ok i get that eventually someone was gonna do this but why would we want to purposely remove one of the only ways of detecting if an image is ai generated or not...?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710295" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">akersten</span>
+        <span class="meta-time">2026/04/10 06:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从根本上来说，这是一个模糊信号，人们不应该依赖它。普通大众不理解布尔逻辑（哦，所以 SynthID 不存在，因此该图像是真实的）。人工智能水印越早面临其应有的滑稽消亡越好。<p>还有一点关于人工智能并不特殊，自古以来我们就没有添加或需要隐形水印来以其他方式欺骗性地操纵媒体，但这不是一个实际的争论，而是一个哲学的争论。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fundamentally it's a fuzzy signal and people shouldn't rely on it. The general public does not understand Boolean logic (oh, so the SynthID is not there, therefore this image is real). The sooner AI watermarking faces its deserved farcical demise the better.<p>Also something about how AI is not special and we haven't added or needed invisible watermarks for other ways media can be manipulated deceptively since time immemorial, but that's less of a practical argument and more of a philosophical one.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711404" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">StarlaAtNight</span>
+        <span class="meta-time">2026/04/10 07:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对这个话题不太了解，而且你采取了强烈的“反对”立场。很想知道为什么你认为它应该如此消亡</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m not very well read on the topic and you seen to take a strong “con” stance. Curious to hear why you think it deserves such a demise</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711614" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 09:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">love2read</span>
+        <span class="meta-time">2026/04/10 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人们认为，只要有办法证明图像是人工智能，他们对错误信息的担忧就可以解决。最好承认，无论你看什么，人们都会试图欺骗你，即使他们的内容没有像 SynthID 那样明显的指示符。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">People think that just because they have a way to prove that an image is AI, their worries of misinformation are solved. Better to acknowledge that wherever you look people will be trying to deceive you even if their content won't have as obvious an indicator as SynthID.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lokar</span>
+        <span class="meta-time">2026/04/10 05:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它总是可供某些人使用，但并不是每个人都知道或相信这一点。   现在他们会的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It was always going to be available to some people, but not everyone would know or believe that.   Now they will.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710377" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pixl97</span>
+        <span class="meta-time">2026/04/10 08:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就像科技世界中的所有其他事物一样。他会的，这就是为什么人工智能最终会杀死我们。<p>如果一个系统依赖于地球上每个人不做某件特定的事情或者系统崩溃，那么预计该系统会很快崩溃。</p><p>这是软件中特别常见的比喻。如果有人能够制作出一些你认为不好的软件，那么这种情况就会发生。也是软件。一个人或一百万人都可以使用它并没有什么区别。软件存在并且可以无限次复制的那一刻。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Much like every other thing in the tech world. He'll, it's why AI will kill us off eventually.<p>If a system depends on every person on the planet not doing one particular thing or the system breaks, expect the system to break quickly.</p><p>This is an especially common trope in software. If someone can make software that does something you consider bad, it will happen. Also it's software. There is no difference between it being available to one person or a million. The moment the software exists and can be copied an unbound number of times.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711932" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subscribed</span>
+        <span class="meta-time">2026/04/10 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它更有可能被用来取消作者的匿名化。<p>所以默认情况下是“否”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">More likely than not it would be used to deanonymise the author.<p>So it's a "no" by default.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711091" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">raincole</span>
+        <span class="meta-time">2026/04/10 05:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">呃...从第一天开始你就可以很容易地做到这一点。只需使用低降噪强度的稳定扩散即可。这个存储库提供了一种破坏性更小的方式[0]，但是很容易隐藏图像是由 Nano Banana 生成的。<p>[0]：如果它做了它声称要做的事情。我没有核实。考虑到自述文件中人工智能的写作量，我的预感是这并不比简单的去噪效果更好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Uh... you can do this pretty easily since day 1. Just use Stable Diffusion with a low denoising strength. This repo presents an even less destructive way[0], but it has always been very easy to hide that an image is generated by Nano Banana.<p>[0]: if it does what it claims to do. I didn't verify. Given how much AI writing in the README my hunch is that this doesn't work better than simple denoising.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710381" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 05:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710362" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">M4v3R</span>
+        <span class="meta-time">2026/04/10 05:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SynthID 在某些世代中可见（有很多边缘或文本的区域），我想知道这是否会让它们看起来更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SynthID is visible in some generations (areas with a lot of edges, or text), I wonder if this would make them look better.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">doctorpangloss</span>
+        <span class="meta-time">2026/04/10 06:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好的...这测试了它自己针对自己的检测器删除水印的能力。它不会针对 Gemini 的 SynthID 应用程序进行测试。所以它没有任何作用...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Okay... this tests its own ability to remove the watermark against its own detector. It doesn't test against Gemini's SynthID app. So it does nothing...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kelsey98765431</span>
+        <span class="meta-time">2026/04/10 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你缩小然后放大它会删除水印</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">if you downscale then upscale it removes the watermark</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710153" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">m00dy</span>
+        <span class="meta-time">2026/04/10 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不像看起来那么难 <a href="https://deepwalker.xyz/blog/bypassing-synthid-in-gemini-photos" target="_blank" rel="noopener noreferrer">https://deepwalker.xyz/blog/bypassing-synthid-in-gemini-phot...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not really hard as it looks <a href="https://deepwalker.xyz/blog/bypassing-synthid-in-gemini-photos" target="_blank" rel="noopener noreferrer">https://deepwalker.xyz/blog/bypassing-synthid-in-gemini-phot...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711984" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sodacanner</span>
+        <span class="meta-time">2026/04/10 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白所有的绞痛。如果从人工智能生成的图像中删除 SynthID 这么容易，那么它首先就不是一个好的解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't understand all the handwringing. If it's this easy to remove SynthID from an AI-generated image then it wasn't a good solution in the first place.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710669" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">raincole</span>
+        <span class="meta-time">2026/04/10 05:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有 <i>解决方案</i>。我不知道为什么人们讨论这个话题，好像有一个技术解决方案一样。仿佛像素中隐藏着仙女或灵魂，帮助我们分辨什么是人工智能生成的，什么不是。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is no <i>solution</i>. I don't know why people discuss this subject as if there is a technical solution. As if there are fairies or souls hidden in the pixels that help us tell what is AI generated and what is not.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">DonsDiscountGas</span>
+        <span class="meta-time">2026/04/10 06:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你想制作人工智能生成的图像，但又不想让其他人知道它是人工智能，最明显的解决方案就是不使用 Gemini。 Synth ID 带有水印。它只会对优秀的演员有用，他们想要人工智能生成的图像，并且不会试图隐藏它是人工智能生成的事实。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you want to make an AI generated image but don't want other people to know that it's AI, the most obvious solution is to not use Gemini. Synth ID is watermarking. It's only ever going to be useful to good actors, who want an AI generated image and aren't trying to hide the fact that it's AI generated.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710855" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dummydummy1234</span>
+        <span class="meta-time">2026/04/10 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">永远不要低估人们的懒惰。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Never underestimate that people are lazy.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711225" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sodacanner</span>
+        <span class="meta-time">2026/04/10 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然，像这样的事情可以帮助我们认识到 SynthID 根本不是一个解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure, and things like this help drive home that SynthID wasn't a solution at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710764" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">levocardia</span>
+        <span class="meta-time">2026/04/10 06:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然有解决办法，只是你看问题的方式不对而已。使用拍摄设备（例如相机）的签名密钥来证明非 AI 图像未被更改。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sure there is a solution, you are just looking at it the wrong way. Make non-AI images provably unaltered with signed keys from the device (e.g. the camera) that took it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710991" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jfim</span>
+        <span class="meta-time">2026/04/10 06:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但这几乎是不可能的。<p>一些艺术家使用的一种工作流程是，他们用墨水在纸上绘画，扫描，然后进行数字着色。没有什么可以阻止人们使用生成式人工智能生成线条艺术、打印、扫描和着色。</p><p>如果有人只是将某些内容复制粘贴到 Photoshop 中或导入图层怎么办？这就是您对将多个图像混合在一起的合成所做的事情。可以将屏幕截图复制粘贴到多层合成中吗？还是禁止这样做并污染最终图像？</p><p>那么多程序工作流程又如何呢？假设我导入一张照片，在 DxO 中对其进行降噪，在affinity 照片中进行修饰，使用 image magick 以编程方式调整大小，并使用 pngcrush 对其进行优化，最后会留下哪些元数据？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's pretty much impossible though.<p>One workflow that some artists use is that they draw with ink on paper, scan, and then digitally color. Nothing prevents someone from generating line art using generative AI, printing it, scanning it, and coloring it.</p><p>And what if someone just copy pastes something into Photoshop or imports layers? That's what you'd do for composites that mix multiple images together. Can one copy paste screenshots into a multi layer composition or is that verboten and taints the final image?</p><p>And what about multi program workflows? Let's say I import a photo, denoise it in DxO, retouch in affinity photo, resize programmatically using image magick, and use pngcrush to optimize it, what metadata is left at the end?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711370" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">raincole</span>
+        <span class="meta-time">2026/04/10 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果前提是大家都会 <i>只是</i> 同意相同的协议，我有一个更牢不可破的解决方案：每个图像都必须在（声称）创建时上传到区块链。否则就是人工智能。<p>如果只是每个人 <i>只是</i> 同意我的观点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If the premise is that everyone would <i>just</i> agree on the same protocol, I have an even more unbreakable solution: every image has to be upload to a blockchain the moment it is (claimed to be) created. Otherwise it's AI.<p>If only everyone <i>just</i> agrees with me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711329" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pixl97</span>
+        <span class="meta-time">2026/04/10 08:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">接下来是向政府注册您的相机，以确保您不会用它做“坏”事。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Next comes registration your camera with the government to ensure you're not doing "bad" things with it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711954" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Diggsey</span>
+        <span class="meta-time">2026/04/10 06:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其工作时间约为 5 分钟，直到有人泄露制造商的私钥或从设备中提取私钥......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Which works for about 5 minutes until someone leaks a manufacturer's private key or extracts it from a device...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711035" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">IncreasePosts</span>
+        <span class="meta-time">2026/04/10 06:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你认为需要多少分钟才​​能有人找到破解方法？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How many minutes do you think it would take before someone figured out how to crack that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711059" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">subscribed</span>
+        <span class="meta-time">2026/04/10 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 Pixel 和 iPhone 上这是不可能的，因为它们实际上拥有既可以保存密钥又可以签名/验证图像的安全硬件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On Pixels and iPhones it would be impossible since they have actually secure hardware that could both hold the keys and sign/verify the image.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711174" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">IncreasePosts</span>
+        <span class="meta-time">2026/04/10 06:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">摄像头模块位于安全区域之外，这意味着它需要发送数据才能进行签名。手机如何知道它正在从摄像头模块获取合法数据，或者其他人刚刚传入的数据？此外，您只需拍摄在正确的光照条件下人工智能生成的东西的照片，就可能获得相当高质量的图像。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The camera module sits outside the secure area, meaning it would need to send data in to be signed. How does the phone know that it's getting legitimate data from the camera module, or data someone else is just piping in? Also, you could probably get a fairly high quality image by just taking a photo of something AI generated in the right lighting conditions.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711253" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rustyhancock</span>
+        <span class="meta-time">2026/04/10 05:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。这种项目需要积极的红队合作，它会带来更好的产品，我们在这个领域需要优秀的产品。<p>这个项目证明了红队的做法还不够好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes. This kind of project needs aggressive red teaming, it leads to better products and we need excellent products in this space.<p>This project proves what red teaming was in place wasn't good enough.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710698" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">techpulselab</span>
+        <span class="meta-time">2026/04/10 08:15</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">matthias_m_dev</span>
+        <span class="meta-time">2026/04/10 08:07</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711938" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 05:09</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710148" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andrewmcwatters</span>
+        <span class="meta-time">2026/04/10 04:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我们正在积极收集 Nano Banana Pro 生成的纯黑和纯白图像，以改进多分辨率水印提取。<p>哦嘿，整洁。我不久前提到过这种提取 SynthID 的具体方法。[1]</p><p>很高兴看到有人接受它。</p><p>[1]： <a href="https://news.ycombinator.com/item?id=47169146#47169767" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47169146#47169767</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; We're actively collecting pure black and pure white images generated by Nano Banana Pro to improve multi-resolution watermark extraction.<p>Oh hey, neat. I mentioned this specific method of extracting SynthID a while back.[1]</p><p>Glad to see someone take it up.</p><p>[1]: <a href="https://news.ycombinator.com/item?id=47169146#47169767" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47169146#47169767</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709868" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">raphman</span>
+        <span class="meta-time">2026/04/10 05:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">FWIW，我在二月份让 Nano Banana 创建了纯白色/黑色图像，并且其中没有可识别的水印（所有像素实际上都是 #ffffff / #000000 IIRC）。<p>Meta：你的评论被标记为[已死]，就像我最近几天看到的其他一些建设性评论一样。不知道为什么。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">FWIW, I had Nano Banana create pure white/black images in February, and there was no recognizable watermark in them (all pixels really were #ffffff / #000000 IIRC).<p>Meta: your comment was marked [dead], like a few other constructive comments I saw in recent days. Not sure why.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710130" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pattilupone</span>
+        <span class="meta-time">2026/04/10 10:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我刚才通过 API 使用 Nano Banana 2 进行了尝试，它对白色和黑色图像进行了内容过滤。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tried it with Nano Banana 2 through the API just now, and it was content filtering me on both white and black images.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712747" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andrewmcwatters</span>
+        <span class="meta-time">2026/04/10 05:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我怀疑他们针对这些特定情况剥离了 SynthID，以防止隐写术的泄露。<p>感谢您指出这一点，但该帐户已被禁止。不过还是谢谢你的担保！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I suspect they strip the SynthID for these specific cases to prevent exfiltration of the steganography.<p>I appreciate you pointing it out, but this account is banned. Thank you for vouching though!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710493" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">refulgentis</span>
+        <span class="meta-time">2026/04/10 04:55</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709935" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jonshariat</span>
+        <span class="meta-time">2026/04/10 05:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意。这不是朋克，这只是帮助坏人。社会需要知道哪些内容是人工智能生成的，哪些不是。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed. This isn't punk this just helps the bad guys. Society needs to know what content is AI generated and what is not.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">recursive</span>
+        <span class="meta-time">2026/04/10 05:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这永远不会是一个可靠的方法。  基本上就是邪恶的一点。  只有当每个人都真诚地努力遵守公约时，它才有效。  但坏人不会这样做。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This was never going to be a reliable way to do it.  It's basically the evil bit .  It only works for as long as everyone is making a good-faith effort to follow the convention.  But the bad guys do not do that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SR2Z</span>
+        <span class="meta-time">2026/04/10 05:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果真是这样，社会难免要失望。<p>已经有一千万个人工智能图像生成器，其中绝大多数没有在其输出中添加水印。  谷歌自动插入它们很好，但最终这种删除它们的工具将不可避免地广泛使用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If that's the case, society will inevitably be disappointed.<p>There are already ten million AI image generators, the overwhelming majority of which do not watermark their outputs.  Google auto-inserting them is nice, but ultimately this kind of tool to remove them will inevitably be widespread.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710292" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/10 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确实不需要这样的能力。它也不需要有能力知道人类生成了什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It really doesn't need such capability. Nor does it need the capability to know what human generated it either.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710639" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 05:59</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710775" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>增强顶点块下降的 WebGPU 实现 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>增强顶点块下降的 WebGPU 实现</h1>
+      <p class="subtitle">A WebGPU implementation of Augmented Vertex Block Descent</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 juretriglav</span>
+        <span>分数 127</span>
+        <span>评论 15</span>
+        <span>2026/04/09 20:01</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47702541" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/jure/webphysics" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>现场演示</li><li>网络物理预告片.mp4</li><li>现场演示</li><li>该项目是一个实验性 WebGPU 刚体/软体物理原型，以 AVBD 式（Giles 等人的增强顶点块下降（Augmented Vertex Block Descent）（2025））解算器为中心。我❤致力于高级的网络图形开源实验，所以如果你想看到更多这样的项目，请支持我的工作。️ 设置 npm install npm run dev 为生产构建：npm run build 注意：这还不是即插即用模块，浏览器支持（目前仅限 Chrome）是有限的，它是一个初步的概念证明。 AVBD 管道 当前的刚体管道遵循 AVBD 论文中算法 1 的结构，具有宽相位、窄相位、热启动接触状态、彩色体求解、对偶更新和最终速度重建。参考论文：Augmented Vertex Block Descent，作者：Giles 等人。 (2025)</li><li>从当前状态 x^t 进行碰撞检测 本文在解算器迭代开始之前，从当前位置开始每个时间步进行碰撞检测。在此代码库中，从 src/physicals/PhysicsEngine.ts 中的主要子步骤编排开始，然后流入广泛阶段和狭窄阶段。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Live Demo</li><li>webphysics-teaser.mp4</li><li>Live Demo</li><li>This project is an experimental WebGPU rigid-body / soft-body physics prototype centered on an AVBD-style (Augmented Vertex Block Descent by Giles et al. (2025)) solver. I ❤ working on advanced¹ web graphics² open source experiments³, so if you&#39;d like to see more projects like these, please support my work.️ Setup npm install npm run dev Build for production: npm run build Note: This is not a plug-and-play module yet and browser support (Chrome only for now) is limited, it&#39;s an initial proof of concept. AVBD Pipeline The current rigid-body pipeline follows the structure of Algorithm 1 from the AVBD paper, with broad phase, narrow phase, warm-started contact state, colored body solves, dual updates, and final velocity reconstruction. Reference paper: Augmented Vertex Block Descent by Giles et al. (2025)</li><li>Collision detection from the current state x^t The paper starts each time step with collision detection from the current positions, before the solver iterations begin. In this codebase that starts in the main substep orchestration in src/physics/PhysicsEngine.ts, then flows into broad phase and narrow phase.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zokier</span>
+        <span class="meta-time">2026/04/10 00:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否认为“Offset Geometric Contact”论文以某种方式适合这个项目？ <a href="https://graphics.cs.utah.edu/research/projects/ogc/" target="_blank" rel="noopener noreferrer">https://graphics.cs.utah.edu/research/projects/ogc/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you see "Offset Geometric Contact" paper fitting into this project somehow? <a href="https://graphics.cs.utah.edu/research/projects/ogc/" target="_blank" rel="noopener noreferrer">https://graphics.cs.utah.edu/research/projects/ogc/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705460" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">juretriglav</span>
+        <span class="meta-time">2026/04/10 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际上我也有一个实现，因为我对扭曲布料的例子很着迷，但需要弄清楚如何最好地结合它，或者在独立的实验中是否更好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I actually have an implementation of that too, since I was fascinated by the twisting cloth example, but need to figure out how best to incorporate it, or if it’s better in a standalone experiment.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">spencer9714</span>
+        <span class="meta-time">2026/04/10 07:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AVBD 实施方面的出色工作！我正在构建一个去中心化的 GPU 计算平台（使用 Node.js/WebGPU）。由于求解器使用“着色”方法来实现并行性，因此如果工作线程/选项卡在求解过程中关闭，如何处理计算抢占或状态恢复？对于分布式队列来说，有效地序列化求解器状态是否可行？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great work on the AVBD implementation! I’m building a decentralized GPU compute platform (using Node.js/WebGPU). Since the solver uses a 'coloring' approach for parallelism, how do you handle compute preemption or state recovery if a worker/tab is closed mid-solve? Is it feasible to serialize the solver state efficiently for a distributed queue?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711536" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sho_hn</span>
+        <span class="meta-time">2026/04/10 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为一名应用程序开发人员，我对网络 3D 的现状感到非常沮丧。我希望我们网络上只有 Vulkan...<p>现在，您的选择基本上是拥有一个可以限制为 WebGL2 的 GLES 渲染器（因此没有计算着色器等以及其他使桌面 OpenGL 可以接受编写现代渲染器的东西），或者必须自己抽象 Vulkan/WebGPU，它们相似但不同，足以大大增加您的代码复杂性。</p><p>您可以使用诸如 wgpu 和 bgfx 之类的抽象，当然您可以只使用游戏引擎中间件并为您完成所有工作，但遗憾的是，总体而言，渲染器无法“编写一次，随处运行”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm super frustrated by the state of 3D on web right now as an app developer. I wish we just had Vulkan on the web ...<p>Right now your options are basically having a GLES renderer that you can restrict to WebGL2 (so no compute shaders, etc. and other things that make desktop OpenGL acceptable for writing a modern renderer) or having to abstract over Vulkan/WebGPU yourself, which are similar but different enough to increase your code complexity considerably.</p><p>There's abstractions like wgpu and bgfx you can commit to, and of course you can just use game engine middleware and have it all done for you, but overall things fall short of just being able to "write once, run anywhere" a renderer, sadly.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">modeless</span>
+        <span class="meta-time">2026/04/10 03:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 您的选择基本上是拥有一个可以限制为 WebGL2 的 GLES 渲染器（因此没有计算着色器等以及其他使桌面 OpenGL 可以接受编写现代渲染器的东西）或必须自己抽象 Vulkan/WebGPU<p>我不明白这个投诉。使用 WebGPU 比使用 GLES 更糟糕的是什么？看起来是一个严格的改进。您可以在任何地方使用 WebGPU，无需通过 Vulkan 进行“抽象”。如果您正在谈论在网络之外使用它，您只需选择 wgpu 或 Dawn 作为您的实现，它与您在浏览器中获得的实现相同 API ，甚至相同的实现。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; your options are basically having a GLES renderer that you can restrict to WebGL2 (so no compute shaders, etc. and other things that make desktop OpenGL acceptable for writing a modern renderer) or having to abstract over Vulkan/WebGPU yourself<p>I don't understand this complaint. What's worse about using WebGPU over using GLES? Seems like a strict improvement. You can use WebGPU anywhere, you're not required to "abstract" over Vulkan. If you're talking about using it outside of the web, you just choose wgpu or Dawn as your implementation, it's the same API and even the same implementation as you'd get in a browser.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708426" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mellinoe</span>
+        <span class="meta-time">2026/04/10 04:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">除了 WebGPU 与现代 Vulkan + 扩展相比很糟糕这一事实之外，没有什么可以阻止你只使用 webgpu，即使是在纯本机项目中，也没有进一步的抽象</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Other than the fact that WebGPU sucks compared to modern Vulkan + extensions, there’s nothing stopping you from just using webgpu even in a native-only project, with no further abstraction</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709537" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adfm</span>
+        <span class="meta-time">2026/04/10 03:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是什么阻碍了它？有什么办法可以让它不那么令人沮丧吗？是什么让“硬件加速网络”对开发人员来说变得轻而易举？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What's holding it back? Is there something to be done to make it less frustrating? What would make "The Hardware-Accelerated Web" a breeze to use for developers?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708450" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Ciantic</span>
+        <span class="meta-time">2026/04/09 22:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AVBD也有这个页面 <a href="https://graphics.cs.utah.edu/research/projects/avbd/" target="_blank" rel="noopener noreferrer">https://graphics.cs.utah.edu/research/projects/avbd/</a> 我不知道这个实现与他们正在演示的实现有何不同，但 Jure Triglav 的这个实现对我来说感觉更流畅。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AVBD also has this page <a href="https://graphics.cs.utah.edu/research/projects/avbd/" target="_blank" rel="noopener noreferrer">https://graphics.cs.utah.edu/research/projects/avbd/</a> I don't know how this implementation differs from the one they are demoing but this one by Jure Triglav feels much smoother to me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704380" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">juretriglav</span>
+        <span class="meta-time">2026/04/09 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该页面上出色的 3D 演示是基于 CPU 的，连续的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The excellent 3D demo on that page is CPU based, serial.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704527" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mjmdavis</span>
+        <span class="meta-time">2026/04/10 00:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这真是太棒了。很棒的工作。<p>我渴望在 WebGPU 中构建这样酷的东西。</p><p>对网络的未来感到非常兴奋。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is really awesome. Great work.<p>I aspire to build cool stuff like this in WebGPU.</p><p>Very excited for the future of the web.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">juretriglav</span>
+        <span class="meta-time">2026/04/10 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！从来没有比现在更容易开始。这个物理引擎的工作原理有点不透明，但我最近写了一篇关于使用面元的全局照明方法 - 我将其分解为可管理的小块，具有大量的交互式可视化效果，而且它也在 WebGPU 中！如果你有时间，也许看一下并开始拆解它： <a href="https://juretriglav.si/surfel-based-global-illumination-on-the-web/" target="_blank" rel="noopener noreferrer">https://juretriglav.si/surfel-based-global-illumination-on-t...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Never been easier to start than right now. This physics engine is a bit opaque in terms of how it works, but I recently wrote about a global illumination approach that uses surfels - I break it down into small manageable pieces, with plenty of interactive visualizations, and it's also in WebGPU! If you have some time, maybe take a look at that and start taking it apart: <a href="https://juretriglav.si/surfel-based-global-illumination-on-the-web/" target="_blank" rel="noopener noreferrer">https://juretriglav.si/surfel-based-global-illumination-on-t...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706459" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Stevvo</span>
+        <span class="meta-time">2026/04/10 01:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有了克劳德，绝对可以实现。即使没有图形编程经验，我也能够复制与流体模拟相关的几篇论文的结果。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It can definitely be achieved with Claude. Even with no experience in graphics progammming, I've been able to replicate results of several papers in related to fluid simulation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707094" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">the-golden-one</span>
+        <span class="meta-time">2026/04/10 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么所有的物理引擎看起来仍然那么飘逸？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do all physics engines still look so floaty?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706446" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jackling</span>
+        <span class="meta-time">2026/04/10 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你能详细说明一下你的意思吗？这可能是一个视角问题，对于一堆块，每块高 1 米，堆叠可能会变得相当高，并且您对它在现实世界中的外观的期望可能不正确，因为您从未在该有利位置经历过大型块塔被撞倒的情况。特别是如果物体的质量很奇怪（相对于其尺寸超轻或超重）。<p>我知道在较旧的游戏中，建议保持低重力（~6 m/s^2 iirc）以帮助模拟稳定性并使事物看起来更好，这可能有助于您对事物漂浮的想法。</p><p>我不认为 git 存储库中的示例特别浮动，但我使用了很多模拟器，所以我可能已经习惯了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you elaborate on what you mean? It could be a matter of perspective, For a stack of blocks, each 1 meters high, the stack can get quite high and your expectations on how it should look like IRL might not be correct, due to never experience a large tower of blocks being knocked over at that vantage point. Especially if the mass of the objects are strange (super light for their size or super heavy).<p>I know in older games, the recommendation was to keep gravity low (~6 m/s^2 iirc) to help with simulation stability and make things look better, that might contribute to your idea of things being floaty.</p><p>I don't find the examples in the git repo to be especially floaty, but I work with a lot of simulators so I might just be used to it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709276" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jackling</span>
+        <span class="meta-time">2026/04/10 04:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很棒的工作，总是阻止我实现更多求解器的是所需的数学量。虽然实现看起来总是很简单，但理解每个求解器的不同优化策略会让人感到困惑。<p>作者能够以如此规律的方式实现渲染论文和物理模拟论文，真是令人印象深刻。这确实是一项壮举。让我很好奇他们的背景是什么。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Awesome work, what always prevents me from implementing more solvers is the amount of math required. While the implementation always seems simple, understanding the different optimization strategies for each solver gets confusing.<p>It's really impressive that the author was able to implement rendering papers and physics sim papers with such regularity. It really is a feat. Makes me curious to see what their background is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709431" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

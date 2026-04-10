@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NASA 如何建造 Artemis II 的容错计算机 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>NASA 如何建造 Artemis II 的容错计算机</h1>
+      <p class="subtitle">How NASA built Artemis II’s fault-tolerant computer</p>
+      <div class="meta-line">
+        <span>cacm.acm.org</span>
+        <span>作者 speckx</span>
+        <span>分数 109</span>
+        <span>评论 35</span>
+        <span>2026/04/09 23:12</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47704804" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://cacm.acm.org/news/how-nasa-built-artemis-iis-fault-tolerant-computer/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dmk</span>
+        <span class="meta-time">2026/04/10 08:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">CMU 人员关于现代敏捷和 DevOps 方法挑战架构学科的引言很好地说明了我们大多数人已经完全忘记了如何构建确定性系统。与我们现在发布软件的方式相比，具有严格帧调度的时间触发以太网感觉就像来自平行宇宙。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The quote from the CMU guy about modern Agile and DevOps approaches challenging architectural discipline is a nice way of saying most of us have completely forgotten how to build deterministic systems. Time-triggered Ethernet with strict frame scheduling feels like it's from a parallel universe compared to how we ship software now.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711967" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mvkel</span>
+        <span class="meta-time">2026/04/10 10:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您将代码视为艺术，那么它的价值当然是对其所付出的努力的衡量。但还有班克斯。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you look at code as art, where its value is a measure of the effort it takes to make, sure. But then there's Banksy.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712770" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arduanika</span>
+        <span class="meta-time">2026/04/10 09:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你甚至可以说 Artemis 的部分价值在于我们记住了如何做一些非常困难的事情，包括软件方面。这是你无法伪造的。在这个世界上，人工智能更可能的威胁之一是真正的人类技能的萎缩——下金蛋的鹅训练模型——这是一项软件壮举，我认为你不能依赖氛围代码，至少不能完全依赖。<p>仅此一点就值得我交税了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You could even say that part of the value of Artemis is that we're remembering how to do some very hard things, including the software side. This is something that you can't fake. In a world where one of the more plausible threats of AI is the atrophy of real human skills -- the goose that lays the golden eggs that trains the models -- this is a software feat where I'd claim you couldn't rely on vibe code, at least not fully.<p>That alone is worth my tax dollars.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712562" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tayk47999</span>
+        <span class="meta-time">2026/04/10 08:22</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712052" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ramraj07</span>
+        <span class="meta-time">2026/04/10 08:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从这句话中得到了相反的信息——脱离联系的团队正在做一些超出预算、如此逾期、如此官僚、并且成功历史如此糟糕的事情，他们说得好像他们已经治愈了癌症一样。<p>这相当于 Altavista 吹嘘他们的定制服务器机架有多么令人惊叹，而谷歌刚刚在一个裸露的主板机架上启动，吃掉了他们的午餐，然后吃掉了整个世界。</p><p>让我们至少等到太空舱安全返回后再宣传他们比运行网站的“DevOps”团队好多少，显然这种比较在某种程度上与激发自负有关。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I take the opposite message from that line - out of touch teams working on something so over budget and so overdue, and so bureaucratic, and with such an insanely poor history of success, and they talk as if they have cured cancer.<p>This is the equivalent of Altavista touting how amazing their custom server racks are when Google just starts up on a rack of naked motherboards and eats their lunch and then the world.</p><p>Lets at least wait till the capsule comes back safely before touting how much better they are than "DevOps" teams running websites, apparently a comparison that's somehow relevant here to stoke egos.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712120" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">danhon</span>
+        <span class="meta-time">2026/04/10 08:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你的意思是这样吗？<p>“由于资金有限，Google 创始人拉里·佩奇 (Larry Page) 和谢尔盖·布林 (Sergey Brin) 最初部署了这套由廉价互连 PC 组成的系统，每秒处理来自 Google 用户的数千个搜索请求。该硬件系统反映了 Google 搜索算法本身，该算法基于容忍
+多台计算机故障并围绕它们进行优化。该生产服务器是第一个 Google 数据中心中约 30 个此类机架之一。尽管许多安装的个人电脑从未工作过并且难以维修，但这些机架为谷歌提供了第一个大规模计算系统，并使公司能够以最低的成本快速发展。”</p><p><a href="https://blog.codinghorror.com/building-a-computer-the-google-way/" target="_blank" rel="noopener noreferrer">https://blog.codinghorror.com/building-a-computer-the-google...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You mean like this?<p>"With limited funds, Google founders Larry Page and Sergey Brin initially deployed this system of inexpensive, interconnected PCs to process many thousands of search requests per second from Google users. This hardware system reflected the Google search algorithm itself, which is based on tolerating
+multiple computer failures and optimizing around them. This production server was one of about thirty such racks in the first Google data center. Even though many of the installed PCs never worked and were difficult to repair, these racks provided Google with its first large-scale computing system and allowed the company to grow quickly and at minimal cost."</p><p><a href="https://blog.codinghorror.com/building-a-computer-the-google-way/" target="_blank" rel="noopener noreferrer">https://blog.codinghorror.com/building-a-computer-the-google...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712171" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ramraj07</span>
+        <span class="meta-time">2026/04/10 09:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们解决的问题并不容易。但这也不是什么疯狂的技术突破。从字面上讲，添加冗余，这就是要求。他们发明量子计算不是为了解决这个问题吗？为什么要在冲刺时扣篮？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The problem they solved isn't easy. But its not some insane technical breakthrough either. Literally add redundancy, thats the ask. They didnt invent quantum computing to solve the issue did they? Why dunk on sprints?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712703" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vlovich123</span>
+        <span class="meta-time">2026/04/10 10:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇。编写容错分布式系统的内在挑战是多么轻松的一件事啊。这看起来很简单，因为谷歌几十年来一直在研究和开发工具，但这绝不是你今天可以轻松添加到项目中的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow. What a hand wave away of the intrinsic challenge of writing fault tolerant distributed systems. It only seems easy because of decades of research and tools built since Google did it, but by no means was it something you could trivially add to a project as you can today.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">1970-01-01</span>
+        <span class="meta-time">2026/04/10 09:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谷歌随后非常后悔没有使用 ECC RAM 来做到这一点： <a href="https://news.ycombinator.com/item?id=14206811" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=14206811</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Google then had complete regret not doing this with ECC RAM: <a href="https://news.ycombinator.com/item?id=14206811" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=14206811</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ramraj07</span>
+        <span class="meta-time">2026/04/10 09:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它让他们到达需要去的地方，然后再担心 ECC。这就像那些在 kubernetes 上部署博客的人，只是为了以防万一它能登上纽约时报的头版或其他什么东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It got them to where they need to be to then worry about ECC. This is like the dudes who deploy their blog on kubernetes just in case it hits front page of new york times or something.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712688" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bfung</span>
+        <span class="meta-time">2026/04/10 09:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人们根本不会在太空中[“提供”更多硬件|（重新启动系统）|（重新部署软件）]。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One simply does not [“provision” more hardware|(reboot systems)|(redeploy software)] in space.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712699" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bluegatty</span>
+        <span class="meta-time">2026/04/10 09:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，空间只是很难。<p>一切都是定制的。</p><p>你需要 10 倍的成本才能在可靠性方面获得每一个额外的“9”，而载人飞行则需要很多个 9。</p><p>人们在阿波罗任务中丧生。</p><p>只需要花这么多钱。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, space is just hard.<p>Everything is bespoke.</p><p>You need 10x cost to get every extra '9' in reliability and manned flight needs a lot of nines.</p><p>People died on the Apollo missions.</p><p>It just costs that much.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712431" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ramraj07</span>
+        <span class="meta-time">2026/04/10 10:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，花1000亿买本该花1/50的东西，用我们仍在祈祷的火箭把人们送上月球，明天不会杀死他们，我们必须祝贺他们在一些无关紧要的职业上扣篮？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yep, spend 100 billion on what should have cost 1/50that cost, and send people up to the moon with rockets that we are still keeping our fingers crossed wont kill them tomorrow, and we have to congratulate them for dunking on some irrelevant career?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712713" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">arduanika</span>
+        <span class="meta-time">2026/04/10 09:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">拜托，这是黑客新闻。除了我们的通用软件工作之外，没有什么是困难的，我们完全可以在一个下午解决任何其他行业的问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please, this is hacker news. Nothing else is hard outside of our generic software jobs, and we could totally solve any other industry in an afternoon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712506" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">geerlingguy</span>
+        <span class="meta-time">2026/04/10 09:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的意思是我可以用 shell 脚本替换 Dropbox。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I mean I can just replace Dropbox with a shell script.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712550" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bluegatty</span>
+        <span class="meta-time">2026/04/10 09:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣，因为你可以！ Dropbox 启动了一个 shell 脚本:)<p>有趣的是，我假设 HN 人们会尊重实时的东西和“硬化”的东西有多么困难。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's funny because you could! Dropbox started a shell script :)<p>Funny though I would assume HN people would respect how hard real-time stuff and 'hardened' stuff is.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zenoprax</span>
+        <span class="meta-time">2026/04/10 10:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为 GP 引用了这个有点著名的帖子/评论： <a href="https://news.ycombinator.com/item?id=8863#9224" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=8863#9224</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think GP is referencing this somewhat [in]famous post/comment: <a href="https://news.ycombinator.com/item?id=8863#9224" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=8863#9224</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712864" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">HNisCIS</span>
+        <span class="meta-time">2026/04/10 09:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你有什么建议？  Vibe 编写了一个在 Mac mini 上运行的 React 应用程序来控制轨迹？  当 Mac mini 受到 SEU 甚至 SEGR 撞击时会发生什么？  你猜每个人都会死吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What would you suggest?  Vibe coding a react app that runs on a Mac mini to control trajectory?  What happens when that Mac mini gets hit with an SEU or even a SEGR?  Guess everyone just dies?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712477" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ramraj07</span>
+        <span class="meta-time">2026/04/10 10:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我所建议的只是对你平庸的解决方案保持谦虚。这不是唯一的解决方案，也不一定那么巧妙。为什么需要在这里提出vivicoding？因为批评傲慢鼻工程师的人默认也是AI白痴？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">All Im suggesting is to be humble about your mediocre solutions. This is not the only solution and not that ingenious necessarily. Why do you need to bring up vibecoding here? Because people who criticize arrogant nasal engineers are also AI idiots by default?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712762" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simoncion</span>
+        <span class="meta-time">2026/04/10 08:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; ...他们说得好像他们已经治愈了癌症一样。<p>我将其归因于文章的作者为相对非技术性的受众撰写文章并要求在该级别进行引用。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; ...they talk as if they have cured cancer.<p>I'd chalk that up to the author of the article writing for a relatively nontechnical audience and asking for quotes at that level.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712186" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">__d</span>
+        <span class="meta-time">2026/04/10 10:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有人能提供有关该系统的一些真实信息吗？  CPU、RAM、存储、网络、什么操作系统、软件使用什么语言等等？<p>我很想知道其中一台 FCM “失灵”的频率，以及它们在路线中的位置等等，但现在可能还为时过早。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does anyone have pointers to some real information about this system?  CPUs, RAM, storage, the networking, what OS, what language used for the software, etc etc?<p>I’d love to know how often one of the FCMs has “failed silent”, and where they were in the route and so on too, but it’s probably a little soon for that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712888" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jbritton</span>
+        <span class="meta-time">2026/04/10 09:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道冗余解决的问题多久发生一次。辐射是否真的会翻转位以及以什么频率翻转。太阳耀斑会导致所有计算机失控吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder how often problems happen that the redundancy solves. Is radiation actually flipping bits and at what frequency. Can a sun flare cause all the computers to go haywire.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712348" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">EdNutting</span>
+        <span class="meta-time">2026/04/10 09:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是直接答案，但可能是您可以获得的尽可能好的信息： <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35162.pdf" target="_blank" rel="noopener noreferrer">https://static.googleusercontent.com/media/research.google.c...</a><p>基本上，是的，辐射确实会导致位翻转，比您想象的更频繁（但在宏伟的计划中仍然是罕见的事件，但足以产生影响）。</p><p>太空中的辐射要“更糟糕”（用引号引起来是因为这个词掩盖了大量不同的问题，两者都只是强度）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not a direct answer but probably as good information as you can get: <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35162.pdf" target="_blank" rel="noopener noreferrer">https://static.googleusercontent.com/media/research.google.c...</a><p>Basically, yes, radiation does cause bit flips, more often than you might expect (but still a rare event in the grand scheme of things, but enough to matter).</p><p>And radiation in space is much “worse” (in quotes because that word is glossing over a huge number of different problems, both just intensity).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712595" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tosapple</span>
+        <span class="meta-time">2026/04/10 10:35</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712938" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">object-a</span>
+        <span class="meta-time">2026/04/10 08:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">硬件故障和辐射对轨道数据中心来说有多大的挑战？如果所有内容都需要 4 倍冗余，那么您似乎会消耗大量容量</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How big of a challenge are hardware faults and radiation for orbital data centers? It seems like you’d eat a lot of capacity if you need 4x redundancy for everything</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712278" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">totetsu</span>
+        <span class="meta-time">2026/04/10 09:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们没有进入这里..但我认为 NASA 也在太空中使用了 250nm 芯片来抵抗辐射。市面上有抗辐射 GPU 吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They dont go into here.. but I thought that NASA also used like 250nm chips in space for radiation resistance. Are there even any radiation resistance GPUs out there?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712303" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kersplody</span>
+        <span class="meta-time">2026/04/10 09:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，RAD 强化太空部件基本上冻结在 2000 年代中期的技术上： <a href="https://www.baesystems.com/en-us/product/radiation-hardened-electronics" target="_blank" rel="noopener noreferrer">https://www.baesystems.com/en-us/product/radiation-hardened-...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">NOPE, RAD hardened space parts basically froze on mid 2000s tech: <a href="https://www.baesystems.com/en-us/product/radiation-hardened-electronics" target="_blank" rel="noopener noreferrer">https://www.baesystems.com/en-us/product/radiation-hardened-...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712665" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pclmulqdq</span>
+        <span class="meta-time">2026/04/10 09:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">绝对不是，尽管最新的晶圆厂采用了 20 纳米的耐辐射处理器。我认为那一代的 FDSOI 工艺可以耐辐射。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Absolutely not, although the latest fabs with rad-tolerant processors are at ~20 nm. There are FDSOI processes in that generation that I assume can be made radiation-tolerant.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">linzhangrun</span>
+        <span class="meta-time">2026/04/10 09:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看来不是；抗干扰主要依靠使用旧的制造工艺，包括军事设备，然后应用抗干扰外壳或类似于ECC的硬件冗余校正。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It seems not; anti-interference primarily relies on using older manufacturing processes, including for military equipment, and then applying an anti-interference casing or hardware redundancy correction similar to ECC.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tosapple</span>
+        <span class="meta-time">2026/04/10 10:39</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712960" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">y1n0</span>
+        <span class="meta-time">2026/04/10 09:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">美国宇航局没有建造这个，洛克希德·马丁公司和他们的分包商建造了这个。  像这样的文章和头条新闻让人们认为 NASA 所做的事情比他们实际做的要多得多。  这就像首席执行官声称公司所做的一切都是功劳。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">NASA didn't build this, Lockheed Martin and their subcontractors did.  Articles and headlines like this make people think that NASA does a lot more than they actually do.  This is like a CEO claiming credit for everything a company does.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712482" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">voodoo_child</span>
+        <span class="meta-time">2026/04/10 09:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很好的“好吧，实际上”。我确信洛克希德公司正在建造这种四冗余、抗辐射的 PowerPC，它耗资数百万美元，并且无论如何都通过时间触发以太网进行通信，无论 NASA 是否需要它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice “well, actually”. I’m sure Lockheed were building this quad-redundant, radiation-hardened PowerPC that costs millions of dollars and communicates via Time-Triggered Ethernet anyway, whether NASA needed one or not.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712629" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adrian_b</span>
+        <span class="meta-time">2026/04/10 10:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">洛克希德·马丁公司及其分包商负责实施。<p>我们不知道该系统的高层架构有多少是由 NASA 指定的，有多少是由洛克希德·马丁公司指定的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lockheed Martin and their subcontractors did the implementation.<p>We do not know how much of the high-level architecture of the system has been specified by NASA and how much by Lockheed Martin.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Sebguer</span>
+        <span class="meta-time">2026/04/10 10:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有人会想到巨型企业！！！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">will nobody think of the megacorps!!!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712941" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">starkparker</span>
+        <span class="meta-time">2026/04/09 23:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">标题需要恢复其如何切除才能有意义</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Headline needs its how-dectomy reverted to make sense</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705155" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">arduanika</span>
+        <span class="meta-time">2026/04/10 09:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">（题外话：）好话。这是通常的说法吗？完全合适，而且应该是标准。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">(Off-topic:) Great word. Is that the usual word for it? Totally apt, and it should be the standard.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712493" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">seemaze</span>
+        <span class="meta-time">2026/04/10 09:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">然而.. <a href="https://news.ycombinator.com/item?id=47615490" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47615490</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">and yet.. <a href="https://news.ycombinator.com/item?id=47615490" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47615490</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adrian_b</span>
+        <span class="meta-time">2026/04/10 10:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那是一台笔记本电脑，而不是阿尔忒弥斯电脑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That was a laptop, not one of the Artemis computers.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712969" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ConanRus</span>
+        <span class="meta-time">2026/04/10 08:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712021" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

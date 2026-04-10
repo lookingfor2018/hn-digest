@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>研究驱动的代理：当代理在编码之前进行阅读时 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>研究驱动的代理：当代理在编码之前进行阅读时</h1>
+      <p class="subtitle">Research-Driven Agents: When an agent reads before it codes</p>
+      <div class="meta-line">
+        <span>blog.skypilot.co</span>
+        <span>作者 hopechong</span>
+        <span>分数 140</span>
+        <span>评论 45</span>
+        <span>2026/04/10 00:58</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47706141" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://blog.skypilot.co/research-driven-agents/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>TL;DR：编码代理在接触代码之前阅读论文并研究竞争项目时会产生更好的优化。我们在 autoresearch / pi-autoresearch 循环中添加了文献搜索阶段，将其指向具有 4 个云 VM 的 llama.cpp，并在大约 3 小时内生成了 5 项优化，使 x86 上的 Flash 注意文本生成速度加快了 15%，在 ARM 上加快了 5%（TinyLlama 1.1B）。完整的设置适用于任何具有基准测试和测试套件的项目。要点：在编写代码之前阅读论文并研究竞争项目的代理可以找到仅代码代理错过的优化。文献研究指出代理存在于 CUDA/Metal 后端中但在 CPU 中不存在的算子融合。30 多个实验中的 5 个实现了：4 个内核融合和自适应并行化。最大的胜利是将 Flash Attention 的 QK 块的三遍融合到单个 AVX2 FMA 循环中。研究分叉和其他后端比搜索 arxiv 更有效率。 ik_llama.cpp 和 CUDA 后端直接通知了五个最终优化中的两个。总成本：约 29 美元（CPU 虚拟机中 20 美元，API 调用中 9 美元），使用 4 个虚拟机大约 3 小时。纯代码上下文在何处起作用 Karpathy 的自动研究表明，编码代理可以自主改进神经网络训练脚本。在我们之前的文章中，我们将其扩展到 16 个 GPU，并观察代理在 8 小时内运行了约 910 个实验，导致 val_bpb 下降了 2.87%。智能体仅从代码上下文中集思广益，实验都是同一个 train.py 上的变体。从那时起，pi-autoresearch 将循环推广为任何基准目标的可重用扩展。 Shopify 首席执行官 Tobi Lütke 在 Liquid 上运行它，这是一个 Ruby 模板引擎，每年处理 292B 美元的商品量。该代理运行了约 120 个实验，产生了 93 个提交，将解析+渲染时间减少了 53%，分配时间减少了 61%，并且在 974 个单元测试中实现了零回归（Simon Willison 的文章，Tobi 的帖子）。在这种情况下，优化表面在源代码中可见。 Liquid 代理可以读取分词器，发现 StringScanner 是瓶颈，并仅从代码库中集思广益替代方案。纯代码上下文崩溃的情况并非每个优化问题都是这样工作的。代码库告诉您代码的作用，但不告诉您代码为何缓慢或该代码库之外存在哪些替代方案。当答案存在于源之外时（在 arxiv 论文中、在竞争项目中，例如在高级工程师带来的领域知识中），仅根据代码工作的代理将生成浅层假设。当我们将代理指向 llama.cpp 的 CPU 推理路径时，我们看到了这一点。优化搜索空间不是“尝试不同的学习率”。问题是“我应该融合这两个内存通道吗？”、“这个工作负载是受计算限制还是受内存限制？”、“ik_llama.cpp 已经尝试过什么？”代理的第一波实验表明了这个问题。仅从代码上下文开始，它就直接对 GGML 矩阵乘法热路径中的量化点积进行 SIMD 微优化。它尝试：Q4_0点积内循环中的AVX2预取（+0.8%）使用双累加器展开2x循环（+0.9%）消除mul_mat中的临时缓冲区（-2.8%，回归）提升块边界计算（+0.6%）都在噪声内。代理的事后分析：“第 1 波结果表明，计算路径中的微优化带来的回报可以忽略不计，因为文本生成受内存带宽限制，而不是计算限制。”约 49 个令牌/秒的 606 MiB 模型消耗约 30 GB/秒的内存带宽，接近 c6i.2xlarge 的 DRAM 限制。当 CPU 停止等待模型权重从 DRAM 到达时，再多的 SIMD 技巧也无济于事。但仅靠代码并不能告诉你这一点。您需要了解目标硬件的内存带宽，了解 Roofline 模型，并认识到批量大小 1 推理是受内存限制的。这是代理不具备的领域知识。添加研究阶段如果瓶颈是假设质量，请为代理提供更好的输入。在进行任何实验之前，让它阅读论文、研究分支，并查看其他项目已经尝试过的内容。与高级工程师在接触不熟悉的代码之前会做的准备工作相同。原始的自动研究循环是：编辑代码 -&gt; 运行实验 -&gt; 检查指标 -&gt; 保留或丢弃。 pi-autoresearch 将其推广到任何具有基准指标的项目。我们的版本在此基础上构建，并添加了研究步骤和并行云执行：代理编写自己的基准脚本 (autoresearch.sh) 和正确性检查 (autoresearch.checks.sh)，然后使用 SkyPilot 在云虚拟机上展开实验。每个实验都在自己的虚拟机上运行：构建项目、运行基准测试、运行正确性检查、报告指标。代理通过 sky 日志检查结果，提交获胜者，并对下一波进行排队。experiment.yaml：一个实验的 SkyPilot 任务模板资源：cpu：4+ 内存：8+</li><li>工作目录：.</li><li>envs：EXPERIMENT_ID：基线 EXPERIMENT_DESC：“基线测量” BUILD_CMD：“make -j $（nproc）” BENCH_TIMEOUT：300 CHECK_TIMEOUT：300</li><li>设置：| cd ~/sky_workdir 如果 [ -f setup_deps.sh ];然后 bash setup_deps.sh else eval &quot;${BUILD_CMD}&quot; fi</li><li>运行： | cd ~/sky_workdir # 构建、基准测试、运行检查、报告 METRIC 行 eval &quot;${BUILD_CMD}&quot; 2&gt;&amp;1 | tail -30 BENCH_OUTPUT=$(timeout &quot;${BENCH_TIMEOUT}&quot; bash autoresearch.sh 2&gt;&amp;1) echo &quot;$BENCH_OUTPUT&quot; # ... 提取 METRIC 行，运行 autoresearch.checks.sh ... echo &quot;EXPERIMENT_STATUS: done&quot; CPU 绑定代码优化不需要 GPU。如果您的目标需要 GPU 基准测试，请使用 --gpus 覆盖。实验日志我们将 Claude Code 指向 llama.cpp，通过 SkyPilot 为其提供 4 个 AWS 虚拟机，并告诉它使 CPU 推理速度更快。目标：TinyLlama 1.1B（Q4_0 量化）的 CPU 推理吞吐量，在两种架构上进行基准测试：x86：AWS c6i.2xlarge（Intel Xeon Ice Lake、8 个 vCPU、AVX-512）ARM：AWS c7g.2xlarge（Graviton3、8 个 vCPU、NEON）指标：用于提示处理 (pp) 和文本生成 (tg) 的令牌/秒，使用 llama-bench -p 512 -n 128 -t 8 -r 5 进行测量。它从 4 x86 虚拟机开始建立基线并进行实验。后来它配置了 ARM VM 以检查可移植性；每个内核融合都包含 AVX2/FMA 和 NEON 路径，并带有标量回退。研究结果在实验波之间，代理运行两个并行研究线程：竞争项目：ik_llama.cpp（注重性能的 fork）、llamafile 的tinyBLAS、PowerInfer、ExLlamaV2（本文的作者甚至不知道其中一些项目）Arxiv 论文：FlashAttention （IO 感知平铺注意力）、Blockbuster（块级运算符融合）、通过高效运算融合实现 LLM 推理加速、softmax 在线标准化器计算、CPU 上大型语言模型的推理性能优化（英特尔的缓存感知线程分区）最重要的发现：ik_llama.cpp 的行交错量化重新打包使 PP 提高了 2.9 倍。它已经通过 Q4_0_8x8 重新打包格式上游到主线 llama.cpp。该代理确认它在基准测试中处于活跃状态。Blockbuster 论文建议将整个 FFN 块（RMSNorm + 门 matmul + 向上 matmul + SwiGLU + 向下 matmul）融合到单个缓存驻留平铺通道中。代理尝试实现它，但权重矩阵被量化（Q4_0_8x8），并且 ggml_concat 不适用于重新包装的量化张量。正确的实现需要更改模型加载器。代理检查是否正在使用 c6i.2xlarge 的 AVX-512 支持。是的。 -march=native 通过编译器预处理器宏启用它，尽管 CMake 变量显示 GGML_AVX512=OFF（仅影响 MSVC 构建）。合并门 + 向上权重 (PR #19139) 连接门和向上投影权重矩阵，以消除每个 FFN 块的一个激活负载。这为 MoE 模型提供了 +12% 的 PP，但尚未在密集模型中实现。分叉分析比 arxiv 搜索更有用。一些可行的想法来自于对 ik_llama.cpp 和 llamafile 已经发布的内容的研究。研究 CUDA 和 Metal 后端也直接导致了下面的优化 #4：代理注意到除 CPU 之外的每个后端都存在 RMS_NORM + MUL 融合。 枢纽：从计算到内存在 Wave 1 失败后，代理改变了方向：“我需要转向减少内存流量或改善内存访问模式的优化。”Matmul 占推理时间的约 95%，因此仅剩下剩余操作（softmax、RMS 范数、量化）留出约 5% 的净空。但这些操作足够小，可以受计算限制而不是受内存限制，因此减少其中的内存传递会有所帮助。 成功的优化 在 30 多个实验中，有 5 个进入了最终代码。每个目标都针对非 matmul 开销的不同部分：1。 Softmax fusion现有代码在数据上进行了三个单独的复制-&gt;缩放-&gt;添加掩码。代理将它们融合成一个：//之前：3遍 memcpy(wp, sp, nc * sizeof(float)); // 第 1 遍：复制 ggml_vec_scale_f32(nc, wp, scale); // 第 2 遍：缩放 ggml_vec_add_f32(nc, wp, wp, mp_f32); // 第 3 步：添加掩码</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>TL;DR: Coding agents generate better optimizations when they read papers and study competing projects before touching code. We added a literature search phase to the autoresearch / pi-autoresearch loop, pointed it at llama.cpp with 4 cloud VMs, and in ~3 hours it produced 5 optimizations that made flash attention text generation +15% faster on x86 and +5% faster on ARM (TinyLlama 1.1B). The full setup works with any project that has a benchmark and test suite.Key takeaways:Agents that read papers and study competing projects before writing code find optimizations that code-only agents miss. The literature research pointed the agent at operator fusions present in CUDA/Metal backends but absent from CPU.5 of 30+ experiments landed: 4 kernel fusions and an adaptive parallelization. The biggest win fused three passes over flash attention’s QK tile into a single AVX2 FMA loop.Studying forks and other backends was more productive than searching arxiv. ik_llama.cpp and the CUDA backend directly informed two of the five final optimizations.Total cost: ~$29 ($20 in CPU VMs, $9 in API calls) over ~3 hours with 4 VMs.Where code-only context worksKarpathy’s autoresearch showed that a coding agent can autonomously improve a neural network training script. In our previous post, we scaled that to 16 GPUs and watched the agent run ~910 experiments in 8 hours, driving val_bpb down 2.87%. The agent brainstormed ideas from code context alone, and the experiments were all variations on the same train.py.Since then, pi-autoresearch generalized the loop into a reusable extension for any benchmarkable target. Shopify CEO Tobi Lütke ran it on Liquid, the Ruby template engine that processes $292B in annual merchandise volume. The agent ran ~120 experiments, producing 93 commits that cut parse+render time by 53% and allocations by 61% with zero regressions across 974 unit tests (Simon Willison’s writeup, Tobi’s post).In that case, the optimization surface was visible in the source. The Liquid agent could read the tokenizer, see that StringScanner was the bottleneck, and brainstorm alternatives from the codebase alone.Where code-only context breaks downNot every optimization problem works this way. A codebase tells you what the code does, but not why it’s slow or what alternatives exist outside of this codebase. When the answer lives outside the source (in arxiv papers, in competing projects, e.g. in the domain knowledge a senior engineer would bring), an agent working from code alone will generate shallow hypotheses.We saw this when we pointed the agent at llama.cpp’s CPU inference path. The optimization search space isn’t “try a different learning rate.” It’s “should I fuse these two memory passes?”, “is this workload compute-bound or memory-bound?”, “what has ik_llama.cpp already tried?”The agent’s first wave of experiments showed the problem. Working from code context alone, it went straight for SIMD micro-optimizations in the quantized dot products that sit in GGML’s matrix multiplication hot path. It tried:AVX2 prefetching in the Q4_0 dot product inner loop (+0.8%)2x loop unrolling with dual accumulators (+0.9%)Eliminating a temporary buffer in mul_mat (-2.8%, regression)Hoisting block boundary calculations (+0.6%)All within noise. The agent’s postmortem:“Wave 1 results show that micro-optimizations in the compute path give negligible returns because text generation is memory-bandwidth bound, not compute bound.”A 606 MiB model at ~49 tokens/s consumes ~30 GB/s of memory bandwidth, close to the c6i.2xlarge’s DRAM limit. No amount of SIMD tricks will help when the CPU is stalled waiting for model weights to arrive from DRAM. But the code alone doesn’t tell you this. You need to know the memory bandwidth of the target hardware, understand the roofline model, and recognize that batch-size-1 inference is memory-bound. That’s domain knowledge the agent didn’t have.Adding a research phaseIf the bottleneck is hypothesis quality, give the agent better inputs. Before running any experiments, have it read papers, study forks, and look at what other projects have already tried. The same preparation a senior engineer would do before touching unfamiliar code.The original autoresearch loop is: edit code -&gt; run experiment -&gt; check metric -&gt; keep or discard. pi-autoresearch generalized this to any project with a benchmarkable metric. Our version builds on that and adds a research step and parallel cloud execution:The agent writes its own benchmark script (autoresearch.sh) and correctness checks (autoresearch.checks.sh), then uses SkyPilot to fan out experiments across cloud VMs. Each experiment runs on its own VM: build the project, run the benchmark, run correctness checks, report metrics. The agent checks results via sky logs, commits winners, and queues the next wave.experiment.yaml: SkyPilot task template for one experimentresources: cpus: 4+ memory: 8+</li><li>workdir: .</li><li>envs: EXPERIMENT_ID: baseline EXPERIMENT_DESC: &quot;baseline measurement&quot; BUILD_CMD: &quot;make -j$(nproc)&quot; BENCH_TIMEOUT: 300 CHECK_TIMEOUT: 300</li><li>setup: | cd ~/sky_workdir if [ -f setup_deps.sh ]; then bash setup_deps.sh else eval &quot;${BUILD_CMD}&quot; fi</li><li>run: | cd ~/sky_workdir # Build, benchmark, run checks, report METRIC lines eval &quot;${BUILD_CMD}&quot; 2&gt;&amp;1 | tail -30 BENCH_OUTPUT=$(timeout &quot;${BENCH_TIMEOUT}&quot; bash autoresearch.sh 2&gt;&amp;1) echo &quot;$BENCH_OUTPUT&quot; # ... extract METRIC lines, run autoresearch.checks.sh ... echo &quot;EXPERIMENT_STATUS: done&quot; No GPU needed for CPU-bound code optimization. Override with --gpus if your target needs GPU benchmarking.The experiment logWe pointed Claude Code at llama.cpp, gave it 4 AWS VMs via SkyPilot, and told it to make CPU inference faster.Target: CPU inference throughput for TinyLlama 1.1B (Q4_0 quantization), benchmarked on two architectures:x86: AWS c6i.2xlarge (Intel Xeon Ice Lake, 8 vCPUs, AVX-512)ARM: AWS c7g.2xlarge (Graviton3, 8 vCPUs, NEON)Metric: tokens/second for prompt processing (pp) and text generation (tg), measured with llama-bench -p 512 -n 128 -t 8 -r 5.It started with 4 x86 VMs to establish baselines and run experiments. Later it provisioned ARM VMs to check portability; each kernel fusion includes both AVX2/FMA and NEON paths, with scalar fallbacks.What the research turned upBetween experiment waves, the agent ran two parallel research threads:Competing projects: ik_llama.cpp (a performance-focused fork), llamafile’s tinyBLAS, PowerInfer, ExLlamaV2 (the author of this post wasn’t even aware of some of these projects)Arxiv papers: FlashAttention (IO-aware tiled attention), Blockbuster (block-level operator fusion), LLM Inference Acceleration via Efficient Operation Fusion, Online normalizer calculation for softmax, Inference Performance Optimization for Large Language Models on CPUs (Intel’s cache-aware thread partitioning)The top findings:ik_llama.cpp’s row-interleaved quantization repacking gave 2.9x PP improvement. It was already upstreamed to mainline llama.cpp via the Q4_0_8x8 repack format. The agent confirmed it was active in the benchmark.The Blockbuster paper proposes fusing the entire FFN block (RMSNorm + gate matmul + up matmul + SwiGLU + down matmul) into a single cache-resident tiled pass. The agent tried to implement it but the weight matrices are quantized (Q4_0_8x8), and ggml_concat doesn’t work with repacked quantized tensors. Proper implementation requires model loader changes.The agent checked whether the c6i.2xlarge’s AVX-512 support was being used. It was. -march=native enables it via compiler preprocessor macros, despite the CMake variable showing GGML_AVX512=OFF (which only affects MSVC builds).Merged gate+up weights (PR #19139) concatenate the gate and up projection weight matrices to eliminate one activation load per FFN block. This gave +12% PP for MoE models but isn’t yet implemented for dense models.The fork analysis was more useful than the arxiv search. Several actionable ideas came from studying what ik_llama.cpp and llamafile had already shipped. Studying the CUDA and Metal backends also directly led to optimization #4 below: the agent noticed that RMS_NORM + MUL fusion existed in every backend except CPU.The pivot: from compute to memoryAfter Wave 1’s failures, the agent changed direction:“I need to pivot to optimizations that reduce memory traffic or improve memory access patterns.”Matmul accounts for ~95% of inference time, so the remaining operations (softmax, RMS norm, quantization) only leave ~5% headroom. But those operations are small enough to be compute-bound rather than memory-bound, so reducing memory passes within them can help.Optimizations that landedFive out of 30+ experiments made it into the final code. Each one targets a different part of the non-matmul overhead:1. Softmax fusionThe existing code did copy -&gt; scale -&gt; add mask in three separate passes over the data. The agent fused them into one:// Before: 3 passes memcpy(wp, sp, nc * sizeof(float)); // pass 1: copy ggml_vec_scale_f32(nc, wp, scale); // pass 2: scale ggml_vec_add_f32(nc, wp, wp, mp_f32); // pass 3: add mask</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simlevesque</span>
+        <span class="meta-time">2026/04/10 03:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我已经从 arxiv 论文中制作技能有一段时间了。例如，我有一个用于多对象跟踪的跟踪器。它有一个描述该主题的所有重要论文（超过 30 篇）的 SKILL.md 和一个包含每篇论文完整内容（reStructuredText）的文件夹。<p>为了向法学硕士提供 Arxiv 论文，我发现 RST 给出了最佳的标记计数/保真度比。 Markdown 缺乏精确性。 LateX 太冗长了。我有一个包含论文网址、名称和日期的脚本，该脚本从 Arxiv 下载 LateX zip，提取它，将它们转换为 RST，然后将它们添加到正确的文件夹中。然后我要求一个法学硕士对全文做一个总结，然后我再给其他法学硕士一份全文和总结，并要求他们改进和校对。在这过程中，我自己阅读论文，最后我阅读摘要，如果我批准它们，我会将其添加到技能中。我还为每篇论文添加了有关所描述的算法在常见基准测试中表现如何的信息。</p><p>如果您在前沿领域工作，我强烈建议您做类似的事情。我也想知道是否有人对改进我的工作有建议。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been making skills from arxiv papers for a while. I have a one for multi-object tracking for example. It has a SKILL.md describing all important papers (over 30) on the subject and a folder with each paper's full content as reStructuredText.<p>To feed Arxiv papers to LLMs I found that RST gives the best token count/fidelity ratio. Markdown lacks precision. LateX is too verbose. I have a script with the paper's urls, name and date that downloads the LateX zips from Arxiv, extracts it, transforms them to RST and then adds them to the right folder. Then I ask a LLM to make a summary from the full text, then I give other LLMs the full paper again with the summary and ask them to improve on and and proofread them. While this goes on I read the papers myself and at the end I read the summaries and if I approve them I add it to the skill. I also add for each paper info on how well the algorithms described do in common benchmarks.</p><p>I highly recommend doing something similar if you're working in a cutting-edge domain. Also I'd like to know if anyone has recommendations to improve what I do.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ctoth</span>
+        <span class="meta-time">2026/04/10 03:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直在研究 ctoth/research-papers-plugin，这是真正让法学硕士提取笔记的管道。我真的很喜欢你对 RST 对 Markdown 的见解！听起来我们正在做类似的事情，我绝对会联系:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been working on ctoth/research-papers-plugin, the pipeline to actually get LLMs to extract the notes. I really like your insight re RST over Markdown! It sounds like we're working on similar stuff and I'll absolutely reach out :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708759" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simlevesque</span>
+        <span class="meta-time">2026/04/10 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我要看看你的插件。我的电子邮件在我的个人资料中。<p>老实说，我认为使用 LateX 代码块的 Markdown 将是最有效的表示形式，但是当使用 Pandoc 执行此操作时，我一直遇到信息丢失甚至语法错误的问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm gonna look at your plugin. My email is in my profile.<p>Honestly I think that Markdown with LateX code blocks would be the most efficient representation but when doing it with Pandoc I kept having issues with loss of information and sometimes even syntax error.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708861" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gessha</span>
+        <span class="meta-time">2026/04/10 08:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直想建造类似的东西。一旦我有东西要展示，我会报告。<p>感谢分享！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’ve been meaning to build something similar. I will report back once I have something to show.<p>Thanks for sharing!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712214" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">paulluuk</span>
+        <span class="meta-time">2026/04/10 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这听起来似乎可行，但老实说，如果您已经完整阅读了所有 30 篇论文，您还需要 llm 为您做些什么呢？只是样板吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This sounds like it would work, but honestly if you've already read all 30 papers fully, what do you still need to llm to do for you? Just the boilerplate?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708653" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simlevesque</span>
+        <span class="meta-time">2026/04/10 03:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在尝试创建一个 go 库，它实现了广泛的 MOT 算法，并可以收集所有这些算法的指标。<p>把所有的论文读一遍和这不一样。我觉得它非常有用。</p><p>我可以要求法学硕士做基本的实现，然后我可以改进它们（使代码更好、更快、减少内存使用），然后我可以询问法学硕士我是否仍在实现论文中描述的算法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm trying to make a go library that implements a wide ranges of MOT algorithms and can gather metrics for all of them.<p>Reading all the papers once isn't the same as this. I find it very useful.</p><p>I can ask an LLM to do the basic implementations, then I can refine them (make the code better, faster, cut on memory use), then I can ask the LLM if I'm still implementing the algorithms as they're described in the paper.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708733" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">giancarlostoro</span>
+        <span class="meta-time">2026/04/10 10:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 然后我可以询问法学硕士我是否仍在实施论文中描述的算法。<p>单元测试可以节省令牌......单元测试非常适合验证重构，或者当从一种语言重写为另一种语言时，首先构建单元测试。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; then I can ask the LLM if I'm still implementing the algorithms as they're described in the paper.<p>Unit testing would save on tokens... unit testing is perfect for validating refactors, or when re-writing a project from one language to the next, build unit tests first.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712890" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gessha</span>
+        <span class="meta-time">2026/04/10 08:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它可以让您更快地筛选出有趣的论文。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It lets you filter out interesting papers more quickly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712200" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alex000kim</span>
+        <span class="meta-time">2026/04/10 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">听起来类似于“LLM知识库” <a href="https://xcancel.com/karpathy/status/2039805659525644595" target="_blank" rel="noopener noreferrer">https://xcancel.com/karpathy/status/2039805659525644595</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">sounds similar to "LLM Knowledge Bases" <a href="https://xcancel.com/karpathy/status/2039805659525644595" target="_blank" rel="noopener noreferrer">https://xcancel.com/karpathy/status/2039805659525644595</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708535" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">j_gonzalez</span>
+        <span class="meta-time">2026/04/10 07:23</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711599" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">satvikpendem</span>
+        <span class="meta-time">2026/04/10 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这符合上下文吗？看起来 30 篇论文的内容就已经溢出了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does that even fit in the context? It seems like 30 papers worth of content would just overflow it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709065" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ctoth</span>
+        <span class="meta-time">2026/04/10 04:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于每篇论文，让你的代理提取一个三句话的描述，创建一个description.md，然后将它们与论文名称连接到一个 INDEX.md 中，它应该参考该索引来找到合适的论文。另外：让您的代理标记文件，然后在文件系统上自动生成您的标记集合。然后你会得到像这样的好东西 <a href="https://github.com/ctoth/Qlatt/tree/master/papers/tagged" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/Qlatt/tree/master/papers/tagged</a><p>然后，您的 {CLAUDE,AGENTS}.md 中的某些内容表示：在处理论文提供的相关上下文的内容时，请在进行工作之前阅读论文。您可以在 ./papers/INDEX.md 中找到所有论文及其描述，并在 ./papers/tagged 中按标签找到论文</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For each paper, have your agent extract a three sentence description, create a description.md, then concat those with the paper names into an INDEX.md which it should consult to find appropriate papers. Also: have your agent tag papers, then autogenerate your tagged collection on the filesystem. Then you get nice things like <a href="https://github.com/ctoth/Qlatt/tree/master/papers/tagged" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/Qlatt/tree/master/papers/tagged</a><p>Then something in your {CLAUDE,AGENTS}.md that says: when working on something with relevant context supplied by papers, read the papers before doing the work. You can find all papers plus their descriptions in ./papers/INDEX.md and papers by tag in ./papers/tagged</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709255" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MrLeap</span>
+        <span class="meta-time">2026/04/10 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">什么是RST？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What is RST?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708652" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simlevesque</span>
+        <span class="meta-time">2026/04/10 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">重构文本： <a href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html" target="_blank" rel="noopener noreferrer">https://www.sphinx-doc.org/en/master/usage/restructuredtext/...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">reStructuredText: <a href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html" target="_blank" rel="noopener noreferrer">https://www.sphinx-doc.org/en/master/usage/restructuredtext/...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708680" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 03:41</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708736" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 03:42</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708750" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">danelliot</span>
+        <span class="meta-time">2026/04/10 05:31</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710435" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tayk47999</span>
+        <span class="meta-time">2026/04/10 08:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712167" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dataviz1000</span>
+        <span class="meta-time">2026/04/10 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">抱歉，垃圾邮件，我也在从不同的角度研究这个问题。希望分享能增加对话。<p>首先，关于循环，克劳德（编码代理）的上下文和注意力足够大，足以进行自我反思。 Agent Tuning 展示了一种技术，不仅演示了这一点，而且还提供了一种量化它的方法。 [0] 区别在于 autoresearch 的 val_bpb 测量代理构建的内容； Agent Tuning 的 p̂ 测量代理本身。</p><p>&gt; 克劳德的注意力不区分“我正在写的指令”和“我正在遵循的指令”——它们都只是上下文中的标记。</p><p>其次，进行研究，寻找学术研究来补充背景会有所帮助。这是一个通过阅读研究并以创造性的新方式重新创建交易策略来创建交易策略的实现示例。 [1]</p><p>最大的问题是编码代理不会“快速而大声地失败”。他们的失败是欺骗性的。</p><p>[0] <a href="https://github.com/adam-s/agent-tuning" target="_blank" rel="noopener noreferrer">https://github.com/adam-s/agent-tuning</a></p><p>[1] <a href="https://github.com/adam-s/alphadidactic" target="_blank" rel="noopener noreferrer">https://github.com/adam-s/alphadidactic</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sorry to spam, I'm working on this also from a different angle. Hopefully sharing adds to the conversation.<p>First, about the loop, Claude's (coding agent) context and attention is big enough to self-reflect. Agent Tuning shows a technique that not only demonstrates this but a way quantify it. [0] The difference is autoresearch's val_bpb measures what the agent built; Agent Tuning's p̂ measures the agent itself.</p><p>&gt; Claude's attention doesn't distinguish between "instructions I'm writing" and "instructions I'm following" -- they're both just tokens in context.</p><p>Second, doing research, finding academic research to add to context helps. Here is an example of an implementation that creates trading strategies by reading research and recreating them in creative new ways. [1]</p><p>The biggest problem is the coding agents don't "Fail fast and loud". They fail deceivingly.</p><p>[0] <a href="https://github.com/adam-s/agent-tuning" target="_blank" rel="noopener noreferrer">https://github.com/adam-s/agent-tuning</a></p><p>[1] <a href="https://github.com/adam-s/alphadidactic" target="_blank" rel="noopener noreferrer">https://github.com/adam-s/alphadidactic</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mkagenius</span>
+        <span class="meta-time">2026/04/10 04:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 最大的问题是编码代理不会“快速而大声地失败”。他们的失败是欺骗性的。<p>GPT 2 和 3 过去常常失败得很快（而且声音很大，因为我们可以很容易地看到它在撒谎）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The biggest problem is the coding agents don't "Fail fast and loud". They fail deceivingly.<p>GPT 2 and 3 used to fail fast (and loud coz we could easily see it lying)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709007" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dataviz1000</span>
+        <span class="meta-time">2026/04/10 04:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的下一个探索将是“编码代理：缓慢、沉默和欺骗性地失败”。<p>在使用 Claude 创建交易策略一个月后，我学到的一件事是：如果该策略看起来可以盈利，那它就是谎言。交易策略代理找不到有效的交易策略，它实际上是一个错误搜寻代理。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My next exploration will be "Coding Agents: fail slow, silent, and deceivingly".<p>After one month working on using Claude to create trading strategies, the one thing I learned; if the strategy looks like it can profit, it is a lie. The trading strategy agent doesn't find trading strategies that work, it is really a bug hunting agent.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709555" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">j_gonzalez</span>
+        <span class="meta-time">2026/04/10 07:18</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711553" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">lmeyerov</span>
+        <span class="meta-time">2026/04/10 07:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在研发层项目之前，我发现了架构研究的价值，例如对 gfql（我们的 oss gpu 密码实现）进行重大更改。它最终是多阶段的：<p>- 对论文、项目等的深入研究。我更喜欢这里的 ChatGPT Pro 深度研究，因为它可以快速调查数百个来源的整体相关性</p><p>- 深入研究特定的论文和项目，其中人工智能编码代理下载相关论文和项目进行本地分析循环，对本质上的 Markdown wiki 进行技术分解，然后将所有内容简化为调查结果报告。 Claude 代码在这里更好一些，因为它很好地支持并行子代理。</p><p>- 迭代设计阶段，代理在论文存储库和我们自己的项目之间进行迭代，以完善建议和想法</p><p>从根本上说，这既令人兴奋，又具有局限性：这是“软件崩溃”的一个例子，我们可以确保相关社区的最佳实践和好想法，但法学硕士在这里并没有发挥创造力，只是混搭和帮助挑选。</p><p>自动化这些东西的工具看起来不错。我希望它能尽快接受特工培训，因为它已经距离他们现有的能力不远了。例如，“迭代优化函数 foobar，更喜欢 GPU 文献了解如何优化。”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've found value in architectural research before r&amp;d tier projects like big changes to gfql, our oss gpu cypher implementation. It ends up multistage:<p>- deep research for papers, projects etc. I prefer ChatGPT Pro Deep Research here As it can quickly survey hundreds of sources for overall relevance</p><p>- deep dives into specific papers and projects, where an AI coding agent downloads relevant papers and projects for local analysis loops, performs technical breakdowns into essentially a markdown wiki, and then reduces over all of them into a findings report. Claude code is a bit nicer here because it supports parallel subagents well.</p><p>- iterative design phase where the agent iterates between the papers repos and our own project to refine suggestions and ideas</p><p>Fundamentally, this is both exciting, but also limiting: It's an example of 'Software Collapse' where we get to ensure best practices and good ideas from relevant communities, but the LLM is not doing the creativity here, just mashing up and helping pick.</p><p>Tools to automate the stuff seems nice. I'd expect it to be trained into the agents soon as it's not far from their existing capabilities already. Eg, 'iteratively optimize function foobar, prefer GPU literature for how.'</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711706" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jbergqvist</span>
+        <span class="meta-time">2026/04/10 04:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我想用代理解决新问题时，我总是要求它在网上广泛搜索给定领域的先前工作，然后分析我们是否可以使用它作为灵感来构建我们的解决方案。<p>我将其视为“想法空间”中的解决方案，通过预先让代理进行搜索，我们可以在收敛到最终解决方案之前更有效地探索这个空间。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When I want to solve a new problem with an agent, I always ask it to search broadly for prior work in the given area online, and then analyze if we can build our solution using it as inspiration.<p>I see it as the solution being out there in “idea space”, and by having the agent search beforehand we can more efficiently explore this space before converging on the final solution.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709900" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dalmo3</span>
+        <span class="meta-time">2026/04/10 09:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">假设所有*公开可用的先前工作都在训练数据中是否不安全？<p>然后你可以提示它提出带有优点和缺点等的选项。</p><p>* 禁止截止后的极新内容</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it not safe to assume that all* publicly available prior work is in the training data?<p>Then you could just prompt it to propose options with pros and cons etc.</p><p>* Bar extremely new stuff from after the cutoff</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712551" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">technotony</span>
+        <span class="meta-time">2026/04/10 10:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许吧，但首先搜索以加载相关信息的上下文肯定会得到更好的结果</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe but having it search first to load the context with relevant information sure gets better results</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712860" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ctoth</span>
+        <span class="meta-time">2026/04/10 03:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近对此非常感兴趣。我很确定 <i>每一个</i> 项目应该有一个 ./papers 目录，其中包含带注释的论文，就像我在 Qlatt[0] 中所做的那样。<p>几乎每个项目。如果某件事已经被做过一百万次，那么这意味着它有很好的文献吗？如果没有，那么找到相关的东西就更重要了！不仅仅是像数据库或编译器之类的脆性计算机科学东西。您正在创建用户界面吗？可能有很棒的 UI 研究可供您参考！这个游戏循环在您正在构建的游戏中会有趣吗？应该是有相关研究吧！</p><p>[0]: <a href="https://github.com/ctoth/Qlatt/blob/master/papers/" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/Qlatt/blob/master/papers/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been very interested in this recently. I'm pretty sure that <i>every</i> project should have a ./papers directory of annotated papers in it like I do in Qlatt[0].<p>Literally every project. If it's something that's been done a million times then that means it has good literature on it? If not, then even more important to find related stuff! And not just crunchy CS stuff like databases or compilers or whatever. Are you creating a UI? There's probably been great UI research you can base off of! Will this game loop be fun in the game you're building? There's probably been research about it!</p><p>[0]: <a href="https://github.com/ctoth/Qlatt/blob/master/papers/" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/Qlatt/blob/master/papers/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708734" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alex000kim</span>
+        <span class="meta-time">2026/04/10 03:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该目录已经很大了！我猜index.md可以帮助代理找到它需要的东西，但即使是markdown文件也很长——这会消耗大量的令牌。<p>我也想知道谁/什么决定了哪些论文在那里。</p><p>在博客文章中，允许代理进行自己的搜索。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That directory is huge already! I guess the index.md helps the agent find what it needs, but even the markdown file is very long - this would consume a ton of tokens.<p>Also I wonder who/what decides what papers go in there.</p><p>In the blog post, the agent is allowed to do its own search.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708787" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ctoth</span>
+        <span class="meta-time">2026/04/10 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">查看 ctoth/research-papers-plugin 中的研究员和流程领导技能。我基本上已经完全自动化了文献综述。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Check out the Researcher and Process Leads skill in ctoth/research-papers-plugin. I have basically completely automated the literature review.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708921" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pstuart</span>
+        <span class="meta-time">2026/04/10 04:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于人工智能来说，拥有降价的“索引全球数据收集”将是一个关键时刻。数据如此之多，但磁盘空间却有限。也许 Torrent 或 IPFS 可以解决这个问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Having a "indexed global data collection" of the markdown would be a kumbaya moment for AI. There's so much data out there but finite disk space. Maybe torrents or IPFS could work for this?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709277" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ctoth</span>
+        <span class="meta-time">2026/04/10 04:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我实际上正在做这方面的工作！ <a href="https://github.com/ctoth/propstore" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/propstore</a> ——就像 Cyc，但没有一个答案。另外，知识库实际上就是可以分叉/合并的 git 存储库。 Research-papers-plugin 是前端，我们提取知识，然后我们需要某个地方来放置它:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm actually sort of working on this! <a href="https://github.com/ctoth/propstore" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/propstore</a> -- it's like Cyc, but there is no one answer. Plus knowledge bases are literally git repos that you can fork/merge. Research-papers-plugin is the frontend, we extract the knowledge, then we need somewhere to put it :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pstuart</span>
+        <span class="meta-time">2026/04/10 06:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">惊人的！ TIL 关于 Cyc，它非常有趣。我一直在思考如何能够集成 Prolog 或类似的工具可能是一项有价值的努力（尽管我自己还没有在 Prolog 中编写任何内容）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Awesome! TIL about Cyc, and it's quite intriguing. I'd been thinking about how being able to integrate Prolog or similar tools might be a valuable endeavor (although I've yet to write anything in Prolog myself).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710960" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zzleeper</span>
+        <span class="meta-time">2026/04/10 03:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，这太棒了。您是手工编写所有这些 MD 文件，还是使用 LLM 来完成提取摘要等简单的工作？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow this is amazing. Did you write all those MD files by hand, or used an LLM for the simple stuff like extracting abstracts?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ctoth</span>
+        <span class="meta-time">2026/04/10 03:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我用过 <a href="https://github.com/ctoth/research-papers-plugin" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/research-papers-plugin</a> 生成注释。真正酷的是他们如何呈现集合中的交叉链接，例如查看 <a href="https://github.com/ctoth/Qlatt/blob/master/papers/Fant_1988_LFFrequencyDomainInterpretation/notes.md" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/Qlatt/blob/master/papers/Fant_1988_...</a><p>Claude 在阅读论文方面比 Codex 更快、更好（其中一些是嵌套技能调度），但他们在这方面的工作都非常令人难以置信。编译你的论文集，将其排队并点击 /ingest-collection 然后去睡觉，然后回到一个非凡的知识库:)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I used <a href="https://github.com/ctoth/research-papers-plugin" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/research-papers-plugin</a> to produce the annotations. The thing that's really cool is how they surface the cross-links in the collection, for instance look at <a href="https://github.com/ctoth/Qlatt/blob/master/papers/Fant_1988_LFFrequencyDomainInterpretation/notes.md" target="_blank" rel="noopener noreferrer">https://github.com/ctoth/Qlatt/blob/master/papers/Fant_1988_...</a><p>Claude is much faster and better at reading papers than Codex (some of this is nested skill dispatch) but they both work quite incredibly for this. Compile your set of papers, queue it up and hit /ingest-collection and go sleep, and come back to a remarkable knowledge base :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">love2read</span>
+        <span class="meta-time">2026/04/10 07:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这听起来很愚蠢，但听起来他们需要在研究之前添加一个阶段，找到一个分析器并运行它，然后再猜测哪些优化可能受益。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It sounds very silly but it sounds like they need to add a phase before research that finds a profiler and runs it before just guessing what optimizations may be beneficiary.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711798" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">KingOfCoders</span>
+        <span class="meta-time">2026/04/10 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用 #PPPCDC 提示：计划、计划、计划，然后验证：将计划与现有代码进行比较。重新阅读计划并将其与文档进行比较。修复你不自信的地方。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I use #PPPCDC for prompting: plan,plan,plan then verify with: Compare the plan to  the existing Code. Reread and compare the plan to the Docs. Fix the areas you're not Confident about.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707952" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maCDzP</span>
+        <span class="meta-time">2026/04/10 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有一个机器学习项目。我通常会组建一个代理团队，其中有领导者、档案管理员、研究助理、研究员、开发人员和测试人员。该团队根据论文生成假设，对其进行测试并对其进行迭代。一切都使用实验室笔记本记录下来。它会燃烧代币，但我发现了一些我正在测试的有前途的策略。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have a ML project. I usually set up a team of agents, where I have a leader, archivist, research assistant, researcher, developer and tester. The team generates hypothesis based on papers, test it, and iterate over that. Everything is documented using a lab notebook. It burns tokens but I have found some promising strategies that I am testing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708830" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hungryhobbit</span>
+        <span class="meta-time">2026/04/10 02:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想任何使用 Claude 的人都知道，当你先让它制定计划，并要求它先尽可能多地研究现有代码时，它会更聪明……所以本文中的结果一点也不让我感到惊讶。<p>然而，我很想听到其他尝试将 shell 脚本（在文章末尾）添加到他们的流程中的人的回复：它（真的）改善了 Claude 吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think anyone who uses Claude knows that it works smarter when you have it make a plan first, and ask it to research the existing code as much as possible first ... so the results in this article doesn't surprise me at all.<p>However, I'd be curious to hear back from others who have tried adding the shell script (at the end of the article) to their flow: does it (really) improve Claude?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708049" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">prats226</span>
+        <span class="meta-time">2026/04/10 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一个好的实验是尝试让它访问延迟跟踪，以便它可以识别问题？ Wrt 编码代理，提供对可观察性工具的访问通常可以提高我的编码/调试能力</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A good experiment would be to also try giving it access to latency traces so it can identify issues? Wrt coding agents, giving access to observability tools often improve coding/debugging ability for me</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710166" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kaycebasques</span>
+        <span class="meta-time">2026/04/10 04:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">双子座有深入的研究API： <a href="https://ai.google.dev/gemini-api/docs/deep-research" target="_blank" rel="noopener noreferrer">https://ai.google.dev/gemini-api/docs/deep-research</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Gemini has a Deep Research API: <a href="https://ai.google.dev/gemini-api/docs/deep-research" target="_blank" rel="noopener noreferrer">https://ai.google.dev/gemini-api/docs/deep-research</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709148" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hopechong</span>
+        <span class="meta-time">2026/04/10 00:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在编写代码之前阅读论文的编码代理可以找到仅代码代理错过的优化。<p>我们在 Karpathy 的自动研究循环中添加了文献综述阶段，并将其指向 llama.cpp。该代理自主阅读 arxiv 论文、研究竞争分叉并启动虚拟机来运行并行实验。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Coding agents that read papers before writing code find optimizations that code-only agents miss.<p>We added a literature review phase to Karpathy’s autoresearch loop and pointed it at llama.cpp. The agent autonomously read arxiv papers, studied competing forks and spun up VMs to run parallel experiments.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706142" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">austinbaggio</span>
+        <span class="meta-time">2026/04/10 03:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">研究步骤是有意义的，还可以证实运行具有不同策略的多个代理也比单个代理更快地复合结果</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Research step makes sense, can also confirm that running multiple agents with diverse strategies also compound results more quickly than single agents</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708489" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alex000kim</span>
+        <span class="meta-time">2026/04/10 03:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信这通常会运作良好。如何让他们有效地与（例如）沟通是一个挑战。 1) 避免重复工作，2) 允许他们结合/叠加彼此的发现以产生更好的结果</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am sure this would works well in general. There is a challenge wrt to how to make them communicate effectively to e.g. 1) avoid duplicative work and 2) allow them to combine/overlay each others' findings to yield even better results</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708577" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tomi_dev</span>
+        <span class="meta-time">2026/04/10 04:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣。<p>当代理首先读取上下文与直接生成时，您是否发现输出质量有明显差异？</p><p>感觉大多数工具都会跳过这一步。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is interesting.<p>Do you see a noticeable difference in output quality when the agent reads context first vs going straight into generation?</p><p>Feels like most tools skip that step.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">outside1234</span>
+        <span class="meta-time">2026/04/10 03:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">研究步骤（从代码库和互联网收集关于如何完成下一步的见解）、规划步骤（根据研究我应该如何排序实施）、实施步骤和验证步骤（实施的代码审查）对我来说是超级有效的工作流程。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A research step (gather insights from across the codebase and internet for how to accomplish the next step), planning step (how should I sequence implementation given that research), an implementation step, and a verification step (code review of the implementation) is super effective workflow for me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alex000kim</span>
+        <span class="meta-time">2026/04/10 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，正如博客所说<p>&gt; 完整的设置适用于任何具有基准测试和测试套件的项目。</p><p>因此，拥有清晰且可衡量的验证步骤是关键。 
+这意味着你不能简单地给人工智能代理一个模糊的目标，例如“提高代码库的质量”因为它太笼统了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yup, as the blog says<p>&gt; The full setup works with any project that has a benchmark and test suite.</p><p>so having a clear and measurable verification step is key. 
+Meaning you can't simply give an AI agent a vague goal e.g. "improve the quality of the codebase" because it's too general.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708623" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">doctorpangloss</span>
+        <span class="meta-time">2026/04/10 02:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">skypilot 开发人员需要专注于解耦他们的产品，以便他们非常有价值的“查找最便宜的云”功能不会与 Kubernetes JobSet 和 MLflow 的故障重新发明结合在一起</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The skypilot devs need to focus on decoupling their offering, so that their very valuable "find the cheapest cloud" functionality isn't married to a glitchy reinvention of Kubernetes JobSet and MLflow</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Sim-In-Silico</span>
+        <span class="meta-time">2026/04/10 09:09</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712343" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">j_gonzalez</span>
+        <span class="meta-time">2026/04/10 07:11</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711505" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">KaiShips</span>
+        <span class="meta-time">2026/04/10 06:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711088" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 06:34</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711151" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">axeldunkel</span>
+        <span class="meta-time">2026/04/10 05:49</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710647" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Bmello11</span>
+        <span class="meta-time">2026/04/10 03:12</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708318" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sschlegel</span>
+        <span class="meta-time">2026/04/10 05:01</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">matthias_m_dev</span>
+        <span class="meta-time">2026/04/10 05:55</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710723" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">notef</span>
+        <span class="meta-time">2026/04/10 07:29</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711646" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Malachiidaniels</span>
+        <span class="meta-time">2026/04/10 03:36</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708668" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">phendrenad2</span>
+        <span class="meta-time">2026/04/10 02:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很明显，对吧？如果你想构建一个 Facebook 克隆，你不会告诉代理“构建 Facebook”。您可以向它提供 Facebook 上每个页面、行为、交互、UI 等的描述。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is obvious, right? If you want to build a Facebook clone, you wouldn't tell the agent "build Facebook". You would provide it with a description of every page on Facebook, behaviors, interactions, UI, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707905" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">faeyanpiraat</span>
+        <span class="meta-time">2026/04/10 03:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否阅读过链接文章中的 TL;DR？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you even read the TL;DR in the linked article??</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708190" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">phendrenad2</span>
+        <span class="meta-time">2026/04/10 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你是说这部分吗？<p>&gt; TL;DR：编码代理在接触代码之前阅读论文并研究竞争项目时会产生更好的优化</p><p>是什么让你认为我没有读过这篇文章，更不用说那篇长话短说了？我真的很好奇。跳到侮辱性的“你读过这篇文章了吗”是一个很大的进步，所以看看你的想法去了哪里真的很有趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You mean this part?<p>&gt; TL;DR: Coding agents generate better optimizations when they read papers and study competing projects before touching code</p><p>What made you think I hadn't read the article, let alone that TL;DR? I'm really curious. Jumping to an insulting "have you read the article" is a big step, so it'll be really interesting to see where your mind went.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708267" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tomi_dev</span>
+        <span class="meta-time">2026/04/10 04:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣。当代理首先读取上下文与直接生成时，您是否发现输出质量有明显差异？<p>感觉大多数工具都会跳过这一步。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is interesting.Do you see a noticeable difference in output quality when the agent reads context first vs going straight into generation?<p>Feels like most tools skip that step.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

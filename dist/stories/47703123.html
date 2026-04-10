@@ -1,0 +1,1292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pizza Tycoon 如何在 25 MHz CPU 上模拟流量 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1053/">返回本批次</a>
+      <h1>Pizza Tycoon 如何在 25 MHz CPU 上模拟流量</h1>
+      <p class="subtitle">How Pizza Tycoon simulated traffic on a 25 MHz CPU</p>
+      <div class="meta-line">
+        <span>pizzalegacy.nl</span>
+        <span>作者 FinnKuhn</span>
+        <span>分数 267</span>
+        <span>评论 57</span>
+        <span>2026/04/09 20:57</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47703123" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://pizzalegacy.nl/blog/traffic-system.html" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>语境</li><li>我一直在研究 Pizza Legacy，这是 1994 年 DOS 游戏 Pizza Tycoon 的开源重新实现。游戏有城市的近距离街景视图，当你滚动它时，你可以看到源源不断的汽车在街道上行驶。一次可能有 20 或 30 个小精灵，但它们在道路网络中行驶，在十字路口排在后面，通常看起来像一座活生生的城市。是的，这有点麻烦，因为有时他们会互相驶过，但它足以给地图带来一些生命感。所有这一切都在 25 MHz 386 CPU 上进行。</li><li>我在 2010 年开始这个项目时实现的第一件事就是近距离缩放级别，但我花了 14 年才终于让汽车在上面行驶，以一种我很高兴的方式；多年来我进行了多次尝试，但每次遇到问题时，我都会陷入构建一个过于复杂的系统的困境，该系统很难推理，而且工作起来没有乐趣。</li><li>2017 年的一次尝试是让每块车都记录哪些位置被占用，每辆车在移动、预留和释放位置之前都必须征求电网许可。它基本上变成了一个共享锁定系统，只是为了移动几个像素，汽车和瓷砖不断地试图保持同步。</li><li>一直以来，我的脑海里都有一个挥之不去的想法：最初的 Pizza Tycoon 在 25 MHz CPU 上运行这个程序，那么为什么我的版本总是如此复杂？</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Context</li><li>I&#39;ve been working on Pizza Legacy, an open-source reimplementation of the 1994 DOS game Pizza Tycoon. The game has a close-zoom street view of the cities, and when you scroll around it you can see a steady stream of cars driving through the streets. Maybe 20 or 30 tiny sprites at a time, but they navigate the road network, queue behind each other at intersections, and generally look like a living city. Yes, it was a bit buggy because sometimes they would drive through each other, but it was good enough to just give some sense of life to the map. All that on a 25 MHz 386 CPU.</li><li>The first thing I implemented in 2010 when I started this project was that close zoom level, but it took 14 years before I finally had the cars driving around on it, in a way that I was happy about; I had multiple attempts over the years but every time I ran into problems I got stuck building an overly complicated system that was hard to reason about and no fun to work on.</li><li>One attempt in 2017 involved each tile keeping track of which positions were occupied, and every car had to ask the grid for permission before moving, reserving and freeing slots as it went. It basically turned into a shared locking system just to move a few pixels, with cars and tiles constantly trying to stay in sync.</li><li>All the while I had this nagging thought in the back of my mind: the original Pizza Tycoon ran this on a 25 MHz CPU, so why were my versions always so complicated?</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">edwcross</span>
+        <span class="meta-time">2026/04/09 22:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">伟大的！我最终将能够购买柏林（最便宜的城市）的所有商业地点以避免任何竞争，然后开一家餐馆。<p>我以前只做“冰淇淋”（非法武器）交易，在一个城市买进另一个城市卖，快速赚大钱，然后买商铺却从不开业（太麻烦了，还要微观管理店铺）。</p><p>但买了大约200个左右后，游戏不可避免地会在我保存文件几周后崩溃，所以最终我不再玩它。我从来没有得到有关该错误的确切细节，但我希望这个重制版不会有它！</p><p>除此之外，最有趣的事情是尝试奇怪的披萨食谱，发现味道算法有点奇怪。我可以放很多鸡肉或菠萝，然后混合一些配料，让一些年龄段的人对它们评价很高。</p><p>但破坏比赛仍然比处理正常事务更有趣。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great! I'll finally be able to buy all commerce spots in Berlin (cheapest city) to avoid any competition, and _then_ open a restaurant.<p>I used to deal only with "ice cream" (illegal weapons) trading, buying in one city and selling them on another, to quickly earn lots of money, and then buying commercial spots but never opening them (too much hassle, having to micro-manage shops).</p><p>But after having bought about 200 or so, the game would inevitably crash a few weeks after my save file, so in the end I stopped playing it. I never got the exact details about the bug, but I hope this remake won't have it!</p><p>Besides that, the most fun thing was trying weird pizza recipes and seeing that the taste algorithm was a bit weird. I could put lots of chicken, or pineapple, and mix a few ingredients, and have some age groups rate them very highly.</p><p>But sabotaging the competition was still funnier than handling a normal business.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704523" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cowomaly</span>
+        <span class="meta-time">2026/04/09 22:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在从头开始编写引擎（而不是重新创建原始引擎），所以它肯定不会有原始的错误。当然，我也会有自己的错误，但至少现在它是开源的，所以可以被更多人修复：D</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm writing the engine from scratch (not re-creating the original engine) so it definitely won't have the original bug. Of course I'll have my own bugs but at least its open source now so it's fixable by more people :D</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704640" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ErroneousBosh</span>
+        <span class="meta-time">2026/04/10 03:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 当然我也会有自己的错误...<p>...但它们也会同样有趣吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Of course I'll have my own bugs...<p>... but they'll be just as entertaining?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708524" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lencastre</span>
+        <span class="meta-time">2026/04/10 01:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最赚钱的披萨，披萨底+一块（字面意思是一块）番茄碎，是的，你没有看错，一颗“nico”番茄<p>那个披萨会让你损失 0 美元，因为四舍五入误差，面团是免费的（如果我没记错的话），一点番茄末小于四舍五入误差，所以实际上为零</p><p>然后你以最低的价格出售披萨</p><p>顾客会讨厌它，但价格这么好</p><p>你甚至不再需要冰淇淋了</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">the most profitable pizza, pizza base + one (literally one) piece of minced tomato, yes you read that right, one “nico” of tomato<p>that pizza will set you back 0 USD because rounding error, the dough is free (if I remember well) and a bit of minced tomato is less than a rounding error, so effectively zero</p><p>then you sell the pizza for the lowest price</p><p>customers will hate it, but the price is so good</p><p>you don’t even need ice cream anymore</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706838" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hadlock</span>
+        <span class="meta-time">2026/04/10 02:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很确定您刚刚描述了小凯撒披萨的商业模式。我记得很久以前它们的价格是 5 美元，但即使在今天，在加州，他们的大意大利辣香肠也只有 10 美元，而竞争对手的售价为 27-35 美元</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm pretty sure you just described Little Caesar's Pizza business model. I recall way back they were $5 but even today here in California their large pepperoni is only $10 where competitors are charging $27-35</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707531" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">setr</span>
+        <span class="meta-time">2026/04/09 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">通过使道路单向且道路拥有运动，我认为它相当于传送带……这意味着异星工厂的传送带优化可能是相关的。<p>例如，存储项目之间的增量而不是直接跟踪位置，因为汽车之间的距离对于道路长度来说是静态的，除了在压缩、插入或移除汽车期间之外</p><p><a href="https://www.factorio.com/blog/post/fff-176" target="_blank" rel="noopener noreferrer">https://www.factorio.com/blog/post/fff-176</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">By making the roads single-direction and roads owning the movement, I think it’s been made equivalent to a conveyer belt… which means factorio’s conveyor belt optimizations might be relevant.<p>Eg storing the delta between items rather than tracking position directly, because the distance between cars is static for the length of the road, except during compression, insertion or removal of a car</p><p><a href="https://www.factorio.com/blog/post/fff-176" target="_blank" rel="noopener noreferrer">https://www.factorio.com/blog/post/fff-176</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704969" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mjamesaustin</span>
+        <span class="meta-time">2026/04/10 00:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于汽车彼此停​​靠，距离并不是静态的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The distance is not static because of cars stopping for one another.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">setr</span>
+        <span class="meta-time">2026/04/10 02:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是压缩，《异星工厂》中的故事也是如此。压缩之前/之后它是静态的，因此您可以避免更新任何值。<p>我认为与异星工厂传送带的主要区别实际上在于插入——如果传送带没有空间，插入就会被阻止；而我则希望一辆车能“溜进来”。</p><p>但我认为你仍然可以说保持了压缩带总是被压缩的特性，除了插入/移除；插入/删除只需要更新增量的静态数量（2，在行的中间，1 在行的末尾）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That’s the compression, same story in factorio. Before/after compression it’s static, so you can  avoid having to update any value.<p>The main difference from factorio belts I think is actually in the insertion — if there’s no room in the belt, insertion is blocked; whereas I’d expect a car to “slip in”.</p><p>But I think you can still say that maintains the property that a compressed belt will always be compressed, excepting insert/removal; and insertion/removal just requires updating a static number of deltas (2, in the middle of the line, 1 at the end of it)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LorenPechtel</span>
+        <span class="meta-time">2026/04/10 04:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">异星工厂腰带也可以添加或移除物品。<p>问题是传送带是根据增量而不是位置来建模的——不需要每个周期移动每个对象。  一个物体与前面的物体有一定的距离。  当传送带向前移动时，这种关系不会改变——不需要更新每个指针（并且游戏中可以有很多传送带！）如果传送带的头部不能移动，您只需要更新一个增量——第一个自由项目和它前面的卡住项目之间的间隙以及该值已经是已知的，无需搜索。  如果您将免费物品移到卡住的物品上，您就会沿着传送带走下去，找到新的第一个免费物品。</p><p>如果在皮带上添加或删除了某些内容，您只需修改皮带模型。  对象只能由插入器移除，插入器仅检查传送带的一个单元格，抓取该单元格中与它们愿意抓取的内容相匹配的任何内容（如果它们正在向机器喂食，它们只会抓取机器想要的东西，否则它们将尊重分配给它们的过滤器列表。）当某些东西被添加到传送带时，您将其添加到列表中并更新后面对象的增量。  在任何情况下都不需要对传送带进行常规更新，就像您在添加和删除项目时不需要对队列中的项目执行任何操作一样。</p><p>Factorio 是一款关于优化的游戏，开发人员很好地将这一想法应用到游戏数学中。  也就是说，直到太空时代 DLC 中的大量小行星。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And Factorio belts can have stuff added or removed, also.<p>The thing is a belt is modeled in terms of deltas rather than positions--there is no need to move each object each cycle.  An object has a distance from the object in front.  When the belt moves forward this relationship does not change--no need to update every pointer (and there can be a *lot* of belts in the game!)  If the head of a belt can't move you only need to update one delta--the gap between the first free item and the stuck item in front of it and that value can already be known, no need to search.  If you move the free item up against the stuck item you walk down the belt to find the new first free item.</p><p>You only need to modify the belt model if something is either added or removed from the belt.  Objects get removed only by inserters, inserters examine only one cell of the belt, grabbing anything in that cell that matches what they are willing to grab (if they are feeding a machine they will only grab what the machine wants, otherwise they'll respect the filter list assigned to them.)  When something gets added to a belt you add it to the list and update the delta of the object behind.  No general update of the belt is needed in any situation, any more than you need to do anything to the items in a queue as you add and remove items.</p><p>Factorio is a game about optimization and the developers did a very good job of applying that idea to the game math.  That is, until the masses of asteroids in the Space Age DLC.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709994" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Waterluvian</span>
+        <span class="meta-time">2026/04/09 21:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">第三张显示交通方向箭头的图片给了我一个小小的恍然大悟的时刻。您不需要复杂的规则来规定汽车在十字路口可以做什么。你不去推理 <i>路口</i> 根本不。你的理由是 <i>车道</i>！<p>在每个选择单元格中，随机决定时，您只需权衡转弯的权重低于直行的权重即可。如果你不想掉头，你可以设置一个像它所描述的规则，或者任何类型的转弯“冷却时间”。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The third image showing the arrows for traffic direction gave me a tiny eureka moment. You don't need complex rules for what cars can do at an intersection. You don't reason about the <i>intersection</i> at all. You reason about the <i>lanes</i>!<p>At each choice cell, you just weigh the turn lower than going straight when randomly deciding. And if you don't want U-turns, you set a rule like it describes, or any sort of "cooldown" on turning.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703833" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/04/09 22:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>有人</i> 还没看过他们的Biffa！<p><a href="https://www.youtube.com/watch?v=pGCoLh3NL7g" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=pGCoLh3NL7g</a></p><p>一切都与车道和流量有关。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>Someone</i> hasn't been watching their Biffa!<p><a href="https://www.youtube.com/watch?v=pGCoLh3NL7g" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=pGCoLh3NL7g</a></p><p>It's all about the lanes and the flow.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704195" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Waterluvian</span>
+        <span class="meta-time">2026/04/09 22:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对这个频道一无所知。 100%符合我的口味。感谢分享！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Had no idea about this channel. 100% down my alley. Thanks for sharing!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bombcar</span>
+        <span class="meta-time">2026/04/09 23:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人惊讶的是，这些游戏中的交通模拟器是多么“糟糕/不准确”，即使有很棒的模组，但如何 <i>信息丰富的</i> 它们与真实的流量模式有关。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's amazing how "bad/inaccurate" the traffic simulators are in those games, even with great mods, and yet how <i>informative</i> they are about real traffic patterns.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705280" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Waterluvian</span>
+        <span class="meta-time">2026/04/09 21:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有人知道任何以“没有业务在如此低的硬件要求上运行”为主题的社区/游戏 Jam 吗？有点像游戏的演示场景。<p>在成长过程中，有很多游戏让我对硬件的期望产生了如此扭曲的看法。  《战蟾蜍》、《古惑狼》、《马拉松三部曲》（Macintosh）、《帝国时代》（多人游戏）、《过山车大亨》（当然）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anyone know of any communities/game jams with the theme of "has no business running on such low hardware requirements"? Kind of like the demoscene but for games.<p>There were many games growing up that gave me such a warped view of what was to be expected from the hardware.  Battletoads,  Crash Bandicoot, Marathon Trilogy (Macintosh), Age of Empires (Multiplayer), Roller Coaster Tycoon (of course).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703763" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">whizzter</span>
+        <span class="meta-time">2026/04/09 22:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不完全确定它是否符合标准，但大多数复古平台通常都会弹出复古主题的组合，这意味着存在自然的硬件限制（例如复古平台的演示）。<p>8 位，如 Nes（Nesjam 五月/六月下旬）、Gameboy（去年的 GBJam，每两年一次）、Atari 等，但也适用于 MSDOS、Amiga 和更多“中学生”平台以及 PS1 等半现代平台。</p><p>现在，即使使用现代工具，要在旧平台上获得令人印象深刻的东西也需要做大量的工作（上次我有一个 Gameboy 技术演示，有一个组合将会增长得惊人）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not entirely sure if it's fit the critera but there is usually pops up retro-themed compos for most retro platforms meaning there's natural hardware restrictions (like demos for retro platforms).<p>8bit like Nes (Nesjam late may/june), Gameboy(GBJam was last year, bi-annual), Atari,etc, but also for MSDOS, Amiga and more "mid-school" platforms together with semimodern like PS1.</p><p>Now, even with modern tools it's plenty of work to get impressive things working on older platforms (I had a Gameboy techdemo last time there was a compo that's due to grow ridiculously much).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">BeetleB</span>
+        <span class="meta-time">2026/04/10 02:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">边疆精英（大卫·布拉本饰）。广阔的宇宙，具有令人敬畏的太空飞行机制（重力等），出色的图形/音频，所有这些都适合在一张软盘上。它是用汇编编码的：<p><a href="https://en.wikipedia.org/wiki/Frontier:_Elite_II" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Frontier:_Elite_II</a></p><p>你可以在里面做弹弓效果。</p><p>对于老游戏，我会说原版《波斯王子》。我在 8088 机器上玩过它，他如何使动画变得复杂，令人印象深刻 <i>和</i> 光滑的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Frontier Elite (David Braben). A vast universe, with awesome space flight mechanics (gravity, etc), great graphics/audio, all fitting on one floppy disk. It was coded in assembly:<p><a href="https://en.wikipedia.org/wiki/Frontier:_Elite_II" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Frontier:_Elite_II</a></p><p>You could do the slingshot effect in it.</p><p>For older games, I would say the original Prince of Persia. I played it on an 8088 machine, and it was pretty impressive how he made the animations sophisticated <i>and</i> smooth.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/04/09 23:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《德军总部 3D》肯定会出现在这个名单上。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wolfenstein 3D would have to be on that list.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705030" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">andai</span>
+        <span class="meta-time">2026/04/09 22:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">+1 如果还不存在的话，它就必须存在！<p>也许问题是人们并不都拥有相同类型的硬件？也许您的目标是模拟器。 （有些幻想游戏机也算在这里？）</p><p>我看起来并不昂贵，但一些复古主题的果酱缺少我所期待的“精神”。</p><p>不久前我做了一场诺基亚即兴表演——单色、嘟嘟声——我记得当时有点恼火，因为规则在技术上允许 3D Unity 游戏，只要它们遵循分辨率和调色板。</p><p>（在 TI 计算器上旋转的 3D 立方体是另一回事；）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">+1 This needs to exist if it doesn't yet!<p>Maybe an issue would be people not all having the same type of hardware though? Maybe you target an emulator. (Some Fantasy Consoles sort of count here?)</p><p>I haven't looked expensively but some of the retro themed jams were missing the "spirit" I was expecting.</p><p>I did a Nokia jam a while back — monochrome, beeps — and I remember being kind of annoyed that the rules technically allowed 3D Unity games as long as they followed resolution and color palette.</p><p>(A 3D cube spinning on a TI calculator is a different matter ;)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703957" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">GoofGarage</span>
+        <span class="meta-time">2026/04/09 22:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;<i>一些幻想游戏机也算在这里吗？</i><p>他们肯定会的。  我建议 GP 查看 PICO-8，其中有一些非常真实的游戏，例如原始的 Celeste <i>（由其原创者）</i>、牛危机、POOM、Combo Pool、Into Ruins、Dank Tomb、UFO Swamp Odyssey、Porklike 等等。  您可以通过浏览器在 Itch.io 上免费玩其中的大部分内容。</p><p>我一直在制作一款“真实的”且功能非常齐全的 PICO-8 游戏作为“适合市场”的原型 - 如果 Itch 上的 PICO-8 游戏得到有意义的关注，我就“找到了乐趣”，因此我应该制作“完整版” <i>（非 PICO-8）</i> 用于蒸汽等</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;<i>Some Fantasy Consoles sort of count here?</i><p>They definitely do.  I recommend GP check out PICO-8 which has some VERY real games on it like the original Celeste <i>(by its original creators)</i>, Cattle Crisis, POOM, Combo Pool, Into Ruins, Dank Tomb, UFO Swamp Odyssey, Porklike, and much more.  Most of which you can play on Itch.io for free in your browser.</p><p>I’ve been having a blast making a “real” and very full-featured PICO-8 game to serve as a “market fit” prototype — if a PICO-8 game on Itch gets meaningful attention, I’ve “found the fun” and therefore I should make “the full version” <i>(non-PICO-8)</i> for Steam, etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704205" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Waterluvian</span>
+        <span class="meta-time">2026/04/09 22:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我想目标模拟器是解决这种问题的方法。<p>说到你最后的评论：虽然 <i>非常令人印象深刻</i>，当有人用 Game Boy 或 SNES 或其他什么东西做了一些令人惊奇的事情时，我感到有点失望，但解决方案包括将整个计算机塞进卡带中。这还是 <i>非常酷</i> 但您的控制台只是成为 GTX 4080 或其他设备的主机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, I imagine a target emulator is the way to go for this kind of thing.<p>Speaking of your last comment: while <i>very impressive</i>, I feel a bit disappointed when someone's done something amazing with a Game Boy or SNES or whatnot, but the solution involves shoving an entire computer in the cartridge. This is still <i>very cool</i> but your console just becomes a head unit for your GTX 4080 or whatnot.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704028" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">actionfromafar</span>
+        <span class="meta-time">2026/04/09 22:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这让我当时也有些失望，因为我意识到有些游戏有额外的声音电路，甚至还有额外的 CPU 。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That made me somewhat disappointed back in the day too, when I realized that some games had extra sound circuitry or even an extra CPU in them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/09 22:24</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704175" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">siriaan</span>
+        <span class="meta-time">2026/04/10 05:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Corncob 3D 是一款飞行模拟器，具有非常逼真的物理效果和以 x86 程序集编写的平面着色 3D 图形。它在 286 上运行得很好！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Corncob 3D was a flight simulator with quite realistic physics and flat shaded 3D graphics written in x86 assembly. It ran pretty well on a 286!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Night_Thastus</span>
+        <span class="meta-time">2026/04/10 01:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“微型法师”： <a href="https://morphcat.de/micromages/" target="_blank" rel="noopener noreferrer">https://morphcat.de/micromages/</a><p>让我想起了这一点。我发现他们的视频详细介绍了制作一款适合 NES 的游戏所需要做的一些工作，真的很有趣！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">'Micro Mages': <a href="https://morphcat.de/micromages/" target="_blank" rel="noopener noreferrer">https://morphcat.de/micromages/</a><p>Reminds me of this. I found their video that had a breakdown of some of what they needed to do to make a game fit on NES really fascinating!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706396" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nosrepa</span>
+        <span class="meta-time">2026/04/10 02:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很高兴看到人们将 Playdate 的硬件推向了何种程度。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been enjoying seeing how far people have been pushing the Playdate's hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707402" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Narishma</span>
+        <span class="meta-time">2026/04/09 21:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">演示派对通常有一个游戏类别。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Demo parties usually have a category for games.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703890" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Neywiny</span>
+        <span class="meta-time">2026/04/10 03:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这并不是说你不需要寻路，因为道路告诉汽车去哪里，而是因为汽车并没有试图去任何地方。与城市天际线和汽车从一个地方行驶到另一个地方不同，十字路口的随机方向要简单得多。这并不一定更糟，这只是一个不同的问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would argue it's not that you don't need pathfinding because the roads tell the cars where to go, it's because the cars aren't trying to get anywhere. Unlike cities skylines and co where a car is going from a place to a place, random directions at intersections are dramatically simpler. Which isn't necessarily worse, it's just a different problem.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708796" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Pikamander2</span>
+        <span class="meta-time">2026/04/10 03:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《快餐大亨 2》（又名《披萨连线 2》）绝对是令人惊叹的。我花了很多时间定制我的披萨，并在竞争的披萨店里塞满了蟑螂和木虫（偶尔还绑架他们的员工）。<p>英文版有一些奇怪的翻译怪癖，但这些恰恰增加了复古的魅力。</p><p>有一次我发现了一个错误，如果你跟随一名信使进入敌方总部大楼，而他们里面有守卫，游戏就会崩溃（我猜他们杀死了信使，然后导致空引用或其他什么？）。当游戏崩溃时，我害怕得把爷爷的电脑弄坏了。美好时光。</p><p>它唯一缺少的是多人游戏。我希望有一天有人能创建一个完整的 OpenRCT2 风格的重制版；它对于在线多人游戏和古怪的模组有着巨大的潜力。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fast Food Tycoon 2 (AKA Pizza Connection 2) was absolutely amazing. I spent so many hours customizing my pizzas and filling up the competing pizzerias with cockroaches and woodworms (and occasionally kidnapping their employees).<p>The English version had some bizarre translation quirks, but those just add to the retro charm.</p><p>One time I found a bug where the game would crash if you followed a courier into an enemy HQ building while they had guards inside (I guess they kill the courier, which then leads to a null reference or something?). When the game crashed I was so scared that I had broke my grandpa's computer. Good times.</p><p>The only thing it was missing was multiplayer. I hope that somebody creates a full OpenRCT2 style remake of it someday; it has so much potential for online multiplayer and wacky mods.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708829" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bluedino</span>
+        <span class="meta-time">2026/04/09 22:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 汽车不需要知道它们要去哪里。每种道路瓷砖类型都有自己的方向。道路块 0x16 是水平道路的底部部分，这意味着汽车只能在这些道路上从左向右行驶。<p>对于老游戏来说看起来太复杂而无法做到的任何事情，总有一个简单的解释。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; cars don't need to know where they're going. Each road tile type carries its own direction. Road tile 0x16 is the bottom part of a horizontal road, meaning that cars can only drive from left to right on these roads.<p>There's always a simple explanation for anything that looks too complicated for an old game to do.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703897" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">manofmanysmiles</span>
+        <span class="meta-time">2026/04/10 00:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个已经开发了这么长时间了。在这个狂热的编码时代，这是一股新鲜空气，并提醒我们 
+我可以放慢脚步。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love that this has been in development for so long. It's a breath of fresh air in this manic vibe coding era, and a reminder to 
+me that I can slow down.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705406" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">harvey9</span>
+        <span class="meta-time">2026/04/10 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也是。一篇完整的博客文章讲述了如何断断续续地花费数年时间在一些只是美观的东西上，甚至不是游戏的核心</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Me too. A whole blog post about spending years on and off on something that's just aesthetic and not even central to the game</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dpcx</span>
+        <span class="meta-time">2026/04/09 21:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我和我高中时的女朋友一直玩这个游戏；尝试制作披萨以获得最高分总是非常令人沮丧。总感觉我可能会差一个像素并得到很低的分数，但我喜欢建立我的“帝国”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My high school girlfriend and I played this game all the time; trying to build the pizzas to get the best score was always super frustrating. It always felt like I could be a single pixel off and get a really low score, but I loved building my "empire"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703743" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">another-dave</span>
+        <span class="meta-time">2026/04/09 22:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我和我的高中女友一直玩这个游戏；尝试制作披萨以获得最高分总是非常令人沮丧。总感觉我可能差一个像素<p>《披萨大亨》是我们几年后在一些重新包装的“经典游戏”系列中以 5 英镑的价格获得的游戏之一，但它没有小册子或任何东西。</p><p>据说这本小册子是正确制作披萨的关键，因为它包含了有关需要哪些元素以及在哪里需要的所有说明。 （我听到有人说他们用这个作为反盗版的东西，因为没有小册子，它可以玩但不可能，不确定这是不是真的哈哈）</p><p>我们过去只是通过货物崇拜来获得美味的披萨。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; My high school girlfriend and I played this game all the time; trying to build the pizzas to get the best score was always super frustrating. It always felt like I could be a single pixel off<p>Pizza Tycoon was one of those games we got years later for £5 in some repackaged "Classic Games" collection but it came without a booklet or anything.</p><p>Supposedly the booklet was the key to getting the pizzas right as it had all the instructions on which elements were needed &amp; where. (I heard someone say they used this as an antipiracy thing as without the booklet, it'd be playable but impossible, not sure if that's true lol)</p><p>We used to just cargo cult our way to good pizzas.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cowomaly</span>
+        <span class="meta-time">2026/04/09 22:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是真的！在原版中，如果您没有游戏附带的“烹饪书”中的至少 3 个披萨食谱，您的餐厅受欢迎度统计数据将除以 8，这使得您很难赚取任何利润:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's true! In the original if you don't have at least 3 of the pizza recipes from the "cook book" that shipped with the game your restaurant popularity stat gets divided by 8, which makes it really difficult to make any profit :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">silvester23</span>
+        <span class="meta-time">2026/04/09 22:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">关于反盗版的事情是正确的，至少在原始版本中是这样（我不知道重新发布的情况）。<p>它的工作原理是，你必须提供至少一些与小册子上的食谱相当接近的披萨，才能吸引顾客。一旦你有了这个，你就可以通过定制食谱发挥创意，但如果你只做定制食谱，你注定会失败。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The thing about the anti-piracy is true, at least in the original version (I don't know about re-releases).<p>The way it worked was you had to offer at least a few pizzas that were reasonably close to recipes from the booklet in order to get any customers. Once you had that, you could get creative with custom recipes but if you only did custom recipes, you were bound to fail.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704393" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">swores</span>
+        <span class="meta-time">2026/04/09 23:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平地说，我怀疑现实生活也有点像这样——会有足够多的潜在顾客想要一份适合你所在地方的“经典”菜品（意大利的玛格丽塔等，英国的意大利辣香肠等，等等），基本上每个提供披萨的地方都会有相同的前几个选项，即使他们对菜单的其余部分有创意。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">To be fair, I suspect real life is a bit like that too - there will be a big enough % of potential customers who want one of "the classics" for where you are (margherita etc in Italy, pepperoni etc in the UK, whatever) that basically every place that serves pizza will have the same first few options even if they get creative with the rest of the menu.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705014" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/04/09 23:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我还是个孩子的时候，我通过反复试验和记笔记，在《KingsQuest VI》中手动闯过逻辑悬崖，然后我才意识到答案就在书中。  翻译象形文字《阿蒙拉之匕首》时几乎做了同样的事情，但我想起之前发生的事情，就去查了一下。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When I was a kid I manually made it through the cliffs of logic in KingsQuest VI by trial and error and taking notes for days, before I realized the answer was in the book.  Almost did the same thing for translating hieroglyphics the Dagger of Amon Ra, but I remembered what happened before and went to check.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">timcobb</span>
+        <span class="meta-time">2026/04/10 00:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 也许一次有 20 或 30 个小精灵，但它们在道路网络中导航，在十字路口排在后面，通常看起来像一座活生生的城市。是的，这有点麻烦，因为有时他们会互相驶过，但它足以给地图带来一些生命感。所有这一切都在 25 MHz 386 CPU 上进行。<p>对于 25MHz CPU 来说有这么多吗？我们谈论的是每秒循环 2500 万次的东西，这对于 386 来说肯定不是什么大问题吧？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Maybe 20 or 30 tiny sprites at a time, but they navigate the road network, queue behind each other at intersections, and generally look like a living city. Yes, it was a bit buggy because sometimes they would drive through each other, but it was good enough to just give some sense of life to the map. All that on a 25 MHz 386 CPU.<p>is that much of anything for a 25MHz CPU? We're talking about something cycling 25 million times per second, surely that's not such a big deal for a 386?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705469" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">leecommamichael</span>
+        <span class="meta-time">2026/04/10 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您有效地写出了我好奇的内容。 “模拟交通”可能意味着很多事情，我记得在旧的《模拟城市》中，他们只是将每个道路瓷砖“着色”为红色/黄色/绿色（毫无疑问来自三元旗），并且视觉效果只是在各州之间混合（汽车密度）。<p>每秒能够完成数百万件事情应该可以实现各种行为，特别是对于那个在运行程序时要求操作系统让开的时代的游戏。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you for writing effectively what I was curious about. "Simulating traffic" can mean a lot of things, I remember on the old SimCity they just "colored" each road-tile as red/yellow/green, (no doubt from a ternary flag) and the visuals just sort of blended between the states (car density.)<p>Being able to do millions of things each second should enable all sorts of behaviors, especially for a game of the era when you asked the OS to kindly step aside while you run your program.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">timcobb</span>
+        <span class="meta-time">2026/04/10 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 特别是对于那个时代的游戏，当你运行程序时，你要求操作系统让开。<p>完全！我也想知道这个问题。我知道每个操作都需要一定数量的周期，但每秒仍然有 25,000,000 个周期发生，并且没有多任务处理...:shrug::)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; especially for a game of the era when you asked the OS to kindly step aside while you run your program.<p>totally! I was also wondering this. I know each operation takes some number of cycles, but there's still 25,000,000 of them happening per second, and there's no multi-tasking... :shrug: :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710518" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">IrishTechie</span>
+        <span class="meta-time">2026/04/09 21:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就在一小时前，我还在GOG上寻找这款游戏，因为它让一个青少年大吃一惊，因为它太棒了！不幸的是，它不在GOG上。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was looking for this game on GOG only an hour ago having regaled a teenager with how great it was! It’s not on GOG unfortunately.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703533" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">haunter</span>
+        <span class="meta-time">2026/04/09 21:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它在GOG和Steam上有售。<p>Pizza Tycoon 是美国市场名称，国际上发布为 Pizza Connection</p><p><a href="https://www.gog.com/en/game/pizza_connection" target="_blank" rel="noopener noreferrer">https://www.gog.com/en/game/pizza_connection</a></p><p><a href="https://store.steampowered.com/app/598990/Pizza_Connection/" target="_blank" rel="noopener noreferrer">https://store.steampowered.com/app/598990/Pizza_Connection/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s on GOG and Steam.<p>Pizza Tycoon was the US market name, internationally it was released as Pizza Connection</p><p><a href="https://www.gog.com/en/game/pizza_connection" target="_blank" rel="noopener noreferrer">https://www.gog.com/en/game/pizza_connection</a></p><p><a href="https://store.steampowered.com/app/598990/Pizza_Connection/" target="_blank" rel="noopener noreferrer">https://store.steampowered.com/app/598990/Pizza_Connection/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47703646" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mcraiha</span>
+        <span class="meta-time">2026/04/09 23:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">至少在芬兰它也是《披萨大亨》
+<a href="https://www.pelit.fi/artikkelit/pizza-tycoon-2/" target="_blank" rel="noopener noreferrer">https://www.pelit.fi/artikkelit/pizza-tycoon-2/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">At least in Finland it was also Pizza Tycoon
+<a href="https://www.pelit.fi/artikkelit/pizza-tycoon-2/" target="_blank" rel="noopener noreferrer">https://www.pelit.fi/artikkelit/pizza-tycoon-2/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705037" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cowomaly</span>
+        <span class="meta-time">2026/04/10 01:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，DOS 版本到处都被称为 Pizza Tycoon。 Amiga 版本是德语版本，名为 Pizza Connection。仅在 2017 年的数字重新发行中，他们才使用 Pizza Connection，但 DOS 版本（包括重新发行）的所有资产都称为 Pizza Tycoon。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah the DOS version was called Pizza Tycoon everywhere. The Amiga version was in German and was called Pizza Connection. Only for the digital re-release in 2017 did they go with Pizza Connection, but all the assets of the DOS version (including that re-release) call it Pizza Tycoon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706665" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Nifty3929</span>
+        <span class="meta-time">2026/04/10 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯 - 我觉得在 SimCity 或 CitySkylines 这样的常规城市模拟器中包含模块会很酷，这样您就可以在该引擎之上构建其他游戏。有点像 Unity (?) 或 Roblox (?)<p>然后，您可以利用深度模拟功能，而不必担心流量和类似的事情 - 为您的书店大亨或甜甜圈大亨特许经营权。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hmm - it occurs to me that it would be cool to have modules inside a regular city-simulator like SimCity or CitySkylines such that you can build additional games on top of that engine. A bit like Unity (?) or Roblox (?)<p>Then you could take advantage of the deep simulation capability, not worring about traffic and things like that - for your Bookstore Tycoon or Donut Tycoon franchise.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47708918" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kilroy123</span>
+        <span class="meta-time">2026/04/09 22:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我没有什么要补充的，只是想说，我喜欢人们像这样重建旧游戏的趋势。我希望看到更多这样的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't have much to add except to say, I love this trend of people rebuilding old games like this. I hope to see a lot more of this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704449" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hilti</span>
+        <span class="meta-time">2026/04/09 23:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这些帖子，因为我一直想从事游戏开发，但一直找不到空闲时间。太感谢了！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love these posts, because I always wanted to get into game development and never found spare time. Thank you so much!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705310" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">joemi</span>
+        <span class="meta-time">2026/04/10 06:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里的评论中其他一些地方也提到过，但我向初级游戏开发者推荐 PICO-8。这是一款设计精良的幻想控制台，因此感觉就像由于限制而实际上是在针对特定硬件进行开发。但是，您可以使用易于使用的 API 在 Lua 中进行编程，并且可以使用 PICO-8 制作整个游戏，因为它具有代码编辑器、精灵编辑器、地图编辑器、声音效果编辑器和音乐编辑器。这是一次非常好的体验——我认为这是人们喜欢它并且你听到很多关于它的主要原因。<p>如果你想要一个限制较少的游戏开发系统，或者买不起（非常值得！）15 美元的 Pico-8，有很多很棒的免费方法，比如 LÖVE（也使用 Lua）、Godot（GDScript 或 C#）、Phaser (js) 等。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's been mentioned a few other places in the comments here, but I recommend PICO-8 for beginning game developers. It's a really well-designed fantasy console, so it feels like you're actually developing for specific hardware due to the limits. But you're programming in Lua with an easy-to-use API, and you can make the entire game using PICO-8, since it has a code editor, sprite editor, map editor, sound fx editor, and music editor. It's a really nice experience -- I think this is the primary reason people love it and you hear so much about it.<p>If you want a less-restrictive game dev system or can't afford the (well worth it!) $15 for Pico-8, there are many great free methods, like LÖVE (also uses Lua), Godot (GDScript or C#), Phaser (js), and so on.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dueltmp_yufsy</span>
+        <span class="meta-time">2026/04/10 01:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“1994 年 DOS 游戏的开源重新实现”
+我喜欢社区团结起来，让这些东西保持活力，甚至超越原来的样子。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"an open-source reimplementation of the 1994 DOS game"
+I love that communities band together to keep these things alive and even thrive beyond the original.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47706860" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ge96</span>
+        <span class="meta-time">2026/04/09 22:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我看到一些汽车消失了<p>编辑：实际上，如果它到达路的尽头，它会生成到旁边的车道，要么向相反方向行驶，要么转弯（参考第一个gif）</p><p>想知道他们是否可以考虑确保没有汽车堆叠在一起</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I see some cars disappearing<p>edit: actually if it hits an end of a road, it spawns to a lane next to it either goes opposite direction or turns (referencing first gif)</p><p>Wonder if they could have considered ensuring no cars stack on top of each other</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704602" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cowomaly</span>
+        <span class="meta-time">2026/04/09 23:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有一些规则在碰撞检测中他们基本上不检查；例如，向东行驶的汽车永远不会与向南行驶的汽车相交，因此只需驶过它们即可。我不确定这是否是一种优化，只是通过检查更少的情况来加速碰撞检测，或者他们试图通过更好的碰撞检测来防止过多的交通拥堵。可能两者都有一点:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are some rules where in their collision detection they basically don't check; for example cars going east will never intersect with cars going south so just drive through them. I'm not sure if this was an optimisation to just speed up collision detection by checking fewer cases or they were trying to prevent too many traffic jams by having better collision detection. Probably a bit of both :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704706" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jszymborski</span>
+        <span class="meta-time">2026/04/09 22:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我无法理解为什么有人想要重新实现《披萨大亨》，直到我意识到我小时候玩过它的续集，与原作相比，它受到了很多非议。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I couldn't understand why someone would want to reimplement Pizza Tycoon, until I realized I played it's sequel as a child, which is much maligned compared to the original.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704015" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cowomaly</span>
+        <span class="meta-time">2026/04/09 22:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我尝试了续集，但它们也不适合我。可能也是由于缺少怀旧因素:)<p>至于我为什么这么做；多年前，当我在大学和开始工作之间有一段时间，我正在寻找一个业余爱好编码项目，并受到 TTDPatch 和 OpenTTD 的启发，所以我想我也会做同样的事情，但要为 Pizza Tycoon 做。没有什么具体原因，只是我十几岁的时候经常玩这个游戏，而且有一些小事情让我觉得烦人，所以我看到了生活质量的一些提升空间。完全意识到没有多少人关心这个游戏（也没有真正期望能真正走得很远），但我仍然享受（并且已经）很多乐趣并在为此编写现代引擎的过程中学到了很多东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tried the sequels and they never clicked for me either. Probably also due to the missing nostalgia factor :)<p>As to why I did this; when I had some time between university and starting a job many years ago I was looking for a hobby coding project and was inspired by TTDPatch and OpenTTD so I figured I'd do the same but for Pizza Tycoon. No specific reason other than that I played the game a lot as a teenager and there were some small things that I found annoying, so I saw some room for quality of life improvements. Fully aware that not many people care about this game (also didn't really expect to really get very far tbh), but still I had (and have) a lot of fun and learned a lot in the process of writing a modern engine for this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704274" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jszymborski</span>
+        <span class="meta-time">2026/04/09 23:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">《披萨大亨》虽然不是最著名的游戏，但仍然很受好评！我只玩过《披萨大亨》/《连线2》，所以我不认为怀旧是我不喜欢它的原因。也就是说，这些年来，它的一些东西一直困扰着我（我最终在成年后再次在 GOG 上购买了它，很久以前就丢失了磁盘）。<p>祝你好运！这并不总是关于目的地:P</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Pizza Tycoon, while not the most famous game, is still very well regarded! I've only played Pizza Tycoon/Connection 2, and so I don't think nostalgia is why I didn't love it. That said, something about it stuck with me over all these years (I ended up purchasing it again as an adult on GOG, long having lost the disk).<p>Good luck! It's not always about the destination :P</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705064" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">thire</span>
+        <span class="meta-time">2026/04/10 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是我的问题还是最后一张 gif 实际上显示了一个错误？有一辆棕色汽车卡在中间，其他汽车正在穿过它</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it me or the last gif actually displays a bug? there is a brown car stuck in the middle and other cars are moving through it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">firefax</span>
+        <span class="meta-time">2026/04/10 04:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对那些小时候学过这么多游戏的人印象深刻——我沉迷于《模拟城市 2000》一段时间……然后是《模拟城市 2000》和《模拟城市街道》，我很快发现想要在线玩的人几乎为零。这有点像 GTA3，如果在 GTA3 中你的汽车可以跳过其他汽车，用机翼滑翔，投下地雷，并拥有机枪和/或火箭。也没有性工作者，尽管在 Simcopter 中，一位开发人员确实插入了一个涉及一群家伙出现的复活节彩蛋……我在中学时因为在学校计算机实验室激活它而被吼叫。 （他们还威胁说要把我拖到市中心去联邦调查局，因为我反复玩“97弹球蛋”这个词——在哥伦拜恩后当“黑客”可不好玩）。<p>无论如何，我一直在寻找离线开源游戏，所以感谢分享。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was impressed with folks who learned so many games as kids -- I got sucked into Simcity 2000 for quite a spell... then Simcopter and "Streets of Simcity", which I soon found out had almost zero ppl looking to play online. It was kind of like GTA3, if in GTA3 your car could hop over other cars, glide with an airfoil, drop mines, and had a machine gun and/or rockets. Also no sex workers, though in Simcopter one developer did insert an easter egg involvinging a bunch of dudes showing up... I got yelled at in middle school for activating it in the school computer lab. (they also threatened to have me dragged downtown to the fbi for repeatedly playing the word 97 pinball egg -- being a "hacker" post columbine was not fun).<p>anyways i've been looking for offline, open source games so thanks for sharing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47709229" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">seriousmountain</span>
+        <span class="meta-time">2026/04/09 23:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个非常好的观察。它让我想起了细胞自动机交通模型的一般工作原理——你不是给每辆车一个大脑，而是将规则编码到细胞中，而汽车只是问“这个细胞告诉我做什么？”比寻路便宜得多，而且简单的本地规则产生的紧急行为通常看起来比脚本化的人工智能更自然。 25 MHz CPU 的限制基本上迫使他们采用更优雅的解决方案。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a really nice observation. It reminds me of how cellular automata traffic models work in general — instead of giving each car a brain, you encode the rules into the cells and the car just asks "what does this cell tell me to do?" Way cheaper than pathfinding, and the emergent behavior from simple local rules often ends up looking more natural than scripted AI would. The constraint of a 25 MHz CPU basically forced them into the more elegant solution.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705341" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">chajath</span>
+        <span class="meta-time">2026/04/10 02:50</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47707995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fedorsapronov</span>
+        <span class="meta-time">2026/04/09 23:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人着迷的是，约束如何孕育优雅。 25 MHz 迫使您找到 O(1) 或 
+O(log n) 解决方案，现代开发人员将使用 O(n²) 和更多硬件。<p>同样的原则也适用于链上计算：gas 成本迫使你找到 
+封闭式解决方案。例如，计算 φⁿ（n 次方的黄金比例） 
+天真的需要 n 次乘法。使用矩阵恒等式 [[1,1],[1,0]]^n 
+通过重复平方可以得到 O(log n) — 并且斐波那契数会消失 
+免费。老游戏开发者会很欣赏 EVM 的限制。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fascinating how constraint breeds elegance. 25 MHz forces you to find O(1) or 
+O(log n) solutions where modern devs would reach for O(n²) and more hardware.<p>Same principle applies to on-chain computation: gas costs force you to find 
+closed-form solutions. For example, computing φⁿ (golden ratio to the power n) 
+naively requires n multiplications. Using the matrix identity [[1,1],[1,0]]^n 
+via repeated squaring gives you O(log n) — and the Fibonacci numbers fall out 
+for free. The old game devs would have appreciated EVM constraints.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47704722" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/09 23:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47705153" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
