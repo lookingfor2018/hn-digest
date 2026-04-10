@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>从 WordPress 迁移到 Jekyll（以及一般的静态站点生成器） | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-10-1400/">返回本批次</a>
+      <h1>从 WordPress 迁移到 Jekyll（以及一般的静态站点生成器）</h1>
+      <p class="subtitle">Moving from WordPress to Jekyll (and static site generators in general)</p>
+      <div class="meta-line">
+        <span>www.demandsphere.com</span>
+        <span>作者 rgrieselhuber</span>
+        <span>分数 66</span>
+        <span>评论 33</span>
+        <span>2026/04/10 04:59</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47710007" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.demandsphere.com/blog/rebuilding-demandsphere-with-jekyll-and-claude-code/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>正如我在本周早些时候的文章中提到的，我们刚刚完成了从 WordPress 到 Jekyll 的迁移。我概述了几个原因，但基本上归结为偏好、速度和轻松进行更改的能力。</li><li>像 Jekyll（或 Astro）这样的框架并不适合所有人，尽管它们在人工智能扩散、Markdown 成为法学硕士的通用语言以及无头网站的总体趋势中更有意义。每个人都知道 WordPress 有多不安全，尽管通过与信誉良好的主机合作可以很大程度上缓解这一问题。</li><li>最大的问题是速度。作为一家平台公司，我们的发展速度非常快，但我们总是感到自己能用 WordPress 做的事情受到限制，并且我们不断受到是否有 WP 开发人员可用的瓶颈。但任何框架都很难找到优秀的开发人员，尤其是 WordPress。当你找到擅长 WordPress 开发的人时，这意味着他们几乎擅长他们尝试的所有其他事情，因此让他们在 WordPress 上工作感觉像是浪费人才。这就像一个内置的人才流失。</li><li>自从 Claude Code 等编码代理出现以来，现在只需迁移到另一个平台就可以更轻松地完全解决这个问题。我们选择 Jekyll 的原因我将在下一节中讨论。</li><li>Jekyll 的架构决策</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>As I mentioned in my post earlier this week, we just completed a migration from WordPress to Jekyll. I outlined a couple of reasons for it but basically came down to preference, speed, and ability to make changes easily.</li><li>Frameworks like Jekyll (or Astro) aren’t for everybody, although they make a lot more sense in the general environment of AI proliferation, markdown becoming the lingua franca of LLMs, and a general trend toward headless sites. Everybody knows how insecure WordPress can be, although this is largely mitigated by working with a reputable host.</li><li>The biggest issue was speed. As a platform company, we move very fast and we always felt limited by what we could do with WordPress and we were constantly bottlenecked by whether or not we had WP developers available. But it’s hard to find good developers for any framework and especially for WordPress. When you find someone who is good at WordPress development, it means they are good at pretty much everything else they try and so it feels like a waste of talent to have them work on WordPress. It’s like a built-in brain drain.</li><li>Since the advent of coding agents like Claude Code, it has now become easier to completely route around this problem by simply migrating to another platform. We chose Jekyll for the reasons I’ll discuss in the next section.</li><li>Architecture decisions that led to Jekyll</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jillesvangurp</span>
+        <span class="meta-time">2026/04/10 10:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在过去的几个月里，我一直在使用人工智能编码工具和静态站点生成器。这极大地增强了大多数 CMS 系统的能力，并完全淘汰了它。特别是对于更复杂的出版工作流程。<p>我用的是hugo，不是jekyll。但我认为您选择哪个网站生成器并不重要。关键点是使用代码驱动的东西。然后让人工智能驱动代码更改。基本上所有日常站点维护和更新现在都通过代理编码进行控制。</p><p>我们使用护栏和技能来强加结构和流程。这包括音调检查（和修复）、确保音频转录与文章同步、确保所有内容都正确标记、处理翻译和批准的关键短语翻译列表、SEO 检查等等。我已经一步一步地拨入了很多这样的内容。您可以在没有大部分内容的情况下开始。但本质上，当你对此进行了一些结构化时，很多手动工作就会消失。与本文一样，我们也使用向量搜索嵌入。我们的搜索实际上使用相同的模型并通过网络 GPU 在浏览器中运行。我也将它用于相关文章。</p><p>此外，我们一直在尝试使用reveal.js 进行演示。同样的原则。忘掉 Keynote、Canva 等东西吧。Reveal.js 是为程序员设计的。但如果你用代理取代它们，非技术人员可以组合出一些非常令人惊奇的套牌。用代码驱动系统替换应用程序和 UI 就不再需要这些应用程序和 UI。使用人工智能来驱动这些基于代码的系统无需让开发人员参与其中。我们的非程序员首席执行官曾是 Canva 的重度用户，现在正在以这种方式进行幻灯片和大型网站更新。实际上很可怕。我认为他不会再使用 Canva。除了设置一些基本的管道之外，我几乎没有参与任何事情。他喜欢的派对技巧之一是通过整合客户的房屋颜色和视觉效果来调整甲板以适应客户。只需将人工智能指向他们的网站即可。</p><p><a href="https://querylight.tryformation.com/" target="_blank" rel="noopener noreferrer">https://querylight.tryformation.com/</a> 是一个hugo 搜索功能演示网站。它托管我在网站上使用的向量（和词汇）搜索库的文档。整个文档站点的管理方式如上所述。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been using ai coding tools in the last few months with static site generators. This is hugely empowering and completely obsoletes most CMS systems. Especially for more complex publication workflows.<p>I'm using hugo, not jekyll. But I don't think it matters which site generator you pick. The key point is using something that is code driven. And then have AI drive the code changes. Basically all routine site maintenance and updates is now controlled via agentic coding.</p><p>We use guard rails and skills to impose structure and process. This includes tone checks (and fixing), making sure audio transcriptions are in sync with articles, ensuring everything is tagged correctly, dealing with translations and approved lists of translations of key phrases, SEO checks and much more. I've been dialing in a lot of this in steps. You can start without most of this. But essentially a lot of manual work melts away when you get a bit structured on this. Like the article, we also use vector search embeddings. Our search actually uses the same model and runs it in the browser via web GPU. I also use it for related articles.</p><p>Also we've been experimenting with using reveal.js for presentations. Same principle. Forget things like Keynote, Canva, etc. Reveal.js is meant for programmers. But if you replace those with agents, non technical people can prompt together some really amazing decks. Replacing applications and UIs with code driven systems removes the need for those applications and UIs. And using AI to drive those code based systems removes the need for having developers in the loop. Our non programmer CEO who was a heavy Canva user is now doing decks and huge website updates this way now. Pretty scary actually. I don't think he'll use Canva again. I'm barely involved beyond setting up some basic plumbing. One party trick he likes is adapting decks to customers by integrating their house colors and visuals. Only takes pointing the AI at their website.</p><p><a href="https://querylight.tryformation.com/" target="_blank" rel="noopener noreferrer">https://querylight.tryformation.com/</a> is a hugo demo site for the search capabilities. It hosts the documentation for the vector (and lexical) search library I use on our websites. The entire documentation site is managed as I describe above.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712893" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mickael-kerjean</span>
+        <span class="meta-time">2026/04/10 12:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 这极大地增强了大多数 CMS 系统的能力并完全使其过时。<p>我走了另一个方向：我没有替换 CMS，而是开源了一个类似 FUSE 的层 [1]，它将任何后台系统安装为文件系统，而事实来源是在 WordPress、Mysql、Postgres 等中。大多数后台系统自然映射到文件树，因此您可以在本地安装它们，并让您的代理通过它进行读写。</p><p>在我运行的 POC 中，我将整个 WordPress 站点映射为一个 fs，该文件通过 git 进行版本控制，因此当您对某些内容进行 git checkout 时，整个数据库将即时更新</p><p>[1] <a href="https://github.com/mickael-kerjean/filestash" target="_blank" rel="noopener noreferrer">https://github.com/mickael-kerjean/filestash</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; This is hugely empowering and completely obsoletes most CMS systems.<p>I went the other direction: instead of replacing the CMS, I open sourced a FUSE like layer [1] that mounts any backoffice system as a filesystem while the source of truth is in WordPress, Mysql, Postgres, .... Most backoffice systems map naturally to a file tree, so you mount them locally and let your agent read and write through that.</p><p>In the POC I ran, I mapped a whole wordpress site as a fs which was versioned controlled via git so when you did a git checkout of something, the whole db would get updated on the fly</p><p>[1] <a href="https://github.com/mickael-kerjean/filestash" target="_blank" rel="noopener noreferrer">https://github.com/mickael-kerjean/filestash</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713727" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fsloth</span>
+        <span class="meta-time">2026/04/10 11:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这超级有趣！感谢分享。我想知道如何建立一个包含常用产品、博客和手册的网站。<p>该博客已经在完全llm自动化的hugo上运行，但我认为它不适用于文档（这是针对非技术人员的，所以想要更多的产品手册和更少的SDK-docs风味）或登陆页面。</p><p>这是你们公司的网站，位于 Hugo 上？ <a href="https://formationxyz.com/" target="_blank" rel="noopener noreferrer">https://formationxyz.com/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is super interesting! Thanks for sharing. I’m wondering myself how to put up a site with usual product stuff, blog and manual.<p>The blog is running already on hugo on full llm automation but I had though it would not work for documentation (this is for non-techies so want something more product-manual -like and less SDK-docs flavour) or landing page that well.</p><p>So this is you company’s site and it’s on Hugo? <a href="https://formationxyz.com/" target="_blank" rel="noopener noreferrer">https://formationxyz.com/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713275" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jillesvangurp</span>
+        <span class="meta-time">2026/04/10 13:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我们几天前刚刚推出了 FORMATION XYZ。谢谢！完全在hugo 上运行，我也使用了搜索库，因为它似乎工作得很好。<p>有趣的事实：</p><p>- 该域名是几周前注册的</p><p>- 大部分繁重工作是由我们的非技术首席执行官通过提示法典完成的；不是我做的。</p><p>- 他对某些功能有点着迷，他能够实现一个小机器人（由矢量搜索和嵌入提供支持）、音频转录和其他一些不错的功能。他有产品/用户体验背景，对细节有敏锐的洞察力，但没有任何编码技能。</p><p>- 我们使用大量技能和护栏来指导内容生成、SEO 优化等。我们的 SEO 代理按计划进行竞争分析，找出最佳 SEO 短语并维护批准的 SEO 语言列表。</p><p>- 我们的内容生成技能可以防止典型的 AI 垃圾气味，尽可能使用 SEO 语言进行编织，并使用子代理对内容进行严厉的批评。只有你让它发生，AI 溢出才会发生。您可以在 querylight 文档网站上看到我那里有更多内容。我需要提高这方面的技能。</p><p>如果你想尝试一下，我建议你从简单的改变开始。使用 Claude Code、Codex 或任何您喜欢的内容。</p><p>我在另一个网站上取得的第一个成功是“将 x 公司的徽标添加到徽标墙上”。它开始找出网站，获取徽标 svg，找出将其放置的位置并将其连接到正确的位置。对我来说，那是一个“现在就可以做到”的时刻。很多内容的改动都是这样的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, we just launched FORMATION XYZ a few days ago. Thanks! Fully running on hugo and I used the search library as well because it seems to work really well.<p>Interesting facts:</p><p>- the domain was registered a few weeks ago</p><p>- most of the heavy lifting was done by our non technical CEO by prompting codex; not by me.</p><p>- he got a bit carried away with some features and he was able to pull off a little robot (powered by vector search and embeddings), audio transcriptions, and a few other nice features. He has a product/ux background and a good eye for detail but no coding skills whatsoever.</p><p>- we use a lot of skills and guard rails to guide content generation, SEO optimization, etc. Our SEO agent does competitive analysis on a schedule, figures out optimal SEO phrases and maintains a list of approved SEO language.</p><p>- our content generation skills guard against typical AI slop smells, weaves in SEO language where possible, and uses a sub agent to act as harsh critic on content. AI slop only happens if you let it happen. You can see on the querylight documentation site that I have a bit more of that there. I need to improve the skills for that one.</p><p>If you want to get your feet wet with this, I would just recommend doing it and start with simple changes. Use Claude Code, Codex, or whatever you prefer.</p><p>One of the first successes I had with another website was "add the logo for company x to the logo wall". It went off and figured out the website, got the logo svg, figured out where to put it and hooked it up in the right place. For me that was a oh "it can do that now" kind of moment. A lot of content changes are like that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ribice</span>
+        <span class="meta-time">2026/04/10 13:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以为非技术人员使用开源 CMS（即 Decap）吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Could you use an open source CMS for non technical folks, i.e. Decap?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713818" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jillesvangurp</span>
+        <span class="meta-time">2026/04/10 13:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大概;如果它有 API 您可能可以获得编码工具来使用它。但使用代理编码工具的要点是它们非常擅长处理代码和文件。而且它往往更快更容易。您也可以围绕它构建测试和浏览器测试。<p>在我看来，CMS 是为人们做事而设计的。如果您将这些东西转移到 AI 代理，为什么还要保留 CMS？如果人工智能完成了所有/大部分编码，那么对于非技术人员来说，动手就不再是一个大的飞跃了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Probably; if it has an API you can probably get coding tools to use it. But the point of using agentic coding tools is that they are really good at working with code and files. And it tends to be a lot faster and easier. And you can build tests and browser tests around that as well.<p>In my view, a CMS is intended for people doing stuff. If you transition that stuff to AI Agents, why keep the CMS around? And if AI does all/most of the coding, it's not such a big leap for non technical people to get their hands dirty anymore.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47714022" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">janvdberg</span>
+        <span class="meta-time">2026/04/10 13:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">旁注，对于那些感兴趣的人，我想指出一个新的 CMS： <a href="https://pureblog.org/" target="_blank" rel="noopener noreferrer">https://pureblog.org/</a>
+严格意义上来说，这不是一个 SSG，但它会生成 md 文件并即时为这些文件提供服务。<p>有一个 WordPress 迁移工具可以完美运行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Side-note, for those interested, I want to point out a new CMS: <a href="https://pureblog.org/" target="_blank" rel="noopener noreferrer">https://pureblog.org/</a>
+Not a SSG in the strict sense, but it generates md files and serves those on the fly.<p>There is a WordPress migrate-tool that worked flawlessly.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47714034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">brokegrammer</span>
+        <span class="meta-time">2026/04/10 09:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Wordpress 更好，因为现在它很容易设置，如果启用缓存，速度会很快，并且有评论系统，如果您希望人们与您的内容进行交互，这是一个大问题。可以轻松添加其他内容，例如联系表格。 CMS 也很棒。<p>使用 SSG，您有几种评论选项，例如 Disqus，但无广告版本要花钱，而且速度较慢，因为它需要加载 JS，而且您的评论归第三方公司所有。可以通过集成外部 API 来构建联系人表单。任何其他需要存储数据的东西都需要与某种第三方服务集成。</p><p>SSG 是一个很棒的概念，但它们主要是为那些因看到过度设计的系统而感到疯狂的书呆子准备的。它们也非常适合像 Cloudflare 这样的公司，因为它们可以向您免费出售 WordPress 附带的服务（CMS、图像上传、数据库、工作人员等）。对于严肃的博客，我会选择 WordPress。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wordpress is better because it's easy to setup these days, can be fast if you enable caching, and has a comment system, which is a big deal if you want people to interact with your content. Other things like contact forms can easily be added. The CMS is also amazing.<p>With SSGs, you have a few options for comments, like Disqus, but the ad-free version costs money, it's slower because it needs to load JS, and your comments are owned by a third party company. Contacts forms can be built by integrating an external API. And anything else that requires storing data will require an integration with a third party service of some sort.</p><p>SSGs are a great concept but they're mostly for nerds who get boners by seeing over-engineered systems. They're also great for companies like Cloudflare because they can sell you services that come for free with Wordpress (CMS, image uploads, databases, workers, etc). For serious blogging, I'd opt for Wordpress.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mcoliver</span>
+        <span class="meta-time">2026/04/10 09:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SSG 设计过度了吗？如果有的话，感觉恰恰相反。  文本 git 存储库、模板化和 llm 中的所有内容都可以理解和扩展。  Git 分支用于测试新版本，合并到 cloudflare 上全局的主要部署。  超快的加载时间，零安全问题，零依赖性。  版本控制。把它拉上拉链，带到任何你想去的地方。<p>无需担心服务器端的事情。超级干净。  Jekyll、css、js、GitHub 和 cloudflare 是一个干净清爽的设置。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SSG are over engineered? If anything it feels the opposite.  Everything in a text git repo, templated, and a llm can understand and extend.  Git branch to test new builds, merge to main deploys globally on cloudflare.  Super fast load times, zero security issues to worry about, zero dependencies.  Version control. Zip it up and take it wherever you want.<p>No server side things to worry about. It's super clean.  Jekyll, css, js, GitHub and cloudflare is such a clean and refreshing setup.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712539" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">QuiDortDine</span>
+        <span class="meta-time">2026/04/10 12:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">反驳观点：静态网站是不可破解的，不需要维护并且可以免费托管。现在我已经为本地（志愿者）活动迁移了网站，他们将永远不必担心他们的网站再次中断。<p>乘以每个没有技术知识的非营利组织，就会有很多潜在的 Jekyll 粉丝。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Counter-point: static sites are unhackable, require no maintenance and are free to host. Now that I've migrated the website for a local (volunteer) event, they will never have to worry about their site breaking on them again.<p>Multiply that by every nonprofit without tech knowledge and that's a lot of potential Jekyll fans.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713574" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">anotherlab</span>
+        <span class="meta-time">2026/04/10 11:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几年前，我将博客从 WordPress 转移到了 Jekyll，它绝不是一个过度设计的系统。我使用 WordPress 多年，对于个人博客来说这有点过分了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I moved my blog from WordPress to Jekyll a few years ago, and it's anything but an over-engineered system. I used WordPress for years, and it was overkill for a personal blog.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713182" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">leonidasv</span>
+        <span class="meta-time">2026/04/10 10:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与 WordPress 捆绑的评论系统不足以用于“严肃的博客”，您需要插件来管理垃圾邮件，允许用户使用社交帐户等。您还需要用于缓存的插件。哦，您还需要 SEO 插件，因为核心 Wordpress 不能处理最低限度的 SEO，并且不够灵活，无法让您自己完成。每个插件都会将攻击面扩展到以持续攻击而闻名的系统，因此您必须不断寻找更新并保持所有内容更新。哦，但不是全部，因为有一些重大变化。有些版本会引入错误或回归。<p>但是，是的，一堆 html 页面是过度设计的。</p><p>PS：如果您不愿意，则无​​需使用 Disqus，您可以自行托管大量免费的开源替代方案，而这些替代方案只需要自行托管 Wordpress 实例的一小部分维护工作。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The comment system bundled with Wordpress is not enough for "serious blogging", you'll need plugins to manage spam, allow users to use social accounts, etc. You'll also need plugins for caching. Oh, and you'll need plugins for SEO as well, because the core Wordpress doesn't handle the bare minimum of SEO and isn't flexible enough to allow you to do it yourself. And each plugin expands the attack surface to a system that's known for the persistent attacks, so you have to be constantly looking for updates and keeping everything update. Oh, but not everything, because there are breaking changes. And there are versions that introduce bugs or regressions.<p>But yeah, a bunch of html pages is over-engineering.</p><p>PS: you don't need to use Disqus if you don't want to, there are a myriad of free open-source alternatives you can self-host that will take a fraction of the maintenance work of self-hosting a Wordpress instance.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Brajeshwar</span>
+        <span class="meta-time">2026/04/10 10:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">2021 年我也这么做了。我的文章有 1000 多篇文章，还有更多评论。对我来说幸运的是，我已经关闭了评论。所以，只好把它们扔掉。对于搜索，我尝试了 Algolia，但达到了极限。我和 <a href="https://pagefind.app" target="_blank" rel="noopener noreferrer">https://pagefind.app</a> 目前。<p>我写了关于我从 WordPress 到 Jekyll 的旅程： <a href="https://brajeshwar.com/2021/brajeshwar.com-2021/" target="_blank" rel="noopener noreferrer">https://brajeshwar.com/2021/brajeshwar.com-2021/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did with mine too in 2021. Mine was 1000+ articles with even more comments. Luckily for me, I’ve already closed the comments. So, had to just throw them away. For the search, I tried Algolia but hit the limit. I’m with <a href="https://pagefind.app" target="_blank" rel="noopener noreferrer">https://pagefind.app</a> for now.<p>I wrote about my journey from WordPress to Jekyll at <a href="https://brajeshwar.com/2021/brajeshwar.com-2021/" target="_blank" rel="noopener noreferrer">https://brajeshwar.com/2021/brajeshwar.com-2021/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712790" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alwillis</span>
+        <span class="meta-time">2026/04/10 06:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">已经跟随 Jekyll 潮流很长时间了；这是我首选的静态站点生成器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Been on the Jekyll bandwagon for a long time now; it's my go-to static site generator.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711273" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hypercube33</span>
+        <span class="meta-time">2026/04/10 11:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个想法和设计，对于像我这样不是网络开发人员的白痴来说，在亚马逊光帆之类的东西上安装一个东西简直是势不可挡。不过，肯定会用艾大锤把我的网站改成这个，在这个项目上呆得太久了，当我的文章是降价的时候，我不需要在博客上胡说八道。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love the idea and design it's just overwhelming for an idiot like me who isn't a web dev to spool one up on something like Amazon light sail. definitely going to Ai sledgehammer my websites over to this though, been way too long sitting on this project and I don't need to blog nonsense when my articles are markdown anyway.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713271" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lachlanj</span>
+        <span class="meta-time">2026/04/10 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你有没有想过看看像雨果这样的人？或者你能从杰基尔那里得到你需要的东西吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you ever been tempted to look at others like Hugo? Or do you get what you need from Jekyll?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712810" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">donohoe</span>
+        <span class="meta-time">2026/04/10 05:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白。他们的设置比 Wordpress 上的设置复杂得多，限制也更大。<p>我不会与他们搬家的理由争论（这对我来说也不成立，但同意不同意）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don’t get it. Their setup is so much more complicated and limiting than what they had on Wordpress.<p>I won’t argue with their reasons to move (which don’t stack up for me either but agree to disagree).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710676" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bonzini</span>
+        <span class="meta-time">2026/04/10 12:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用 SSG 来召开会议。 git 存储库每年都会指导我进行完全相同的更改。我为组织的各个阶段预先构建了块，并完成了前一年的提交，以帮助我了解下一步该做什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I use a SSG for a conference. The git repository guides me in doing exactly the same changes every year. I have pre built blocks for the various stages of organization and go through the commits for the previous year to help me understand what to do next.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713578" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tayk47999</span>
+        <span class="meta-time">2026/04/10 08:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712112" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gmays</span>
+        <span class="meta-time">2026/04/10 10:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不想麻烦地迁移我的 WordPress 博客，所以现在只需将其部署到 Github &gt; Cloudflare Pages，这样它就可以静态提供（快速+安全）。它也是免费的，几年前写了一篇博客文章： <a href="https://gmays.com/how-to-host-wordpress-sites-free/" target="_blank" rel="noopener noreferrer">https://gmays.com/how-to-host-wordpress-sites-free/</a><p>但如今，我构建的任何新网站都在 NextJS 上，因为编码代理使其变得轻而易举。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I didn't want to hassle with migrating my WordPress blog, so now just deploy it to Github &gt; Cloudflare Pages so it's served statically (fast + secure). It's free too, wrote a blog post on it a couple years back: <a href="https://gmays.com/how-to-host-wordpress-sites-free/" target="_blank" rel="noopener noreferrer">https://gmays.com/how-to-host-wordpress-sites-free/</a><p>But these days any new site I build is on NextJS since coding agents make it a breeze.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712765" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mc007</span>
+        <span class="meta-time">2026/04/10 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，我们从经典的 CMS 到 Jekyll，然后是 Hugo，然后是 Astro，最后构建了我们自己的 CMS - 用于更大的内容和网站集。摆弄自定义 DSL、模板、奇怪的构建和技巧……太耗时了 - 难以想象我的妻子会碰它或在那里写一篇文章:)<p>看看 <a href="https://service.polymech.info/user/cgo/pages/poolypress-cms" target="_blank" rel="noopener noreferrer">https://service.polymech.info/user/cgo/pages/poolypress-cms</a>，agentic CMS，通过一些提示、小部件感知来翻译、创建和管理文章。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">interesting, we went from classic CMS to Jekyll, then Hugo, then Astro and finally built our own CMS - for larger sets of content and sites. Fiddling with custom DSLs, templates, weird builds and tricks ... was just way too time consuming - unthinkable my wife would ever touch it or write an article in there :)<p>Have a look at <a href="https://service.polymech.info/user/cgo/pages/poolypress-cms" target="_blank" rel="noopener noreferrer">https://service.polymech.info/user/cgo/pages/poolypress-cms</a>, agentic CMS, translates, creates and manages articles with a few prompts, widget aware.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711229" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sumanep</span>
+        <span class="meta-time">2026/04/10 09:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，我最近从 WordPress 迁移到...Google 协作平台，所以...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, I migrates from wordpress to... Google  Sites recently so...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712507" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pseudosavant</span>
+        <span class="meta-time">2026/04/10 06:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近退役了我的 WordPress 博客，并用静态站点生成器取而代之。我的要求很简单，最终我让 Codex 为我构建了它。<p>这是我在网站上使用 MySQL、PHP 和 Wordpress 的最后一件事。不必保持最新和安全的 3 件大事。我可以将 Markdown 签入我的存储库，它会构建站点，然后 Nginx 为其提供服务。如此快速、安全。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I recently retired my Wordpress blog and replaced it with a static-site generator. My requirements were straight-forward and I ended up having Codex build it for me.<p>It was the last thing using MySQL, PHP, and Wordpress on my site. 3 big things to not have to keep up-to-date and secured. I can check in markdown to my repo, it builds the site, and Nginx serves it. So fast, and secure.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711003" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rmoriz</span>
+        <span class="meta-time">2026/04/10 07:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有一个遗留的 WP 博客，多年来我一直想将其迁移到某些静态架构，但恕我直言，用户应该能够发表评论，甚至可能发布 pingback。我知道，MT 时代过去了。但社交媒体始终是为了获得（积极的）评论和反馈，而不仅仅是发表言论和知识。<p>我也不想将我的网站与 disqus 或其他第 3 方云服务及其对 GDPR 的影响联系起来。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have a legacy WP blog that I wanted to migrate to some static architecture for ages but IMHO users should be able to comment and maybe even post a pingback. I know, old MT days. But social media is always about getting (positive) comments and feedback, not just dropping statements and knowledge.<p>I also don't want to tie my site to disqus or other 3rd party cloud services and their implication on GDPR.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711877" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">KajMagnus</span>
+        <span class="meta-time">2026/04/10 13:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您看过 Talkyard 博客评论吗？它是开源的，总部位于欧洲。 <a href="https://blog-comments.talkyard.io" target="_blank" rel="noopener noreferrer">https://blog-comments.talkyard.io</a>。  （我正在开发它。）<p>&gt; 旧版 WP 博客...用户应该能够...</p><p>（你的博客是关于什么的？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Have you seen Talkyard Blog Comments? It's open-source and based out of Europe. <a href="https://blog-comments.talkyard.io" target="_blank" rel="noopener noreferrer">https://blog-comments.talkyard.io</a>.  (I'm developing it.)<p>&gt; legacy WP blog ... users should be able to ...</p><p>(What's your blog about?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47713853" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mbirth</span>
+        <span class="meta-time">2026/04/10 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一位朋友发现了 Cusdis - 一个可自行托管的 Disqus 替代品： <a href="https://cusdis.com" target="_blank" rel="noopener noreferrer">https://cusdis.com</a> 。但这只做评论，没有 pingbacks - 并且通过一个单独的产品，您需要使用 JavaScript 进行集成。<p>运行此命令会让您遇到安全问题，而您试图通过 SSG 路线来避免这些问题。从某种意义上说，你可以保留 WP。</p><p>（此外，WP 有这个漂亮的 ActivityPub 插件，使您的博客成为一个联邦帐户，人们可以订阅甚至评论您来自 Mastodon/Pleroma/ 等的帖子。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A buddy found Cusdis - a self-hostable Disqus alternative: <a href="https://cusdis.com" target="_blank" rel="noopener noreferrer">https://cusdis.com</a> . But this only does comments, no pingbacks - and via a separate product that you need to integrate using JavaScript.<p>And running this opens you up to security issues you were trying to avoid by going the SSG route. In a way you could just keep WP, then.</p><p>(Also, WP has this beautiful ActivityPub plugin that makes your blog a fediverse account that people can subscribe to and even comment on your posts from Mastodon/Pleroma/etc.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712071" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">winddude</span>
+        <span class="meta-time">2026/04/10 09:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我做了类似的事情，但关闭了我的旧 WP 博客。玩过11ty、sveltekit，我最终选择了hugo。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did something similar, but killed my old WP blog. played around with 11ty, sveltekit, i eventually settled on hugo.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/10 09:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712497" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">purplehat_</span>
+        <span class="meta-time">2026/04/10 05:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">静态站点生成器相对于 pandoc + makefile 有什么优势？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what's the advantage of a static site generator over pandoc + makefile?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47710751" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lopsotronic</span>
+        <span class="meta-time">2026/04/10 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然观点不同，但我想说 pandoc+makefile 是 SSG 的一个变体，而不是完全不同的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While opinions differ, I would say that pandoc+makefile is a variant of SSG, versus something wholly different in kind.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711267" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">turkeyboi</span>
+        <span class="meta-time">2026/04/10 07:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同样的事情</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Same thing</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711748" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gglitch</span>
+        <span class="meta-time">2026/04/10 08:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用 Jekyll 进行包含，因此我可以使用 Ruby 从 yaml 数据渲染页面。我确信 Pandoc 也可以通过某种方式做到这一点，但在 Jekyll 中开箱即用非常简单。<p>我的意思是，这很诱人。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m using Jekyll for includes and so I can use Ruby to render pages from yaml data. I’m sure Pandoc can do this too one way or another but it’s dead simple out of the box in Jekyll.<p>I mean, it’s tempting though.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">UqWBcuFx6NV4r</span>
+        <span class="meta-time">2026/04/10 08:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊？与丰田凯美瑞相比，汽车有什么优势？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Huh? What’s the advantage of a car over a Toyota Camry?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711981" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">albedoa</span>
+        <span class="meta-time">2026/04/10 08:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让这个男人尝试用*检查笔记*互联网点来养活他的家人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Let the man try to feed his family with *checks notes* internet points.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712086" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">AlienRobot</span>
+        <span class="meta-time">2026/04/10 09:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得这篇文章更多的是关于他们用 AI 构建的所有工具，而不是转向 Jekyll。这些工具都不需要首先移动，因为它们实际上可以直接转储数据库。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel this article is more about all the tools they built with AI than about moving to Jekyll. None of these tools required the move in first place, since they could have literally just dumped the DB.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47712307" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">KaiShips</span>
+        <span class="meta-time">2026/04/10 06:29</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47711095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
