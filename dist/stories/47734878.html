@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高级 Rust：以 20% 的痛苦获得 80% 的好处 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1604/">返回本批次</a>
+      <h1>高级 Rust：以 20% 的痛苦获得 80% 的好处</h1>
+      <p class="subtitle">High-Level Rust: Getting 80% of the Benefits with 20% of the Pain</p>
+      <div class="meta-line">
+        <span>hamy.xyz</span>
+        <span>作者 maxloh</span>
+        <span>分数 32</span>
+        <span>评论 20</span>
+        <span>2026/04/12 07:30</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47734878" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://hamy.xyz/blog/2026-01_high-level-rust" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jackjeff</span>
+        <span class="meta-time">2026/04/12 16:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这种“高级 Rust”的想法是不是和 Swift 很相似？<p>一切都是ARC。克隆人很便宜。但你仍然有一个合理的健全类型系统并且没有垃圾收集。</p><p>我得到它。离 Apple 越远，使用 swift 工具就越没用，所以我并不是说它更好。</p><p>但从语言的角度来看；本质上不是高级锈吗？</p><p>诗。我真的不知道快速。只是问我到底错在哪里/为什么。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Isn’t this “high level rust” idea similar to swift?<p>Everything is ARC. Clones are cheap. But you still have a reasonable sound type system and no garbage collection.</p><p>I get it. Tooling on swift is meh the further you are from Apple, so I’m not suggesting it’s better.</p><p>But from a language point of view; is it not essentially a high level rust?</p><p>Ps. I don’t really know swift. Just asking where/why I’m wrong really.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737160" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gertlabs</span>
+        <span class="meta-time">2026/04/12 16:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于编程越来越多地交给法学硕士，而英语是工程师与代码交互的主要方式，因此了解法学硕士如何用不同的编程语言进行推理（存在显着差异）是很有趣的。<p>在我们的基准测试中，我们发现法学硕士在一次性编码提交的语言之间的表现相当，稍微偏向更流行的语言。但如果你给前沿法学硕士一个工具，让他们迭代/修复编译错误，他们实际上 <i>显著地</i> 在 Rust 中表现优于。这意味着，他们在开发 Rust 时提出了比 Javascript 更具洞察力的想法。</p><p>向下滚动到语言比较表： <a href="https://gertlabs.com/?agentic=agentic" target="_blank" rel="noopener noreferrer">https://gertlabs.com/?agentic=agentic</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Since programming is increasingly offloaded to LLMs and English is the main way engineers interact with code, it's interesting to see how LLMs reason in different programming languages (there are notable differences).<p>In our benchmarking, we've found that LLMs perform comparably between languages for one-shot coding submissions, slightly favoring more popular languages. But if you give frontier LLMs a harness and let them iterate / fix compilation errors, they actually <i>significantly</i> outperform in Rust. Meaning, they come up with more insightful ideas when developing Rust, than for example Javascript.</p><p>Scroll down to the language comparison chart: <a href="https://gertlabs.com/?agentic=agentic" target="_blank" rel="noopener noreferrer">https://gertlabs.com/?agentic=agentic</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737153" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hackingonempty</span>
+        <span class="meta-time">2026/04/12 15:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">F# 但不是 Scala？  TFA F# 只缺少社区和生态系统。 Scala 的受欢迎程度与 Go 或 Rust 相当，并且可以访问整个 Java 生态系统和 JVM 运行时。  这应该给它五颗星，作者正在寻找但它没有被考虑。<p>我认为很多开发人员都因为不考虑 Scala 3 而错过了机会。我将它与 Zio 效果系统一起使用，该系统带来了可组合并发和事务内存等功能。  我认为 TFA 中列出的任何语言都没有可比性。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">F# but not Scala?  In TFA F# is only lacking in community and ecosystem. Scala is comparable in popularity to Go or Rust and has access to the entire Java ecosystem and JVM runtime.  That should give it the five stars the author is looking for but its not considered.<p>I think a lot of devs are missing out by not considering Scala 3.  I use it with the Zio effect system which brings composable concurrency and transactional memory amongst other features.  I don't think there is anything comparable in any of the languages listed in TFA.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736872" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">usrnm</span>
+        <span class="meta-time">2026/04/12 15:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; Scala 的受欢迎程度与 Go 或 Rust 相当<p>你有什么数字可以支持你吗？这句话对我来说听起来非常非常错误</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Scala is comparable in popularity to Go or Rust<p>Do you have any numbers to back you up? That statement sounds very, very wrong to me</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737139" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Tade0</span>
+        <span class="meta-time">2026/04/12 15:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">关于打字稿：<p>&gt; 但类型存在于运行时（不健全），要求您添加自己的运行时检查。</p><p>我不记得在数据跨越系统边界的情况之外这样做过。</p><p>绝大多数语言都有不健全的类型系统，但人们却能高效地使用它们。</p><p>多年来，我逐渐意识到这是一种挑剔。在某些应用程序中您绝对需要它，但大多数时候它不是一个重要的要求，并且有些人对它给予了过度的重视。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Regarding TypeScript:<p>&gt; but types lie at runtime (unsound) requiring you to add your own runtime checks.</p><p>I don't recall doing that outside of situations when data is crossing system boundaries.</p><p>The vast majority of languages have an unsound type system, yet people are productive in them.</p><p>Over the years I've come to realise it's a form of nitpicking. You absolutely need it in some applications, but it's not an important requirement most of the time and it's given undue importance by some.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737104" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nananana9</span>
+        <span class="meta-time">2026/04/12 16:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我读过的大多数 Rust 代码都是 arc-mutex-slop。<p>这种优化的目的实际上并不是要处理真正的 Rust 所带来的痛苦，同时允许你在酷儿童俱乐部中编写“速度极快的软件”，同时编写几乎是 Java 或 C# 的东西，但使用的是一个可怕的非功能性垃圾收集器，而不是最先进的垃圾收集器。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most of the Rust code I've read is arc-mutex-slop.<p>What this optimizes for is not actually having to deal with the pain in the ass that proper Rust is, while allowing you to be in the cool kids club writing "blazingly fast software", all while writing what's pretty much Java or C#, but with a terrible non-functional garbage collector instead of a state of the art one.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737158" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ysleepy</span>
+        <span class="meta-time">2026/04/12 15:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意 Rust 社区对 Arc/Cloning/Box 的使用有点过于不满。如果你使用 swift，一切都会被计算在内，为什么要让自己为了边际收益而承受如此多的痛苦。<p>教程和书籍应该对此更加开放，而不是推动复杂的生命周期黑客等，同时也展示安全和简单的方法。</p><p>这篇文章给出了 Java 比 Go 更差的 devx 排名，我不能同意。 Java 至少在 devx 的各个方面都与 go 相当，并且在 IDE 支持、表达能力和依赖性管理方面更好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree that the rust community frowns a little too much on the use of Arc/Cloning/Box. If you use swift, everything is ref counted, why subject yourself to so much pain for marginal gain.<p>Tutorials and books should be more open about that, instead of pushing complex lifetime hacks etc., also show the safe and easy ways.</p><p>The article gives Java a worse devx rank than Go and I can't agree. Java is at least on par with go in every aspect of devx, and better in IDE support, expressiveness, and ependency mgmt.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736847" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tonyedgecombe</span>
+        <span class="meta-time">2026/04/12 15:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[延迟]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[delayed]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fyrn_</span>
+        <span class="meta-time">2026/04/12 15:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很确定 devx 的意思是语法人体工程学之类的东西。因为否则 rust 的 devx 第一类（cargo、clippy、crates.io）是一种非标准定义。<p>我认为可以公平地说 Java 的“语法人体工程学”比其他的稍低一些/默认情况下有点像 rust 或 C++ 那样手动。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Pretty sure by devx they mean something like syntax ergonomics. Because otherwise rust's devx first class (cargo, clippy, crates.io) so kind of a nonstandard definition.<p>I think it's fair to say Java's "syntax ergonomics" are a little below the rest / somewhat manual like rust or C++ by default.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736870" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">VorpalWay</span>
+        <span class="meta-time">2026/04/12 15:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我同意 Rust 社区对 Arc/Cloning/Box 的使用有点过于不满<p>与往常一样，这在很大程度上取决于您所做的事情。我编写了一个程序，其中 Arc 引用计数占运行时间的 25%。全部也来自单个实例。我重构为使用借用并用生命周期注释相关结构。这还实现了额外的优化，我还可以避免一些副本，与以前相比，我总共节省了大约 36% 的总运行时间。</p><p>Arc 在这里如此昂贵的原因可能是引用计数存在争用，因此缓存行在运行线程池中处理该任务的线程的核心之间来回跳动。</p><p>总之，这两个极端都不正确。通常 Arc 很好，但有时确实不好。唯一了解的方法就是进行分析。始终进行分析，人类在预测表现方面很糟糕。</p><p>（对于很多人来说，想出避免 Arc/clone/Box 等的方法可能很有趣，所以也有这个。如果你不喜欢这个，那就不要参与这个爱好。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I agree that the rust community frowns a little too much on the use of Arc/Cloning/Box<p>As usual, this depends heavily on what you do. I had written a program where Arc reference counting was 25 % of the runtime. All from a single instance as well. I refactored to use borrows and annotated relevant structs with lifetimes. This also enabled additional optimisation where I could also avoid some copies, and in total I saved around 36% of the total runtime compared to before.</p><p>The reason Arc was so expensive here is likely that the reference count was contended, so the cacheline was bouncing back and forth between the cores that ran the threads in the threadpool working on the task.</p><p>In conclusion, neither extreme is correct. Often Arc is fine, sometimes it really isn't. And the only way to know is to profile. Always profile, humans are terrible at predicting performance.</p><p>(And to quite a few people, coming up with ways to avoid Arc/clone/Box, etc can be fun, so there is that too. If you don't enjoy that, then don't participate in that hobby.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736957" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dev_l1x_be</span>
+        <span class="meta-time">2026/04/12 15:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不确定社区是否会反对这些。事实上，我几乎在我编写的每一个 Rust 代码中都使用了它们。关键是我可以 grep 查找这些内容，因为 Rust 不会以隐藏的方式执行此操作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am not sure the community frowns on these. In fact I use those in almost every Rust code I write. The point is that i can grep for those because Rust does not do it in a hidden way.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737055" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pjmlp</span>
+        <span class="meta-time">2026/04/12 16:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它被称为 OCaml。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is called OCaml.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737148" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">moomin</span>
+        <span class="meta-time">2026/04/12 14:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">C# 今年终于在预览版中获得了 sum 类型。我们将看看是否有任何内容会进入 C#15，但它们比以往任何时候都更接近。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">C# has indeed finally gained sum types this year… in preview. We’ll see if anything makes it into C#15 but they’re closer than they’ve ever been.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736616" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zigzag312</span>
+        <span class="meta-time">2026/04/12 14:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一开始仅键入联合体，但还有更多正在计划中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Type unions only at first, but there's more being planned.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736824" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fork-bomber</span>
+        <span class="meta-time">2026/04/12 15:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">鉴于文章作者首选的语言属性，Crystal lang 值得一看。它具有面向对象的范式、优雅的可组合性、高效的代码生成等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Crystal lang deserves a look given the article writer’s preferred language attributes. It has OO paradigms, elegant composability, efficient codegen etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736852" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dannersy</span>
+        <span class="meta-time">2026/04/12 15:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是另一篇人工智能文章吗？这里关于 Rust 的内容已经被说了一遍又一遍，这并没有带来什么新内容。他们似乎总是从无知的地方写作。如果您正在编写“高级 Rust”，则克隆或 Arc 或其他任何内容的使用可以忽略不计。如果您正在编写 HTTP 服务，您的克隆速度将会如此之快，以至于 IO 绑定服务的范围几乎为零。<p>另一个观察是开发人员的经验。再说一遍，你写过 Rust 吗？我认为 Rust 使用起来如此愉快的原因是编译时错误令人惊叹，文档的处理方式令人惊叹，等等。我知道像 Typescript 这样的东西的生态系统要好得多，但是你是否曾经尝试过_真正_了解 React 等随机钩子在幕后发生了什么恶作剧？他们的文档是如此令人沮丧和稀疏，并且对他们认为你应该知道的内容做出了假设。锈？您转到文档生成器，阅读他们认为您应该了解的概述，如果还不够，我可以单击“源”进行更深入的研究。我还能想要什么呢？</p><p>也许我只是被触发了。关于 Rust 的讨论似乎总是由时尚或炒作驱动，几乎总是与如何实际使用它无关。如果我必须再次阅读有关编译时间的内容，我会尖叫。在我使用过的所有语言中，就需要新功能或重构的成熟项目而言，它是最好的语言之一。在一些文章中提到了这一点，但大多数时候我们从某个一维的角度听到“速度”，通常是来自网络空间的人，在这个领域，人们是否应该首先尝试使用 Rust 是有争议的。</p><p>为咆哮道歉，但在这一点上，我认为 Rust 作为文章参与度的流行词已经变得令人厌倦，因为在我看来，这些人实际上对 Rust 根本不感兴趣。谁在乎 Reddit 上的人对你使用克隆的看法？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is this another AI article? What is said about Rust here has been said over and over again, and this brings nothing new to the table. They also always seem to be writing from a place of ignorance. If you're writing "high level Rust" the use of clone or Arc or whatever is negligible. If you're writing an HTTP service, your clone will be so fast it will make literally zero difference in the scope of your IO bound service.<p>Another observation is developer experience. Again, have you written _any_ Rust? I would argue that the reason Rust is such a joy to use is that the compile time errors are amazing, the way docs are handled are amazing, and so on. I know the eco system for something like Typescript is worlds better, but have you ever tried to _really_ understand what shenanigans are going on behind the scenes on some random hook from say, React? Their docs are so dismal and sparse and make assumptions on what they think you should know. Rust? You go to the doc gen, read what they think you should know as an overview, and if it isn't enough, I can click on "source" to dive deeper. What more could I possibly want?</p><p>Perhaps I'm just triggered. The discussion on Rust always seems to be fad or hype driven and almost always have very little to do with how it is to actually use it. If I have to read about compile times, again, I'm going to scream. Of all the languages I've used, it is one of the best in terms of a mature project needing new features or refactors. This is mentioned in some articles, but mostly we hear about "velocity" from some one dimensional perspective, usually someone from the web space, where it is arguable if the person should even bother trying to use Rust in the first place.</p><p>Apologies for the rant, but at this point I think Rust as a buzz word for article engagement has become tiring because it seems clear to me that these people aren't _actually_ interested in Rust at all. Who gives a shit what someone on Reddit thinks of your use of clone??</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736962" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fyrn_</span>
+        <span class="meta-time">2026/04/12 12:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">根据您的描述，我认为一个好的用于不可改变地使用的数据结构库将有助于解决一些痛点。具有写时复制支持或类似功能的东西。这是一种强大的风格，在 haskell 中使用它，它可以防止一大类错误，几乎只是业务逻辑错误，这正是您想要的。<p>我喜欢你描述的风格，谢谢分享。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Based on your description, I think a good library for data structures that are intended to be used immutably would help with some pain points. Something with copy on write support or something like that. It's a powerful style, used it in haskell and it prevents a large class of bugs, almost down to just business logic bugs, which is what you want.<p>I like the style you're describing, thanks for sharing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736267" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vibbix</span>
+        <span class="meta-time">2026/04/12 14:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Java 的 DevEx 分数低于 C#，这是一项疯狂的工作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Java have less of a DevEx score than C# is crazy work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736812" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">slopinthebag</span>
+        <span class="meta-time">2026/04/12 15:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有代码示例吗？卧槽？<p>如果您想看到高级铁锈，请查看 Dioxus。它是一个 Web 框架，无论是在架构上还是在人体工程学上都非常像 React。我实际上让 AI 将一个 JS 项目迁移到 Dioxus，我认为这大约是 75% 的代码。对于“低级”语言来说相当不错。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No code examples? Wtf?<p>If you want to see high level rust, check out Dioxus. It's a web framework, and it's extremely React-like both in architecture but also ergonomics. I actually had AI migrate a JS project to Dioxus and I think it was something like 75% of the code. Pretty decent for a "low level" language.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737079" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jurschreuder</span>
+        <span class="meta-time">2026/04/12 15:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对除了 C# 和 Rust 之外的几乎所有语言都进行了编程，哈哈。<p>因此，有人在寻找完美语言的同时积极使用我积极避免的仅有的两种语言，这对我来说非常奇怪。</p><p>C# 的社区几乎为零，只有在 Windows 中才能真正正常工作，而 Windows 的辉煌岁月早已过去。除了 Microsoft 积极推动它作为 Java 替代品之外，它没有存在的权利。</p><p>Rust 是 C++ 的一个过于复杂的子集，它解决了最新版本的 C++ 不再存在的内存问题，并且只能通过积极的营销来生存，充满了将不属于在一起的东西组合在一起，就像 C/C++ 一样。以及内存安全/释放后使用。</p><p>如果 C 和 C++ 因为可以手动分配内存而基本相同，那么 Rust/PHP 也基本相同。</p><p>Rust 的借用检查器仅解决了释放后使用问题，据统计，这占内存相关漏洞的 10%。不是“内存安全”，其中 60-70% 只是数组越界。</p><p>确实是最糟糕的两种语言，它们都只能在积极的营销中生存。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I program almost all languages except C# and Rust haha.<p>So someone looking for the perfect languages while actively using the only two languages I actively avoid is very strange to me.</p><p>C# has close to zero community and only really works properly in Windows which is far past its glory days. Except for Microsoft aggressively pushing it as a Java alternative it has no right to exist.</p><p>Rust is an overcomplicated subset of C++ that solved memory problems the most recent versions of C++ don't have anymore, and only survives by  aggressive marketing, full of grouping things together that don't belong together, like C/C++. And memory safety / use-after-free.</p><p>If C and C++ are basically the same because they have access to manual memory allocation then Rust/PHP are also basically the same.</p><p>And Rust's borrow checker only solves use-after-free which statistically are 10% of memory related vulnerabilities. Not "memory safety" of which 60-70% is just array out of bounds.</p><p>Really the worst two languages that both only survive in aggressive marketing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dannersy</span>
+        <span class="meta-time">2026/04/12 15:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你还没有写过 Rust，就会做出一揽子荒谬的声明，说 Rust 过于复杂或不能解决你的问题。 Rust 与 PHP 的额外比较也很荒谬，原因有很多，甚至可能不值得讨论，因为它从一开始就显得不诚实。<p>你在这里忽略了一个非常基本的点，这通常是我在长期 C 程序员中发现的。 C 是一种伟大但古老的语言，在上下文、工具和库理解上花费了数十年的时间，这使得编写 C 语言比 Rust 更加困难。我们仍然是人类，Rust 并不完全试图从技术角度从处理内存的基本范式来解决 C，而是更多地从程序员的角度出发。您关于解决内存错误的评论是基于人类对 C 的完美使用，而不是首先编写错误，这正是 Rust 想要解决的众多问题之一。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You do not write Rust yet will make blanket absurd claims about Rust being overcomplicated or not solving your problems. The additional comparison of Rust to PHP is also ridiculous for so many reasons it might not be worth even discussing, because it just seems bad faith from the start.<p>You're missing a very fundamental point here, and this is usually something I find with long time C programmers. C is a great, but old language, with decades of overhead on context, tooling, and lib understanding that make getting in to writing C substantially more difficult than say, Rust. We are still humans, and Rust isn't entirely trying to solve C from a fundamental paradigm of handling memory from a technical point of view, but more from a programmer one. Your comment about solving memory bugs is predicated on perfect human usage of C to not write the bug in the first place, which is precisely one of the many problems Rust is looking to solve.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47737004" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
