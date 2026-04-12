@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>博尔赫斯的制图师和阅读LM输出的默契技巧 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1356/">返回本批次</a>
+      <h1>博尔赫斯的制图师和阅读LM输出的默契技巧</h1>
+      <p class="subtitle">Borges&#39; cartographers and the tacit skill of reading LM output</p>
+      <div class="meta-line">
+        <span>galsapir.github.io</span>
+        <span>作者 galsapir</span>
+        <span>分数 38</span>
+        <span>评论 10</span>
+        <span>2026/04/11 21:06</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47730229" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://galsapir.github.io/sparse-thoughts/2026/04/11/map-and-territory/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026 年 4 月 11 日 文化</li><li>听这个帖子 0:00 0:00</li><li>博尔赫斯有一个关于一个帝国的短篇故事，该帝国的制图师不断制作越来越大的地图，直到他们绘制了一张与帝国本身一样大的地图。1 不那么着迷的后代，看到它毫无用处，并将其抛弃在天气中。地图之所以有用，正是因为它们是简化的。当对保真度的追求破坏了压缩时，它就破坏了要点。</li><li>就本文而言，语言模型就是我们的地图。2</li><li>我就开门见山（不过请耐心听我说）。 LM已经变得非常优秀了。如此之好，以至于它们现在远远超出了该领土的有用代表，并且在许多方面开始重塑该领土本身。我认为，这意味着我们需要更好地阅读地图，同时又不失去与该领土的联系。我们需要更多的方式在阅读和与他们互动时保持参与。现在，我们与计算机的大部分（专业）交互都是通过 LM 进行的：在检查新代码库时、在阅读论文时、在为一项任务做好准备时。有时甚至作为思考的界面。这是一个我们目前并不愿意避免的抽象层（我并不是说我们应该这样做），但它改变了我们需要擅长的事情。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>11 Apr 2026 culture</li><li>Listen to this post 0:00 0:00</li><li>Borges has a very short story about an empire whose cartographers kept producing larger and larger maps, until they built one the size of the empire itself.1 the following generations, less enchanted, saw it was useless and abandoned it to the weather. maps are useful precisely because they are reductions. when the pursuit of fidelity destroys the compression it destroys the point.</li><li>for the purposes of this text, LMs are our maps.2</li><li>i’ll cut to the chase (bear with me though). LMs have become really good. so good that they are now well beyond useful representations of the territory, and are in many ways beginning to reshape the territory itself. this means, i think, that we need to be much better at reading maps without losing our connection to the territory. we need more ways to stay engaged while reading and interacting with them. much of our (professional) interaction with computers is mediated through LMs now: when examining a new codebase, when reading a paper, when priming ourselves towards a task. sometimes even as an interface for thinking. this is an abstraction layer that we are not really willing to avoid at this point (and im not saying that we should) but it changes what we need to be good at.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tyrust</span>
+        <span class="meta-time">2026/04/12 07:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不错的作品。<p>现在你所描述的技能绝对是相关的。  在工作中，我会定期审查来自我自己的代理人和其他人的臭味变化。  我想知道这种气味是否会一直存在，或者是否会完全消失，从而使气味检测器技能变得无关紧要。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice piece.<p>Right now the skills you describe are definitely relevant.  At work I'm regularly reviewing smelly changes, both from my own agents and others'.  I'm wonder if this smell will always be present or if it will go away entirely, leaving the smell detector skills irrelevant.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734834" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">galsapir</span>
+        <span class="meta-time">2026/04/12 13:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嘿谢谢！我确实想知道这一点。我认为，即使专门针对代码气味，事情会更加微妙，但对于其他形式的人工智能驱动的平均性（特别是在我们无法 RLVR 模型达到完美的领域），它可能仍然存在。但是，是的，我想知道这些想法将如何老化（以及我们将如何相应地更新我们的先验知识）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hey thanks! I do wonder that. I think that even if specifically for code smell the things would be subtler, for other forms of AI driven averageness (especially in areas where we can't RLVR the models to perfection) it might still be present. But yeah I wonder how those thoughts will age (and how we'll update our priors accordingly).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736449" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">operatingthetan</span>
+        <span class="meta-time">2026/04/12 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果作者不能对读者使用大写字母进行基本礼貌，就不会阅读这些内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not going to read something where the author can't do the basic courtesy to the reader of using capitalization.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732738" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nagaiaida</span>
+        <span class="meta-time">2026/04/12 06:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是你的特权，但在我看来，这比有人以你完全能够阅读但不喜欢的格式记录信息要无礼得多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">that is your prerogative, but this seems to me far more discourteous than somebody putting information down in a format you're perfectly capable of reading yet dislike.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734641" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">galsapir</span>
+        <span class="meta-time">2026/04/12 02:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，这是一种风格选择（现在需要更多的工作才能获得小写文本）。但是是的，合法;-)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">haha that's a style choice (takes more work to get lowercase text these days). But yeah legit ;-)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732784" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">RealityVoid</span>
+        <span class="meta-time">2026/04/12 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现“LM”大写更奇怪。我知道这种风格现在在某些圈子里很流行，但对我来说有点令人困惑。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I found it more peculiar that "LM" was capitalized. I know the style is very trendy in certain circles right now, but it is a bit puzzling for me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733135" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">galsapir</span>
+        <span class="meta-time">2026/04/12 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我真的在考虑最好的“保护伞术语”是什么。由于“LLM”在特定的环境中使用得太广泛，而“人工智能系统”感觉很合适，所以我最终选择了“LM”。不知道，有待讨论。。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yeah I was really thinking about what the best "umbrella term" would be here. Since "LLM" is too widely used in a really specific context and "AI systems" felt niche I ended up with "LMs". Idk, up for debate..</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733172" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gaythread</span>
+        <span class="meta-time">2026/04/12 01:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">简介：我是一名研究员（从事医疗保健工作）。我尝试消费内容——书籍、论文、帖子、播客等等——并开始写作来弄清楚我对这一切的真正想法。这是从理解的边缘写的。希望少一些“这就是我所知道的”，多一些“这就是我正在努力解决的问题”。包括粗糙边缘。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the bio: i’m a researcher (working in healthcare). I try to consume content — books, papers, posts, podcasts, whatever — and started writing to figure out what I actually think about it all. This is writing from the edge of understanding. Hopefully, less about “here’s what I know” and more about “here’s what I’m trying to work out.” Rough edges included.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">contraposit</span>
+        <span class="meta-time">2026/04/12 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://www.goodreads.com/book/show/42041926-the-scout-mindset" target="_blank" rel="noopener noreferrer">https://www.goodreads.com/book/show/42041926-the-scout-minds...</a><p>这是我最喜欢的书。我关注他们的播客很长时间了。您可能会喜欢本书中的想法。或者你可以在 youtube 上观看她 1 小时的讲座。我们需要侦察兵忠实地探索该地区并报告。</p><p><a href="https://rationallyspeakingpodcast.org/" target="_blank" rel="noopener noreferrer">https://rationallyspeakingpodcast.org/</a> 作者：朱莉娅·加莱夫 (Julia Galef) 和马西莫·皮柳奇 (Massimo Pigliucci)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://www.goodreads.com/book/show/42041926-the-scout-mindset" target="_blank" rel="noopener noreferrer">https://www.goodreads.com/book/show/42041926-the-scout-minds...</a><p>This is my favourite book. I have followed their podcast for so long. You might like the ideas in this book. Or you can watch the 1-hour lecture by her on youtube. We needs scouts to faithfully explore the territory and report back.</p><p><a href="https://rationallyspeakingpodcast.org/" target="_blank" rel="noopener noreferrer">https://rationallyspeakingpodcast.org/</a> by Julia Galef and Massimo Pigliucci</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732191" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">galsapir</span>
+        <span class="meta-time">2026/04/12 01:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！我会检查一下。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! I'll check it out.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732280" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maxbeech</span>
+        <span class="meta-time">2026/04/12 01:16</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732257" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">galsapir</span>
+        <span class="meta-time">2026/04/11 21:06</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47730230" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

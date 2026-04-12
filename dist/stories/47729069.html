@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BlueHammer 滥用 Windows Defender 的更新过程来获取系统访问权限 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1356/">返回本批次</a>
+      <h1>BlueHammer 滥用 Windows Defender 的更新过程来获取系统访问权限</h1>
+      <p class="subtitle">BlueHammer abuses Windows Defender&#39;s update process to gain SYSTEM access</p>
+      <div class="meta-line">
+        <span>hackingpassion.com</span>
+        <span>作者 BullsEye0</span>
+        <span>分数 26</span>
+        <span>评论 9</span>
+        <span>2026/04/11 17:37</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47729069" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://hackingpassion.com/bluehammer-windows-defender-zero-day/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>想学习道德黑客吗？我建立了一个完整的课程。看看！学习渗透测试、Web 漏洞利用、网络安全和黑客思维：→ 掌握道德黑客实践（该链接直接支持我作为您的讲师！）黑客不是一种爱好，而是一种生活方式！Windows Defender 是每台 Windows 计算机上运行的内置防病毒软件，有一个零日漏洞利用程序，完整的源代码位于 GitHub 上。没有补丁，没有 CVE，并且确认可以在完全更新的 Windows 10 和 11 上运行。一位研究人员表示，微软食言了，这只是让每个关注的攻击者都获得了权限升级，将任何低权限帐户直接带到 NT AUTHORITY\SYSTEM。在 Windows Server 上，结果有所不同，但仍然很严重：标准用户最终获得了提升的管理员访问权限。 😏该漏洞称为 BlueHammer。 4 月 2 日，研究人员在个人博客上公开披露了该漏洞，并于 4 月 3 日在 GitHub 上发布了完整的漏洞利用源代码。两者都以 Chaotic Eclipse（也称为 Nightmare Eclipse）的别名发布，并向 Microsoft 安全响应中心发送了一条消息，内容归结为：我告诉过你这会发生。在进入技术方面之前，这里有一个值得了解的背景故事。3 月下旬，同一位研究人员开设了一个博客，其中有一篇文章解释说他们永远不想回到公共研究中。有人与他们达成了协议，然后又违反了协议，并且清楚地知道后果是什么。帖子称，这让研究人员无家可归，一无所有。一周后，BlueHammer 在 GitHub 上上线，并发布一条消息，特别感谢 MSRC 领导层让其成为必要。这并不是一个对缓慢的审核过程感到恼火的人。那是一个没有什么可失去的人。现在谈谈漏洞利用本身，因为这个漏洞确实值得理解。BlueHammer 不是传统的 bug，它不需要 shellcode、内存损坏或内核漏洞利用即可工作。它的作用是将五个完全合法的 Windows 组件按顺序链接在一起，产生设计者从未想过的东西。这五个组件是 Windows Defender、卷影复制服务、云文件 API、机会锁和 Defender 的内部 RPC 接口。一个值得了解的实际限制：该漏洞需要待处理的 Defender 签名更新才能在攻击时可用。队列中没有一个，链不会触发。这使得它不如按钮漏洞那么可靠，但也不能安全地忽略它。攻击链的工作原理如下。当 Defender 运行防病毒定义更新时，该过程的一部分涉及创建临时卷影复制，这与 Windows 用于备份和恢复的快照机制相同。该卷影副本包含在常规操作期间通常完全锁定的文件，包括 SAM 数据库，该数据库存储计算机上每个本地帐户的密码哈希值。BlueHammer 将自己注册为云文件同步提供商，与 OneDrive 或 Dropbox 用于同步文件的类型相同。当 Defender 接触该文件夹内的特定文件时，漏洞利用程序会收到回调并立即对该文件放置机会锁。防守者停滞不前，被阻挡，等待着永远不会到来的回应。刚刚创建的卷影副本仍处于安装状态。该窗口已打开。Defender 冻结后，该漏洞利用程序直接从快照读取 SAM、SYSTEM 和 SECURITY 注册表配置单元。它使用从 SYSTEM 配置单元中提取的启动密钥解密存储的 NTLM 密码哈希值，更改本地管理员帐户的密码，使用该帐户登录，复制管理员安全令牌，将其推送到系统级别，创建临时 Windows 服务，并生成以 NT AUTHORITY\SYSTEM 身份运行的命令提示符。然后，为了掩盖其踪迹，它会将原始密码哈希放回原处。本地帐户密码看起来完全没有变化。没有崩溃，没有警报，什么都没有。整个链从正常用户会话开始运行不到一分钟。利用源代码中硬编码的云文件提供程序名称为 IHATEMICROSOFT。升级期间使用的管理员密码被硬编码为 $PWNed666!!!WDFAIL。这些错误并不是偶然留下的。它们是消息，直接写入代码中，并且只有一个目标读者。Tharros 的首席漏洞分析师 Will Dormann 测试了该漏洞，并确认其效果良好，足以构成真正的威胁。微软一直在削减成本。那些知道如何看待复杂漏洞并真正理解它的经验丰富的分析师已被遵循严格流程清单的员工所取代。这些清单要求之一是该漏洞的视频演示。拒绝制作视频的研究人员将关闭他们的报告。多尔曼在 Mastodon 上表示，如果微软因为研究人员拒绝提交视频而结案，他不会感到惊讶，因为这显然已成为 MSRC 的要求。微软对 BlueHammer 的唯一公开回应是关于支持协调漏洞披露的声明。花点时间思考一下。这种情况的关键在于微软自己的流程打破了协调。通过说支持协调来回应这一问题并不能解决问题。微软推出了 Defender 签名更新，该更新将原始 BlueHammer 二进制文件检测为 Exploit:Win32/DfndrPEBluHmr.BB。该签名并不能修复该漏洞。它标记来自已发布源代码的已编译示例。重新编译相同的代码并进行任何小的更改，Defender 根本不会标记它。检测捕获该一个特定文件。该技术本身完全通过正常的 Windows 组件运行，完全按照其设计目的进行操作，完全未被检测到。在微软解决根本原因之前，签名并不能起到保护作用。Cyderes 的 Howler Cell 研究团队修复了原始 PoC 中的错误，并对已修补的 Windows 10 和 11 运行了完整的漏洞利用。它有效。不到一分钟即可从受限用户会话中启动 SYSTEM shell。仍然没有 CVE，也没有补丁。漏洞利用代码是公开的，GitHub 存储库已经有超过 100 个分支和近 300 个 star，多个研究人员已经修复了原始错误并确认其有效，勒索软件组织和 APT 参与者倾向于获取公共 LPE 代码并在其上线后几天内将其投入使用。这是现在要做的事情。 → 监视来自常规用户进程的 VSS 枚举。从备份或系统工具之外的任何内容调用针对 HarddiskVolumeShadowCopy 对象的 NtQueryDirectoryObject 是一个危险信号，几乎没有任何无辜的解释。 → 监视未知进程的云文件同步根注册。从 OneDrive、Dropbox 或 Box 以外的任何地方调用 CfRegisterSyncRoot 值得立即检查。该调用正是 BlueHammer 设置陷阱的方式。→ 对创建 Windows 服务或获取系统级令牌的低特权进程发出警报。 BlueHammer 使用 CreateService 在升级期间短暂注册恶意服务，并显示在 EDR 遥测中。 → 观察本地管理员帐户上的快速连续密码更改。 BlueHammer 会重置密码，使用它，然后将其重置回来。安全事件 ID 4723 和 4724 在同一帐户上快速连续触发两次没有正常的解释。→ 保持权限严格。 BlueHammer 需要本地会话才能运行，因此标准用户实际上不需要的每个权限都是可以删除的攻击面。→ 继续关注 Microsoft 安全公告以获取补丁。当它到来时，将其视为高优先级。了解权限升级的工作原理、攻击者如何从基本立足点到完全控制系统，以及后利用实际上是什么样子，这些正是我在道德黑客课程中所介绍的内容。 BlueHammer 是渗透测试中经常出现的技术的真实示例。→ 加入我完整的道德黑客课程（该链接直接支持我作为您的讲师！）黑客不是一种爱好，而是一种生活方式。来源：Chaotic Eclipse — 公开披露 · BlueHammer — GitHub 作者 Bulls EyeJolanda de koff • 电子邮件 • 捐赠 我的名字是 Jolanda de Koff，在互联网上，我也被称为 Bulls Eye。道德黑客、渗透测试员、研究员、程序员、自学者，永远的n00b。 Not necessarily in that order.喜欢制作自己的黑客工具，有时会与大家分享。 “你可以用电脑创造艺术和美丽，黑客不是一种爱好，而是一种生活方式......我♥开源和Linux</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Want to learn ethical hacking? I built a complete course. Have a look!Learn penetration testing, web exploitation, network security, and the hacker mindset:→ Master ethical hacking hands-on(The link supports me directly as your instructor!)Hacking is not a hobby but a way of life!Windows Defender, the built-in antivirus running on every Windows machine, has a zero-day exploit with full source code sitting on GitHub. No patch, no CVE, and confirmed working on fully updated Windows 10 and 11. A researcher who says Microsoft went back on their word just handed every attacker paying attention a privilege escalation that takes any low-privileged account straight to NT AUTHORITY\SYSTEM. On Windows Server the result is different but still serious: a standard user ends up with elevated administrator access. 😏The vulnerability is called BlueHammer. On April 2nd the researcher posted the public disclosure on a personal blog, and on April 3rd the full exploit source code went live on GitHub. Both published under the alias Chaotic Eclipse, also known as Nightmare Eclipse, with a message to Microsoft’s Security Response Center that comes down to: I told you this would happen.Before getting into the technical side, there is a backstory here worth knowing.In late March, the same researcher opened a blog with a single post explaining that they never wanted to come back to public research. Someone had made an agreement with them and then broke it, knowing exactly what the consequences would be. The post says it left the researcher without a home and with nothing. A week later, BlueHammer went live on GitHub with a message that specifically thanks MSRC leadership for making it necessary. That is not someone annoyed with a slow review process. That is someone with nothing left to lose.Now to the exploit itself, because this one is genuinely worth understanding.BlueHammer is not a traditional bug, and it does not need shellcode, memory corruption, or a kernel exploit to work. What it does is chain five completely legitimate Windows components together in a sequence that produces something their designers never intended. Those five components are Windows Defender, Volume Shadow Copy Service, the Cloud Files API, opportunistic locks, and Defender’s internal RPC interface. One practical limitation worth knowing: the exploit needs a pending Defender signature update to be available at the time of the attack. Without one in the queue, the chain does not trigger. That makes it less reliable than a push-button exploit, but it does not make it safe to ignore.Here is how the attack chain works.When Defender runs an antivirus definition update, part of that process involves creating a temporary Volume Shadow Copy, which is the same snapshot mechanism Windows uses for backup and restore. That shadow copy contains files that are normally completely locked during regular operation, including the SAM database, which stores the password hashes for every local account on the machine.BlueHammer registers itself as a Cloud Files sync provider, the same kind of thing that OneDrive or Dropbox uses to sync files. When Defender touches a specific file inside that folder, the exploit gets a callback and immediately places an opportunistic lock on that file. Defender stalls, blocked, waiting for a response that is never coming. The shadow copy it just created is still mounted. The window is open.With Defender frozen in place, the exploit reads the SAM, SYSTEM, and SECURITY registry hives directly from the snapshot. It decrypts the stored NTLM password hashes using the boot key pulled from the SYSTEM hive, changes a local administrator account’s password, logs in with that account, copies the administrator security token, pushes it to SYSTEM level, creates a temporary Windows service, and spawns a command prompt running as NT AUTHORITY\SYSTEM. Then, to cover its tracks, it puts the original password hash back. The local account password looks completely unchanged. No crash, no alert, nothing.The whole chain runs in under a minute from a normal user session.The Cloud Files provider name hardcoded in the exploit source code reads IHATEMICROSOFT. The administrator password used during the escalation is hardcoded as $PWNed666!!!WDFAIL. These are not bugs left in by accident. They are messages, written directly into the code, and there is only one intended reader.Will Dormann, principal vulnerability analyst at Tharros, tested the exploit and confirmed it works well enough to be a real threat.Microsoft has been cutting costs. Experienced analysts who knew how to look at a complex exploit and actually understand it have been replaced with staff following rigid process checklists. One of those checklist requirements is a video demonstration of the exploit. Researchers who refuse to make a video get their reports closed. Dormann said on Mastodon that he would not be surprised if Microsoft closed the case because the researcher refused to submit a video, since that has apparently become an MSRC requirement.Microsoft’s only public response to BlueHammer has been a statement about supporting coordinated vulnerability disclosure. Take a moment with that. The whole point of this situation is that Microsoft’s own process broke the coordination. Responding to that by saying you support coordination is not an answer.Microsoft pushed a Defender signature update that detects the original BlueHammer binary as Exploit:Win32/DfndrPEBluHmr.BB. That signature does not fix the vulnerability. It flags the compiled sample from the published source code. Recompile the same code with any small change and Defender does not flag it at all. The detection catches that one specific file. The technique itself, which runs entirely through normal Windows components doing exactly what they were built to do, stays completely undetected. Until Microsoft fixes the root cause, a signature is not protection.The Howler Cell research team at Cyderes fixed the bugs in the original PoC and ran the full exploit against patched Windows 10 and 11. It works. SYSTEM shell from a restricted user session in under a minute.There is still no CVE and no patch. The exploit code is public, the GitHub repository already has more than 100 forks and nearly 300 stars, multiple researchers have fixed the original bugs and confirmed it works, and ransomware groups and APT actors tend to pick up public LPE code and put it to use within days of it going live.Here is what to do right now.→ Monitor for VSS enumeration coming from regular user processes. Calls to NtQueryDirectoryObject targeting HarddiskVolumeShadowCopy objects from anything outside of backup or system tooling is a red flag with almost no innocent explanation.→ Watch for Cloud Files sync root registration by unknown processes. CfRegisterSyncRoot being called from anything other than OneDrive, Dropbox, or Box is worth checking immediately. That call is exactly how BlueHammer sets up its trap.→ Alert on low-privileged processes creating Windows services or grabbing SYSTEM-level tokens. BlueHammer uses CreateService to briefly register a malicious service during the escalation, and that shows up in EDR telemetry.→ Watch for quick back-to-back password changes on local administrator accounts. BlueHammer resets the password, uses it, then resets it back. Security event IDs 4723 and 4724 firing twice in quick succession on the same account does not have a normal explanation.→ Keep permissions tight. BlueHammer needs a local session to run, so every permission a standard user does not actually need is attack surface that can be removed.→ Keep watching Microsoft security advisories for a patch. When it comes, treat it as high priority.Understanding how privilege escalation works, how attackers get from a basic foothold to full system control, and what post-exploitation actually looks like is exactly what I cover in my ethical hacking course. BlueHammer is a real-world example of the kind of techniques that come up in penetration testing all the time.→ Join my complete ethical hacking course(The link supports me directly as your instructor!)Hacking is not a hobby but a way of life.Sources: Chaotic Eclipse — Public Disclosure · BlueHammer — GitHubBy Bulls EyeJolanda de koff • email • donateMy name is Jolanda de Koff and on the internet, I&#39;m also known as Bulls Eye. Ethical Hacker, Penetration tester, Researcher, Programmer, Self Learner, and forever n00b. Not necessarily in that order. Like to make my own hacking tools and I sometimes share them with you. &quot;You can create art &amp; beauty with a computer and Hacking is not a hobby but a way of life ...I ♥ open-source and Linux</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">zx8080</span>
+        <span class="meta-time">2026/04/11 18:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">破坏文本选择是一种非常对用户不利的 Web 开发技巧。谢谢你，说真的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Breaking text selection is a VERY user-hostile web development trick. Thank you, seriously.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729358" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/11 19:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个网站是我长期以来遇到的最有敌意的网站之一。手机上就惨了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This website is one of the most user hostile I’ve encountered in a long time. On mobile it’s miserable.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">duskdozer</span>
+        <span class="meta-time">2026/04/11 19:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是讽刺的意思吗？它还包括 smooth-scroll.js、clipboard.js（无 Flash。无框架。压缩后只有 3kb）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is it meant to be ironic? It's also including a smooth-scroll.js, clipboard.js (No Flash. No frameworks. Just 3kb gzipped)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729579" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">smcin</span>
+        <span class="meta-time">2026/04/11 18:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣，但您的网站在移动设备上的渲染效果非常糟糕；我必须向下滚动四屏广告或空白填充，然后才能看到文章的单个段落，然后是更多空白页面。它在视觉上与广告农场没有什么区别。你能解决这个问题吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting but your site renders very badly on mobile; I have to scroll down through four screenfuls of ads or blank padding before I see a single paragraph of article, then more blank page. It is visually indistinguishable from an adfarm. Could you fix that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729180" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">meandmycode</span>
+        <span class="meta-time">2026/04/11 19:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更像是广告热情，使用您最喜欢的搜索索引进行搜索确实会带来更好的结果。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">More like ads passion, truly a lot of better results from searching using your favourite search index..</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729498" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">PeterWhittaker</span>
+        <span class="meta-time">2026/04/11 19:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">网站呈现效果对我来说非常好，带有拦截器的 iOS Safari；文本选择效果很好。<p>是的，我知道，因果报应即将到来，但其他评论与我的经验如此相反（我非常喜欢该页面和内容），我无法不发表评论。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Site renders great for me, iOS Safari with blockers; text selection works fine.<p>Yeah, I know, karma hit coming, but the other comments are so counter to my experience (I quite like the page and content) that I could not not comment.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729616" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fenykep</span>
+        <span class="meta-time">2026/04/11 19:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对我来说也是如此（勇敢的机器人）。
+文本选择的阻塞很烦人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Same for me (brave android).
+The blocking of text selection is annoying tho.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dist-epoch</span>
+        <span class="meta-time">2026/04/11 19:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果本机代码在您的 Windows 上运行（而不是浏览器沙箱中的 JavaScript），那么您就已经失败了。<p>它可以窃取您的 cookie 和浏览器保存的密码，它可以上传您的照片或删除它们。</p><p>权限升级到 SYSTEM 是您最不用担心的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If native code is running on your Windows (as opposed to JavaScript in the browser sandbox), you've already lost.<p>It can steal your cookies and browser saved passwords, it can upload your photos or delete them.</p><p>Privilege escalation to SYSTEM is the least of your worries.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729523" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">drum55</span>
+        <span class="meta-time">2026/04/11 19:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或多或少，除了 Qubes 和 MacOS（在非常有限的程度上）之外，没有任何桌面操作系统可以处理用户受到的轻微威胁，更不用说具有特权的用户了。王国的密钥已经在用户域中，SSH 密钥、您所有的电子邮件和照片、联系人、对网络中其他设备的访问权限。用户可以通过修改自己的环境来给自己设置后门来获取密码，可以通过修改用户浏览器的 DNS 设置来升级以获得更多访问权限。总的来说，根访问是完全无关的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">More or less, no desktop OS other than Qubes and MacOS (to a very limited extent) can handle the user being even vaguely compromised, much less a user with privilege. Keys to the kingdom are already in the user domain, SSH keys, all your emails and photos, contacts, access to other devices in your network. The user can backdoor themselves to get passwords by modifying their own environment, can escalate by modifying the DNS settings of the users browser to gain more access. Root access by and large is completely irrelevant.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">redsocksfan45</span>
+        <span class="meta-time">2026/04/11 18:51</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47729441" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

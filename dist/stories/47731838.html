@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>保持 Postgres 队列健康 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1356/">返回本批次</a>
+      <h1>保持 Postgres 队列健康</h1>
+      <p class="subtitle">Keeping a Postgres Queue Healthy</p>
+      <div class="meta-line">
+        <span>planetscale.com</span>
+        <span>作者 tanelpoder</span>
+        <span>分数 91</span>
+        <span>评论 23</span>
+        <span>2026/04/12 00:24</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47731838" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://planetscale.com/blog/keeping-a-postgres-queue-healthy" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>作者：西蒙·格里格斯四月 10, 2026 健康的消化系统是能够有效消除废物的系统。纤维是健康饮食的关键部分，不是因为它有营养，而是因为它可以让您消耗的所有东西保持活力。数据库也没有那么不同。如果您想要一个健康的队列表，则需要监控旨在在备份之前执行清理工作的系统。Postgres 早在它非常适合这项工作之前就一直是基于队列的工作负载的流行选择。多年来，在多个主要版本中，Postgres 只会成为此类工作负载的更强有力的选择。但是，是什么让作业队列产生了独特的问题呢？尽管取得了所有这些进步，但仍然存在哪些陷阱？值得了解的是，因为它们不仅会降低您的作业队列，还会降低您的混合工作负载数据库和整个应用程序。共享负载“只使用 Postgres”模因证实了每个工作负载都属于 Postgres 数据库的概念。这还不是最糟糕的主意。您确实可以将任何东西放入 Postgres 数据库中并使其保留下来。丰富的扩展生态系统填补了“普通”Postgres 中的任何功能空白。因此，您可能会同时在同一个数据库中运行多个不同的工作负载类型。您的 OLTP、OLAP、时间序列、事件源、全文、地理空间和/或队列工作负载可能同时在同一数据库集群中运行，具有不同的需求、挑战和优先级，同时竞争相同的资源。每种工作负载类型都有专用的服务，您可以单独使用。但是，如果您正在阅读这篇博文，您可能希望优化它们如何协调工作。在 PlanetScale，我们始终赞成为每项工作选择正确的工具 - Postgres 或其他工具。但是，如果您对在 Postgres 中维护健康队列和混合工作负载感到好奇，请继续阅读。队列工作负载队列表的独特之处在于大多数行都是瞬态的。插入，读取一次，然后删除。因此，表的大小大致保持不变，而其累积吞吐量却很大。您的应用程序可以使用作业队列来跟踪异步操作，例如发送电子邮件、创建发票或生成报告。在 Postgres 中这样做的主要好处是，您可以保持作业状态以及数据库中运行的任何其他逻辑与事务同步。如果作业失败，整个事务将失败并回滚。如果事务失败，作业可能会重试或被删除。使用外部供应商需要仔细协调才能与应用程序的事务状态保持同步。我们今天的示例考虑这个简单的队列表，人们可能会使用它来创建需要执行的单个作业。有效负载列包含应用程序完成操作所需的所有信息。CREATE TABLE 作业 ( id BIGSERIAL PRIMARY KEY, run_at TIMESTAMPTZ DEFAULT now(), status TEXT DEFAULT &#39;pending&#39;, Payload JSONB );</li><li>创建索引 idx_jobs_fetch ON jobs (run_at) WHERE status = &#39;pending&#39;;当您的应用程序定期执行查询以检查要完成的作业时，它会搜索仍处于待处理状态的最旧作业，执行任何必要的工作，然后删除该作业。工作人员打开一个事务并声明下一个待处理作业：BEGIN;</li><li>SELECT * FROM jobs WHERE status = &#39;pending&#39; ORDER BY run_at LIMIT 1 FOR UPDATE SKIP LOCKED;在实践中，保持该事务尽可能短是至关重要的——它保持开放的时间越长，它保持真空的时间就越长。本文中的示例假设工作人员操作为亚毫秒级。工作人员执行作业所需的任何工作。如果工作失败，事务将回滚 - 该行从未被修改，锁被释放，并且该作业再次对其他工作人员可见。如果工作成功，工作人员将删除该工作并提交：DELETE FROM jobs WHERE id = $1;犯罪;为了实现并发性和更快的作业处理，您可能希望多个工作人员同时执行各个作业。通过上面的示例查询，每个工作人员都可以通过 FOR UPDATE SKIP LOCKED 行来防止执行重复工作，因为同一查询将“锁定”它正在处理的行，直到提交事务。正如我们所看到的，作业队列工作负载的性质非常简单。获取一行然后将其删除。然而，在表面之下，还有更多的内容。需要进行清理。降低作业队列及其运行的数据库的常见问题是，在这些事务之后数据库无法比新工作累积的速度更快地进行清理。性能本身并不是问题。其他人记录了 Postgres 可以处理大规模的工作负载。因此，Postgres 支持作业队列的能力是没有问题的。保持作业队列与数据库的其他竞争工作负载协调通常是一个挑战。队列表的健康状况不仅取决于其自身的配置，还取决于在同一 Postgres 实例上运行的每个其他事务的行为。虽然副本和复制槽也可以针对队列表工作，但本文重点关注主数据库上的竞争查询流量。清理死元组是问题当行发生变化时，Postgres 可以维护同一行的多个版本，以便不同的事务可以看到查询时的行值。这是 Postgres 对“多版本并发控制”(MVCC) 的实现，也是其设计的核心原则。这意味着在我们的作业队列中，Postgres 数据库中 DELETE 操作所针对的行不会立即删除。相反，它被标记为删除，对新事务不可见，并保留在数据库中直到被清理。这些尚未删除的不可见行被称为“死元组”。死元组通过“清理”操作进行清理，该操作可以手动执行或在健康的 Postgres 数据库中定期发生。虽然死元组不会在 SELECT 查询中返回，但它们仍然会产生成本。对于顺序扫描，执行器从堆页读取死元组并在丢弃它们之前检查它们的可见性。对于索引扫描（我们的作业队列依赖于 ORDER BY run_at LIMIT 1 的那种），成本更加隐蔽：B 树索引本身会累积对死元组的引用，迫使扫描遍历不再指向行的条目可见。每个死索引条目都意味着额外的 I/O 来检查堆页面，但只是将其丢弃。这种开销对应用程序来说是不可见的，但会随着死元组的数量而大幅增长。 至于尝试清理的频率，autovacuum_naptime 控制启动器在检查每个数据库是否需要清理的表之间休眠的时间，通常默认为 1 分钟。表的清理时间取决于死元组阈值 autovacuum_vacuum_threshold 和 autovacuum_vacuum_scale_factor。底层的死元组让我们想象一下这样的场景：我们有一个作业表，其中定期创建和处理不同类型的任务。另一个应用程序访问同一数据库以执行大型分析查询并生成报告。这些优先级较低且完成速度较慢。假设您对作业队列表执行查询：SELECT * FROM jobs WHERE status = &#39;pending&#39; 您期望看到的响应显示了这三个待处理作业：-- 您看到的 id |运行于 |状态 |有效负载--+-------------------------+---------+-------------------------------------------- 42 | 2026-04-07 09:01:12 世界标准时间 |待定 | {“类型”：“电子邮件”，“收件人”：“...”} 43 | 2026-04-07 09:01:14 世界标准时间 |待定 | {“类型”：“发票”，“id”：781} 44 | 2026-04-07 09:01:15 世界标准时间 |待定 | {&quot;type&quot;: &quot;report&quot;, &quot;id&quot;: 332} (3 行) 每行中都是元数据，查询执行器读取元数据以确定是否应将其包含在响应中或对当前事务不可见。虽然您无法查询死元组，但您可以在任何活动元组的响应中包含此元数据。 -- 此事务由数据库指定一个 ID (XID) SELECT ctid, xmin, xmax, id, status FROM jobs WHERE status = &#39;pending&#39;;</li><li>ctid | xmin |最大|编号 |状态 ------+--------+------+----+--------(0,7) | 439821 | 439821 0 | 42 | 42待定 (0,8) | 439825 | 439825 0 | 43 | 43待定 (0,9) | 439830 | 439830 0 | 44 | 44 ending (3 rows) ctid — 元组在磁盘上的物理位置，表示为表的 heap 内的（页，偏移量）。xmin — 插入该行的事务 ID (XID)；读者用它来决定该行在事务开始时是否存在。xmax — 删除或锁定该行的 XID；值为 0 意味着还没有事务将其标记为删除。还可能存在死元组，即先前已删除但尚未物理删除的行，Postgres 执行器仍然必须在返回响应的过程中进行扫描。虽然您只看到三个活动行，但执行器扫描了更多行：-- 概念视图：执行器扫描的内容（不是真正的查询输出） xmin |最大|编号 |状态 | -------+--------+--------+----+--------+ (0,1) | 439790 | 439790 439792 | 439792 36 | 36待定 | -- dead: xmax 设置，被事务删除 439792 (0,2) | 439795 | 439795 439797 | 439797 37 | 37待定 | -- 死了 (0,3) | 439800 | 439803 | 439803 38 | 38待定 | -- 死了 (0,4) | 439804 | 439804 439806 | 439806 39 | 39待定 | -- 死了 (0,5) | 439808 | 439808 439812 | 439812 40|待定 | -- 死了 (0,6) | 439814 | 439818 | 439818 41 | 41待定 | -- 死了 (0,7) | 439821 | 439821 0 | 42 | 42待定 | -- live: xmax为0，未删除(0,8) | 439825 | 439825 0 | 43 | 43待定 | -- 直播 (0,9) | 439830 | 439830 0 | 44 | 44待定 | -- live（6 个死元组 + 扫描 3 个活行，返回 3 行） 这个故事不仅限于堆。表上的任何索引都按排序顺序保留叶条目，并且每个条目引用堆上的 ctid。按索引顺序的扫描会跟随这些指针并检查堆。当任何叶条目在其堆元组已死时仍然存在时，该扫描中的工作就会被浪费。概念上（清理尚未删除这些指针时的最坏情况）：-- 概念视图：按 run_at 顺序访问的索引叶条目（不是真正的查询输出） tid |堆查找后 ----------------------+--------+-------------------- 2026-04-07 08:59:01 | (0,1)|死亡 — 被丢弃 2026-04-07 08:59:03 | (0,2) |死 2026-04-07 08:59:05 | (0,3) |死了 2026-04-07 08:59:07 | (0,4) |死 2026-04-07 08:59:09 | (0,5) |死 2026-04-07 08:59:11 | (0,6) |死 2026-04-07 09:01:12 | (0,7) |直播 2026-04-07 09:01:14 | (0,8) |直播 2026-04-07 09:01:15 | (0,9) | live（6 个死索引目标 + 3 个可到达的活行，与上面的堆遍历形状相同）在我们想象的规模下，三个作业和六个死元组没有问题。但是，如果数据库不能比其工作负载创建死元组的速度更快地回收死元组，那么数据库注定会失败。经过良好调整和配置的 Postgres 集群可以处理每秒数万个作业的作业队列吞吐量。那么是什么导致表膨胀呢？通常，当高写入变动（插入、更新和删除行的快速周期）超过自动清理时，就会发生这种情况。但 autovacuum 落后不仅仅是吞吐量问题。即使 autovacuum 运行得足够频繁，它也无法删除活动事务可能仍可见的死元组。当 autovacuum 糟糕时，有一些常见情况会导致 autovacuum 在清理死元组方面无效。某些表锁可能会阻止清理，并且不正确的 autovacuum 配置可能会导致死元组的清理率不理想。在健康的数据库中，autovacuum 将定期运行并在死元组变得可见时清理它们。然而，最常见的是，当活动事务阻止死元组变得可回收时，清理就会被阻止。 Postgres 不会清除任何对活动事务可能仍然可见的死元组。最古老的此类交易设置了截止点，称为“MVCC 范围”。在该事务完成之前，每个比其快照更新的死元组都会被保留。需要 2 分钟才能完成的单个事务会在整个 2 分钟内固定地平线。产生相同故障模式的另一种类型的工作负载是多个重叠查询，没有单独长时间运行的查询，它们会持续固定地平线。例如，想象三个分析查询，每个运行 40 秒，间隔 20 秒。任何单个查询都不会因运行时间过长而触发超时。但是，由于一个事务始终处于活动状态，因此范围永远不会前进，并且对真空的影响与一个永远不会结束的事务相同。如果数据库拥有的唯一工作负载是作业队列，则这种情况不太可能发生。但您遵循“只使用 Postgres”的理念。因此，您有许多重叠的工作负载，每个工作负载都有自己的优先级，并且依赖于相互避免干扰。您的问题不是 Postgres 不适合作业队列，也不是它无法足够快地完成作业，而是这些快速作业和它们快速积累的死元组没有被足够快地清理，因为其他并发运行、重叠的较慢查询。我们可以使用的工具过去几年和主要版本Postgres，添加了新工具来简化队列性能的维护。如前所述，您可以尝试调整Postgres的autovacuum设置，例如autovacuum_vacuum_cost_delay和autovacuum_vacuum_cost_limit，以提高操作的频率和有效性。但在我们想象的场景中，我们希望修复的不是作业队列的吞吐量；而是我们想要修复的任务队列的吞吐量。为了防止长时间运行的查询运行时间过长，有几个超时配置选项：statement_timeout，在 Postgres 7.3 中引入，杀死任何超出指定持续时间的单独 SQL 语句。idle_in_transaction_session_timeout，从 Postgres 9.6 开始，终止在打开事务中空闲时间超过指定持续时间的会话。transaction_timeout，从 Postgres 17.0，杀死任何超过指定持续时间的活动或非活动事务。但是，这些都不能解决我们的具体问题。它们是生硬的工具，仅针对单个查询的执行时间，不能限制并发或执行成本。我们需要防止任何使 MVCC 范围持续固定的工作负载。我们需要一种工具，能够区分不同“类别”的流量，使高优先级工作负载不受影响，并限制低优先级工作负载消耗资源的速率。Enter Database Traffic Control™流量控制是 Insights 扩展的一部分，由 PlanetScale 开发，专门用于 PlanetScale Postgres。非常适合当您需要对单个查询的执行方式以及它们可以消耗多少资源进行细粒度控制时。流量控制中资源预算所针对的查询被分配一组有限的资源；一旦超过该限制，它们就会被阻止。我们想象的场景的解决方案是限制重叠的较慢查询可以运行的频率以及一次可以运行的数量。超时是一种生硬的工具，无法为我们提供这种精细的控制。通过限制这些查询，我们可以放心，自动清理将更有可能以可接受的速度清理死元组。由于我们问题的解决方案涉及终止某些查询，因此我们的应用程序包含重试逻辑至关重要。如果说数据库做的工作越少，运行得越好，那是不公平的。我们试图在保持相同数量的情况下平滑执行工作的速率。在我们的应用程序中，被阻止的查询不会永远被拒绝；而是会被拒绝。构建一个演示这篇文章的灵感来自于关于将作业队列放入 Postgres 数据库的智慧的内部讨论，其中共享了以下博客文章。2015 年，Brandur Leach 发布了 Postgres Job Queues &amp; Failure By MVCC，记录了 Postgres 支持的作业队列中的灾难性故障模式。该博客文章还包括一个测试平台，以演示未关闭的事务如何固定 MVCC 范围并防止清理。幸运的是，原始测试平台仍然可以在 Brandur/que-degradation-test 上使用，因此为了测试我们迄今为止学到的所有内容，我们可以用它作为验证我们解决方案的灵感。重现问题自 2015 年以来发生了很多变化。我的目的是使用 Postgres 18 重新创建相同的应用程序工作负载，看看我是否可以重现同样的问题。原始测试平台需要 Ruby、Que gem (v0.x)，并在 Postgres 9.4 上进行测试。按原样运行它会在现代 Postgres 上测试十年前的库，而不是现代 Postgres 上的模式。为了隔离我可以理解的代码库中的 SQL 级行为，我用 TypeScript 和 Bun 重写了测试。简而言之，我们维护了与 Que 相同的递归 CTE 模式。具有相同的模式、生产者率、工作持续时间、工人数量和长跑者模式。在 PlanetScale PS-5 集群（起价 5 美元/月）上运行。结果是明显的，但可管理的退化。虽然最初的测试使数据库在 15 分钟内陷入死亡螺旋，但我的 PS-5 在相同的时间内使工作队列保持接近于零。然而，死元组仍然存在显着的线性增长，这表明在更长的时间尺度上，也会遇到同样的问题。因此，虽然最初的问题在较新版本的 Postgres 中得到了缓解（部分归功于 B 树索引清理——针对版本变动的自下而上删除、扫描驱动的死索引元组删除以及相关行为），但它并没有被消除。尝试修复它下一步，我想知道较新版本的 Postgres 是否提高了性能；我们能解决原来的问题吗？我们在 2026 年有两项 2015 年没有的具体改进。FOR UPDATE SKIP LOCKED 用单个 SELECT 完全取代了递归 CTE，该 SELECT 跳过其他工作人员锁定的行。批处理（每个事务 10 个作业）一次锁获取涵盖 10 个作业而不是 1 个作业，摊销索引扫描成本。我们保持其他所有内容相同：8 个工作人员，50 个工作人员jobs/sec 生产者，10ms 工作，long-runner 在 45s 后开始。结果看起来像这样：Metricoriginal（递归CTE）增强（SKIP LOCKED +批处理）基线锁定时间2-3ms1.3-3.0ms结束锁定时间（典型）10-34ms9-29ms最差尖峰84.5ms（在33k死元组）180ms（在24k死元组）队列深度0-100（振荡）0 （大部分）末端的死元组42、40042、450吞吐量~89/s~50/s，退化曲线几乎相同。这些更新不会影响 MVCC 降级，因为两种方法都扫描相同的 B 树索引并遇到相同的死元组。主要改进是吞吐量差异，但这反映了测试的设计，而不是锁定策略。在每秒 50 个作业的生产速度下，CTE 工作人员各自独立地抢夺工作并超过了生产者，而批量工作人员则排空队列并花费时间进行回退睡眠。这两个版本都没有面临真正的压力。 总之，十年前设计的 Postgres 支持的队列可以在 15 分钟内杀死数据库，现在可以存活更长时间，但最初的问题仍然存在。现代 Postgres 提升了地板，但没有移除天花板。如果我们不是每秒运行 50 个作业，而是每秒运行 500 个作业，同样的问题会更快发生，性能下降，并且您的应用程序会受到影响。通过流量控制进行修复流量控制中的资源预算为我们提供了一些控制目标查询可以访问的资源数量的手段：服务器共享和突发限制：服务器资源的百分比以及消耗它们的速度。每个查询限制：查询可以运行的时间，以完整服务器使用的秒数为单位进行测量。最大并发工作人员：可用的百分比资源预算配置为使用这些限制中的一项或多项，以防止特定工作负载消耗资源，否则会对其他工作负载产生负面影响。查询最常见的目标是附加到查询的 SQLCommenter 标记中包含的元数据。对于我们的示例，分析查询设置了action=analytics。由于idle_in_transaction_session_timeout可以捕获并杀死原始基准中的“长期运行者”空闲事务，因此我将降级触发器切换到更现实的生产场景：多个重叠的分析查询通过活动工作保持事务打开——这种查询不能通过会话超时来杀死。为了演示流量控制在遏制这种降级方面的有效性，我将所有action=analytics查询的最大并发工作人员限制为1个工作人员（max_worker_processes 的 25%），目的是一次只允许运行一个分析查询。为了给系统施加足够的压力，在 15 分钟的测试窗口内产生死亡螺旋，我将产量增加到 800 个作业/秒。我在同一个 EC2 实例上针对同一个 PlanetScale 数据库运行了两次“增强”工作负载：800 个作业/秒 3 个并发分析工作人员运行 120 秒的查询，交错运行，因此它们连续重叠 15 分钟的持续时间结果展示了解决核心清理问题的能力。Metric流量控制已禁用流量控制已启用队列积压155,000个作业0个作业锁定时间300ms+2ms结束时的死元组383,0000–23,000（循环）分析查询3个并发，重叠一次1个，2个重试VACUUM有效性阻塞（地平线始终固定）正常（查询之间的窗口）结果死亡spiral 完全稳定的流量控制能够针对特定的工作负载并限制其并发性——这是 autovacuum 配置调整或超时无法实现的。分析报告仍会在容量允许的情况下执行，其中 15 份报告在 15 分钟窗口内完成。完成更多分析查询需要更长的时间，但队列始终保持健康。总结Postgres 支持的队列中的 MVCC 死元组问题并不是 2015 年的遗留问题。现代 Postgres 提高了门槛 - B 树改进和 SKIP LOCKED 购买了重要的空间 - 但底层机制没有改变。当 VACUUM 无法清理它们时，死元组就会累积，而当长时间运行或重叠事务固定在 MVCC 范围内时，VACUUM 也无法清理它们。在队列、分析和应用程序逻辑共享单个数据库的“仅使用 Postgres”世界中，这不是理论上的风险。这是正常运行状态。危险的版本并不是一场戏剧性的崩溃——它是一种悄然退化的平衡，其中锁定时间逐渐增加，作业速度减慢，并且没有警报触发。Postgres 提供基于超时的工具，但它们无法区分工作负载类别或限制并发性。如果您将队列与其他工作负载一起运行，那么您可以做的最有影响力的事情就是确保 VACUUM 能够跟上。交通控制使这一切变得简单。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>By Simeon Griggs | April 10, 2026A healthy digestive system is one that efficiently eliminates waste. Fiber is a key part of a healthy diet, not because it is nutritious, but because it keeps everything you consume moving.Databases are not so different. If you want a healthy queue table, you&#39;ll need to monitor the systems that are designed to perform cleanup well before they&#39;re backed up.Postgres has been a popular choice for queue-based workloads long before it was a good fit for the job. Over many years and multiple major versions, Postgres has only become an even stronger choice for this type of workload.But what makes job queues uniquely problematic? And in spite of all these advancements, what traps remain?It&#39;s worth knowing, since they could bring down not only your job queue but also your mixed-workloads database and your entire application.Sharing the loadThe &quot;just use Postgres&quot; meme lends credence to the notion that every workload belongs in a Postgres database. It&#39;s not the worst idea. You really can throw just about anything at a Postgres database and make it stick. The rich extensions ecosystem fills any functionality gaps in &quot;vanilla&quot; Postgres.As a result, you may have multiple distinct workload types running in the same database at the same time. Your OLTP, OLAP, Time Series, Event Sourcing, Full Text, Geospatial, and/or Queue workloads may all be running at the same time in the same database cluster with different needs, challenges, and priorities—while competing for the same resources.There are dedicated services for each of these workload types that you can use in isolation. If you&#39;re reading this blog post, however, you&#39;re likely looking to optimize how they can all work in harmony.At PlanetScale, we&#39;re always in favor of choosing the right tool for each job—Postgres or otherwise. But if you&#39;re curious about maintaining healthy queues alongside mixed workloads in Postgres, keep reading.The queue workloadWhat makes a queue table unique is that most rows are transient. Inserted, read once, and deleted. So the table&#39;s size stays roughly constant while its cumulative throughput is enormous.Your application may use a job queue to track asynchronous actions like sending an email, creating an invoice, or generating a report. The major benefit of doing this in Postgres is that you can keep the job state and any other logic running in your database in sync with the transaction.If the job fails, the entire transaction fails and rolls back. If the transaction fails, the job may retry or get deleted. Using an external vendor requires careful coordination to keep in sync with your application&#39;s transactional state.Our example for todayConsider this simple queue table one might use to create individual jobs that need doing. The payload column contains all the information your application needs to complete the operation.CREATE TABLE jobs ( id BIGSERIAL PRIMARY KEY, run_at TIMESTAMPTZ DEFAULT now(), status TEXT DEFAULT &#39;pending&#39;, payload JSONB );</li><li>CREATE INDEX idx_jobs_fetch ON jobs (run_at) WHERE status = &#39;pending&#39;; As your application regularly performs queries to check for jobs to be done, it searches for the oldest job that is still in a pending state, performs whatever work is necessary, and then deletes that job.The worker opens a transaction and claims the next pending job:BEGIN;</li><li>SELECT * FROM jobs WHERE status = &#39;pending&#39; ORDER BY run_at LIMIT 1 FOR UPDATE SKIP LOCKED; In practice, keeping this transaction as short as possible is critical — the longer it stays open, the longer it holds back vacuum. The examples in this post assume sub-millisecond worker operations.The worker performs whatever work the job requires. If the work fails, the transaction rolls back — the row was never modified, the lock is released, and the job becomes visible to other workers again.If the work succeeds, the worker deletes the job and commits:DELETE FROM jobs WHERE id = $1; COMMIT; For concurrency and faster job processing, you may want multiple workers executing individual jobs simultaneously. With the example query above, each worker is protected against performing duplicate work by the line FOR UPDATE SKIP LOCKED as the same query will &quot;lock&quot; the row it is working with until the transaction is committed.As we can see, the nature of a job queue workload is quite simple. A row is fetched and then deleted. Beneath the surface, however, there&#39;s more to it than that. There&#39;s cleanup to be done.The common issue that degrades job queues and the database they operate in is when the database cannot clean up after these transactions faster than new work accumulates.Performance alone is not the problemPostgres is documented by others to handle this workload at massive scale. So Postgres&#39; capability to support job queues is not in question.Keeping your job queue in harmony with the other competing workloads of your database is typically the challenge.The health of your queue table depends not only on its own configuration, but also on the behavior of every other transaction running on the same Postgres instance. While replicas and replication slots can also work against queue tables, this post focuses on competing query traffic on the primary.Cleaning up dead tuples is the problemWhen rows mutate, Postgres can maintain multiple versions of the same row, so that different transactions can see row values as of the time they were queried. This is Postgres&#39; implementation of &quot;Multi-Version Concurrency Control&quot; (MVCC) and a core principle of its design.This means in our job queue a row in a Postgres database targeted by a DELETE operation is not immediately removed. Instead, it is marked for deletion, made invisible to new transactions, and remains in the database until cleaned up. These not-yet-deleted, invisible rows are referred to as &quot;dead tuples.&quot;Dead tuples are cleaned up by a &quot;vacuum&quot; operation, which can be performed manually or occurs regularly in a healthy Postgres database. While dead tuples are not returned in a SELECT query, they still incur a cost.For a sequential scan, the executor reads dead tuples from heap pages and checks their visibility before discarding them.For an index scan — the kind our job queue relies on with ORDER BY run_at LIMIT 1 — the cost is more insidious: the B-tree index itself accumulates references to dead tuples, forcing the scan to traverse entries that point to rows no longer visible.Each dead index entry means additional I/O to check a heap page only to discard it. This overhead is invisible to the application but can grow substantially with the number of dead tuples.As for how frequently cleanup is attempted, autovacuum_naptime controls how long the launcher sleeps between checking each database for tables that need vacuuming, usually 1 minute by default. When a table is vacuumed depends on the dead tuple thresholds autovacuum_vacuum_threshold and autovacuum_vacuum_scale_factor.Dead tuples under the hoodLet&#39;s envision the scenario where we have a jobs table in which tasks of different types are regularly created and processed. Another application accesses the same database to perform large analytical queries and generate reports. These are lower-priority and slower to complete.Say you perform a query on the jobs queue table:SELECT * FROM jobs WHERE status = &#39;pending&#39; The response you expect to see shows those three pending jobs:-- What you see id | run_at | status | payload ----+-------------------------+---------+------------------------------- 42 | 2026-04-07 09:01:12 UTC | pending | {&quot;type&quot;: &quot;email&quot;, &quot;to&quot;: &quot;...&quot;} 43 | 2026-04-07 09:01:14 UTC | pending | {&quot;type&quot;: &quot;invoice&quot;, &quot;id&quot;: 781} 44 | 2026-04-07 09:01:15 UTC | pending | {&quot;type&quot;: &quot;report&quot;, &quot;id&quot;: 332} (3 rows) Within each row is metadata that the query executor reads to determine whether it should be included in the response or is invisible to the current transaction. While you can&#39;t query for dead tuples, you can include this metadata in the response of any live tuples.-- This transaction is given an ID (XID) by the database SELECT ctid, xmin, xmax, id, status FROM jobs WHERE status = &#39;pending&#39;;</li><li>ctid | xmin | xmax | id | status -------+--------+------+----+--------- (0,7) | 439821 | 0 | 42 | pending (0,8) | 439825 | 0 | 43 | pending (0,9) | 439830 | 0 | 44 | pending (3 rows) ctid — the physical location of the tuple on disk, expressed as (page, offset) within the table&#39;s heap.xmin — the transaction ID (XID) that inserted this row; readers use it to decide whether the row existed when their transaction began.xmax — the XID that deleted or locked this row; a value of 0 means no transaction has marked it for deletion yet.There may also be dead tuples, previously deleted rows that haven&#39;t been physically removed yet, which the Postgres executor still has to scan on its way to returning a response. While you only saw three live rows, the executor scanned through many more:-- Conceptual view: what the executor scans (not real query output) ctid | xmin | xmax | id | status | -------+--------+--------+----+---------+ (0,1) | 439790 | 439792 | 36 | pending | -- dead: xmax set, deleted by transaction 439792 (0,2) | 439795 | 439797 | 37 | pending | -- dead (0,3) | 439800 | 439803 | 38 | pending | -- dead (0,4) | 439804 | 439806 | 39 | pending | -- dead (0,5) | 439808 | 439812 | 40 | pending | -- dead (0,6) | 439814 | 439818 | 41 | pending | -- dead (0,7) | 439821 | 0 | 42 | pending | -- live: xmax is 0, not deleted (0,8) | 439825 | 0 | 43 | pending | -- live (0,9) | 439830 | 0 | 44 | pending | -- live (6 dead tuples + 3 live rows scanned, 3 rows returned) That story is not limited to the heap. Any index on the table keeps leaf entries in sorted order and each entry references a ctid on the heap. A scan in index order follows those pointers and checks the heap. There is wasted work in that scan when any leaf entry still exists when its heap tuple is dead. Conceptually (a worst case when cleanup has not yet removed those pointers):-- Conceptual view: index leaf entries visited in run_at order (not real query output) run_at (pending) | tid | after heap lookup ----------------------+-------+-------------------- 2026-04-07 08:59:01 | (0,1) | dead — discarded 2026-04-07 08:59:03 | (0,2) | dead 2026-04-07 08:59:05 | (0,3) | dead 2026-04-07 08:59:07 | (0,4) | dead 2026-04-07 08:59:09 | (0,5) | dead 2026-04-07 08:59:11 | (0,6) | dead 2026-04-07 09:01:12 | (0,7) | live 2026-04-07 09:01:14 | (0,8) | live 2026-04-07 09:01:15 | (0,9) | live (6 dead index targets + 3 live rows reachable, same shape as the heap walk above) At our imaginary scale, three jobs and six dead tuples are no problem.However, a database is destined to fail if it cannot reclaim dead tuples faster than its workload creates them. A well-tuned and provisioned Postgres cluster can handle job queue throughput of tens of thousands of jobs per second. So what causes table bloat?Typically, this happens when high write churn — the rapid cycle of inserting, updating, and deleting rows — outpaces autovacuum. But autovacuum falling behind isn&#39;t just a question of throughput. Even when autovacuum runs frequently enough, it cannot remove dead tuples that might still be visible to an active transaction.When autovacuum sucksThere are a few common situations that make autovacuum ineffective at cleaning up dead tuples.Certain table locks can prevent cleanup, and improper autovacuum configuration can contribute to a suboptimal cleanup rate for dead tuples.In a healthy database, autovacuum will run regularly and clean up dead tuples as they become visible to it.Most commonly, however, cleanup is blocked when active transactions prevent dead tuples from becoming reclaimable. Postgres will not vacuum away any dead tuple that might still be visible to an active transaction. The oldest such transaction sets the cutoff—referred to as the &quot;MVCC horizon.&quot; Until that transaction completes, every dead tuple newer than its snapshot is retained.A single transaction that takes 2 minutes to complete pins the horizon for the full 2 minutes.Another type of workload that produces the same failure mode is multiple overlapping queries, none individually long-running, that keep the horizon pinned continuously.For example, imagine three analytics queries, each running for 40 seconds, staggered 20 seconds apart. No individual query would trigger a timeout for running too long. But because one is always active, the horizon never advances, and the effect on vacuum is the same as one transaction that never ends.This is unlikely if the only workload your database has is your job queue. But you&#39;re following the &quot;just use Postgres&quot; philosophy. So, you have many overlapping workloads, each with its own priorities, that rely on staying out of each other&#39;s way. Your problem is not that Postgres is a bad fit for a job queue or that it can&#39;t complete jobs fast enough—it&#39;s that these fast jobs and the dead tuples they rapidly accumulate aren&#39;t being cleaned up fast enough because of other concurrently running, overlapping slower queries.Tools at our disposalOver several years and major versions of Postgres, new tools have been added to simplify the maintenance of queue performance.As mentioned, you may attempt to tune Postgres&#39; autovacuum settings, such as autovacuum_vacuum_cost_delay and autovacuum_vacuum_cost_limit, to improve the frequency and effectiveness of the operation. But in our imagined scenario, it&#39;s not the job queue&#39;s throughput we wish to fix; it&#39;s how other workloads negatively affect it.To prevent long-running queries from running too long, there are several timeout configuration options:statement_timeout, introduced in Postgres 7.3, kills any individual SQL statement that exceeds the specified duration.idle_in_transaction_session_timeout, from Postgres 9.6, terminates sessions that have been idle inside an open transaction for longer than the specified duration.transaction_timeout, from Postgres 17.0, kills any active or inactive transaction that exceeds the specified duration.However, none of these solves our specific problem. They&#39;re blunt instruments that only target the execution time of a single query and cannot limit concurrency or execution cost. We need to prevent any workload that keeps the MVCC horizon continuously pinned.What&#39;s needed is a tool that can distinguish among different &quot;classes&quot; of traffic, leave high-priority workloads unaffected, and throttle the rate at which lower-priority workloads consume resources.Enter Database Traffic Control™Traffic Control is part of the Insights extension, developed by PlanetScale and exclusively available for PlanetScale Postgres. Perfect for when you need fine-grained control over how individual queries perform and how many resources they can consume.Queries targeted by a Resource Budget in Traffic Control are assigned a limited set of resources; once that limit is exceeded, they can be blocked.The solution to our imagined scenario is to limit how often overlapping slower queries can run and how many can run at once. Timeouts are a blunt instrument that can&#39;t give us that kind of granular control. With those queries capped, we can be assured autovacuum will be more likely to clean up dead tuples at an acceptable rate.Since the solution to our problem involves terminating certain queries, it is critical that our application includes retry logic. It wouldn&#39;t be fair to say the database runs better if it does less work. We&#39;re trying to smooth out the rate at which work is performed while still doing the same amount.In our application, blocked queries aren&#39;t rejected forever; they are retried at a more appropriate time.Building a demoThe inspiration for this post came from an internal discussion on the wisdom of putting job queues in your Postgres database, in which the following blog post was shared.In 2015, Brandur Leach published Postgres Job Queues &amp; Failure By MVCC, documenting a catastrophic failure mode in Postgres-backed job queues. That blog post also includes a test bench to demonstrate how an unclosed transaction can pin the MVCC horizon and prevent cleanup.Fortunately, the original test bench is still available at brandur/que-degradation-test, and so to test everything we&#39;ve learned so far, we can use it as inspiration to validate our solution.Recreating the problemA lot has changed since 2015. My intention was to recreate the same application workloads with Postgres 18 and see if I could reproduce the same problem.The original test bench requires Ruby, the Que gem (v0.x), and it was tested on Postgres 9.4. Running it as-is would test a decade-old library on modern Postgres, not the pattern on modern Postgres. To isolate the SQL-level behavior in a codebase I could understand, I rewrote the test in TypeScript and with Bun.In short, we maintained the same recursive CTE pattern as Que. With the same schema, producer rate, work duration, worker count, and long-runner pattern. Running on a PlanetScale PS-5 cluster (which starts at $5/month).The outcome was visible, but manageable, degradation. While the original test put the database into a death spiral within 15 minutes, my PS-5 kept the worker queue near zero for the same duration. However, there was still notable, linear growth in dead tuples, suggesting that on a longer timescale, the same problem would have been encountered. So while the original problem is mitigated in newer versions of Postgres (thanks in part to B-tree index cleanup—bottom-up deletion for version churn, scan-driven removal of dead index tuples, and related behavior), it has not been eliminated.Attempts to fix itNext, I wondered if newer versions of Postgres have improved performance; can we solve the original problem? There are two specific improvements available to us in 2026 that weren&#39;t there in 2015.FOR UPDATE SKIP LOCKED replaces the recursive CTE entirely with a single SELECT that skips rows locked by other workers.Batch processing (10 jobs per transaction) one lock acquisition covers 10 jobs instead of 1, amortizing the index scan cost.We kept everything else identical: 8 workers, 50 jobs/sec producer, 10ms work, long-runner starts after 45s. The results looked like this:Metricoriginal (recursive CTE)enhanced (SKIP LOCKED + batch)Baseline lock time2-3ms1.3-3.0msEnd lock time (typical)10-34ms9-29msWorst spike84.5ms (at 33k dead tuples)180ms (at 24k dead tuples)Queue depth0-100 (oscillating)0 (mostly)Dead tuples at end42,40042,450Throughput~89/s~50/sThe degradation curves are almost identical. These updates did not affect MVCC degradation, as both approaches scan the same B-tree index and encounter the same dead tuples.The major improvement is the throughput difference, but this reflects the test&#39;s design, not the lock strategy. At 50 jobs/sec production, the CTE workers each grab jobs independently and outpace the producer, while the batched workers drain the queue and spend time in backoff sleep. Neither version was under real pressure.In summary, a Postgres-backed queue designed a decade ago that could kill a database in 15 minutes can now survive longer, but the original problem remains. Modern Postgres has lifted the floor but not removed the ceiling. If instead of running 50 jobs/sec, we ran 500 jobs/sec, the same problem occurs faster, performance degrades, and your application suffers.Fixing with Traffic ControlResource Budgets in Traffic Control give us a few levers to govern how many resources a targeted query has access to:Server share and burst limit: A percentage of server resources and how quickly they can be consumed.Per-query limit: The time a query can run, measured in seconds of full server usage.Maximum concurrent workers: A percentage of available worker processes.Resource Budgets are configured to use one or more of these limits to prevent specific workloads from consuming resources, which would otherwise negatively affect other workloads.Queries are targeted most commonly by metadata included in an SQLCommenter tag appended to the query. For our example, the analytics queries had action=analytics set.Since idle_in_transaction_session_timeout can catch and kill the &quot;long-runner&quot; idle transaction from the original benchmark, I switched the degradation trigger to the more realistic production scenario: multiple overlapping analytics queries that hold transactions open through active work — the kind you can&#39;t just kill with a session timeout.To demonstrate Traffic Control&#39;s effectiveness at curbing this degradation, I throttled the Maximum concurrent workers of all action=analytics queries to 1 worker (25% of max_worker_processes) with the intention of only ever allowing a single analytics query to run at a time.To stress the system enough to produce a death spiral within our 15-minute test window, I increased production to 800 jobs/sec.I ran the &quot;enhanced&quot; workload twice on the same EC2 instance against the same PlanetScale database:800 jobs/sec3 concurrent analytics workers running 120-second queries, staggered so they overlap continuously15-minute durationThe results demonstrated the ability to solve the core cleanup problem.MetricTraffic Control disabledTraffic Control enabledQueue backlog155,000 jobs0 jobsLock time300ms+2msDead tuples at end383,0000–23,000 (cycling)Analytics queries3 concurrent, overlapping1 at a time, 2 retryingVACUUM effectivenessBlocked (horizon always pinned)Normal (windows between queries)OutcomeDeath spiralCompletely stableTraffic Control was able to target specific workloads and limit their concurrency — something not possible with autovacuum configuration tuning or timeouts. The analytics reports are still executed as capacity allows, with 15 completed over the 15-minute window. It takes longer to complete more analytics queries, but the queue remains healthy throughout.SummaryThe MVCC dead tuple problem in Postgres-backed queues is not a relic of 2015. Modern Postgres has raised the threshold — B-tree improvements and SKIP LOCKED buy significant headroom — but the underlying mechanism is unchanged. Dead tuples accumulate when VACUUM cannot clean them, and VACUUM cannot clean them when long-running or overlapping transactions pin the MVCC horizon.In a &quot;just use Postgres&quot; world where queues, analytics, and application logic share a single database, this is not a theoretical risk. It is the normal operating condition. The dangerous version isn&#39;t a dramatic crash — it&#39;s a quietly degraded equilibrium where lock times creep up, jobs slow down, and no alert fires.Postgres provides timeout-based tools, but they can&#39;t distinguish between workload classes or limit concurrency. If you run queues alongside other workloads, the most impactful thing you can do is ensure VACUUM can keep up. Traffic Control makes that simple.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nine_k</span>
+        <span class="meta-time">2026/04/12 04:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">简而言之：<p>* 当长时间运行的查询可能会阻止快速搅动表的清理时，Postgres 在真空范围方面仍然存在相同的问题。 （作者使用了 2015 年的基准，当时问题已经得到很好的理解。）</p><p>* Stock Postgres 仍然没有足够好的工具来对抗它。</p><p>* 作者公司专用版Postgres确实有这样的工具；文章中散布着一些礼貌的宣传。</p><p>我的结论是：在同一个 Postgres 实例上混合长（OLAP 样式）加载和快速搅拌（队列样式）加载仍然不明智。也许运行 0MQ 甚至 RMQ 可能是一个更简单的解决方案，具体取决于队列的要求。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In short:<p>* Postgres still has the same problem with vacuum horizon, when a long-running query can block vacuuming of a quick-churning table. (The author uses a benchmark from 2015 when the problem was already well-understood.)</p><p>* Stock Postgres still has no tools good enough against it.</p><p>* The author's company special version of Postgres does have such tools; a few polite promotions of it are strewn across the article.</p><p>My conclusion: it's still not wise to mix long (OLAP-style) loads and quick-churning (queue-style) loads on the same Postgres instance. Maybe running 0MQ or even RMQ may be an easier solution, depending on the requirements to the queue.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cataflutter</span>
+        <span class="meta-time">2026/04/12 03:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不错的文章，但有一些评论：<p>1）这两种说法似乎相互冲突：</p><p>&gt; 最旧的此类交易设置了截止点 — 称为“MVCC 范围”。在该事务完成之前，每个死元组 <i>比其快照更新</i> 被保留。</p><p>和</p><p>&gt; 例如，假设三个分析查询，每个运行 40 秒，间隔 20 秒。任何单个查询都不会因运行时间过长而触发超时。但由于交易始终处于活跃状态，视野永远不会前进，对真空的影响与一笔永无止境的交易相同。</p><p>如果启动三个分析*事务*（重要的是事务，而不是查询，尽管延迟事务在第一个查询之前不获取快照存在一些微妙之处） 
+在不同的时间，它们将具有交错的快照，因此一旦第一个完成，这应该允许真空前进。</p><p>2）虽然这个查询的问题：</p><p></p><pre><code>    SELECT * FROM jobs
+    WHERE status = 'pending'
+    ORDER BY run_at
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED;
+</code></pre>
+必须考虑死元组是一个真正的问题和性能问题，
+这也可以通过添加单调递增的列来缓解
+并添加 `WHERE column &lt; ?` 子句，前提是您还添加了
+索引以使分页高效。
+这样你就不需要考虑死元组，它们“只是”浪费空间
+在等待清理的同时，不要陷入阅读 perf 的困境。<p>如何保证列是单调的有一点微妙之处
+考虑到并发作家的情况下，数量会增加，但答案取决于什么技巧
+您可以适合您的应用程序。</p><p>3) 我几乎想说一行总结是“不要将（非常）长时间运行的事务与 Postgres 中（非常）高的事务率结合起来”</p><p>（这样的表述公平吗？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Decent article, but some remarks:<p>1) It seems these two statements conflict with each other:</p><p>&gt; The oldest such transaction sets the cutoff—referred to as the "MVCC horizon." Until that transaction completes, every dead tuple <i>newer than its snapshot</i> is retained.</p><p>and</p><p>&gt; For example, imagine three analytics queries, each running for 40 seconds, staggered 20 seconds apart. No individual query would trigger a timeout for running too long. But because one is always active, the horizon never advances, and the effect on vacuum is the same as one transaction that never ends.</p><p>If the three analytics *transactions* (it's transactions that matter, not queries, although there is some subtlety around deferred transactions not acquiring a snapshot until the first query) are started 
+at different times, they will have staggered snapshots and so once the first completes, this should allow the vacuum to advance.</p><p>2) Although the problem about this query:</p><p></p><pre><code>    SELECT * FROM jobs
+    WHERE status = 'pending'
+    ORDER BY run_at
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED;
+</code></pre>
+having to consider dead tuples is a genuine concern and performance problem,
+this can also be mitigated by adding a monotonically increasing column
+and adding a `WHERE column &lt; ?` clause, provided you have also added an
+index to make that pagination efficient.
+This way you don't need to consider dead tuples and they 'only' waste space
+whilst waiting to be vacuumed, rather than also bogging down read perf.<p>There is a little subtlety around how you guarantee that the column is monotonically
+increasing, given concurrent writers, but the answer to that depends on what tricks
+you can fit into your application.</p><p>3) I almost want to say that the one-line summary is 'Don't combine (very) long-running transactions with (very) high transaction rates in Postgres'</p><p>(Is this a fair representation?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733308" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nine_k</span>
+        <span class="meta-time">2026/04/12 04:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于（2）：问题是索引仍然需要保留死元组，直到 Postgres 明确确定没有事务保存它们，并对它们运行真空。它可能会加快速度，但最终仍会溢出磁盘存储。它仍然可能会阻止其他表被清理！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For (2): the problem is that the index would still need to keep the dead tuples, until Postgres is positively certain that no transaction holds them, and runs vacuum over them. It may speed up things a bit, but would still overflow the disk storage eventually. It may still prevent other tables from being vacuumed, too!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733782" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cataflutter</span>
+        <span class="meta-time">2026/04/12 05:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于磁盘使用，是的，这没有解决任何问题。<p>但对于读取性能（在我看来，这就是本文中该部分的动机），只要 Postgres 不需要将死元组实际视为查询的一部分，那么在索引中拥有一堆与死元组相对应的条目实际上并不重要。</p><p>因此，如果您有一个单调递增的 `job_id` 并且已建立索引，那么
+只要您按照递增 `job_id` 顺序处理作业，您就可以使用索引并保证您不必继续重新考虑与已完成的作业相对应的死元组（如果这有意义）。</p><p>[这是因为索引是一个 b 树，它支持在索引中的列（的任何前缀）上进行高效（O(log n) 页读取 n 个条目）的搜索。]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For disk usage, yes this doesn't address anything.<p>But for read performance (which is IMO what the section in the article was motivated by), it doesn't actually matter to have a bunch of entries corresponding to dead tuples in your index, provided Postgres doesn't need to actually consider the dead tuples as part of your query.</p><p>So if you have a monotonically increasing `job_id` and that's indexed, then
+so long as you process your jobs in increasing `job_id` order, you can use the index and guarantee you don't have to keep reconsidering the dead tuples corresponding to jobs that already completed (if that makes sense).</p><p>[This is because the index is a b-tree, which supports efficient (O(log n) page reads for n entries) seeking on (any prefix of) the columns in the index.]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734042" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jmalicki</span>
+        <span class="meta-time">2026/04/12 12:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章很少介绍待决的含义，但我猜那个条件就足够了？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article is sparse on what pending means, but I would guess that that where condition would be enough?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736121" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nine_k</span>
+        <span class="meta-time">2026/04/12 06:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很公平！正如您所描述的，这应该使用部分索引，并选择状态=挂起（通过该索引）且未锁定（通过选择...更新跳过锁定）的最低ID。为了实际使用索引，应该对查询计划进行三次检查。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is fair! This should as you descripbe work with a partial index, and with picking the lowest ID that has status = pending (via that index) which is not locked (via select ... for update skip locked). The query plan should be triple-checked though to actually use the index.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734467" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simeonGriggs</span>
+        <span class="meta-time">2026/04/12 02:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哟！作者在这里，如果有人有问题我会来的！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yo! Author here, I’ll be around if anyone’s got questions!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733001" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dondraper36</span>
+        <span class="meta-time">2026/04/12 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我理解正确的话，博客文章中的队列实现在操作正在进行时保存一个事务。<p>我看到建议使其尽可能短，但为什么我们不能将状态列更新为“正在处理”并完全避免潜在的长事务呢？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If I understood correctly, the queue implementation in the blog post holds a transaction while an operation is in progress.<p>I see the advice to make it as short as possible, but why can’t we update the status column to, say, “processing” and avoid potentially long transactions at all?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733544" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">oxidant</span>
+        <span class="meta-time">2026/04/12 07:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这对于较长的工作非常有效。您需要另一个进程来扫描孤立作业并重新排队或使它们失败。添加拾取时间的时间戳以进行跟踪</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This works well for jobs that are long-ish. You need another process to sweep for orphaned jobs and requeue or fail them. Add a timestamp of when it got picked up to keep track</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734772" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Yeroc</span>
+        <span class="meta-time">2026/04/12 07:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该解决方案与使用 pg_squeeze 相比如何？  我们使用排队解决方案遇到了这种情况，并且我们一直在测试它......似乎有效。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How does this solution compare with using pg_squeeze?  We ran into this situation with a queuing solution and we've been testing it out... seems to work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735029" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeeybee</span>
+        <span class="meta-time">2026/04/12 03:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否在队列表上使用 fillfactor &lt; 100 进行测试？通过热更新，状态更改可以重用死空间而无需创建新的索引条目，这似乎可以显着延迟死亡螺旋的发生？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Did you test with fillfactor &lt; 100 on the queue table? With HOT updates, status changes can reuse dead space without creating new index entries, which seems like it could significantly delay the onset of the death spiral?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733155" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mattashii</span>
+        <span class="meta-time">2026/04/12 03:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果状态列发生变化，并且索引依赖于该状态列的内容（无论是在其列中引用它，还是在索引的 WHERE 过滤器中），则状态列的更新将阻止应用 HOT 优化。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If the status column changes, and an index depends on the contents of that status column (be it by referencing it in its columns, or in the index's WHERE filter) then an update of the status column will prevent the HOT optimization from being applied.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733435" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">EffCompute</span>
+        <span class="meta-time">2026/04/12 03:26</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733283" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">danelliot</span>
+        <span class="meta-time">2026/04/12 11:45</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735978" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sp1982</span>
+        <span class="meta-time">2026/04/12 06:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果你更新行，问题会更糟，如果你坚持插入和删除，你会走得很远。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The problem is way worse if you update rows, if you stick with insert and delete you can get quite far.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734514" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sebmellen</span>
+        <span class="meta-time">2026/04/12 03:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Postgres 可以做很多事情。我看到人们选择 Kafka 和 SQS 来做 Graphile Worker 可以整天做的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Postgres can do so much. I see people choose Kafka and SQS for things that Graphile Worker could do all day long.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733204" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mikeocool</span>
+        <span class="meta-time">2026/04/12 03:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“一切都使用 Postgres”是低/中规模的一个很好的理念，可以让事情变得简单，但是有一个扩展点，我希望我的 SQL 数据库尽可能少做。<p>它基本上始终是许多系统中的瓶颈/问题根源。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">“Use Postgres for everything” is a great philosophy at low/medium scale to keep things simple, but there comes a scaling point where I want my SQL database doing as little possible.<p>It’s basically always the bottleneck/problem source in a lot of systems.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733317" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jghn</span>
+        <span class="meta-time">2026/04/12 04:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然。另一方面是，处于“低/中规模”区域的人比自我报告的人多得多。每个人都认为自己是规模异常值，因为人们倾向于根据自己的经验进行相对思考。仅仅因为某事物的规模比人们习惯的规模更大，并不意味着它的规模很大。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Of course. The flip side is that many, many more people are in the "low/medium scale" zone than would self report. Everyone thinks they're a scale outlier because people tend to think in relative terms based on their experience. Just because something is larger scale than one is used to, doesn't mean it's high scale.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733708" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tibbar</span>
+        <span class="meta-time">2026/04/12 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。例如，您的“预算”通常为 1-10k 写入/秒。一次繁重的连接基本上会让您离线。即使是规模相对较小的企业通常也需要将一些查询模式转移到 OLAP/nosql/redis/等。不久之后。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes. For example you'll typically have a "budget" of 1-10k writes/sec. And a single heavy join can essentially take you offline. Even relatively modest enterprises typically need to shift some query patterns to OLAP/nosql/redis/etc. before very long.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733347" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zer00eyz</span>
+        <span class="meta-time">2026/04/12 03:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我看到人们选择 Kafka 和 SQS<p>SQS 非常简单，如果您（永远）使用 AWS，它会“在堆栈中”，并提供一些可能对您有意义的易于使用的功能（延迟队列是一个很棒的功能）。</p><p>卡夫卡……很多。如果您需要它提供的东西，那就太好了。你只需要能够支持它，这并不简单。</p><p>我可以指出很多现有的 Kafka 项目，因为很明显有人希望将其添加到简历中。我认为没有人使用 SQS 这样做，它只是（一个相当好的实用程序）。但是，如果您想离开（或从 AWS 分支出来）并且您依赖它，那么祝您好运。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I see people choose Kafka and SQS<p>SQS is dead simple, and if your in AWS (forever) it is "in the stack" with some easy to use features that may make sense to you (delay queue is a great one).</p><p>Kafka is... a lot. If you need what it provides, then it's great. You just have to be able to support it, and thats non trivial.</p><p>I can point to more than a hand full of Kafka project that exist because it was clear that someone wanted it on their resume. I dont think any one is doing that with SQS, it is just (a fairly good utility). However if you want to leave (or branch out from) AWS and you're reliant on it, good luck.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733415" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">richwater</span>
+        <span class="meta-time">2026/04/12 02:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果该广告至少解释了该解决方案的技术方面的一些内容，那就太好了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It would be nice if this ad at least explained a little bit of the technical side of the solution.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732870" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simeonGriggs</span>
+        <span class="meta-time">2026/04/12 03:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们有一篇单独的博客文章介绍流量控制的工作原理： <a href="https://planetscale.com/blog/behind-the-scenes-how-traffic-control-works" target="_blank" rel="noopener noreferrer">https://planetscale.com/blog/behind-the-scenes-how-traffic-c...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We’ve got a separate blog post all about how traffic control works: <a href="https://planetscale.com/blog/behind-the-scenes-how-traffic-control-works" target="_blank" rel="noopener noreferrer">https://planetscale.com/blog/behind-the-scenes-how-traffic-c...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733465" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sgarland</span>
+        <span class="meta-time">2026/04/12 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这听起来有点像 InnoDB 的并发控制解决方案，它使用令牌 [0] 作为查询可以执行的最大工作单位。<p>0: <a href="https://dev.mysql.com/doc/refman/8.4/en/innodb-performance-thread_concurrency.html" target="_blank" rel="noopener noreferrer">https://dev.mysql.com/doc/refman/8.4/en/innodb-performance-t...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It sounds vaguely like InnoDB’s concurrency control solution which uses tokens [0] as a unit of maximum work a query can perform.<p>0: <a href="https://dev.mysql.com/doc/refman/8.4/en/innodb-performance-thread_concurrency.html" target="_blank" rel="noopener noreferrer">https://dev.mysql.com/doc/refman/8.4/en/innodb-performance-t...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733016" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dukepiki</span>
+        <span class="meta-time">2026/04/12 13:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">MySQL 的并发控制是对所有查询中可以同时活动的线程总数的限制。<p>流量控制根据可配置的元数据（例如用户名、远程地址或查询中包含的任何 sqlcommenter 标记的内容）限制并发性和资源使用。  因此，您可以说“批处理角色不能一次运行超过四个查询”之类的话。  更细的粒度是关键。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">MySQL’s concurrency control is a limit on the total number of threads that can be active at once, across all queries.<p>Traffic Control limits concurrency and resource use according to configurable metadata like the username, remote address, or the contents of any sqlcommenter tags included in the query.  So you can say things like “the batch processing role can’t run more than four queries at a time.”  The finer granularity is key.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736303" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sroussey</span>
+        <span class="meta-time">2026/04/12 07:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">门票，不是代币，但是是的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">tickets, not tokens, but yeah</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734943" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 03:56</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733476" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Serhii-Set</span>
+        <span class="meta-time">2026/04/12 03:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733461" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">johnwhitman</span>
+        <span class="meta-time">2026/04/12 05:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733985" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

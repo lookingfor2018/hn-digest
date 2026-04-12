@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced Mac Substitute 是 1980 年代 Mac OS 的 API 级别重新实现 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1356/">返回本批次</a>
+      <h1>Advanced Mac Substitute 是 1980 年代 Mac OS 的 API 级别重新实现</h1>
+      <p class="subtitle">Advanced Mac Substitute is an API-level reimplementation of 1980s-era Mac OS</p>
+      <div class="meta-line">
+        <span>www.v68k.org</span>
+        <span>作者 zdw</span>
+        <span>分数 228</span>
+        <span>评论 60</span>
+        <span>2026/04/11 23:39</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47731506" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.v68k.org/advanced-mac-substitute/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>在 Advanced Mac Substitute 中运行的 MacPaint（点击查看视频）</li><li>高级 Mac 替代品</li><li>Advanced Mac Substitute 是 1980 年代 Mac 操作系统的 API 级别重新实现。它可以在模拟器中运行 68K Mac 应用程序，无需 Apple ROM 或系统软件。</li><li>System 的 Twilight 在 Advanced Mac Substitute 中运行。</li><li>在 Advanced Mac Substitute 中运行的 Lode Runner</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>MacPaint running in Advanced Mac Substitute (click to see video)</li><li>Advanced Mac Substitute</li><li>Advanced Mac Substitute is an API-level reimplementation of 1980s-era Mac OS. It runs 68K Mac applications in an emulator without an Apple ROM or system software.</li><li>System’s Twilight running in Advanced Mac Substitute.</li><li>Lode Runner running in Advanced Mac Substitute</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">keepamovin</span>
+        <span class="meta-time">2026/04/12 09:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这太酷了。我喜欢那个样子。经典的黑白 Macos 具有永恒的“另类时间线”L'Air de Panache 美学，对我来说这意味着可信度和稳定性。也许这是我小学计算机室里一排排 Macintosh SE 或 Plus 的记忆，那些坚固的、直立的米色小砖块。<p>我做了一个MacOS系统7 Web桌面UI，具有真实的网页浏览功能： <a href="https://win9-5.com/macos/" target="_blank" rel="noopener noreferrer">https://win9-5.com/macos/</a></p><p>重新想象。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is super cool. I love that look. Something about classic black &amp; white macos has a timeless "alternative timeline" L'Air de Panache aesthetic that to me says credibility and stability. Maybe it's the memory of the rows of Macintosh SE or Plus, those solid little upright beige bricks, in the computer room at my elementary school.<p>I made a MacOS system 7 web desktop UI with real web browsing: <a href="https://win9-5.com/macos/" target="_blank" rel="noopener noreferrer">https://win9-5.com/macos/</a></p><p>A re-imagining.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735512" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 10:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦哇。  当我看到微笑的机器和空的进度条时，我毫不犹豫地直接进入 NoScript 并启用了您的域 - 这对我来说非常不寻常。  真迷人！  当我看到你的屏保时，我笑出了声。<p>它既熟悉又陌生，就像我看到了另一个宇宙。</p><p>前段时间我制作了自己的基于网络的 Mac 模拟器：  <a href="https://www.metamage.com/apps/maxim/" target="_blank" rel="noopener noreferrer">https://www.metamage.com/apps/maxim/</a></p><p>这是一种更加熟悉 CSS 和 JS 的方式（并沉迷于我对经典 Mac OS 的怀旧之情），但我最大的收获是 Web 并不是我想要构建复杂结构的基础，并且间接地帮助我创建了 Advanced Mac Substitute。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh wow.  Once I saw the smiling machine and empty progress bar, I went straight to NoScript and enabled your domain without a moment's hesitation — highly unusual for me.  It's charming!  I laughed out loud when I saw your screen-saver.<p>It's familiar and alien at the same time, like I'm seeing an alternate universe.</p><p>I made my own web-based Mac simulator some time ago:  <a href="https://www.metamage.com/apps/maxim/" target="_blank" rel="noopener noreferrer">https://www.metamage.com/apps/maxim/</a></p><p>It was a way to become more familiar with CSS and JS (and indulge my classic Mac OS nostalgia), but my biggest takeaway was that the web wasn't a foundation I wanted to build complex structures on, and indirectly helped spur me to create Advanced Mac Substitute.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735662" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rcarmo</span>
+        <span class="meta-time">2026/04/12 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这非常整洁。过去几个月我一直在向 Basilisk II 添加 ARM64 JIT（<a href="https://github.com/rcarmo/macemu" target="_blank" rel="noopener noreferrer">https://github.com/rcarmo/macemu</a>）并完全理解所涉及的内容（我目前正在修补 Quadra ROM 以绕过 NuBus 硬件检测......）<p>肯定会尝试一下，因为我_喜欢_在微型机器中拥有一个经典的 Mac 环境和一些现代的物质享受（如文件共享）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is pretty neat. I have been spending the past few months adding an ARM64 JIT to Basilisk II (<a href="https://github.com/rcarmo/macemu" target="_blank" rel="noopener noreferrer">https://github.com/rcarmo/macemu</a>) and totally appreciate what's involved (I'm currently stuck patching a Quadra ROM to bypass NuBus hardware detection...)<p>Will definitely give it a try, since I would _love_ to have a Classic Mac environment with some modern creature comforts (like file sharing) in tiny machines.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">londons_explore</span>
+        <span class="meta-time">2026/04/12 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很惊讶 1980 的软件工作在二进制 API 兼容性上，而不是依赖于 API 怪癖，如计时、内存对齐怪癖、特定分配器行为的内存布局等。<p>只需无意中依赖一个实现细节，就可以使应用程序无法在另一个操作系统实现上运行......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am amazed that 1980's software works on binary API compatibility rather than relying on API quirks like timing, memory alignment quirks, memory  layout from specific allocator behaviour, etc.<p>It only takes one unintentional reliance on an implementation detail to make an application not run on another OS implementation...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733017" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Lerc</span>
+        <span class="meta-time">2026/04/12 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从架构的角度来看，Mac 经典几乎是最纯粹的。<p>1 位帧缓冲区和 CPU 可以让您完成机器的大部分功能。</p><p>8 位机器的大多数怪癖滥用都来自于提供的有限制的功能。精灵，但只有 8 个，颜色，但在任何 8x8 单元格中只有 2 个。  多色，但只有两种调色板中的一种，您会讨厌这两种颜色。</p><p>几乎所有的黑客攻击都是为了绕过功能的限制。</p><p>我不知道苹果做出的决定是否是专门考虑到​​未来的机器。如果第一台机器有玩家导弹图形，那么制造 5 代新机器肯定会很头痛。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Mac classic was about as pure as you could get from an architectural point of view.<p>A 1 bit framebuffer and a CPU gets you most of what the machine can do.</p><p>Most of the quirk abuse of 8-bit machines came from features that were provided with limitations. Sprites, but only 8 of them, colours but only 2 in any 8x8 cell.  Multicolour but only in one of two palettes and you'll hate both.</p><p>Almost all of the hacks were to get around the limitations of the features.</p><p>I don't know if the decision apple made was specifically with future machines in mind. It certainly would have been a headache to make new machines 5 generations down the track if the first one had player missile graphics.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733717" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">wmf</span>
+        <span class="meta-time">2026/04/12 03:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有很多应用程序依赖于实施怪癖。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There were plenty of apps that relied on implementation quirks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733208" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eschaton</span>
+        <span class="meta-time">2026/04/12 04:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不过，他们主要依赖于操作系统/工具箱实现怪癖，而不是硬件实现怪癖，因为依赖后者的应用程序无法在 Macintosh XL 上运行，而这对某些细分市场很重要。 （就像一些使用电子表格的人一样，他们愿意用 CPU 速度来换取屏幕尺寸。）同样，由于系统设计不同，任何尝试使用软盘复制保护技巧的东西都不会起作用，因此这在应用程序中并不常见。<p>因此，即使是直接写入帧缓冲区的东西也会向操作系统询问地址和边界，而不是对它们进行硬编码，复制保护将使用许可证密钥（加密/哈希，而不是加密狗）来实现，而不是软盘上奇怪的磁道布局等。它带来了足够好的前向兼容性，使得 Macintosh II 中的重大架构变化成为可能，并且事情只是从那里改进。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They mostly relied on OS/Toolbox implementation quirks though, not hardware implementation quirks, because applications that relied on the latter wouldn’t run on the Macintosh XL and that mattered to certain market segments. (Like some people using spreadsheets, who were willing to trade CPU speed for screen size.) Similarly anything that tried to use floppy copy protection tricks wouldn’t work due to the different system design, so that wasn’t common among applications.<p>So even things that wrote directly to the framebuffer would ask the OS for the address and bounds rather than hardcode them, copy protection would be implemented using license keys (crypto/hashes, not dongles) rather than weird track layouts on floppies, etc. It led to good enough forward compatibility that the substantial architectural changes in the Macintosh II were possible, and things just improved from there.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">icodestuff</span>
+        <span class="meta-time">2026/04/12 04:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，有很多游戏是针对特定时钟速度进行编码的，然后 SE 推出后，进行了更新，其中包括涡轮按钮的软件版本，让您可以选择两种速度中的哪一种运行。它们在 SE/30 或 Mac II 上运行速度很快，而在较新的设备上运行速度快得无法使用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Eh, there were plenty of games that were coded for a particular clock speed, and then once the SE came out, had an update that included a software version of a turbo button, let you select which of two speeds to run at. They run FAST on an SE/30 or Mac II and unusably fast on anything newer.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733921" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eschaton</span>
+        <span class="meta-time">2026/04/12 04:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我当时并没有遇到太多这样的情况，我想是因为有与屏幕刷新同步的 VBL 任务机制，可以很容易地避免使用指令循环进行计时。<p>在我的经验中更常见的是假设帧缓冲区是 1 位，但如果我切换到黑白，此类游戏仍然可以在我的 IIci 上运行 - 它们只会使用屏幕的左上 3/4，因为它们仍然适当关注其 GrafPort 中的每行字节数。</p><p>可能是当我使用 Mac II 时，所有不符合最低标准的游戏都已经被淘汰了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I didn’t encounter too many of those back in the day, I think because there was the VBL task mechanism for synchronizing with screen refresh that made it easy to avoid using instruction loops for timing.<p>Much more common in my experience was the assumption that the framebuffer was 1-bit, but such games would still run on my IIci if I switched to black &amp; white—they’d just use the upper left 3/4 of the screen since they still paid proper attention to the bytes-per-row in its GrafPort.</p><p>Could be that by the time I was using a Mac II though that all the games that didn’t meet that minimum bar had already been weeded out.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733979" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">flomo</span>
+        <span class="meta-time">2026/04/12 06:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，有很多软盘游戏只能在原始 Mac 或 Plus 上运行。连我的 Mac SE 都不行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, there were a bunch of floppy games which only ran on an original Mac or maybe a Plus. No go with even my Mac SE.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734569" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hyperrail</span>
+        <span class="meta-time">2026/04/12 12:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">事实上，甚至是来自微软这样的大公司！<p>有一个故事在 <i>编写可靠的代码</i> 作者：Steve Maguire [1]，其中 Apple 要求 Microsoft 修复其 Mac 应用程序中不符合开发人员文档的黑客行为 <i>麦金塔内部</i> 因为当应用程序首次与原始 Macintoshes 一起开发时，需要这样的解决方法。然而，微软的变通办法将被苹果公司正在开发的主要系统软件更新所打破，苹果自然希望避免永久添加变通办法所依赖或旨在避免的实施错误和怪癖。</p><p>正如 Maguire 所说，删除 Microsoft Excel 中的一种此类解决方法引起了 Excel 团队的激烈争论，因为它位于热路径 68k 汇编函数中，重写代码以删除它会给函数运行时增加 12 个 CPU 周期。最终，一位开发人员解决了这场争论，他运行了 Excel 的“3 小时折磨测试”，并计算了相关函数被调用的次数。总计：大约 76,000 次，因此每次再增加 12 个周期，总计将达到大约 910,000 个周期...在 Macintosh 128k 的 ~7 MHz 68000 CPU 上，这将在 3 小时的测试运行中增加大约 0.15 秒。由于删除解决方法的速度被证明是完全微不足道的，所以它确实被删除了。</p><p>[1] <a href="https://openlibrary.org/books/OL1407270M/Writing_solid_code" target="_blank" rel="noopener noreferrer">https://openlibrary.org/books/OL1407270M/Writing_solid_code</a> - 第 136 页，标题“不要高估成本”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Indeed, even ones from companies as big as Microsoft!<p>There is a story in <i>Writing Solid Code</i> by Steve Maguire [1] where Apple asked Microsoft to fix hacks in its Mac apps that didn't conform to the developer docs in <i>Inside Macintosh</i> because such workarounds were required when the apps were first developed alongside the original Macintoshes. However, Microsoft's workarounds would be broken by a major System Software update under development at Apple, which naturally wanted to avoid having to permanently add back the implementation bugs and quirks that the workarounds either relied on or were meant to avoid.</p><p>As Maguire told it, removing one such workaround in Microsoft Excel was hotly debated by the Excel team because it was in a hot-path 68k assembly function and rewriting the code to remove it would add 12 CPU cycles to the function runtime. The debate was eventually resolved by one developer who ran Excel's "3-hour torture test" and counted how many times the function in question was called. The total: about 76,000 times, so 12 more cycles each time would be about 910,000 cycles total... which on the Macintosh 128k's ~7 MHz 68000 CPU would be about 0.15 seconds added to a 3-hour test run. With the slowdown from removing the workaround thus proven to be utterly trivial, it was indeed removed.</p><p>[1] <a href="https://openlibrary.org/books/OL1407270M/Writing_solid_code" target="_blank" rel="noopener noreferrer">https://openlibrary.org/books/OL1407270M/Writing_solid_code</a> - page 136, heading "Don't Overestimate the Cost"</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736203" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">CharlesW</span>
+        <span class="meta-time">2026/04/12 04:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">出于好奇，您想到什么应用程序？在与经典 Mac OS 一起使用的所有类型的软件（INIT、CDEV、FKEY、桌面附件、驱动程序等）中，应用程序最不可能依赖于实现怪癖。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Out of curiosity, what app are you thinking of? Of all of types of software used with classic Mac OS (INITs, CDEVs, FKEYs, Desk Accessories, Drivers, etc.), apps would be the least likely to rely on implemention quirks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733869" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wk_end</span>
+        <span class="meta-time">2026/04/12 07:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Macintosh Common Lisp——至少是 Mac Garden 等周围的版本——似乎拒绝在精确的模拟器和真实硬件之外的任何东西上运行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Macintosh Common Lisp - at least the versions floating around Mac Garden and such - seems to refuse to run on anything besides accurate emulators and real hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734892" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">imoverclocked</span>
+        <span class="meta-time">2026/04/12 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我无法想象它与运行它的原始硬件相比有多快。我记得使用带有单个软盘驱动器（不支持硬盘驱动器）的 Mac 512k 并进行插入软盘舞蹈。那时的计算机更加机械化。<p>如果有一个“放慢速度”功能，同时还伴随着各种软盘读/写噪音，那将是很有趣的。不同代硬件的奖励积分以及与这些硬件搭配的 OG HD 噪音！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can't imagine how fast this is compared to the original hardware that ran it. I remember using a Mac 512k with a single floppy drive (no hard drive support) and doing the insert-floppy-dance. Computers were far more mechanical then.<p>It would be fun to have a "slow it down" feature that also has the various floppy read/write noises paired with it. Bonus points for different generations of hardware and having the OG HD noises to pair with those too!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732336" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">drzaiusx11</span>
+        <span class="meta-time">2026/04/12 02:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最近有一个展示 HN 复古硬件项目，其中包括声音仿真。也许作者正在读这篇文章，但他们的声音模拟可能是我最喜欢的部分（不要忽视实际的困难部分！我只是发现它很迷人）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There was a show HN retro HW project somewhat recently that included sound emulation on board. Maybe that author is reading this, but their sound emulation was probably my favorite part (not to disregard the actual hard parts! I just found it charming)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732668" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jdwithit</span>
+        <span class="meta-time">2026/04/12 03:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我小时候在父母的 Apple IIe 上玩 King's Quest IV 的“美好”回忆。几乎每次走到另一个屏幕时，你都必须换上一张新的 5.25 英寸软盘。我对这个游戏很着迷，但我的上帝，不断翻转和交换磁盘很乏味。谷歌说它有 8 个双面磁盘，我可以发誓它有几十个。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Fond" memories of playing King's Quest IV as a little kid on my parents' Apple IIe. You had to swap in a new 5.25" floppy almost every time you walked to another screen. I was fascinated by the game but my god was it tedious to constantly flip and swap the disks around. Google says it came on 8 double sided disks, I could have sworn it was a couple dozen.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733315" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">technothrasher</span>
+        <span class="meta-time">2026/04/12 03:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 Apple ][+ 上玩了几个小时的游戏是“FantasyLand 2041”。它有六个双面磁盘，经过相当长的游戏时间，我很沮丧地发现第六个磁盘已损坏。  多年后我发现它并没有损坏，游戏还没有完成。  然后我进一步发现，制作该游戏和其他流行游戏（《火星之沙》、《金字塔之下》、《厄舍屋》）的约翰·贝尔（John Bell）非常疯狂，还写了几本“政府向我们隐瞒不明飞行物”的书。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The game I played for hours on the Apple ][+ was "FantasyLand 2041". It came on six double sided disks, and I was bummed to find out after quite a lot of game time that disk six was corrupted.  I then found out many years later that it wasn't corrupted, the game wasn't ever finished.  I then further discovered that John Bell, who produced that and other popular games (Sand of Mars, Beneath the Pyramids, House of Usher), is utterly batty and has written a few "the government is hiding UFOs from us" books.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733496" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">steve-atx-7600</span>
+        <span class="meta-time">2026/04/12 10:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">刚刚尝试了这个 apple II 模拟器，它与您所描述的很接近，但适用于 Apple II <a href="https://www.virtualii.com/" target="_blank" rel="noopener noreferrer">https://www.virtualii.com/</a> 。  具有软盘声音和速度设置。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Just tried out this apple II emulator that’s close to what you’re describing, but for Apple II <a href="https://www.virtualii.com/" target="_blank" rel="noopener noreferrer">https://www.virtualii.com/</a> .  Has floppy sounds as well as speed settings.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735615" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">epenn</span>
+        <span class="meta-time">2026/04/12 09:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷！这让我想起了 ARDI Executor [1]——一款于 1990 年首次发布的（已停产的）商业软件，它采用了与此处使用的相同的 API 级重新实现方法。考虑到它是在 90 年代的 PC 硬件上运行，它的速度快得令人瞠目结舌。当我还是个小孩子时，用它在我的 Windows PC 上玩一些 Mac 游戏时，当我第一次学习如何编码时，看到这是可能的，这对我来说真的很鼓舞。 :) 很高兴看到有更现代的实现也能做到这一点！<p>它于 2005 年停产，但开发人员随后将其开源，并在几年后将代码放在 GitHub 上。 [2]</p><p>[1] <a href="https://en.wikipedia.org/wiki/Executor_(software)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Executor_(software)</a></p><p>[2] <a href="https://github.com/ctm/executor" target="_blank" rel="noopener noreferrer">https://github.com/ctm/executor</a></p><p>额外奖励：创建 Executor 的初创公司 ARDI 的一位工程师在 Bob Cringely 1996 年的纪录片《书呆子的胜利》中得到了简短的介绍，谈论了在典型的 90 年代中期硅谷初创公司工作的生活方式。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool! This reminds me of ARDI Executor [1] - a piece of (discontinued) commercial software first released in 1990 that took the same API-level reimplementation approach used here. And it did so jaw-droppingly fast considering that it was running on 90s PC hardware. As a little kid using it to play a few Mac games on my Windows PC, it was genuinely inspiring to me to see that this was possible at a time when I was first learning how to code. :) Great to see something with a more modern implementation doing this as well!<p>It was discontinued in 2005, but the developers subsequently open sourced it and put the code on GitHub a couple years later. [2]</p><p>[1] <a href="https://en.wikipedia.org/wiki/Executor_(software)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Executor_(software)</a></p><p>[2] <a href="https://github.com/ctm/executor" target="_blank" rel="noopener noreferrer">https://github.com/ctm/executor</a></p><p>Bonus: One of the engineers from ARDI, the startup that created Executor, was very briefly featured in Bob Cringely's 1996 documentary Triumph of the Nerds talking about the lifestyle of working at prototypical mid-90s Silicon Valley startup.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">homarp</span>
+        <span class="meta-time">2026/04/12 00:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它与执行者相比如何？ <a href="https://en.wikipedia.org/wiki/Executor_(software)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Executor_(software)</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how does it compare to executor? <a href="https://en.wikipedia.org/wiki/Executor_(software)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Executor_(software)</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47731872" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hyperhello</span>
+        <span class="meta-time">2026/04/12 01:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望看到像 Carbon 这样的旧应用程序，以便它们在现代窗口框架中启动（没有丢失的 Tahoe 角）并可以保存到文件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd like to see something like Carbon for old apps so that they boot in modern window frames (without the missing Tahoe corners) and can save to files.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732269" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Advanced Mac Substitute 将文档和首选项文件存储在沙盒主机目录中。<p>例如，查看 MacPaint 演示：</p><p><a href="https://www.v68k.org/advanced-mac-substitute/demo/MacPaint-AMS-demo.mp4" target="_blank" rel="noopener noreferrer">https://www.v68k.org/advanced-mac-substitute/demo/MacPaint-A...</a></p><p>如果您在 macOS 的 Finder 中双击 Hello 文档，它将启动并在 MacPaint.app 中打开。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Advanced Mac Substitute stores documents and preference files in sandboxed host directories.<p>For example, check out the MacPaint demo:</p><p><a href="https://www.v68k.org/advanced-mac-substitute/demo/MacPaint-AMS-demo.mp4" target="_blank" rel="noopener noreferrer">https://www.v68k.org/advanced-mac-substitute/demo/MacPaint-A...</a></p><p>If you were to double-click the Hello document in macOS' Finder, it would launch and open in MacPaint.app.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">eschaton</span>
+        <span class="meta-time">2026/04/12 03:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这正是可以作为此类系统基础的项目。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is exactly the sort of project that can serve as the basis for such a system.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">msephton</span>
+        <span class="meta-time">2026/04/12 03:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那么这是否已经击败了 MACE 到达终点线呢？或者目标不同？ <a href="https://mace.home.blog" target="_blank" rel="noopener noreferrer">https://mace.home.blog</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So has this beaten MACE to the finish line? Or are the goals different? <a href="https://mace.home.blog" target="_blank" rel="noopener noreferrer">https://mace.home.blog</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">davidfstr</span>
+        <span class="meta-time">2026/04/12 00:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">适用于经典 Mac 操作系统的 Wine？惊人的。干得好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wine for classic Mac OS? Amazing. Well done.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732055" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bsimpson</span>
+        <span class="meta-time">2026/04/12 03:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">听起来像 Wine + FEX</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sounds like Wine + FEX</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733234" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">homarp</span>
+        <span class="meta-time">2026/04/12 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相关讨论 <a href="https://news.ycombinator.com/item?id=40338443" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=40338443</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">related discussion <a href="https://news.ycombinator.com/item?id=40338443" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=40338443</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47731891" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shermantanktop</span>
+        <span class="meta-time">2026/04/12 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但它会运行黑暗城堡吗？<p>那场比赛浪费了很多时间。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But will it run Dark Castle??<p>Many hours were wasted on that game.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732202" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rvnx</span>
+        <span class="meta-time">2026/04/12 01:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仍然想知道为什么主角看起来像《史酷比》中的萨米<p>是的：</p><p><a href="https://github.com/jjuran/metamage_1/commit/30cb0e260d5ff478d80145406f670504df80d885" target="_blank" rel="noopener noreferrer">https://github.com/jjuran/metamage_1/commit/30cb0e260d5ff478...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Still wondering why the main character looks like Sammy from Scooby Doo<p>and yes:</p><p><a href="https://github.com/jjuran/metamage_1/commit/30cb0e260d5ff478d80145406f670504df80d885" target="_blank" rel="noopener noreferrer">https://github.com/jjuran/metamage_1/commit/30cb0e260d5ff478...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732411" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Chazprime</span>
+        <span class="meta-time">2026/04/12 03:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">天哪，我会直接去 <i>超越黑暗城堡</i>……这确实将这个系列提升到了一个完全不同的水平。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hell, I’d go straight for <i>Beyond Dark Castle</i>… it really took the series to a whole different level.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">flenserboy</span>
+        <span class="meta-time">2026/04/12 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">像这样的努力可能是让旧应用程序在当前硬件上“本地”运行的好方法，因为有大量的应用程序非常适合工作，但现在无法运行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Efforts like this could be a nice way to get old apps to run "natively" on current hardware, as there are a ton of them out there which are perfectly good for work, but which cannot run today.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734748" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">WillAdams</span>
+        <span class="meta-time">2026/04/12 07:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很高兴能够因此运行 Macromedia Freehand/MX。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'd be glad of being able to run Macromedia Freehand/MX thus.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734776" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andai</span>
+        <span class="meta-time">2026/04/12 04:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷。如果它是基于 SDL2 构建的，那么通过 Emscripten 使其在浏览器中运行应该很简单，对吧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool. If it's built on SDL2, it should be straightforward to make it run in the browser via Emscripten, right?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733635" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 05:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Advanced Mac Substitute 使用分解方法。  68K 模拟发生在后端，它是通过 Unix 域套接字连接的进程集合，可移植到基本上任何 POSIX 系统。<p>前端处理显示图形并将用户输入转发到后端。  工作前端包括 SDL2（由贡献者提供）、X11、Linux fbdev、VNC 和五种不同的 macOS API（Cocoa/OpenGL、CGL、AGL、Quartz 和 QuickDraw）。</p><p>前端和后端使用 FIFO 和共享内存进行通信。  我知道某些平台需要重构所有这些才能在单个进程中运行。  如果 Emscripten 是其中之一，那么它就不会像你建议的那么简单。</p><p>无论如何，如果我是负责移植的人，我可能会为此目的编写一个简单的前端，可能会使用 fbdev 作为起点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Advanced Mac Substitute uses a factored approach.  68K emulation happens in the back end, which is a collection of processes connected by Unix-domain sockets, portable to basically any POSIX system.<p>The front end deals with displaying graphics and forwarding user input to the back end.  Working front ends include SDL2 (by a contributor), X11, Linux fbdev, VNC, and five different macOS APIs (Cocoa/OpenGL, CGL, AGL, Quartz, and QuickDraw).</p><p>The front and back ends communicate using FIFOs and shared memory.  I'm aware that certain platforms will require refactoring all of this to run in a single process.  If Emscripten is one of them, then it won't be as simple as you suggest.</p><p>In any case, if I were the one doing the port, I might write a bare-bones front end just for this purpose, possibly using the fbdev one as a starting point.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734167" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Batbird</span>
+        <span class="meta-time">2026/04/12 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这引发了闪回。我不确定我是否记得正确，但我认为我们有时也使用过 Pascal，并且对于某些工具箱来说它是可选的。虽然已经过去很长时间了，所以我可能会弄错。那可能是 Mac 之前的时代？但好时光。男孩，世界是一个不同的地方。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This triggered flashbacks. I'm not sure if I'm remembering correctly, but I think we sometimes also used used Pascal, and it was optional for some toolboxes. It's been a long time though so I could be mistaken. That might have been pre-Mac? But good times, though. Boy, is the world a different place.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732344" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">DavidSJ</span>
+        <span class="meta-time">2026/04/12 02:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最初的 Mac 系统软件是用 Pascal 编写的，大多数 Mac 工具箱调用采用 Pascal 风格（以长度为前缀）而不是 C 风格（以空字符结尾）字符串。但是您可以使用任何一种语言编写应用程序代码，同时牢记这一警告。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The original Mac system software was written in Pascal and most Mac toolbox calls took Pascal-style (prefixed by length) rather than C-style (terminated with null character) strings. But you could write application code in either language keeping this caveat in mind.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732924" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">eschaton</span>
+        <span class="meta-time">2026/04/12 04:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它实际上主要是用汇编语言编写的，但使用了 Pascal 调用约定和结构布局，因为人们希望 Pascal 成为应用程序开发人员的主要语言。 Lisa 的情况如此，Apple II 上的“大型”应用程序如此，微型计算机和小型计算机行业的其他大部分行业甚至新兴的工作站行业（例如 Apollo）的情况也是如此。<p>Lisa 系统软件主要是用 Pascal 实现的，一些人将其归咎于其庞大和性能。那时的编译器和链接器还不是很好。大多数编译器代码生成非常严格，并且大多数链接器甚至没有跨编译单元边界合并相同的字符串文字！</p><p>Lisa Workshop C 在函数声明和定义中引入了“pascal”关键字，以表明它们使用 Pascal 调用约定，并遵循 Lisa Pascal 结构布局规则，以尽量减少与操作系统互操作的开销。 （我不确定它是否也引入了“\p”Pascal 字符串文字约定，还是后来在斯坦福或 THINK Lightspeed C 中引入的。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It was actually mostly written in assembly, but used Pascal calling conventions and structure layouts since that was expected to be the primary language for application developers. As it had been for Lisa, as it was for “large” applications on Apple II, and as was the case for much of the rest of the microcomputer and minicomputer industry and even the nascent workstation industry (eg Apollo).<p>It was the Lisa system software that was mostly implemented in Pascal and some blamed this for its largeness and its performance. Compilers and linkers weren’t great back then; most compiler code generation was pretty rigid, and most linkers didn’t even coalesce identical string literals across compilation unit boundaries!</p><p>Lisa Workshop C introduced the “pascal” keyword for function declarations and definitions to indicate they used Pascal calling conventions, and otherwise followed Lisa Pascal structure layout rules, so as to minimize the overhead of interoperating with the OS. (I’m not sure whether it introduced the “\p” Pascal string literal convention too or if that came later with Stanford or THINK Lightspeed C.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733525" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">drob518</span>
+        <span class="meta-time">2026/04/12 11:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这带回了回忆。我在大学时拥有 Mac 版 Lightspeed C 的副本。<p>在工作站领域，大多数公司使用 C 而不是 Pascal。 Apollo 在这方面有所不同，因为他们的操作系统 Domain 是独一无二的，而大多数其他工作站公司（Sun、HP、DEC 和 IBM）都使用过一段时间的 Unix 变体（大多数情况下是基于 BSD 或基于 System V）。 Apollo Domain 是用 Pascal 编写的，绝对不是基于 Unix 的。它有许多独特而有趣的功能。特别是它具有非常复杂的身份验证和文件共享功能。用户可以登录属于域（因此得名）的任何计算机，并且用户的完整文件系统将通过该硬件上的网络提供。网络上的每个系统共享一个域级文件系统，这消除了对 NFS 等许多 Unix 解决方案的需求。当惠普收购阿波罗时，我刚刚从大学毕业接受了惠普工作站部门的工作邀请。几个月后，当我开始工作时，我已经是 Apollo 系统部门 HP 部门的一员了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That brings back the memories. I had a copy of Lightspeed C for the Mac in college.<p>In the workstation world, most companies used C and not Pascal. Apollo was different in that regard as their operating system, Domain, was unique to themselves, while most of the other workstation companies (Sun, HP, DEC, and IBM) were using Unix variants of some time (either BSD-based or System V-based in most cases). Apollo Domain was written in Pascal and was definitely not Unix-based. It had many unique and interesting features. In particular it had very sophisticated authentication and file sharing capabilities. A user could log in on any machine that was part of the domain (hence the name) and the user’s complete file system would be made available over the network on that hardware. Every system on the network shared a domain-level file system which removed the need for many Unix solutions like NFS. I had just accepted a job offer out of college from HP’s workstation division when HP bought Apollo. By the time I started, a couple months later, I was part of the HP side of the Apollo Systems Division.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735974" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">WillAdams</span>
+        <span class="meta-time">2026/04/12 07:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这种二分法的一个很好的例子是 Puzzle Desk Accessory——最初是用 Pascal 编写的（作为制作 DA 的一个例子），它太大而无法包含在 400KB 的微型软盘上，因此用汇编语言重新编写，从 6K 字节到 600 字节：<p><a href="https://www.folklore.org/Puzzle.html" target="_blank" rel="noopener noreferrer">https://www.folklore.org/Puzzle.html</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A good example of this dichotomy is the Puzzle Desk Accessory --- originally written in Pascal (as an example of making a DA thus), it was too large to include on a 400KB micro-floppy disk, so was re-written in assembly language going from 6K Bytes to 600 Bytes:<p><a href="https://www.folklore.org/Puzzle.html" target="_blank" rel="noopener noreferrer">https://www.folklore.org/Puzzle.html</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734798" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">azinman2</span>
+        <span class="meta-time">2026/04/12 00:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这真是一个壮举。我很想更多地了解制作这个的过程、动机、花费了多少时间等等。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is quite the feat. I’d love to know more about the process to make this, the motivation, how much time was spent, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47731858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">whartung</span>
+        <span class="meta-time">2026/04/12 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我猜测他们在 TRAP 级别重新实现了工具箱（当时大多数 MacOS 调用都是通过 68K TRAP 指令访问的）。<p>因此，他们没有模拟硬件来运行本机 ROM，而是“简单地”重新实现了 ROM。</p><p>我的一个朋友在另一个层面上做到了这一点。他基本上将工具箱的大部分重写为 C 库，以便拥有 Mac 应用程序的公司可以将其移植到 PC 上运行，同时共享源代码。</p><p>这是在 Windows 出现之前的情况，而且它确实有效！从 DOS 启动它，占据整个屏幕。他没有复制 Mac 的外观和感觉。相反，他将 OpenLook 用于他的小工具和其他东西（因为你知道，它是“开放的”）。</p><p>但他重写了大部分内容：QuickDraw、事件管理器、内存管理器、窗口管理器等。就像大象一样吃了它。我认为他的区域不如 Mac 聪明。很确定他只是坚持使用矩形。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm guessing they reimplemented the toolbox at the TRAP level (most MacOS calls at the time were accessed through the 68K TRAP instruction).<p>So, rather than emulating hardware to run native ROMs, they "simply" reimplemented the ROMs.</p><p>A friend of mine did this at another level. He basically rewrote the bulk of the toolbox as a C library so that the company, who had a Mac application, could port it to run on a PC, while sharing the source code.</p><p>This was before Windows, and it worked! Launched it from DOS, takes over the entire screen. He didn't copy the Mac look and feel. Instead he used OpenLook for his gadgets and what not (since it was, you know, "open").</p><p>But he rewrote the bulk of it: QuickDraw, Event Manager, Memory Manager, Window Manager, etc. Just ate it like an elephant. I don't think his regions were as clever as the Mac. Pretty sure he just stuck with rectangles.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732075" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 04:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">更正：68K Mac OS 调用是 A 行陷阱 - 换句话说，它们具有 `$Axxx` 形式的操作码。  对于处理器来说，它们是未实现的指令，每个指令都通过同一向量获取异常。  异常处理程序是 Mac OS 陷阱调度程序。<p>`TRAP` 是一条不同的指令，具有操作码 `$4E4x`。  每个都有自己的异常向量。</p><p>不过，这不仅仅是陷阱调用，有时应用程序会直接写入声音缓冲区或使用硬件页面翻转。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Correction:  68K Mac OS calls were A-line traps — in other words, they had opcodes of the form `$Axxx`.  To the processor, they're unimplemented instructions that each take an exception through the same vector.  The exception handler is the Mac OS trap dispatcher.<p>`TRAP` is a different instruction, with opcodes `$4E4x`.  Each one gets its own exception vector.</p><p>It's not just trap calls, though — sometimes applications write directly to the sound buffer or use hardware page flipping.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733744" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bitwize</span>
+        <span class="meta-time">2026/04/12 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得 MacOS 系统调用是通过无效指令完成的，这会导致 CPU “陷入”（引发中断）。引发了 Mac 扩展作者互相询问的问题：“你们修补了多少陷阱？”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">As I recall MacOS system calls were done through invalid instructions which would cause the CPU to "trap" (raise an interrupt). Giving rise to the question Mac extension writers asked of each other: "How many traps did you patch?"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 12:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你想谈谈陷阱补丁吗？  您的 Mac 的 INIT 具有最少的陷阱补丁，请在 SysBeep() 和 GetNextEvent() 等无聊的地方触摸工具箱。  开发人员的 Mac 具有庞大且棘手的 INIT，其中包含陷阱补丁，可挂接到设备管理器的一半。 [1]  开发人员与金属接触，像从 ROM 重置向量热启动一样启动，在 NMI 上停止。<p>[1] 参见 <a href="https://www.macrelics.com/legacynth/" target="_blank" rel="noopener noreferrer">https://www.macrelics.com/legacynth/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You want to talk trap patches?  Your Mac's INITs have minimal trap patches, touch the Toolbox in boring places like SysBeep() and GetNextEvent().  The Developator's Mac has big, tricky INITs with trap patches that hook into half of the Device Manager.[1]  The Developator is in touch with the metal, starts like a warm boot off the ROM reset vector, stops on an NMI.<p>[1] See <a href="https://www.macrelics.com/legacynth/" target="_blank" rel="noopener noreferrer">https://www.macrelics.com/legacynth/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736261" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最早的记忆中，我的动机是希望复活《愚者差事》。<p>我并没有忽视其中的讽刺意义。 :-)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My earliest recollection of what motivated me is a desire to resurrect The Fool's Errand.<p>The irony is not lost on me. :-)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734336" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">azinman2</span>
+        <span class="meta-time">2026/04/12 10:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嘿，我一直在考虑构建一个创世模拟器来玩忍者的复仇。从来没有想过尝试更换创世ROM..让我们先让游戏运行:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hey, I’ve been thinking about building a genesis emulator to play Revenge of Shinobi. Never thought about trying to replace the genesis rom.. let’s get the game working first :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735759" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 10:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">创世记必须从某个地方开始。 ;-)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A Genesis has to start somewhere. ;-)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735778" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">msie</span>
+        <span class="meta-time">2026/04/12 11:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇！创造这个的疯子是谁？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow! Who is the madman that created this?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735983" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hagbard_c</span>
+        <span class="meta-time">2026/04/12 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>   make ams-vnc
+   ./build.pl -i exhibit graft skif minivx xv68k freemountd listen vnc-interact
+
+   ...
+
+   Daemon starting up... done.
+   T=0.037s  ERROR:    OpenDF is unimplemented
+
+</code></pre>
+嗯，看来不行。我们来试试X11版本：<p></p><pre><code>   make ams-x11
+   ./build.pl -i exhibit graft skif minivx xv68k freemountd interact-x11
+
+   ...
+
+   T=0.275s  ERROR:    OpenDF is unimplemented
+</code></pre>
+不对，好像少了点什么。开放DF？我所找到的只是这个： <a href="https://github.com/PrjEnt/OpenDF" target="_blank" rel="noopener noreferrer">https://github.com/PrjEnt/OpenDF</a>，一个长期被遗弃的项目，它似乎是另一个被遗弃的东西的更紧凑的版本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>   make ams-vnc
+   ./build.pl -i exhibit graft skif minivx xv68k freemountd listen vnc-interact
+
+   ...
+
+   Daemon starting up... done.
+   T=0.037s  ERROR:    OpenDF is unimplemented
+
+</code></pre>
+Hm, doesn't seem to work. Let's try the X11 version:<p></p><pre><code>   make ams-x11
+   ./build.pl -i exhibit graft skif minivx xv68k freemountd interact-x11
+
+   ...
+
+   T=0.275s  ERROR:    OpenDF is unimplemented
+</code></pre>
+Nope, it seems to be missing something. OpenDF? All I find is this: <a href="https://github.com/PrjEnt/OpenDF" target="_blank" rel="noopener noreferrer">https://github.com/PrjEnt/OpenDF</a>, a long-abandoned project which seems to be a more compact version of another abandoned thing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732291" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Someone</span>
+        <span class="meta-time">2026/04/12 01:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为他们的意思是 <i>FSpOpenDF</i> （<a href="https://dev.os9.ca/techpubs/mac/Files/Files-53.html#HEADING53-0" target="_blank" rel="noopener noreferrer">https://dev.os9.ca/techpubs/mac/Files/Files-53.html#HEADING5...</a>），（相对）较晚添加到 Mac API 中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think they mean <i>FSpOpenDF</i> (<a href="https://dev.os9.ca/techpubs/mac/Files/Files-53.html#HEADING53-0" target="_blank" rel="noopener noreferrer">https://dev.os9.ca/techpubs/mac/Files/Files-53.html#HEADING5...</a>), a (relatively) late addition to the Mac API.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732604" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 03:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">System 7 中添加的 FSSpec 调用大部分是现有文件管理器功能的新接口。  有一个实际的高级 `OpenDF()` 调用，它类似于 `FSOpen()` ，只不过当名称以 `.` 开头时它不会尝试打开驱动程序。<p>某些应用程序在不检查其可用性的情况下调用 `OpenDF()` ，但如果 `OpenDF()` 返回 `paramErr` ，则回退到 `FSOpen()` 或等效值，这是父级所见证的。  请参阅 `metamage_1` 存储库中的 `68k/modules/ams-fs/Files.cc`。</p><p>如果错误消息让人们感到困惑，也许是时候真正实现 `OpenDF()` 了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The FSSpec calls added in System 7 are mostly new interfaces to existing File Manager functionality.  There's an actual high-level `OpenDF()` call, which is like `FSOpen()` except that it won't try to open a driver when the name begins with `.`.<p>Some applications call `OpenDF()` without checking its availability, but fall back to `FSOpen()` or equivalent if `OpenDF()` returns `paramErr`, which is what the parent is witnessing.  See `68k/modules/ams-fs/Files.cc` in the `metamage_1` repo.</p><p>If the error message is confusing people, maybe it's time to implement `OpenDF()` for real.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733425" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">anthk</span>
+        <span class="meta-time">2026/04/12 06:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 Nethack 3.6.7 for m68k 中遇到了这个错误。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I had that error with Nethack 3.6.7 for m68k.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734551" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 13:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是你；这就是我。  我的 LoadScrap() 实现（在启动时调用）正在调用 FSOpen()，结果是在回退到 PBOpen() 之前尝试 OpenDF() 的粘合代码。  直到。<p>该调用来自操作系统内部！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not you; it's me.  My implementation of LoadScrap() (which is called at startup) is calling FSOpen(), and it turns out the glue code for that tries OpenDF() before falling back to PBOpen().  TIL.<p>The call is coming from within the OS!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736295" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hagbard_c</span>
+        <span class="meta-time">2026/04/12 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者将此信息添加到错误消息中： <i>OpenDF 未实现，回退到 FSOpen</i></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That, or add this information to the error message: <i>OpenDF not implemented, falling back to FSOpen</i></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 04:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊，是的，我已经好几年没碰过的两个前端了。  这应该很有趣。 :-)<p>您剪掉了“在 127.0.0.1:5900 上启动 VNC 服务器”的部分。  您是否尝试连接 VNC 客户端？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ah, yes, the two front ends I haven't touched in years.  This should be fun. :-)<p>You clipped the part that said "Starting VNC server on 127.0.0.1:5900".  Did you try connecting a VNC client?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733536" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ksherlock</span>
+        <span class="meta-time">2026/04/12 01:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OpenDF是MacOS工具箱调用（显然没有实现）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OpenDF is a MacOS toolbox call (which is apparently not implemented)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47732456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hagbard_c</span>
+        <span class="meta-time">2026/04/12 02:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">奇怪的是，鉴于我认为该东西确实在其他地方运行，所以它会出错。 X11 版本有时会显示打开屏幕，但任何交互尝试都会导致上述错误。 VLC版本直接显示错误。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Strange it errors out on given that I assume the thing does run elsewhere. The X11 version sometimes shows the opening screen but any attempt at interaction leads to the mentioned error. The VLC version shows the error directly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733068" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jjuran</span>
+        <span class="meta-time">2026/04/12 04:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与欢迎应用程序的任何交互都会终止它。  尝试在环境中设置 AMS_APPNAME=Tic-tac-toe，或 AMS_APPNAME="Nyanochrome Cat"。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Any interaction with the Welcome application terminates it.  Try setting AMS_APPNAME=Tic-tac-toe in the environment, or AMS_APPNAME="Nyanochrome Cat".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733554" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hagbard_c</span>
+        <span class="meta-time">2026/04/12 04:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这有效，即使显示有关 OpenDF 的错误消息，井字游戏也会出现并保留。换句话说，错误消息可以被忽略，至少只要 AMS_APPNAME 中的任何内容不需要 OpenDF 提供的任何内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, that works, the tic-tac-toe thing appears and remains even though the error message regarding OpenDF is shown. In other words that error message can be ignored, at least as long as whatever is in AMS_APPNAME does not require whatever OpenDF provides.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733731" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anthk</span>
+        <span class="meta-time">2026/04/12 06:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">autc04 的执行器一直很好，直到我尝试打开适用于 m68k Mac 的 Nethack 3.6.7。它崩溃了，但这是一次有趣的练习。<p>AMS 可能工作得更好，但设置起来很痛苦。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Executor from autc04 was fine until I tried to open Nethack 3.6.7 for m68k Macs. It crashed, but it was a fun exercise.<p>AMS might work better, but it's a pain to setup.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734534" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>如何构建 `Git diff` 驱动程序 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1356/">返回本批次</a>
+      <h1>如何构建 `Git diff` 驱动程序</h1>
+      <p class="subtitle">How to build a `Git diff` driver</p>
+      <div class="meta-line">
+        <span>www.jvt.me</span>
+        <span>作者 zdw</span>
+        <span>分数 102</span>
+        <span>评论 10</span>
+        <span>2026/04/12 02:07</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47732697" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.jvt.me/posts/2026/04/11/how-git-diff-driver/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>作者：Jamie Tannaon，2026 年 4 月 11 日 CC-BY-NC-SA-4.0 Apache-2.03 分钟 自 2024 年 11 月以来，我一直想写的内容是如何创建一个外部命令，用于使用 git diff 在文件之间进行比较。我发现，在实现 renovate-packagedata-diff 时，似乎缺乏有关如何执行此操作的文档，因此值得我在博客中撰写有关如何执行此操作的文档（我后来发现 Git Diffs 手册页中有一些文档，但不太容易发现）它作为 TODO 在我脑海中存在了一段时间，然后最近 Andrew Nesbitt 关于 Git Diff 驱动程序的好帖子推动了我，本周我正在研究使用 oasdiff 比较 OpenAPI 规范。我想我应该利用这个机会在博客上介绍它是如何工作的，并添加一个单独的 oasdiff 作为 diff 驱动程序。请注意，在这种情况下，我们希望在输出中公开更多信息，并且不能依赖 textconv 方法将（二进制）文件转换为更易于 diff 的文本格式。在很多情况下，使用 textconv 可能就足够了！我们需要处理什么参数？尽管许多工具如果希望作为工具运行[之前][之后]，那么它们可以开箱即用，但 git diff 将 7 个参数传递给外部它调用的工具。虽然令人惊讶，但这确实提供了一些有用的更丰富的数据。为了给出一个更“有效的示例”，让我们看看更新现有文件或添加/删除文件的样子：# newlines added for readability only</li><li># 当更新现有文件时 renovate-packagedata-diff renovate/github-co-cddo-api-catalogue.json # 1: 存储库中的文件名 /tmp/git-blob-shryRa/github-co-cddo-api-catalogue.json # 2: &quot;before&quot; f0a1311ae439fff36f994a3be5d5a7eb7d7a34dc # 3：“之前”文件 100644 的 SHA-1 哈希值 # 4：“之前”文件的八进制模式 /tmp/git-blob-y2mrZp/github-co-cddo-api-catalogue.json # 5：“之后”e39975894a72f706e6a59bccf31120ffaa219ff3 # 6：SHA-1 哈希值“after”文件的 100644 #7：“after”文件的八进制模式</li><li># 创建新文件时 renovate-packagedata-diff renovate/github-co-cddo-api-catalogue.json # 1: 存储库中的文件名 /dev/null # 2: &quot;before&quot; 。 # 3：“之前”文件的 SHA-1 哈希值。 # 4: “之前”文件 /tmp/git-blob-iAbnMD/github-co-cddo-api-catalogue.json 的八进制模式 # 5: “之后” 5c55e5b99b21db68c360419d44dac906c336bec6 # 6: “之后”文件 100644 的 SHA-1 哈希值 #7: 八进制模式“之后”文件</li><li># 当文件被删除时 renovate-packagedata-diff renovate/github-co-cddo-api-catalogue.json # 1: 仓库中的文件名 /tmp/git-blob-aBldZ4/github-co-cddo-api-catalogue.json # 2: &quot;before&quot; 6b24e38aa4aac8e00e44ab68e156744138ef6afc # 3：“之前”文件 100644 的 SHA-1 哈希值 # 4：“之前”文件 /dev/null 的八进制模式 # 5：“之后”。 #6：“之后”文件的 SHA-1 哈希值。 # 7: “after”文件的八进制模式 请注意，创建/删除文件时使用 /dev/null，并且在这些情况下不相关的参数作为 .. 如果您希望命令能够处理常规参数和 git diff 参数，那么查看环境变量 GIT_PAGER_IN_USE 是否设置也很有用。 oasdiff 的示例正如我在关于此的单独帖子中所述，有了此信息，它就是直接围绕 oasdiff 工具编写一个轻量级包装脚本来比较 OpenAPI 规范。例如，我们可以添加的最基本的实现是：#!/usr/bin/env bash</li><li># 通过 https://www.jvt.me/posts/2026/04/11/oasdiff-driver/ # `git diff` 的 diff 驱动程序，为给定的 OpenAPI 规范提供人类可读的变更日志</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Written by Jamie Tannaon April 11, 2026 CC-BY-NC-SA-4.0 Apache-2.03 minsSomething I&#39;ve been meaning to write about since November 2024 is how to create an external command for diffing between files with git diff.I found that while I was implementing renovate-packagedata-diff that there seemed to be a lack of documentation around how to do it, so it would be worthwhile me blogging about it.(I&#39;ve since found that there is some documentation in the Git Diffs man page, but it wasn&#39;t exactly well discoverable)It&#39;s been at the back of my mind as a TODO for some time, and then I was nudged about it fairly recently by Andrew Nesbitt&#39;s good post on Git Diff Drivers, and this week looking at diffing OpenAPI specs with oasdiff.I thought I&#39;d use this as an opportunity for blogging about how this works, as well as adding a separate for oasdiff as a diff driver.Note that this is a case where we want to expose more information in our output, and can&#39;t rely on the textconv method to convert a (binary) file to a more diff-able textual format.In a lot of cases, using textconv is likely sufficient!What arguments do we need to handle?Although many tools would work out-of-the-box if they expect to be run as tool [before] [after], git diff passes 7 arguments to the external tool it&#39;s calling.Although surprising, this does provide some richer data that is useful to have.To give a more &quot;worked example&quot;, let&#39;s look at what this looks like for updating an existing file, or adding/deleting a file:# newlines added for readability purpose only</li><li># when an existing file is updated renovate-packagedata-diff renovate/github-co-cddo-api-catalogue.json # 1: filename in the repo /tmp/git-blob-shryRa/github-co-cddo-api-catalogue.json # 2: &quot;before&quot; f0a1311ae439fff36f994a3be5d5a7eb7d7a34dc # 3: SHA-1 hash of the &quot;before&quot; file 100644 # 4: octal mode of the &quot;before&quot; file /tmp/git-blob-y2mrZp/github-co-cddo-api-catalogue.json # 5: &quot;after&quot; e39975894a72f706e6a59bccf31120ffaa219ff3 # 6: SHA-1 hash of the &quot;after&quot; file 100644 # 7: octal mode of the &quot;after&quot; file</li><li># when a net-new file is created renovate-packagedata-diff renovate/github-co-cddo-api-catalogue.json # 1: filename in the repo /dev/null # 2: &quot;before&quot; . # 3: SHA-1 hash of the &quot;before&quot; file . # 4: octal mode of the &quot;before&quot; file /tmp/git-blob-iAbnMD/github-co-cddo-api-catalogue.json # 5: &quot;after&quot; 5c55e5b99b21db68c360419d44dac906c336bec6 # 6: SHA-1 hash of the &quot;after&quot; file 100644 # 7: octal mode of the &quot;after&quot; file</li><li># when a file is deleted renovate-packagedata-diff renovate/github-co-cddo-api-catalogue.json # 1: filename in the repo /tmp/git-blob-aBldZ4/github-co-cddo-api-catalogue.json # 2: &quot;before&quot; 6b24e38aa4aac8e00e44ab68e156744138ef6afc # 3: SHA-1 hash of the &quot;before&quot; file 100644 # 4: octal mode of the &quot;before&quot; file /dev/null # 5: &quot;after&quot; . # 6: SHA-1 hash of the &quot;after&quot; file . # 7: octal mode of the &quot;after&quot; file Note that /dev/null is used when a file was created/deleted, and that arguments that aren&#39;t relevant in these cases are provided as a ..It can also be useful to see if the environment variable GIT_PAGER_IN_USE is set, if you&#39;d like your command to be able to handle regular arguments and the git diff arguments.Example with oasdiffAs noted in my separate post about this, with this information it&#39;s straightforward to write a lightweight wrapped script around the oasdiff tool for comparing OpenAPI specs.For instance, the most basic implementation we can add is:#!/usr/bin/env bash</li><li># Via https://www.jvt.me/posts/2026/04/11/oasdiff-driver/ # A diff driver for `git diff` to provide a human-readable changelog for a given OpenAPI spec</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yboris</span>
+        <span class="meta-time">2026/04/12 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相关：我最喜欢的观众是 <i>diff2html-cli</i> 这可以让你在浏览器中看到差异：<p><a href="https://diff2html.xyz/" target="_blank" rel="noopener noreferrer">https://diff2html.xyz/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Related: my favorite viewer is <i>diff2html-cli</i> which lets you see the diff in your browser:<p><a href="https://diff2html.xyz/" target="_blank" rel="noopener noreferrer">https://diff2html.xyz/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733758" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">danvk</span>
+        <span class="meta-time">2026/04/12 10:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可能还喜欢 webdiff，它具有类似的功能 <a href="https://github.com/danvk/webdiff" target="_blank" rel="noopener noreferrer">https://github.com/danvk/webdiff</a> （这是我几年前建造的，现在仍然每天使用它。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You might also like webdiff, which does something similar <a href="https://github.com/danvk/webdiff" target="_blank" rel="noopener noreferrer">https://github.com/danvk/webdiff</a> (I built this years ago and still use it every day.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735575" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">JavierFlores09</span>
+        <span class="meta-time">2026/04/12 04:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">到目前为止我最喜欢的在线差异查看器是 <a href="https://diffs.dev/" target="_blank" rel="noopener noreferrer">https://diffs.dev/</a>，非常简单。 Diff2html 看起来也很酷，因为它可以在终端中工作</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">my favorite online diff viewer so far is <a href="https://diffs.dev/" target="_blank" rel="noopener noreferrer">https://diffs.dev/</a>, very straightforward. Diff2html looks cool too given it can work in terminal</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733798" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">forrestthewoods</span>
+        <span class="meta-time">2026/04/12 07:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么不直接使用 Araxis Merge 或 Beyond Compare？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why not just use Araxis Merge or Beyond Compare?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734819" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">WalterGR</span>
+        <span class="meta-time">2026/04/12 10:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">付费解决方案的一些替代方案：<p>WinMerge 非常出色，是开源的，虽然仅适用于 Windows，但它在 Wine 中运行良好，无需任何调整。</p><p>Kdiff 是开源的、跨平台的，虽然我个人不喜欢它，但它支持 4 窗格合并，这非常符合人体工程学，而且很少见。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Some alternatives to paid solutions:<p>WinMerge is excellent, open source, and while Windows-only, it runs well in Wine without needing any tweaks.</p><p>Kdiff is open source, cross-platform, and while I personally don’t love it, it supports 4-pane merge, which is quite ergonomic and rare.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735657" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">faangguyindia</span>
+        <span class="meta-time">2026/04/12 13:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有什么比 sublime merge 更好的了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nothing beats sublime merge for this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tarun_anand</span>
+        <span class="meta-time">2026/04/12 11:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有图像和多媒体的 OSS git diff 吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there an OSS git diff for images and multimedia?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735842" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alkh</span>
+        <span class="meta-time">2026/04/12 12:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我打赌可能会有一些东西，但您可能可以通过使用 ImageMagick[1] 和一些操作来创建自己的东西。对于前。对于图像，我会创建一个临时文件或在 OSX 上使用进程替换 + open 或在 Linux 上使用 xdg-open。这是第一篇关于<p>或者您可以使其变得更加简单（因为输出只是文本）并直接打印出元数据的差异。您可能需要一些其他工具，例如 ImageMagick，但至少不需要将二进制数据作为差异的一部分查看。</p><p>[1]<a href="https://stackoverflow.com/questions/5132749/diff-an-image-using-imagemagick" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/5132749/diff-an-image-us...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I bet there might be something but you can probably create your own by using ImageMagick[1] and some manipulations. For ex. for images, I would create a temp file or use a process substitition + open on OSX or xdg-open on Linux. Here is a first post about<p>Or you can make it even easier(cause the output is only a text) and simply print out the difference in metadata directly. You might need some other tools like ImageMagick but at least no shenanigans with viewing binary data as part of your diff.</p><p>[1]<a href="https://stackoverflow.com/questions/5132749/diff-an-image-using-imagemagick" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/questions/5132749/diff-an-image-us...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736137" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">da_rob</span>
+        <span class="meta-time">2026/04/12 12:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，有imgap： <a href="https://github.com/roblillack/imgap" target="_blank" rel="noopener noreferrer">https://github.com/roblillack/imgap</a><p>您可以使用它为 git diff 创建增量映像，还可以通过 git difftool 交互式比较更改。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, there is imgap: <a href="https://github.com/roblillack/imgap" target="_blank" rel="noopener noreferrer">https://github.com/roblillack/imgap</a><p>You can use it to create delta images for git diff but also to interactively compare changes via git difftool.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736191" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 03:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733325" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gritzko</span>
+        <span class="meta-time">2026/04/12 04:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近实现了一个 diff 驱动程序作为 git-dogs 的一部分。整合部分克劳德一击即中。<p>我的是基于代币的： <a href="https://replicated.wiki/blog/img/difflet.png" target="_blank" rel="noopener noreferrer">https://replicated.wiki/blog/img/difflet.png</a></p><p>git 工具集本身正在开发中： <a href="https://github.com/gritzko/git-dogs" target="_blank" rel="noopener noreferrer">https://github.com/gritzko/git-dogs</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I recently implemented a diff driver as part of git-dogs. The  integration part Claude one-shotted.<p>Mine is token based: <a href="https://replicated.wiki/blog/img/difflet.png" target="_blank" rel="noopener noreferrer">https://replicated.wiki/blog/img/difflet.png</a></p><p>The set of git tools itself, very much in development: <a href="https://github.com/gritzko/git-dogs" target="_blank" rel="noopener noreferrer">https://github.com/gritzko/git-dogs</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47733516" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">semanticintent</span>
+        <span class="meta-time">2026/04/12 09:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735431" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

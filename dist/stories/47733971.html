@@ -1,0 +1,2556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apple 芯片和虚拟机：突破 2 个虚拟机限制 (2023) | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-12-1356/">返回本批次</a>
+      <h1>Apple 芯片和虚拟机：突破 2 个虚拟机限制 (2023)</h1>
+      <p class="subtitle">Apple Silicon and Virtual Machines: Beating the 2 VM Limit (2023)</p>
+      <div class="meta-line">
+        <span>khronokernel.com</span>
+        <span>作者 krackers</span>
+        <span>分数 178</span>
+        <span>评论 122</span>
+        <span>2026/04/12 04:58</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47733971" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://khronokernel.com/macos/2023/08/08/AS-VM.html" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>macOS 内部深入探讨 构建开发内核集合 配置我们的 Mac 以启动开发内核集合 让我们的机器开始工作！苹果什么时候给我们带来了这个功能？撤销我们的操作系统更新工作结束语</li><li>对于那些想知道过去几个月我在 OpenCore Legacy Patcher 之外做了什么的人来说，我得到了在当地一家咨询公司担任 Mac 管理员实习生的绝佳机会。</li><li>我一直在研究的领域之一是 macOS 虚拟机，特别是基于 Apple 虚拟化框架的 Apple Silicon 虚拟机。然而，在使用 Apple 的 VM 堆栈（通过令人惊叹的项目 UTM）进行大量开发和测试后不久，我发现了一个非常令人沮丧的限制：Apple Silicon 主机一次最多只能有 2 个处于活动状态的 macOS 来宾 VM。</li><li>最常见的错误是 Virtualization.framework 生成的错误：</li><li>虚拟机数量超出限制。已达到支持的最大活动虚拟机数量。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>macOS Internals Deep Dive Building a Development Kernel Collection Configuring our Mac to boot the Development Kernel Collection Putting our machine to work! When did Apple grace us with this feature? Undoing our work for OS updates Closing Thoughts</li><li>For those who’ve been wondering what I’ve been doing for these past few months outside of OpenCore Legacy Patcher, I got the amazing opportunity to work as a Mac Admin Intern at a local consultant company.</li><li>One of the areas I’ve been working quite a bit with is macOS Virtual Machines, specifically Apple Silicon Virtual Machines based on Apple’s Virtualization framework. However, not long after doing a lot of development and testing using Apple’s VM stack (through the amazing project, UTM), I found a very frustrating limitation: Apple Silicon hosts can only have a maximum of 2 macOS guest VMs active at once.</li><li>This is most commonly seen with this error, generated by Virtualization.framework:</li><li>The number of virtual machines exceeds the limit. The maximum supported number of active virtual machines has been reached.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kylec</span>
+        <span class="meta-time">2026/04/12 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个非常愚蠢的限制，至少统一适用于所有 Mac。我认为，如果您购买功能更强大的 Mac，他们应该允许您虚拟化更多 Mac 实例。就像 M5 可能限制为 2 个，但也许让 M5 Pro 做 4 个，M5 Max 做 8 个或其他。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a very silly restriction, at least to apply uniformly to all Macs. I think if you buy a more powerful Mac they should let you virtualize more Mac instances. Like an M5 maybe limit to 2, but maybe let an M5 Pro do 4 and an M5 Max do 8 or something.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734130" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">benoau</span>
+        <span class="meta-time">2026/04/12 05:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们为什么要施加限制？  您的硬件是一个自然限制，当您达到其阈值时，您会自行停止。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why should they impose a limit at all?  Your hardware is a natural limit, you'll stop of your own accord when you reach its thresholds.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734378" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">m463</span>
+        <span class="meta-time">2026/04/12 10:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 他们为什么要施加限制？<p>每当我看到苹果的愚蠢行为时，我必须记住：</p><p></p><pre><code>  "You're not the target market."</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Why should they impose a limit at all?<p>Whenever I see apple silliness, I have to remember:</p><p></p><pre><code>  "You're not the target market."</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735633" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jdejean</span>
+        <span class="meta-time">2026/04/12 13:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是啊但是。他们很高兴地把它卖给你</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah but. They happily sold it to you</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736314" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bestham</span>
+        <span class="meta-time">2026/04/12 13:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们把它卖给你，有限制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They sold it to you, with a limit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736456" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 09:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然是寻租。他们想向您使用的每台物理和逻辑机器收费。虚拟化解决了这个问题。<p>如果可以的话，他们可能会对处理器的每个功能单独收费。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Rent seeking, of course. They want to charge you for every physical and logical machine you use. Virtualization gets around that.<p>They'd probably charge separately for every feature of the processor if they could.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735344" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">JoshTriplett</span>
+        <span class="meta-time">2026/04/12 10:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这会更有意义，除了 <i>他们甚至没有选择支付费用</i>。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That would make more sense except <i>they don't even have an option to pay for it</i>.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735559" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jonnrb</span>
+        <span class="meta-time">2026/04/12 10:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，他们确实这么做了。它被称为“另一台 Mac”。我什至没有在这里尖酸刻薄：我合理地认为苹果公司的某个人仔细考虑了这一点并说“是的，如果他们需要同时运行 2 个以上的虚拟机，那么可能有多个用户，他们每个人都可以拥有自己的 Mac”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes they do. It's called "another Mac". And I'm not even being snarky here: I legitimately think someone at Apple thought this through and said "yeah if they need more than 2 VMs running at the same time, there are probably multiple users and they can each get their own Mac".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735580" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/12 10:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，苹果一直以各种方式对虚拟机进行严格限制，例如任何人都可以将虚拟机或 Mac 出租给其他人的最低期限是 24 小时，这使得类似云的工作负载几乎不可能实现。出于某种原因，苹果确实不喜欢虚拟机，而且它的用意远不止“可能是多个用户”。<p>这非常令人沮丧。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nah, Apple has been extremely restrictive about virtual machines in all kinds of ways, e.g. the minimum terms anyone is able to lease out a VM or Mac to someone else is 24h, making cloud-like workloads practically impossible. For some reason, Apple really doesn’t like virtual machines, and it’s much more intentional than just “probably multiple users”.<p>It’s extremely frustrating.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/12 12:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对你来说很沮丧，对我来说很搞笑。我不知道他们以这种方式阻碍了 MacOS。我一点也不感到惊讶，而且非常可笑。<p>我不知道为什么人们不断地给苹果公司钱，尤其是那些想要运行虚拟机的精通技术的人。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Frustrating for you, hilarious for me. I had no idea they had hobbled MacOS in this way. It doesn't surprise me at all really, and it's pretty ridiculous.<p>I'm not sure why people keep giving Apple their money, especially tech-savvy people that would want to run VMs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">VanTheBrand</span>
+        <span class="meta-time">2026/04/12 10:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">选择是您必须购买另一台机器。有一些 mac ec2 实例和几个 mac 云主机，如果可以的话，他们都会滥用这一点，而不是为了保持合规性，他们购买更多的机器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The option is you have to buy another machine. There are mac ec2 instances and several mac cloud hosts that all would abuse this if they could, instead to stay compliant they buy more machines.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735578" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">benoau</span>
+        <span class="meta-time">2026/04/12 10:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">（其中“滥用”是指使用硬件来运行软件）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">(where "abuse" means using the hardware to run software)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735668" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">JoshTriplett</span>
+        <span class="meta-time">2026/04/12 10:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因此，他们需要一个充满系统的大型数据中心，而不是一堆付费许可证。<p>而且 macOS 仍然是一个仅供个人使用的玩具，这对开发人员来说是一个巨大的痛苦。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And thus they need a massive datacenter full of systems, rather than a pile of paid licenses.<p>And macOS remains a toy for use only by individuals that is a massive pain for developers to support.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735590" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/12 12:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近尝试在 EC2 上启动 MacOS 实例（在我的工作帐户上），但被阻止了。<p>所以我问了 IT 部门，他们说在 EC2 上运行 MacOS 实例成本太高了， <i>他们只会给我寄一台 Macbook Pro</i>。</p><p>我希望我是在开玩笑。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I tried to launch a MacOS instance on EC2 recently (on my work account), and was blocked.<p>So I asked the IT dept and they said it's stupidly expensive to run a MacOS instance on EC2, <i>and that they would just send me a Macbook Pro instead</i>.</p><p>I wish I were kidding.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">isodev</span>
+        <span class="meta-time">2026/04/12 10:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 您的硬件<p>啊，但是当你购买 iPhone 或 Mac 时，Apple 会将其视为他们的硬件在有限时间内根据服务条款慷慨地向你提供。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Your hardware<p>Ah but when you buy an iPhone or a Mac, Apple sees it as their hardware graciously made available to you for a limited time and under ToS.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735577" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naikrovek</span>
+        <span class="meta-time">2026/04/12 06:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们可能害怕那些会运行 MacOS 虚拟桌面农场而不购买适当数量的 Apple 机器的人。<p>如果我的主要收入来源是硬件销售，这就是我所担心的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They are likely scared of people who would run MacOS virtual desktop farms, without also buying an appropriate number of Apple machines.<p>That’s what I would be worried about if my primary source of income was hardware sales.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734408" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mysteria</span>
+        <span class="meta-time">2026/04/12 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我看来，他们应该出售价格适当的许可证，以允许使用更多虚拟机。让许可证足够昂贵，以免影响硬件销售，或者在许可协议中明确禁止 VDI/虚拟席位。<p>目前，Github Actions 等服务需要痛苦且低效地架设数千台 Mac Mini，并在每台 Mac Mini 上运行 2 个虚拟机才能保持在限制范围内。他们可能不介意付费在 Mac Studio 上运行更多虚拟机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">IMO they should sell appropriately priced licenses that allow the use of more VMs. Make the licenses expensive enough so that it doesn't eat into hardware sales, or explicitly prohibit VDI/virtual seats in the license agreement.<p>Currently services like Github Actions painfully and inefficiently rack thousands of Mac Minis and run 2 VMs on each to stay within the limits. They probably wouldn't mind paying a fee to run more VMs on Mac Studios instead.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735292" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ryandrake</span>
+        <span class="meta-time">2026/04/12 06:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">苹果不得不被拖进虚拟化的世界，以及 macOS 运行在“苹果打造的金属”之外的任何东西上的想法。几十年来，他们一直非常明确地表示，他们只关心购买苹果铝和硅的客户。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Apple had to be dragged kicking and screaming into the world of virtualization and the idea of macOS running on anything besides "metal built by Apple." They've been pretty clear for decades that they only care about customers who buy Apple aluminum and silicon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734436" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">woodson</span>
+        <span class="meta-time">2026/04/12 06:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，但是他们的客户 <i>是</i> 那些购买苹果硬件的人。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, but their customers <i>are</i> those that buy Apple hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734713" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 06:54</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734707" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moondev</span>
+        <span class="meta-time">2026/04/12 07:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">想象一下购买一台具有 500+ GB 内存的 mac studio，但仅限于 2 个虚拟机。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Imagine buying a mac studio with 500+ GB of memory and being limited to 2 vms.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734844" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naikrovek</span>
+        <span class="meta-time">2026/04/12 09:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，这就是我要做的，直到我发现两个虚拟机的限制。  我正在构建一个 MacOS GitHub Actions 农场，或者更确切地说，正在研究它。  我已经编写了大部分代码，但当我发现 MacOS 虚拟机的两个虚拟机限制时，我的惰性戛然而止。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah that is what I was going to do until I discovered the two VM limit.  I was building a MacOS GitHub Actions farm, or rather, looking into it.  I had written most of the code but my inertia screeched to a halt when I discovered the two VM limit for MacOS VMs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735392" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/12 12:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你不是苹果的目标市场，也永远不会是。<p>他们不关心你想用你拥有的硬件做什么。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You are not Apple's target market, and never will be.<p>They don't care what you want to do with the hardware you own.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736167" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">FireBeyond</span>
+        <span class="meta-time">2026/04/12 08:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们停产了 512GB Studio，Pro 也消失了，所以现在不用担心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They discontinued the 512GB Studio, and the Pro is gone, so no fear there now.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735171" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">naikrovek</span>
+        <span class="meta-time">2026/04/12 09:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但它们仍然存在。  有一天我在翻新店看到了一件。  他们肯定还存在。<p>即使是 256GB 型号也可以运行 16GB 虚拟机负载</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They still EXIST though.  And I saw one the other day on the Refurbished store.  They’re definitely still around.<p>Even a 256GB model would run a load of 16GB VMs</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735388" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">colechristensen</span>
+        <span class="meta-time">2026/04/12 10:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">市场设计。<p>他们不 <i>想</i> 进入服务器业务，他们不 <i>想</i> 运行 Mac 农场的第三方虚拟机提供商出售超额认购的产品，为那些会抱怨的用户提供动力不足、令人失望的虚拟机体验。</p><p>很多人希望苹果进入一个苹果不想进入的市场。  他们拥有可用的工具，可以使他们故意削弱的市场得以实现，这样就没有人不情愿地进入他们的市场。  “每单位硬件两个虚拟机”的许可证已经存在至少十年了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Market design.<p>They don't <i>want</i> to be in the server business, they don't <i>want</i> there to be third party VM providers running Mac farms selling oversubscribed giving underpowered disappointing VM experiences to users who will complain.</p><p>A bunch of folks want Apple to enter a market Apple doesn't want to enter into.  They have tools available which would enable that market which they are kneecapping on purpose so that nobody unwillingly enters them into it.  The "two VMs per unit hardware" has been in their license for at least a decade.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735717" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/12 12:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;“每单位硬件两个虚拟机”的许可证已经存在至少十年了。<p>如果没有解决方法或破解方法，我会感到非常惊讶。</p><p>Microsoft 在某些版本的 Windows 上对 RDP 等某些功能进行了限制，但总有办法绕过它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;The "two VMs per unit hardware" has been in their license for at least a decade.<p>I'd be pretty surprised if there isn't a workaround or hack for this.</p><p>Microsoft has had limits on some things like RDP on some versions of Windows, but there have always been ways to get around it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736178" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 13:22</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736366" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fsckboy</span>
+        <span class="meta-time">2026/04/12 10:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;<i>他们为什么要施加限制？你的硬件是一个自然限制</i><p>因为施加人为限制使他们无法暴露自然限制到底有多低？苹果硅需要始终以崇敬的态度说话，你们这些信仰的兄弟，不要助长那些不忠实的人，以免他们撕裂和撕裂我们用整块布制成的东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;<i>Why should they impose a limit at all? Your hardware is a natural limit</i><p>because imposing an artificial limit keeps them from exposing how low the natural limits turn out to be? Apple Silicon need always to be spoken with reverence, ye brother of the faith, do not fuel the faithless lest they rend and threadrip that which we've made of wholecloth.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bdcravens</span>
+        <span class="meta-time">2026/04/12 07:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该限制实际上并不是资源问题，因为您可以运行几乎“无限”数量的非 Mac 虚拟机。我怀疑这更多的是商业决策，例如阻止人们开设低成本 Mac VPS 提供商。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The limit isn't really a resource issue, since you can run pretty much an "unlimited" number of non-Mac VMs. I suspect it's more of a business decision, such as preventing people from setting up shop as a low-cost Mac VPS provider.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734888" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fortran77</span>
+        <span class="meta-time">2026/04/12 11:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许这不起作用。你为什么这么肯定会呢？它可能会表现得很糟糕。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe it doesn't work. Why are you so sure it would? It may perform very badly.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">leptons</span>
+        <span class="meta-time">2026/04/12 12:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但是基于 Mx 的 Mac 不应该是您能买到的最快的计算机吗？为什么他们不能运行 2 个以上的虚拟机？<p>我可以同时运行大量 Windows 虚拟机，Windows 是否会成为与 MacOS 相当的资源消耗者？</p><p>Apple M2 CPU 的 RAM 最高可达 192GB。如果我们看看只有 8GB RAM 的 Mac Neo，那么在内存变得稀缺之前，M2 主机应该能够运行至少 20 个虚拟机。</p><p>Apple 没有充分理由限制 2 个虚拟机，除了出于贪婪，这是众所周知的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But aren't Mx based macs supposed to be the fastest computers you can get? Why wouldn't they be able to run more than 2 VMs?<p>I can run a ton of Windows VMs at the same time, wouldn't Windows be a comparable resource hog to MacOS?</p><p>Apple M2 CPUs can have up to 192GB of RAM. If we look at the Mac Neo that has only 8GB of RAM, then an M2 host should be able to run at least 20 VMs before memory gets scarce.</p><p>There's no good reason Apple limits to 2 VMs except for greed, which they are well known for.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736204" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">fortran77</span>
+        <span class="meta-time">2026/04/12 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我购买了 100 美元的 Windows 11 Pro 许可证，我的限制是 1024 个虚拟机<p>如果硬件可以处理，Windows 11 上的 Hyper-V 支持每台主机最多同时运行 1024 个虚拟机。在我的小型 Windows ARM 笔记本电脑上，我可以轻松运行 4 个虚拟机，然后再耗尽动力。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I buy a $100 Windows 11 Pro licence, and my limit is 1024 VMs<p>Hyper‑V on Windows 11 supports up to 1024 simultaneous VMs per host if the hardware can handle it. On my little Windows ARM laptop I can easily run 4 VMs before it runs out of steam.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735123" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">oxfeed65261</span>
+        <span class="meta-time">2026/04/12 11:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 Mac 上，您可以运行大量 Windows/Linux VM 和两个 Mac VM。<p>在 Windows 上，您可以运行大量 Windows/Linux VM 和零个 Mac VM。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On Mac, you can run lots of Windows/Linux VMs and two Mac VMs.<p>On Windows, you can run lots of Windows/Linux VMs and zero Mac VMs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735917" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ChoGGi</span>
+        <span class="meta-time">2026/04/12 11:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 零 Mac 虚拟机。<p>合法（我上次检查时）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; zero Mac VMs.<p>Legally (the last time I checked)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735973" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kylec</span>
+        <span class="meta-time">2026/04/12 10:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">2 的限制仅适用于虚拟化 macOS。您可以在 macOS 上同时运行任意数量的 Linux VM。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The limit of 2 is just for virtualizing macOS. You can run as many Linux VMs as you want at once on macOS.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735635" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fortran77</span>
+        <span class="meta-time">2026/04/12 10:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对 Windows 上的 Linux 提供一流的支持，并且 Microsoft 还提供可供下载的开发人员 VM，因此您可以运行任意数量的 Windows。我进行了 Hyper-V 快速创建，有三种版本的 Linux 或 Windows 可供选择，并且预装了所有开发工具。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's first class support for Linux on Windows, and Microsoft has a developers VM available for download so you can run as many Windows as you want. I do a Hyper-V Quick Create and there are three flavors of Linux to choose from, or Windows, with all the development tools pre-installed.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735678" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">colechristensen</span>
+        <span class="meta-time">2026/04/12 10:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Linux 在 Windows 上存在的唯一原因是他们试图重演 90 年代的策略，即统治然后摧毁竞争。  我几乎已经进入了 Windows 10 时代，将大部分时间都转移到了 Windows 上的 WSL 中。<p>Windows 11 和他们试图实现的围墙花园贪婪是如此糟糕，以至于这种主导 Linux 的尝试肯定会失败，我没有完全放弃 Windows 系统的唯一原因是我的几 TB 外部驱动器很大，我没有花时间实际去做。</p><p>再加上 Steam 和他们的 Wine 工作绝对是扼杀它，所以让我继续使用 Windows 的动力几乎消失了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The only reason Linux exists on Windows is they're trying to redo the 90s playbook of dominating then destroying the competition.  I was almost on board in the Windows 10 era, switching a whole lot of my time to doing things in WSL on Windows.<p>Windows 11 and the walled garden greed they're trying to enable is so bad that this dominating Linux attempt is certainly failing, the only reason I haven't completely ditched my Windows system is that my several TB external drive is at large and I haven't taken the time to actually do it.</p><p>Plus Steam and their Wine work is absolutely killing it so the one thing that was keeping me motivated to still have a Windows presence is pretty much gone.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735736" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">namelosw</span>
+        <span class="meta-time">2026/04/12 08:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这确实很愚蠢。有一天，我决定尝试一下这个 openclaw 的东西，但担心安全问题，所以我试了一下 VM，结果发现 iCloud 和 App Store 受到限制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It really is silly. The other day I decided to try this openclaw thing out but concerned about the security stuff, so I took VM for a spin only to find out the iCloud and the App Store were restricted.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735146" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">whatsupdog</span>
+        <span class="meta-time">2026/04/12 07:10</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734782" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dvrp</span>
+        <span class="meta-time">2026/04/12 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Mykola Grymalyuk 似乎是在这篇博文发表两年后开始在 Apple 工作的。  你要么像英雄一样死去..</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems Mykola Grymalyuk started working at Apple 2 years after this blog post.  You either die a hero..</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735290" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">czk</span>
+        <span class="meta-time">2026/04/12 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从 M3+ 开始，您可以使用 Hypervisor.framework/Virtualization.framework 来启动嵌套虚拟机。<p>如果绕过限制那就很有趣了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">starting with M3+ you can use Hypervisor.framework/Virtualization.framework to spin up nested VMs.<p>it would be amusing if that bypassed the limit.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734246" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jonnrb</span>
+        <span class="meta-time">2026/04/12 10:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，每个 VM 有 2 个 VM，您可以创建一个无限的 VM 链接列表，其中每个 macOS 托管一个“来宾”和一个“下一个主机”。我懒得测试这个了。有接受者吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lol with 2 VMs per VM you can do an infinite VM linked list where each macOS hosts a "guest" and a "next host". I'm too lazy to test this out. Any takers?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">colechristensen</span>
+        <span class="meta-time">2026/04/12 10:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得有点有趣的是，我的回答是“不，我不会在这上面浪费我每周的代币，这还不够好”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it's a little funny that my response is "no I'm not wasting my weekly tokens on that, it's not a good enough bit"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735743" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Khalid_nowaf</span>
+        <span class="meta-time">2026/04/12 05:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很好奇，为什么苹果要做出这样的限制呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m very curious, why did Apple put such a limitation?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734211" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ralph84</span>
+        <span class="meta-time">2026/04/12 06:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为他们的商业模式是将紧密集成的硬件和软件作为一个包进行销售。硬件销售为软件开发提供资金。他们不希望没有购买硬件的人使用该软件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because their business model is to sell tightly integrated hardware and software as a package. The hardware sales fund the software development. They don't want people who haven't bought the hardware using the software.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734696" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moondev</span>
+        <span class="meta-time">2026/04/12 07:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">VM 限制仅适用于从 macOS 本身启动的 macOS VM 的数量。<p>我的2018款mac mini正式支持VMware ESXi直接安装在硬件上，虚拟任意数量的macOS机器</p><p>有趣的是，我什至可以从集成的 Linux 终端使用 qemu + KVM 在我的 chromebook 框架上启动 2 个以上的 macOS 虚拟机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The VM limit only applies to the number of macOS VMs launched from macOS  itself.<p>My 2018 mac mini officially supports VMware ESXi to be installed directly on the hardware and virtualize any number of macOS machines</p><p>Funny enough I can even launch more than 2 macOS vms on my framework chromebook with qemu + KVM from the integrated Linux terminal.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734806" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ralph84</span>
+        <span class="meta-time">2026/04/12 09:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">macOS 是专有软件。您运行的每个副本都需要一个许可证，无论它是否在虚拟机中。 VM 限制已写入 macOS EULA。<p>&gt; 在您拥有或控制且已运行 Apple 软件的每台 Apple 品牌计算机的虚拟操作系统环境中安装、使用和运行最多两 (2) 个 Apple 软件的附加副本或实例，或任何先前的 macOS 或 OS X 操作系统软件或 Apple 软件的后续版本，目的是：(a) 软件开发； (b) 软件开发期间的测试； (c) 使用 macOS 服务器；或 (d) 个人，
+非商业用途。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">macOS is proprietary software. You need a license for every copy you run, whether it's in a VM or not. The VM limit is written into the macOS EULA.<p>&gt; to install, use and run up to two (2) additional copies or instances of the Apple Software, or any prior macOS or OS X operating system software or subsequent release of the Apple Software, within virtual operating system environments on each Apple-branded computer you own or control that is already running the Apple Software, for purposes of: (a) software development; (b) testing during software development; (c) using macOS Server; or (d) personal,
+non-commercial use.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735365" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 09:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735479" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/12 10:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是否意味着使用 VMware 执行此操作的任何人都违反了 EULA？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This implies anyone doing this using VMware violates the EULA?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735706" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">plorkyeran</span>
+        <span class="meta-time">2026/04/12 10:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。 Apple 不会因为您在个人计算机上运行太多虚拟机而对您进行追责，但如果您运行的是涉及 macOS 虚拟机的商业企业，他们确实会关心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes. Apple's not going to come after you for running too many VMs on your personal machine, but if you're running a commercial enterprise involving macOS VMs they do care.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735769" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moondev</span>
+        <span class="meta-time">2026/04/12 11:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">VMware vSphere 不是一款供消费者使用的产品。它旨在由企业大规模运营。 ESXi 正在运行虚拟机而不是 macOS。<p><a href="https://i0.wp.com/williamlam.com/wp-content/uploads/2020/04/esxi-macos-guest-mac-pro-2019.png?ssl=1" target="_blank" rel="noopener noreferrer">https://i0.wp.com/williamlam.com/wp-content/uploads/2020/04/...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">VMware vSphere is not a product intended to be used by consumers. It's intended to be run by enterprises at scale. ESXi is running the  vms not macOS.<p><a href="https://i0.wp.com/williamlam.com/wp-content/uploads/2020/04/esxi-macos-guest-mac-pro-2019.png?ssl=1" target="_blank" rel="noopener noreferrer">https://i0.wp.com/williamlam.com/wp-content/uploads/2020/04/...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735912" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">spockz</span>
+        <span class="meta-time">2026/04/12 12:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的。并且该许可证仅允许您在 macOS 主机上运行 macOS 来宾。因此，使用 esxi 意味着您没有任何运行的 macOS 客户机的许可证。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes. And the license only allows you to run macOS guests on macOS hosts. So using esxi means you don’t have any license for whatever macOS guests you run.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736248" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">benoau</span>
+        <span class="meta-time">2026/04/12 07:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，但从这个意义上来说，“硬件”几乎完全是 iPhone 和与 iPhone 相邻的产品，Mac 是排名第四或第五位的业务线……也许是第六位。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah but the "hardware" in that sense is almost entirely iPhone and iPhone-adjacent, Mac is a trailing 4th- or 5th-place line of business... maybe 6th.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">cluckindan</span>
+        <span class="meta-time">2026/04/12 05:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可能是为了防止使用单个硬件系统来运行在线身份农场。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Probably to prevent a single hardware system from being used to run an online identity farm.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734247" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mschuster91</span>
+        <span class="meta-time">2026/04/12 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有太大意义，虚拟机没有获得可以（滥用）用于发送垃圾邮件 iMessage 的唯一硬件标识符。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn't make too much sense, the VMs don't get unique hardware identifiers that one could (ab)use for spamming iMessage.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734636" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">peyton</span>
+        <span class="meta-time">2026/04/12 06:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这种追踪是关注的根源。我的第一个想法是这也与 IDMS 相关。我对这个系统了解不够，无法确定到底是什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That kind of tracks as the source of the concern. My first thought was it’d be something IDMS-related as well. I don’t know enough about that system to pinpoint exactly what.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734668" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">driverdan</span>
+        <span class="meta-time">2026/04/12 08:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">MacOS 充满了这些反所有者的决定。为了他们的利益，他们希望完全控制您的体验。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">MacOS is full of these anti-owner decisions. They want full control over your experience for their benefit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 08:25</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">RestartKernel</span>
+        <span class="meta-time">2026/04/12 05:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一篇非常酷的文章，但是在任何严肃的开发平台上存在如此任意的限制都是很奇怪的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is a really cool article, but the existence of such an arbitrary limit on any serious development platform is weird.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734159" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tempest_</span>
+        <span class="meta-time">2026/04/12 05:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在过去 20 年里，苹果是一个严肃的开发平台吗？<p>我知道很多开发者喜欢苹果硬件，因为它很高端，但 OSX 一直是“几乎 Linux”，由一家更关心 iTunes 的公司控制，而不是使用他们的硬件进行开发的人们。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Has apple been a serious development platform in the last 20 years?<p>I know a lot of devs like apple hardware because it is premium but OSX has always been "almost linux" controlled by a company that cares more about itunes then it does the people using their hardware to develop.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734209" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aurornis</span>
+        <span class="meta-time">2026/04/12 13:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在过去 20 年里，苹果是一个严肃的开发平台吗？<p>这是与现实相距甚远的评论之一，我无法判断它是否在恶搞。</p><p>给出一个诚实的答案：使用 Mac 进行认真的开发是很常见的。在大型科技公司，即使有优质的 Linux 选项，大多数员工也会选择 Mac。</p><p>我有点感兴趣的是，为什么有人会认为 Mac 已经有 20 年没有被用于软件开发了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Has apple been a serious development platform in the last 20 years?<p>This is one of those comments that is so far away from reality that I can’t tell if it’s trolling.</p><p>To give an honest answer: Using Macs for serious development is very common. At bigger tech companies most employees choose Mac even when quality Linux options are available.</p><p>I’m kind of interested in how someone could reach a point where they thought macs were not used for software development for 20 years.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736512" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jaredklewis</span>
+        <span class="meta-time">2026/04/12 06:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认识的每 10 个软件工程师中至少有 9 个在 Mac 上完成所有开发工作。因为这个样本来自我的经验，所以它偏向于初创公司和科技公司。当然，有很多开发人员不在这些领域，但科技公司是世界开发人员的很大一部分。<p>所以，是的，我想说苹果是一个“严肃的开发平台”，因为它在美国科技行业的软件开发中占据了主导地位。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">At least 9 out of every 10 software engineers I know does all their development on a mac. Because this sample is from my experience, it’s skewed to startups and tech companies. For sure, lots of devs outside those areas, but tech companies are a big chunk of the world’s developers.<p>So yea I would say Apple is a “serious development platform” just given how much it dominates software development in the tech sector in the US.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734685" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">OptionOfT</span>
+        <span class="meta-time">2026/04/12 06:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我感觉很多人选择 Mac 是因为另一个选择是锁定的 Windows，并且不提供 Linux。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have the feeling a lot of people take Macs because the other option is a locked down Windows, and Linux is not offered.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734733" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">manithree</span>
+        <span class="meta-time">2026/04/12 07:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这。直到去年我才在工作中运行 Linux，最终它被禁止了。我选择了锁定的 Mac，而不是锁定的 Windows。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This. I ran Linux at work until last year, when it was finally disallowed. I went with locked-down Mac over locked-down Windows.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734917" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hparadiz</span>
+        <span class="meta-time">2026/04/12 07:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">目前 Linux 笔记本电脑的硬件还不是很好。特别是对于arm64机器。即使硬件很好，底盘和其他所有东西通常都是塑料和劣质的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The hardware for a Linux laptop right now is not great. Especially for an arm64 machine. Even if the hardware is good the chassis and everything else is typically plastic and shitty.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734785" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">c0balt</span>
+        <span class="meta-time">2026/04/12 08:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一种令人惊讶的情绪。大多数戴尔和联想笔记本电脑工作正常，并且通常具有相当好的制造质量（非塑料机箱等）。<p>然而，arm64 大多很糟糕。 Linux 笔记本电脑的唯一真正竞争者（除了 asahi）是 Snapdragon 芯片，但缺乏 iirc 的硬件支持。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That is a surprising sentiment. Most dell and Lenovo laptops work just fine and are usually of reasonably good build quality (non-plastic chassis etc.).<p>arm64 is however mostly bad. The only real contender for Linux laptops (outside of asahi) was Snapdragon's chips but the HW support there was lacking iirc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735047" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">invalidname</span>
+        <span class="meta-time">2026/04/12 09:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们在工作中为我们提供了 Dell Linux 机器。他们太糟糕了，我们有很多问题。过热，相机很糟糕，相对于设备的巨大重量来说，性能很差。一切都比 Mac 下降了一大步。<p>每当我看到 Linux 人们比较 Linux 和 Mac 时，我都会对他们的大胆感到惊讶。他们不属于同一个联盟。不是一英里。甚至 CLI 在 Mac 上也更方便，这对我来说真的很神奇。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They give us Dell Linux machines from work. They suck so bad and we have so many problems. Overheating, camera is terrible, performance is bad relatively to the huge weight of the device. Everything is a huge step down from Macs.<p>Whenever I see Linux people comparing Linux and Mac I'm amazed at the audacity. They are not in the same league. Not by a mile. Even the CLI is more convenient on the Mac which is truly amazing to me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735482" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">herecomesthepre</span>
+        <span class="meta-time">2026/04/12 09:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所有对 Framework 的热爱都去了哪里？<p>乐高积木可更换 USB 端口的蜜月结束了吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What happened to all the love for Framework?<p>The honeymoon of Lego-brick replaceable USB ports is over?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735394" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">linguae</span>
+        <span class="meta-time">2026/04/12 09:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我有一台个人的 Framework 13 和一台工作用的 MacBook Pro。  我喜欢 Framework 的使命，即提供用户可维修的硬件；我们需要可升级、可维修的硬件。  然而，我的 MacBook Pro 上的电池续航时间比我的 Framework 上的电池续航时间要长得多。  此外，Apple Silicon 除了能效之外还提供出色的性能。  虽然我在框架上使用 Windows 11，但我更喜欢 macOS。<p>此外，如今 RAM 和 SSD 的天价还造成了一个意想不到的情况：与 DIMM 和 NVMe SSD 的市场价格相比，苹果为 RAM 和 SSD 升级而抬高的价格看起来并不算那么糟糕。  是的，该框架具有可升级的优势，这意味着如果 RAM 和 SSD 价格下降，那么将来的升级会更便宜，而对于 Mac，一旦购买就无法（轻松）升级 RAM 和存储。  然而，对于现在需要一台电脑并愿意在几年后购买另一台电脑的人来说，一台新的 Mac 看起来很有吸引力，特别是考虑到 Apple Silicon 的好处时。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have a personal Framework 13 and a work-issued MacBook Pro.  I love Framework’s mission of providing user-serviceable hardware; we need upgradable, serviceable hardware.  However, the battery life on my MacBook Pro is dramatically better than on my Framework.  Moreover, Apple Silicon offers excellent performance on top of its energy efficiency.  While I use Windows 11 on my Framework, I prefer macOS.<p>Additionally, today’s sky-high RAM and SSD prices have caused an unexpected situation: Apple’s inflated prices for RAM and SSD upgrades don’t look that bad in comparison to paying market prices for DIMMs and NVMe SSDs.  Yes, the Framework has the advantage of being upgradable, meaning that if RAM and SSD prices decrease, then upgrades will be cheaper in the future, whereas with a Mac you can’t (easily) upgrade the RAM and storage once purchased.  However, for someone who needs a computer right now and is willing to purchase another one in a few years, then a new Mac looks appealing, especially when considering the benefits of Apple Silicon.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735483" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gambiting</span>
+        <span class="meta-time">2026/04/12 07:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;&gt;我认识的每 10 个软件工程师中至少有 9 个在 Mac 上进行所有开发<p>我从事视频游戏行业，你知道，这个行业比电影还要大——据我所知，十分之十的开发者都在使用 Windows。我有一台工作发布的 Mac 只是为了做一些 iOS 开发，老实说，我不明白为什么有人可以每天使用它作为他们的主要开发机器，它对操作系统允许你做的事情是如此的限制。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;&gt;At least 9 out of every 10 software engineers I know does all their development on a mac<p>I work in video games, you know, industry larger than films - 10 out of 10 devs I know are on Windows. I have a work issued Mac just to do some iOS dev and I honestly don't understand how anyone can use it day to day as their main dev machine, it's just so restrictive in what the OS allows you to do.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">array_key_first</span>
+        <span class="meta-time">2026/04/12 09:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您在视频游戏公司使用 Windows 是有道理的。我们在工作中也使用 Windows，但它对于开发来说绝对是糟糕的。我真的更喜欢 Linux 桌面，特别是因为我们专门部署到 Linux。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It makes sense that you use Windows in a video game company. We use windows as well at work and it's absolutely awful for development. I would really prefer a Linux desktop, especially since we exclusively deploy to Linux.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735337" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">st3fan</span>
+        <span class="meta-time">2026/04/12 07:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">奇怪..根据我的经验，macOS 仍然完全开放。你能举个例子吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Weird .. macOS is still completely open is my experience. Can you give an example?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734770" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gambiting</span>
+        <span class="meta-time">2026/04/12 07:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我编译了我们使用的一个工具，将其发送给另一个开发人员，他们在不经过系统设置的情况下无法打开它，因为操作系统认为它不安全。没有一揽子简单的方法来禁用此行为。<p>我们还在编译期间将自定义 dlib 注入到 clang 中，并从 Tahoe 开始失败 - 我们发现这是因为 SIP（​​系统完整性保护）。我们联系了苹果，得到的答复是“我们不会讨论任何与SIP操作相关的功能”。伟大的。因此，现在我们要么必须在每台开发机器上禁用 SIP（​​IT 部门对此非常不满意），要么使用我们自己的开发密钥重新签署 clang 可执行文件，以便操作系统不打扰我们。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I compile a tool we use, send it to another developer, they can't open it without going through system settings because the OS thinks it's unsafe. There is no blanket easy way to disable this behaviour.<p>We also inject custom dlibs into clang during compilation and starting with Tahoe that started to fail - we discovered that it's because of SIP(system integrity protection). We reached out to apple, got the answer that "we will not discuss any functionality related to operation of SIP". Great. So now we either have to disable SIP on every development machine(which IT is very unhappy about) or re-sign the clang executable with our own dev key so that the OS leaves us alone.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734799" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">10000truths</span>
+        <span class="meta-time">2026/04/12 07:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果 SIP 启动，听起来您正在使用 Apple 开发人员工具附带的 clang。来自自制软件或 LLVM 自己的二进制版本的 clang 是否也会出现同样的问题？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If SIP is kicking in, it sounds like you're using the clang that comes with Apple's developer tools. Does this same issue occur with clang sourced from homebrew, or from LLVM's own binary releases?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734882" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/12 08:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果它被发送给另一个开发人员然后要求他们运行 <i>xattr -rd com.apple.quarantine</i> 以便他们可以运行它似乎并不是不可克服的。我同意要求营销或销售人员这样做是行不通的，但开发人员可以做到。必须签名然后将二进制文件上传到 Apple 进行公证也很烦人，但您可以将其放入脚本中并继续您的一天。<p>但苹果“完全开放”，事实并非如此。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If it's being sent to another developer then asking them to run <i>xattr -rd com.apple.quarantine</i> on the file so they can run it doesn't seem insurmountable. I agree that it's a non-starter to ask marketing or sales to do that, but developers can manage. Having to sign and then upload the binary to Apple to  notarize is also annoying but you put it in a script and go about your day.<p>But Apple being "completely open", it is not.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/12 11:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;操作系统允许您执行的操作非常有限。<p>使用它们的人通常不会获得定制操作系统的报酬。如果您只想完成工作并且不想担心操作系统，那么操作系统非常适合。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;it's just so restrictive in what the OS allows you to do.<p>The people using them typically aren't being paid to customize their OS. The OS is good for if you just want to get stuff done and don't want to worry about the OS.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735989" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fortran77</span>
+        <span class="meta-time">2026/04/12 08:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我是定位、导航和计时行业的顾问，10 名开发人员中有 10 名使用 Windows。在此之前，我在一家好莱坞大公司工作，虽然编剧和副总裁执行助理都使用 Mac，但每个技术人员都使用 Windows。电影全部在 Windows 上进行剪辑和调色。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I work as a consultant for the position, navigation, and timing industry and 10 of 10 devs were on Windows. Before that I worked for a big hollywood company and while scriptwriters and VP executive assistants had Macs, everyone technical was on Windows. Movies were all edited and color graded on Windows.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735138" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">herecomesthepre</span>
+        <span class="meta-time">2026/04/12 09:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">网络垃圾人不会“设计”任何东西，你暗示这一点是一种侮辱。<p>昨天观看阿耳忒弥斯着陆的任何人都会热衷于注意到任务控制中心使用的所有 Windows PC — 几乎全部托管远程 Linux 应用程序。</p><p>看不见 Mac。</p><p>他们在太空中使用 Windows 上的 VLC。</p><p>如果明天世界上所有的 Mac 电脑都消失了，那么一切重要的东西都会以某种方式继续存在，丝毫不减。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Webshitters don't "engineer" anything, it's insulting you would insinuate that.<p>Anyone who watched the Artemis landing yesterday would have been keen to notice all the Windows PCs in use at Mission Control — nearly all hosting remote Linux applications.</p><p>Not a Mac in sight.</p><p>They were using VLC on Windows in space.</p><p>If all the Macs in the world disappeared tomorrow, everything essential would somehow continue unabated.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735367" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">amelius</span>
+        <span class="meta-time">2026/04/12 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个奇怪的情况。苹果产品是消费产品，但它们让我们将它们用作开发硬件，因为没有其他方法可以为这些产品制作软件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It is a weird situation. Apple products are consumer products but they make us use them as development hardware because there is no other way to make software for those products.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734321" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">BoorishBears</span>
+        <span class="meta-time">2026/04/12 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为其他 Apple 产品制作软件的成本很低，因为我使用 MBP。<p>128GB RAM 和 M4 Max 构成了一台非常坚固的开发机器，而且构建质量也是一个不错的奖励。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Making software for other Apple products pretty low on the reasons I use a MBP.<p>128GB of RAM and an M4 Max makes for a very solid development machine, and the build quality is a nice bonus.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735296" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">moondev</span>
+        <span class="meta-time">2026/04/12 12:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对允许启动的虚拟机数量的人为限制并不能使其可靠</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">An artificial limit on the number vms you are allowed to launch doesn't make it solid</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47736126" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">trueno</span>
+        <span class="meta-time">2026/04/12 08:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在过去 20 年里，苹果是一个严肃的开发平台吗？<p>我认为没有人善意地问这个问题，所以它甚至可能不值得回答。看：</p><p>&gt; 我知道很多开发者喜欢苹果硬件，因为它很高端，但 OSX 一直是“几乎是 Linux”，由一家更关心 iTunes 的公司控制，而不是使用他们的硬件进行开发的人们。</p><p>是的，fwiw mac 拥有用于多目标部署的功能。我旋转了无数个容器来满足我的需要。需要台式机吗？ Arm 原生 Linux 或 Windows 安装在 utm/parallels/whatever 中运行得接近原生速度，如果我愿意的话，我可以完全模拟 x86/64 envs。不需要经常这样做，但事实上我不需要拿出不同的设备就可以做到这一点。速度损失对我来说几乎无关紧要，因为我有无数的资源可以在这个背包设备中使用，它实际上可以提供一整天的电池。备用核心，备用统一内存，世界我的牡蛎。几周前，我刚刚在 win xp 32 位 sp2 中使用 86box 在一个非常依赖传统的 Visual Studio .net 7 环境中编译一些东西，该环境需要 22 年前发布的精确的 msvc 风格的浮点精度，并且我需要一个完全模拟的 CPU，其运行频率将使编译器做出与 22 年前相同的决定。我从来不用离开我的 Mac，也不必在 eBay 上购买一些 22 年前的 ThinkPad，这东西给了我一台进入另一个时代的时间机器，这样我就可以得到一些按规格编译的东西。这些技术闻所未闻，但这只是我不必离开我的 Mac 就能完成工作的众多场景之一。说它是一把瑞士军刀是轻描淡写的。它是一把瑞士军刀，附带基础硬件规格，可让您展开任何活动。</p><p>在苹果硅时代，我在 Macos 上的开发从未被阻止。我在为其他目标开发 Windows/Linux 时被阻止。 fwiw，我使用一切，我忠于任何提出我能投入金钱的最好东西的人。对于我的职业生涯来说，这无疑是苹果自动取款机。当这一天到来时，其他黑马会带来更好的硬件，我会毫不犹豫地放弃这个环境。我在这个领域没有部落主义的忠诚，我只是倾向于那些为我提供最好的经济胜利并拥有我所追求的东西的人。我们已经有十年没有谈论itunes了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Has apple been a serious development platform in the last 20 years?<p>i dont think anyone asks this question in good faith, so it may not even be worth answering. see:</p><p>&gt; I know a lot of devs like apple hardware because it is premium but OSX has always been "almost linux" controlled by a company that cares more about itunes then it does the people using their hardware to develop.</p><p>yea fwiw macs own for multi-target deployments. i spin up a gazillion containers in whatever i need. need a desktop? arm native linux or windows installations in utm/parallels/whatever run damn near native speed, and if im so inclined i can fully emulate x86/64 envs. dont run into needing to do that often, but the fact that i can without needing to bust out a different device owns. speed penalty barely even matter to me, because ive got untold resources to play around with in this backpack device that literally gets all day battery. spare cores, spare unified mem, worlds my oyster. i was just in win xp 32bit sp2 few weeks ago using 86box compiling something in a very legacy dependent visual studio .net 7 environment that needed the exact msvc-flavored float precision that was shipping 22 years ago, and i needed a fully emulated cpu running at frequencies that was going to make the compiler make the same decisions it did 22 years ago. never had to leave my mac, didnt have to buy some 22 year old thinkpad on ebay, this thing gave me a time machine into another era so i could get something compiled to spec. these techs arent heard of, but its just one of many scenarios where i dont have to leave my mac to get something done. to say its a swiss army knife is an understatement. its a swiss army knife that ships with underlying hardware specs to let you fan out into anything.</p><p>for development i have never been blocked on macos in the apple silicon era. i have been blocked on windows/linux developing for other targets. fwiw i use everything, im loyal to whoever puts forth the best thing i can throw my money at. for my professional life, that is unequivocally apple atm. when the day comes some other darkhorse brings forth better hardware ill abandon this env without a second thought. i have no tribalistic loyalties in this space, i just gravitate towards whoever presents me with the best economic win that has the things im after. we havent been talking about itunes for like a decade.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735245" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">thomascountz</span>
+        <span class="meta-time">2026/04/12 05:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为 Apple 生态系统开发的任何内容都需要使用 Apple 开发平台。也许范围可以说是“不严重”，但规模却不容忽视。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Anything being developed for the Apple ecosystem requires use of the Apple development platform. Maybe the scope could be called "unserious," but the scale cannot be ignored.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734288" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tempest_</span>
+        <span class="meta-time">2026/04/12 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我知道。<p>然而，在 10 年前的某个时候使用 Xcode 后，我相信应用程序生态系统仍然存在，并且人们永远不会选择它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am aware.<p>However having used Xcode at some point 10 years ago my belief is that the app ecosystem exists in spite of that and that people would never choose this given the choice.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734352" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">morphle</span>
+        <span class="meta-time">2026/04/12 08:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">苹果公司在 Linux 垃圾出现之前十年就拥有了真正的 Unix，一个糟糕的 Unix 副本。 Nextstep 比 Linux 垃圾好多了。 “糟糕想法的预算”是艾伦·凯 (Alan Kay) 谈到 Linux [1] 时所说的，他发明了个人计算机。<p>我 1987-1997 年间的 ISP 基于在 Apple 上运行的几种不同的 Unix，可能早在你出生之前。</p><p>苹果公司建造了几台超级计算机。</p><p>[1] <a href="https://www.youtube.com/watch?v=rmsIZUuBoQs" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=rmsIZUuBoQs</a></p><p>[2] 创始人学校会议：未来不一定是增量的 <a href="https://www.youtube.com/watch?v=gTAghAJcO1o" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=gTAghAJcO1o</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Apple had real Unix a decade before the Linux crap was made, a bad unix copy. Nextstep was much better than Linux crap. "A budget of bad ideas" is what Alan Kay said about Linux [1], he invented the personal computer.<p>My 1987-1997 ISP was based on several different Unix running on Apple, probably long before you where born.</p><p>Apple built several supercomputers.</p><p>[1] <a href="https://www.youtube.com/watch?v=rmsIZUuBoQs" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=rmsIZUuBoQs</a></p><p>[2] Founder School Session: The Future Doesn't Have to Be Incremental <a href="https://www.youtube.com/watch?v=gTAghAJcO1o" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=gTAghAJcO1o</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">icedchai</span>
+        <span class="meta-time">2026/04/12 10:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你在谈论 A/UX 吗？那是我最早接触的 Unix 系统之一。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are you talking about A/UX? That was one of the first Unix systems I was exposed to.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735572" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">morphle</span>
+        <span class="meta-time">2026/04/12 11:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，但我也有其他人。 68000 和 PowerPC 上的 BSD</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes but I had others too. BSD on both 68000 and PowerPC</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735943" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">smackeyacky</span>
+        <span class="meta-time">2026/04/12 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">艾伦·凯发明了一条死胡同（闲聊）。  与此同时，Linux 成为了未来。<p>Apple 的 Unix 很糟糕，直到他们收购了 NextStep。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Alan Kay invented a dead end (smalltalk).  Meanwhile Linux became the future.<p>Apple had a terrible Unix until they bought NextStep.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tempest_</span>
+        <span class="meta-time">2026/04/12 08:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，他们就是这样，在过去 20 年里他们一直是 iPhone 公司。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, they were that, and for the last 20 years they have been the iphone company.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735230" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jonhohle</span>
+        <span class="meta-time">2026/04/12 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">至少对我来说，不是 Linux 也是一个特点。 Linux 一直“几乎是 Unix”，现在无论好坏，它已经成为自己的东西。 OS X 从来没有试图成为 Linux。如果我们还有一些商业 POSIX 实现那就更好了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For me at least, not being Linux is a feature. Linux has always been “almost Unix” to the point where now it has become its own thing for better or worse. OS X was never trying to be Linux. It would be better if we still had a few more commercial POSIX implementations.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734327" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tempest_</span>
+        <span class="meta-time">2026/04/12 05:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是公平的，但根据我的经验，大多数开发人员的目标是 Linux 服务器，而不是 BSD（或任何其他风格），这得益于 OSX。如果 OSX 是 Linux 的衍生版本，那么它也同样适合他们。<p>编辑：我想我还应该注意到绝大多数在 mac books 上开发的人（无论如何以我的经验）实际上都是针对 chrome 的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That is fair but in my experience most devs are targeting linux servers not BSD(or any other flavour) which is helped by OSX. If OSX was linux derived it would suit them just as well.<p>edit: I suppose I should also note the vast majority of people developing on mac books (in my experience anyway) are actually targeting chrome.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734375" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wpm</span>
+        <span class="meta-time">2026/04/12 09:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">macOS 不可能基于 Linux。<p>事实证明，操作系统不仅仅是一个内核，上面附加了一些用户空间的垃圾，这与 Linux 发行版不同。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is no reality that macOS could be based on Linux.<p>Turns out, an operating system is more than just a kernel with some userspace crap tacked on top, unlike what Linux distros tend to be.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735547" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">realusername</span>
+        <span class="meta-time">2026/04/12 10:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 事实证明，操作系统不仅仅是一个内核，上面附加了一些用户空间的垃圾，这与 Linux 发行版不同。<p>这也是我对 OSX 的看法，我们不要假装混乱的用户空间是 OSX 最美的部分。</p><p>苹果肯定拥有出色的内核和驱动程序工程，但一旦你进入上面的堆栈，它就会变得纸带上的纸带，在他们修复刚刚添加的下一堆之前，你最好不要太快升级你的操作系统。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Turns out, an operating system is more than just a kernel with some userspace crap tacked on top, unlike what Linux distros tend to be.<p>This is also my opinion of OSX, let's not pretend that the userland mess is the most beautiful part of OSX.</p><p>Apple has great kernel and driver engineering for sure but once you go the stack above, it's ducktape upon ducktape and you better not upgrade your OS too quickly before they fix the next pile they've just added.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735619" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jonhohle</span>
+        <span class="meta-time">2026/04/12 06:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">异质性是其特点。 Linux 生态系统因此而变得更好（systemd、Wayland、dconf、epoll、inotify 都基于 OS X 中最初的想法），并且不受制于 Linux 是苹果公司每个人都赢的竞争优势。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Heterogeneity is the feature. The Linux ecosystem is better off for it (systemd, Wayland, dconf,  epoll, inotify are all based on ideas that were in OS X first) and not being beholden to Linux is a competitive advantage for Apple everyone wins.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">RestartKernel</span>
+        <span class="meta-time">2026/04/12 06:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我想我还应该注意到，绝大多数在 mac books 上开发的人（无论如何，根据我的经验）实际上都是针对 chrome 的。<p>点已采取。大多数开发人员可能会使用 Linux 容器而不是 MacOS 虚拟机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I suppose I should also note the vast majority of people developing on mac books (in my experience anyway) are actually targeting chrome.<p>Point taken. Most developers probably make do with Linux containers rather than MacOS VMs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734483" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jadar</span>
+        <span class="meta-time">2026/04/12 08:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 在 Apple Silicon 中使用自定义内核集合时，存在一些不幸的缺点。最大的问题是简化的操作系统更新不再可用。<p>这可能是因祸得福。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; When using a custom kernel collection with Apple Silicon, there are some unfortunate downsides. The biggest being that streamlined OS updates are no longer available.<p>This might be a blessing in disguise.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735226" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rayiner</span>
+        <span class="meta-time">2026/04/12 07:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">太疯狂了，你可以编译一个自定义内核，它会启动并且 GUI 会运行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s crazy that you can compile a custom kernel and it’ll boot and the GUI will run.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734852" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">obilgic</span>
+        <span class="meta-time">2026/04/12 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这也可以与 Lume 一起使用吗？目前它也有类似的限制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can this work with lume as well? Currently it has a similar limitation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734201" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">czk</span>
+        <span class="meta-time">2026/04/12 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">应该的，据我了解，lume 是苹果 Virtualization.framework 的一个薄包装</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it should, lume is a thin wrapper around Apple's Virtualization.framework as i understand it</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734271" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ab_testing</span>
+        <span class="meta-time">2026/04/12 06:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常有趣的是，HN 讨厌微软和谷歌，但又喜欢一家公司，在没有苹果许可的情况下，他们甚至无法在移动平台上运行应用程序，或者只能在他们拥有的硬件上运行一定数量的虚拟机。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very funny to see HN hate on Microsoft and Google but then love a company where they cannot even run an app on their mobile platform without Apple's permission  or only a certain number of VMs on the hardware they own .</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734547" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">monocularvision</span>
+        <span class="meta-time">2026/04/12 07:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有一天我也许可以撤销这个链接，但今天不是那一天： <a href="https://en.wiktionary.org/wiki/Goomba_fallacy" target="_blank" rel="noopener noreferrer">https://en.wiktionary.org/wiki/Goomba_fallacy</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Someday I may be able to retire this link, but today is not that day: <a href="https://en.wiktionary.org/wiki/Goomba_fallacy" target="_blank" rel="noopener noreferrer">https://en.wiktionary.org/wiki/Goomba_fallacy</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734869" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">toobulkeh</span>
+        <span class="meta-time">2026/04/12 07:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直在寻找这个。最后，正确的标签。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’ve been looking for this for forever. Finally, the right label.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734959" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gaythread</span>
+        <span class="meta-time">2026/04/12 07:42</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734936" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 07:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">HN 不是一个人。我很高兴能讨厌他们所有人。我明白你的意思了。我已经放弃让普通人来关心，但看到程序员绝对聪明到可以在他们实际拥有的计算机上运行自己的 Linux 系统 <i>主动选择</i> 不这样做是非常令人不安的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">HN is not one person. I'm very happy to hate on all of them. I see what you mean though. I've given up on getting normal people to care, but seeing programmers who are absolutely smart enough to run their own Linux system on computers they actually own <i>actively choose</i> not to do so is very disconcerting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734827" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AussieWog93</span>
+        <span class="meta-time">2026/04/12 07:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;看到那些绝对聪明到可以在他们实际拥有的计算机上运行自己的 Linux 系统的程序员主动选择不这样做，是非常令人不安的。<p>我运行 macOS 是因为 Apple 知道 QA 测试具有实际重要性，而设计另一个包管理器则不然。</p><p>我确实时不时地启动 Linux，看看它是否还好，然后总是走开。</p><p>为什么我的网络打印机上的文档打印速度约为 50dpi？</p><p>为什么当我打开笔记本电脑的盖子时，系统有约 20% 的时间无法唤醒？</p><p>当互联网随机掉线时，为什么我必须每隔一小时左右拔下并重新连接我的 USB WiFi 加密狗？</p><p>为什么系统偶尔会停止识别我的 USB SD 卡读卡器，迫使我硬重启系统？</p><p>当我启用 HDR 时，为什么 HDMI 上的音频会失真？</p><p>为什么 Kodi 只检测到 30Hz 的刷新率，而系统本身在看到显示器为 60Hz 时没有问题？</p><p>所有这些都是真实用户遇到的实际问题，但 Linux 开发社区并没有解决这些问题，而是选择将时间和资源投入到 systemd 替代方案上，或者为已经拥有合理且官方支持的分发方法的软件创建脆弱的 AUR 包。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;seeing programmers who are absolutely smart enough to run their own Linux system on computers they actually own actively choose not to do so is very disconcerting.<p>I run macOS because Apple understands that QA testing is something of actual importance, and designing yet another package manager is not.</p><p>I do spin up Linux every now and again to see if it's good yet, and always walk away.</p><p>Why do documents print at ~50dpi on my network printer?</p><p>Why does the system simply  not wake up ~20% of the time when I open my laptop's lid?</p><p>Why do I have to unplug and reconnect my USB WiFi Dongle every hour or so when the internet randomly drops out?</p><p>Why does the system stop recognising my USB SD Card reader occasionally, forcing me to hard reboot the system?</p><p>Why is the audio distorted over HDMI when I enable HDR?</p><p>Why does Kodi only detect a refresh rate of 30Hz when the system itself has no issues seeing that the monitor is 60Hz?</p><p>All of these are real problems that real users have had, but instead of solving them the Linux development community instead chooses to devote their time and resources navel gazing about systemd alternatives or creating a fragile AUR package for software that already has a sensible and officially supported distribution method.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734969" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">array_key_first</span>
+        <span class="meta-time">2026/04/12 09:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所有操作系统都有错误，而苹果也没有像以前那样的质量保证。一段时间以来，MacOS 的质量基本上一直呈下降趋势，而 Linux 则继续变得更好。<p>您必须意识到，Linux 发行版所做的事情本质上更加复杂。他们正在制作一个旨在在每台计算机上运行的通用操作系统。</p><p>Apple 正在开发一款操作系统，旨在在大约 0.1% 的设备上运行。哦，他们也制造这些设备。</p><p>不知何故，MacOS 的质量仍然呈下降趋势。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">All operating systems have bugs, and Apple doesn't have the QA it used to have. MacOS has basically been exclusively trending down in quality for a while now, while Linux continues to get better.<p>What you have to realize is that what Linux distros are doing is inherently more complicated. They're making a general purpose operating system intended to run on every computer.</p><p>Apple is making one operating system intended to run on maybe 0.1% of devices. Oh, and they also make those devices.</p><p>And MacOS is still trending down in quality, somehow.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735364" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AussieWog93</span>
+        <span class="meta-time">2026/04/12 09:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你对质量下降趋势的看法并没有错，但我们距离 macOS 甚至 Windows 在常规桌面系统上出现与 Linux 相同级别的 QA 问题还有很长的路要走。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You're not wrong about the downwards trend in quality but we're still a long ways off from macOS or even Windows having the same level of QA issues that Linux does, on a regular desktop system.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735464" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 07:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">长话短说，您为了方便而牺牲了自由，您认为质量保证值得受到苹果的摆布，您签署了“您的”机器的密钥，以便他们可以在您的余生中为您“管理”它。<p>与此同时，我现在正在运行大约十几个开发虚拟机。我仅受计算机内存量的限制。我从来没有想过一些巨型企业会考虑限制他们自己的用户可以生成的虚拟机。每一天，他们都会达到新的低点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">TL;DR you sacrificed your freedom for convenience, you think quality assurance is worth being at Apple's mercy, you signed away the keys to "your" machine so they can "manage" it for you along with the rest of your life.<p>Meanwhile I'm running about a dozen of development virtual machines right now. I'm limited only by the amount of RAM my computer has. It never even occurred to me that some gigacorporation out there would have thought to limit the VMs their own users can spawn. Every day, they reach a new low.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735017" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">commandersaki</span>
+        <span class="meta-time">2026/04/12 09:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">VM 限制仅适用于 macOS 来宾，否则我可以启动任意数量的 VM，这与在 Linux 中这样做没有什么不同（因为它无法运行 macOS VM）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The VM limitation is only for macOS guests, otherwise I can spin up as many VMs as I like, which is no different to doing so in Linux (since it cannot run macOS VMs).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735361" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ericmay</span>
+        <span class="meta-time">2026/04/12 08:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">另一方面，我非常方便地享受我的体验，我不必浪费时间搞那些我不感兴趣的东西——比如OP的例子，如果我想运行Linux，我只需安装它并做我想做的事情，或者在某个地方租用一些计算时间。<p>此外，你可以买一台Mac，做你想做的事 <i>和</i> 去购买一堆现成的组件来做你想做的任何爱好的事情。</p><p>自由也许始于不去弥补和对自己施加限制。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">On the other hand I’m very conveniently enjoying my experience, I don’t have to waste time screwing with stuff I have no interest in screwing with - like the OP’s examples, and if I want to run Linux I’ll just install it and do what I want or rent out some compute time somewhere.<p>Besides, you can buy a Mac and do whatever you want <i>and</i> go buy a bunch of off the shelf components to do whatever hobby stuff you want to do too.</p><p>Freedom, perhaps, starts with not making up and applying  limitations on yourself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735041" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 08:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 自由也许始于不去弥补和对自己施加限制。<p>对自己施加限制并没有什么错。这就是纪律、原则。这是很重要的事情。</p><p>真正的问题是接受完全虚构的限制 <i>其他的</i> 适用于 <i>你</i>。有一天，公司一觉醒来，就决定人们不能运行两个以上的虚拟机？那太愚蠢了。实际上用“但是方便”的论点来捍卫这一点，就好像方便应该凌驾于自由之上一样？不。</p><p>自由不是你积极努力争取的东西。这是你开始的事情。这就是现状。 <i>其他的</i> 把它从你身边拿走。你可以被动接受，享受“便利”，也可以反抗，走更难的路。看到人们在网上感到非常失望 <i>黑客</i> 新闻选择了前者的道路。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Freedom, perhaps, starts with not making up and applying limitations on yourself.<p>Nothing wrong with applying limitations to oneself. That's discipline, principles. It's important stuff.</p><p>The real problem is accepting the completely made up limitations that <i>others</i> apply on <i>you</i>. Corporation wakes up one day and just decides people can't run more than two virtual machines? That's stupid. Actually defending this with "but convenience" arguments as if convenience was supposed to override freedom? No.</p><p>Freedom isn't something you actively work towards. It's something you start with. It's the status quo. <i>Others</i> take it away from you. You can either accept it passively and enjoy the "convenience", or you can resist and go down the harder path. It's very disappointing to see people on <i>Hacker</i> News choose the former path.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735095" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ericmay</span>
+        <span class="meta-time">2026/04/12 10:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你只是生活在自由的幻想之下。您完全依赖于其他人的决定以及他们对您所有计算需求（从芯片到您使用的 Linux 发行版）的支持。你只是随意地画一条线，让自己感觉自己处于掌控之中，但事实并非如此。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You’re just living under the illusion of freedom. You are completely dependent on the decisions of others and their good graces for all of your computing needs, from the silicon to the Linux distro you use. You’re just drawing an arbitrary line a little further to feel like you’re in control, but you’re not.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735675" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 10:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">硅？当然。价值数十亿美元的晶圆厂存在巨大的单点故障。由于通用计算的战争，它也变成了一个问题。如果我们无法运行自由软件，那么它就毫无意义。 Linux 发行版？并不真地。这只是我想为事情付出多少努力的问题。我可以制作自己的发行版，但我无法制作自己价值数万亿美元的晶圆厂。<p>无论如何，这个论点到底是什么？无法掌控一切，所以无所谓吗？连尝试都懒得去尝试吗？就放弃吗？就接受苹果数字领地上的农奴命运吗？我对未来很悲观，但我还没有完全屈服于这种彻底的虚无主义。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Silicon? Sure. Billion dollar fabs are huge single points of failure. It's turning into a problem too due to the war on general purpose computing. Free software doesn't matter if we can't run it. Linux distro? Not really. It's only a matter of how much effort I want to put into things. I can make my own distro, I can't make my own trillion dollar fab.<p>Anyway, what even is this argument? Can't control everything, so it doesn't matter? Don't even bother trying? Just give up? Just accept your lot in life as a serf in Apple's digital fiefdom? I'm pessimistic about the future but even I haven't completely succumbed to such total nihilism yet.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AussieWog93</span>
+        <span class="meta-time">2026/04/12 08:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;TL;DR 你为了方便牺牲了你的自由<p>是的，我做到了，就像你选择作为社会纳税成员而不是隐士在灌木丛中寻找浆果和鱼时所做的那样。</p><p>享受您的虚拟机吧。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;TL;DR you sacrificed your freedom for convenience<p>Yes I did, just like you did when you chose to live as a taxpaying member of society rather than a hermit scouring the bush for berries and fish.</p><p>Enjoy your VMs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作为社会的纳税成员生活是强加给我们的。如果我们拒绝，持枪的暴力分子就会出现在我们家门口逮捕我们并夺取我们的财产。至少我们可以尝试投票淘汰那些对人口强加愚蠢配额的白痴。<p>计算机自由问题甚至还远未达到这一点。这些都不是强加给我们的。我们有能力随时做出不同的选择。 <i>我们可以选择</i> 不接受垄断公司的条款。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Living as a taxpaying member of society is something that is imposed on us. If we refuse, violent men with guns show up at our doors to arrest us and seize our property. At least we get to try and vote out idiots imposing stupid quotas on the population.<p>The issue of computer freedom does not even come close to this. None of this is imposed on us. We have the power to choose differently at any time. <i>We can choose</i> not to accept the monopolistic corporation's terms.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">senderista</span>
+        <span class="meta-time">2026/04/12 08:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我使用 Macbook 工作，并通过 ssh 在远程 Linux 实例上进行所有开发。每个操作系统都在做自己最擅长的事情。我上次尝试使用 Linux 笔记本电脑进行开发是在 2020 年，我的结论与 2010 年相同：至少十年内不会再尝试。我有比修复损坏的驱动程序和咒骂劣质触控板更重要的事情要做。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I use a Macbook for work and do all my development via ssh on remote Linux instances. Each OS is doing what it does best. I last tried a Linux laptop for development in 2020 and my conclusion was the same as in 2010: never again for at least a decade. I have better things to do than fix broken drivers and curse at shitty trackpads.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735119" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 08:28</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735137" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dghlsakjg</span>
+        <span class="meta-time">2026/04/12 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里的用户什么时候开始羞于抨击苹果了？<p>除了爱之外，还有很多对苹果的恨。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Since when are users in this place shy about bashing Apple?<p>Plenty of hate out there of apple alongside the love.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Barbing</span>
+        <span class="meta-time">2026/04/12 06:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有时在同样的评论中，那些令人沮丧的天才</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In the very same comments sometimes, those frustrating geniuses</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734698" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">neal_jones</span>
+        <span class="meta-time">2026/04/12 07:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的内心有两只狼。一个是“F Apple”，另一个是“他们打算推出 M5 ultra 还是……？”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Inside of me are two wolves. One that’s like “F Apple” and another that is like “Are they going to do an M5 ultra or…?”</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734796" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">matheusmoreira</span>
+        <span class="meta-time">2026/04/12 07:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们可以赞赏他们的硬件成就，同时谴责他们的垄断性反用户决定。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We can appreciate their hardware achievements and at the same time condemn them for their monopolistic anti-user decisions.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Barbing</span>
+        <span class="meta-time">2026/04/12 11:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就在那里——差不多就是这样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There it is--pretty much that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735809" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">RealityVoid</span>
+        <span class="meta-time">2026/04/12 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">成年人的头脑中可以同时容纳两种想法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Adults can hold 2 thoughts in their head at their same time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skygazer</span>
+        <span class="meta-time">2026/04/12 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">解释弗·斯科特·菲茨杰拉德？ “检验一流智力的标准是能否在头脑中同时持有两种相反的想法，并且仍然保留运作的能力。”<p>持有矛盾的想法并不是值得称赞的技能。任何不加批判的人都可以相信相互矛盾的事情而不被它们困扰。天才对这些想法抱有怀疑的态度，足够长的时间让证据改变或驱逐它们。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Paraphrasing F. Scott Fitzgerald? "The test of a first-rate intelligence is the ability to hold two opposed ideas in the mind at the same time, and still retain the ability to function."<p>Holding contradictory ideas isn't the laudable skill. Any uncritical person can believe conflicting things without being troubled by them. The genius is holding such ideas in disbelief long enough to let evidence alter or evict them.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Barbing</span>
+        <span class="meta-time">2026/04/12 11:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，确实如此，尽管他们很聪明（严厉的爱？），就像我刚才那样抱怨他们</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, indeed, complaining about them even though they're brilliant (tough love?) as I just did</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735807" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tomhow</span>
+        <span class="meta-time">2026/04/12 08:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请避免这种将整个社区描述为对任何特定公司或技术“仇恨”或“热爱”的嘲笑。<p>HN 是一个多元化的全球社区，其对大多数主题的看法均呈正态分布，这里的大多数人能够形成细致入微的意见，考虑所有这些主题的积极和消极因素。这种“非常有趣”的滑动依赖于一种漫画，如果你专注于任何讨论中最响亮的声音，那么很容易描绘出这种漫画，但如果你努力深入阅读讨论，那么这种漫画就会消失。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please avoid these kinds of sneers that characterize the whole community as being united in “hate” or “love” for any particular company or technology.<p>HN is a diverse global community and its views about most topics form a normal distribution, and most people here are able to form nuanced opinions that consider the positives and negatives in all these topics. This kind of “very funny” swipe relies on a caricature that's easy to portray if you focus on the loudest voices on one side of any discussion but falls away if you make the effort to read the discussions in depth.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47735099" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hparadiz</span>
+        <span class="meta-time">2026/04/12 07:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">什么爱？我认为这是胡说八道。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What love? I think this is bullshit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734779" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pcdoodle</span>
+        <span class="meta-time">2026/04/12 07:27</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734860" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">edude03</span>
+        <span class="meta-time">2026/04/12 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">IIRC 你可以关闭 sip 并设置控制它的启动参数，而无需自定义内核</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">IIRC you can just turn off sip and set the boot argument that controls it without a custom kernel</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734700" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/12 05:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47734186" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
