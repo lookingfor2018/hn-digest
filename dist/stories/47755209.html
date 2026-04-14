@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>B 树和数据库索引 (2024) | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-14-1402/">返回本批次</a>
+      <h1>B 树和数据库索引 (2024)</h1>
+      <p class="subtitle">B-trees and database indexes (2024)</p>
+      <div class="meta-line">
+        <span>planetscale.com</span>
+        <span>作者 tosh</span>
+        <span>分数 97</span>
+        <span>评论 40</span>
+        <span>2026/04/14 01:22</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47755209" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://planetscale.com/blog/btrees-and-database-indexes" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>本·迪肯 [@BenjDicken] |九月 9, 2024什么是 B 树？B 树在许多软件中发挥着基础作用，尤其是数据库管理系统 (DBMS)。 MySQL、Postgres、MongoDB、Dynamo 和许多其他数据库都依赖 B 树通过索引执行高效的数据查找。当您读完本文时，您将了解 B 树和 B+树的工作原理、为什么数据库将它们用于索引，以及为什么使用 UUID 作为主键可能不是一个好主意。您还将有机会体验我们讨论的数据结构的交互式动画。准备好单击按钮。计算机科学有大量数据结构可供选择，用于在计算机上存储、搜索和管理数据。 B 树就是这样一种结构，通常用于数据库应用程序中。 B 树存储称为键和值的数据对，计算机程序员将其称为树状结构。对于那些不熟悉计算机科学家如何使用“树”一词的人来说，它实际上看起来更像是根系统。下面您将找到本博客的第一个交互式组件。这使您可以可视化 B 树的结构，并了解添加键/值对并更改每个节点的键/值对数量时会发生什么。在我们继续详细介绍之前，请通过单击几次“添加”或“添加随机”按钮来尝试一下，并尝试直观地了解它的工作原理。如果上面的动画太快或太慢，您可以调整本文中 B 树发生的所有动画速度。如下调整：每个B树都由节点（矩形）和子指针（连接节点的线）组成。我们将最顶层的节点称为根节点，将底层节点称为叶节点，将其他所有节点称为内部节点。 B 树的正式定义可能因您询问的人而异，但以下是一个非常典型的定义。K 阶 B 树是一种具有以下属性的树结构：树中的每个节点存储 N 个键/值对，其中 N 大于 1 且小于或等于 K。每个内部节点至少有 N/2 个键/值对（内部节点是既不是叶也不是根的节点）。每个节点有 N+1 个子节点。根节点至少有一个值和两个子节点，除非它是唯一的节点。所有叶子都位于同一级别。B 树的另一个关键特征是排序。每个节点内的元素都保持有序。键左侧的任何子级只能包含小于该键的其他键。右边的孩子必须拥有比它更大的键。这种强制排序意味着您可以非常有效地搜索键。从根节点开始，执行以下操作：检查该节点是否包含您要查找的键。如果没有，则在节点中查找要插入键的位置（如果您要添加它）。沿着该位置的子指针向下到下一级，并重复该过程。以这种方式搜索时，您只需访问树的每一层的一个节点即可搜索一个键。因此，级别越少（或者越浅），搜索速度就越快。尝试在下面的树中搜索一些键：当您拥有大量数据并且还需要持久存储（磁盘）时，B 树特别适合工作良好。这是因为每个节点使用固定数量的字节。可以定制字节数以与磁盘块很好地配合。在硬盘驱动器磁盘 (HDD) 和固态磁盘 (SSD) 上读取和写入数据是以称为块的单位完成的。这些通常是长度为 4096、8192 或 16384（4k、8k、16k）的字节序列。单个磁盘将具有数百万或数十亿个块的容量。另一方面，RAM 通常是按字节级别寻址的。这就是为什么当我们需要在磁盘上组织和存储持久数据时，B 树工作得如此出色。 B 树的每个节点的大小都可以调整为与磁盘块的大小（或该大小的倍数）相匹配。树的每个节点可以存储的值的数量基于每个节点分配的字节数以及每个键/值对消耗的字节数。在上面的示例中，您看到了一些非常小的节点 - 存储 3 个整数值和 4 个指针的节点。如果我们的磁盘块和 B 树节点是 16k，并且我们的键、值和子指针都是 8 位，这意味着我们可以存储 682 个键/值，每个节点有 683 个子指针。三级树可以存储超过 3 亿个键/值对 (682 × 682 × 682 = 317,214,568)。 B+TreeB 树很棒，但许多数据库索引使用称为 B+树的“更高级”变体。它与B树类似，规则有以下变化：键/值对仅存储在叶子节点。非叶子节点仅存储键和关联的子指针。还有两个附加规则特定于B+树在MySQL索引中的实现方式：非叶子节点存储N个子指针而不是N+1。所有节点还包含“下一个”和“上一个”指针，允许树的每个级别也充当双向链接列表。这是另一个可视化显示 B+ 树如何使用这些修改后的特征。这次除了添加键/值对之外，您还可以单独调整内部节点和叶节点中的键数量。为什么B+树更适合数据库？有两个主要原因。由于内部节点不必存储值，因此我们可以为每个内部节点容纳更多键！这可以帮助保持树更浅。所有值都可以存储在同一级别，并通过底层链表按顺序遍历。继续尝试在 B+ 树上搜索：MySQL 中的 B+ 树MySQL 可以说是世界上最流行的数据库管理系统，支持多种存储引擎。最常用的引擎是InnoDB，它严重依赖B+树。事实上，它非常依赖它们，以至于它实际上将所有表数据存储在 B+tree 中，并使用表的主键作为树键。每当创建新的 InnoDB 表时，都需要指定主键。数据库管理员和软件工程师经常使用简单的自动递增整数来表示该值。在幕后，MySQL + InnoDB 为创建的每个新表创建一个 B+树。该树的键是主键设置的值。这些值是每行的剩余列值，并且仅存储在叶节点中。这些B+树中每个节点的大小默认设置为16k。每当 MySQL 需要访问一段数据（键、值等）时，它就会从磁盘加载整个关联页面（B+树节点），即使该页面包含它不需要的其他键或值。每个节点中存储的行数取决于表的“宽度”。在“窄”表（列数很少的表）中，每个叶子可以存储数百行。在“宽”表（具有许多列的表）中，每个叶只能存储个位数的行。 InnoDB 还支持大于磁盘块的行，但我们不会在本文中深入探讨这一点。使用下面的可视化来查看每个内部节点和每个叶节点中的键数量如何影响树的深度。树越深，查找元素的速度越慢。因此，我们希望数据库使用浅树！在 InnoDB 表上创建二级索引（在主键以外的列上创建二级索引）也很常见。这些可能需要加速 SQL 查询中的 WHERE 子句过滤。为每个二级索引构建一个额外的持久B+树。对于这些，键是用户选择要为其构建索引的列。这些值是关联行的主键。每当使用辅助索引进行查询时：在辅助索引 B+tree 上执行搜索。收集匹配结果的主键。然后使用这些主键在主表 B+tree 上执行额外的 B+tree 查找，然后找到实际的行数据。考虑以下数据库模式：CREATE TABLE user ( user_id BIGINT UNSIGNED AUTO_INCRMENT NOT NULL, username VARCHAR(256) NOT NULL, email VARCHAR(256)非空，主键（user_id））；在用户（电子邮件）上创建索引 email_index；这将导致创建两个 B+tree 索引：一个用于表的主键，使用 user_id 作为键，另外两列存储在值中。另一个用于 email_index，以 email 作为键，user_id 作为值。当执行这样的查询时：SELECT username FROM user WHERE email = &#39;x@planetscale.com&#39;;这将首先在 email_index B+tree 上查找 x@planetscale.com。找到关联的 user_id 值后，它将使用该值对主键 B+树执行另一次查找，并从那里获取用户名。总的来说，我们希望始终最大限度地减少完成查询所需访问的块/节点的数量。我们必须访问的节点越少，查询的速度就越快。您为表选择的主键对于最大限度地减少我们需要访问的节点数至关重要。插入表的数据在 B+ 树中的排列方式取决于您选择的键。这意味着您对主键的选择将影响表中所有数据在磁盘上的布局，进而影响性能。明智地选择你的主键！主键的两种常见选择是：整数序列（例如BIGINT UNSIGNED AUTO_INCRMENT）UUID，其中有很多版本。我们首先考虑使用UUIDv4主键的后果。 UUIDv4 是一个大部分随机的 128 位整数。我们可以通过将一堆随机整数插入到 B+ 树可视化中来模拟这一点。每次插入时，所有访问过的节点都将突出显示为绿色。您还可以控制发生拆分时保留在现有节点中的键的百分比。多次单击“添加随机”按钮来尝试一下。您注意到什么？一些观察结果：插入所访问的节点是提前不可预测的。插入的目标叶节点是不可预测的。中的值叶子不按顺序排列。问题 1 和 2 是有问题的，因为在多次插入的过程中，我们必须访问树中的许多节点（页面）。这种过度的读写会导致性能不佳。如果我们打算按照插入的顺序搜索或查看数据，则问题 3 是有问题的。其他一些 UUID 也会出现同样的问题（尽管不是那么极端）。例如，UUID v3 和 v5 都是通过哈希生成的，因此不会是顺序的，并且具有与随机插入类似的行为。另外，UUIDv7 实际上在克服其中一些挑战方面做得很好。让我们考虑使用顺序 BIGINT UNSIGNED AUTO_INCRMENT 作为我们的主键。尝试将顺序值插入到 B+ 树中：这可以缓解上述所有问题：插入新值时我们总是遵循最右边的路径。叶子只会添加到树的右侧。在叶子级别，数据根据插入时间排序。由于 1 和 2，按顺序发生的许多插入将重新访问页面的相同路径，导致插入大量键/值对时 I/O 请求减少。下面的条形图显示了数量上面两棵 B+ 树上前 5 次插入访问的唯一节点数。假设树的深度相同，您应该看到随机树稍高，这意味着性能较差。如果您对分割百分比对顺序插入模式与随机插入模式的影响感到好奇，请查看下面的交互式可视化。使用滑块设置分割百分比。折线图将更新以显示 400 个键插入序列中的各个点上的前 5 个节点需要访问多少个节点。请注意，在大多数情况下，顺序插入比随机插入需要更少的节点访问，并且也更可预测。数据顺序按时间顺序从数据库中搜索数据是很常见的。考虑查看 X 上的时间线或 Slack 中的聊天历史记录。我们通常希望按时间（或逆时）顺序查看帖子和聊天消息。这意味着我们经常会读取时间上彼此“接近”的数据库块。这些查询采用以下形式：SELECT username, message_text, ... FROM post WHERE sent &gt; $START_DATETIME AND sent &lt; $END_DATETIME ORDER BY sent DESC;考虑一下如果我们的主键有 UUIDv4，会是什么样子。在下面的B+树中，一堆随机键和相应的值已被插入到表中。尝试寻找值的范围。您看到了什么？请注意，值序列分布在许多非顺序叶节点上。另一方面，请考虑查找按顺序插入的值。在这种情况下，包含搜索结果的所有页面将彼此相邻。甚至可以搜索多行，并且所有行都将在一个页面中彼此相邻。对于这种各种查询模式，我们可以使用顺序主键来减少需要读取的页面数量。主键大小另一个重要的考虑因素是键大小。我们总是希望我们的主键是： 足够大，永远不会耗尽 足够小，不使用过多的存储 对于整数序列，我们有时可以为较小的表使用 MEDIUMINT（1600 万个唯一值）或 INT（40 亿个唯一值）。对于大表，为了安全起见，我们经常跳转到 BIGINT（18 个可能的值）。 BIGINT 是 64 位（8 字节）。 UUID 通常为 128 位（16 字节），是 MySQL 中最大整数类型大小的两倍。由于 B+tree 节点的大小是固定的，因此 BIGINT 将允许我们在每个节点上容纳比 UUID 更多的键。这会导致树更浅，查找速度更快。考虑这样一种情况，每个树节点只有 100 字节，子指针为 8 字节，值也为 8 字节。我们可以在每个节点中容纳 4 个 UUID（加上 4 个子指针）。点击下面的播放插入序列按钮即可查看插入内容。如果我们使用 BIGINT，则可以在每个节点中放置 6 个键（以及相应的子指针）。这将导致树更浅，性能更好。 Pages 和 InnoDB 回想一下，B+树的一大好处是我们可以将节点大小设置为我们想要的任何大小。在InnoDB中，B+树节点通常设置为16k，即InnoDB页面的大小。当执行查询（并因此遍历B+树）时，InnoDB不会从磁盘读取单独的行和列。每当它需要访问一段数据时，它就会从磁盘加载整个关联页面。InnoDB 有一些技巧来缓解这种情况，其中主要的就是缓冲池。缓冲池是 InnoDB 页面的内存缓存，位于磁盘页面和 MySQL 查询执行之间。当MySQL需要读取一个页面时，它首先检查它是否已经在缓冲池中。如果是，则从那里读取数据，跳过磁盘 I/O 操作。如果没有，它会在磁盘上查找该页，将其添加到缓冲池中，然后继续查询执行。缓冲池极大地提高了查询性能。如果没有它，我们最终会执行更多的磁盘 I/O 操作来处理查询工作负载。即使使用缓冲池，最大限度地减少需要访问的页面数量也有助于提高性能（1），因为在缓冲池中查找页面仍然有（小的）成本，（2）它有助于减少需要发生的缓冲池加载和逐出的数量。其他情况在这里，我们主要关注将顺序键与随机/UUID键进行比较。但是，无论您考虑使用哪种主键或辅助键，请记住此处显示的原则都是有用的。例如，您还可以考虑使用 user.created_at 时间戳作为索引的键。这将具有与顺序整数类似的属性。插入通常总是会转到最右边的路径，除非插入旧数据。相反，像 user.email_address 字符串这样的东西将具有与随机键更相似的特征。用户不会按照电子邮件字母顺序创建帐户，因此插入将发生在 B+tree 中的各处。 结论这已经是一篇很长的博客文章，但是，关于 MySQL 中的 B+tree、索引和主键选择还有很多内容可以说。从表面上看，这似乎很简单，但如果您想充分利用数据库的性能，则需要考虑大量的细微差别。如果您想进一步实验，可以访问专门的交互式 B+tree 网站。如果您想要常规的 B 树，请转到此处。我希望您对索引有所了解！特别感谢 Sam Rose 的早期审查。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Ben Dicken [@BenjDicken] | September 9, 2024What is a B-tree?The B-tree plays a foundational role in many pieces of software, especially database management systems (DBMS). MySQL, Postgres, MongoDB, Dynamo, and many others rely on B-trees to perform efficient data lookups via indexes. By the time you finish this article, you&#39;ll have learned how B-trees and B+trees work, why databases use them for indexes, and why using a UUID as your primary key might be a bad idea. You&#39;ll also have the opportunity to play with interactive animations of the data structures we discuss. Get ready to click buttons.Computer science has a plethora of data structures to choose from for storing, searching, and managing data on a computer. The B-tree is one such structure, and is commonly used in database applications. B-trees store pairs of data known as keys and values in what computer programmers call a tree-like structure. For those not acquainted with how computer scientists use the term &quot;tree&quot; it actually looks more like a root system.Below you&#39;ll find the first interactive component of this blog. This allows you to visualize the structure of a B-tree and see what happens as you add key/value pairs and change the number of key/value pairs per node. Give it a try by clicking the Add or Add random button a few times and try to get an intuitive sense of how it works before we move on to the details.If the animations above are too fast or slow, you can adjust the animation speed of everything that happens with the B-trees in this article. Adjust below:Every B-tree is made up of nodes (the rectangles) and child pointers (the lines connecting the nodes). We call the top-most node the root node, the nodes on the bottom level leaf nodes, and everything else internal nodes. The formal definition of a B-tree can vary depending on who you ask, but the following is a pretty typical definition.A B-tree of order K is a tree structure with the following properties:Each node in the tree stores N key/value pairs, where N is greater than 1 and less than or equal to K.Each internal node has at least N/2 key/value pairs (an internal node is one that is not a leaf or the root).Each node has N+1 children.The root node has at least one value and two children, unless it is the sole node.All leaves are on the same level.The other key characteristic of a B-tree is ordering. Within each node the elements are kept in order. Any child to the left of a key must only contain other keys that are less than it. Children to the right must have keys that are greater than it.This enforced ordering means you can search for a key very efficiently. Starting at the root node, do the following:Check if the node contains the key you are looking for.If not, find the location in the node where your key would get inserted into, if you were adding it.Follow the child pointer at this spot down to the next level, and repeat the process.When searching in this way, you only need to visit one node at each level of the tree to search for one key. Therefore, the fewer levels it has (or the shallower it is), the faster searching can be performed. Try searching for some keys in the tree below:B-trees are uniquely suited to work well when you have a very large quantity of data that also needs to be persisted to long-term storage (disk). This is because each node uses a fixed number of bytes. The number of bytes can be tailored to play nicely with disk blocks.Reading and writing data on hard-drive disks (HDDs) and solid-state disks (SSDs) is done in units called blocks. These are typically byte sequences of length 4096, 8192, or 16384 (4k, 8k, 16k). A single disk will have a capacity of many millions or billions of blocks. RAM on the other hand is typically addressable on a per-byte level.This is why B-trees work so well when we need to organize and store persistent data on disk. Each node of a B-tree can be sized to match the size of a disk block (or a multiple of this size).The number of values each node of the tree can store is based on the number of bytes each is allocated and the number of bytes consumed by each key / value pair. In the example above, you saw some pretty small nodes — ones storing 3 integer values and 4 pointers. If our disk block and B-tree node is 16k, and our keys, values, and child pointers are all 8 bits, this means we could store 682 key/values with 683 child pointers per node. A three level tree could store over 300 million key/value pairs (682 × 682 × 682 = 317,214,568).The B+TreeB-trees are great, but many database indexes use a &quot;fancier&quot; variant called the B+tree. It&#39;s similar to a B-tree, with the following changes to the rules:Key/value pairs are stored only at the leaf nodes.Non-leaf nodes store only keys and the associated child pointers.There are two additional rules that are specific to how B+trees are implemented in MySQL indexes:Non-leaf nodes store N child pointers instead of N+1.All nodes also contain &quot;next&quot; and &quot;previous&quot; pointers, allowing each level of the tree to also act as a doubly-linked list.Here&#39;s another visualization showing how the B+tree works with these modified characteristics. This time you can individually adjust the number of keys in inner nodes and in the leaf nodes, in addition to adding key/value pairs.Why are B+trees better for databases? There are two primary reasons.Since inner nodes do not have to store values, we can fit more keys per inner node! This can help keep the tree shallower.All of the values can be stored at the same level, and traversed in-order via the bottom-level linked list.Go ahead and give searching on a B+tree a try as well:B+trees in MySQLMySQL, arguably the world&#39;s most popular database management system, supports multiple storage engines. The most commonly used engine is InnoDB which relies heavily on B+trees. In fact, it relies so heavily on them that it actually stores all table data in a B+tree, with the table&#39;s primary key used as the tree key.Whenever you create a new InnoDB table you are required to specify a primary key. Database administrators and software engineers often use a simple auto-incrementing integer for this value. Behind the scenes, MySQL + InnoDB creates a B+tree for each new table created. The keys for this tree are whatever the primary key was set to. The values are the remaining column values for each row, and are stored only in the leaf nodes.The size of each node in these B+trees is set to 16k by default. Whenever MySQL needs to access a piece of data (keys, values, whatever), it loads the entire associated page (B+tree node) from disk, even if that page contains other keys or values it does not need.The number of rows stored in each node depends on how &quot;wide&quot; the table is. In a &quot;narrow&quot; table (a table with few columns), each leaf could store hundreds of rows. In a &quot;wide&quot; table (a table with many columns), each leaf may only store a single-digit number of rows. InnoDB also supports rows being larger than a disk block, but we won&#39;t dig into that in this post.Use the visualization below to see how the number of keys in each inner node and in each leaf node affect the depth of the tree. The deeper the tree, the slower it is to look up elements. Thus, we want shallow trees for our databases!It&#39;s also common to create secondary indexes on InnoDB tables — ones on columns other than the primary key. These may be needed to speed up WHERE clause filtering in SQL queries. An additional persistent B+tree is constructed for each secondary index. For these, the key is the column(s) that the user selected the index to be built for. The values are the primary key of the associated row. Whenever a secondary index is used for a query:A search is performed on the secondary index B+tree.The primary keys for matching results are collected.These are then used to do additional B+tree lookup(s) on the main table B+tree to then find the actual row data.Consider the following database schema:CREATE TABLE user ( user_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, username VARCHAR(256) NOT NULL, email VARCHAR(256) NOT NULL, PRIMARY KEY (user_id) ); CREATE INDEX email_index ON user(email); This will cause two B+tree indexes to be created:One for the table&#39;s primary key, using user_id for the key and the other two columns stored in the values.Another for the email_index, with email as the key and user_id as the value.When a query like this is executed:SELECT username FROM user WHERE email = &#39;x@planetscale.com&#39;; This will first perform a lookup for x@planetscale.com on the email_index B+tree. After it has found the associated user_id value it will use that to perform another lookup into the primary key B+tree, and fetch the username from there.Overall, we&#39;d like to always minimize the number of blocks / nodes that need to be visited to fulfill a query. The fewer nodes we have to visit, the faster our query can go. The primary key you choose for a table is pivotal in minimizing the number of nodes we need to visit.InsertionsThe way your table&#39;s data is arranged in a B+tree depends on the key you choose. This means your choice of PRIMARY KEY will impact the layout on disk of all of the data in the table, and in turn performance. Choose your PRIMARY KEY wisely!Two common choices for a primary key are:An integer sequence (such as BIGINT UNSIGNED AUTO_INCREMENT)A UUID, of which there are many versions.Let&#39;s first consider the consequences of using a UUIDv4 primary key. A UUIDv4 is a mostly-random 128 bit integer.We can simulate this by inserting a bunch of random integers into our B+tree visualization. On each insertion, all of the visited nodes will be highlighted green. You can also control the percentage of keys to keep in the existing node when a split occurs. Give it a try by clicking the Add random button several times. What do you notice?A few observations:The nodes visited for an insert are unpredictable ahead of time.The destination leaf node for an insert is unpredictable.The values in the leaves are not in order.Issues 1 and 2 are problematic because over the course of many insertions we&#39;ll have to visit many of the nodes (pages) in the tree. This excessive reading and writing leads to poor performance. Issue 3 is problematic if we intend to ever search for or view our data in the order it was inserted.The same problem can arise (albeit in a less extreme way) with some other UUIDs as well. For example, UUID v3 and v5 are both generated via hashing, and therefore will not be sequential and have similar behavior to inserting randomly. Alternatively, UUIDv7 actually does a good job of overcoming some of these challenges.Let&#39;s consider using a sequential BIGINT UNSIGNED AUTO_INCREMENT as our primary key instead. Try inserting sequential values into the B+tree instead:This mitigates all of the aforementioned problems:We always follow the right-most path when inserting new values.Leaves only get added on the right side of the tree.At the leaf level, data is in sorted order based on when it was inserted.Because of 1 and 2, many insertions happening in sequence will revisit the same path of pages, leading to fewer I/O requests when inserting a lot of key/value pairs.The bar chart below shows the number of unique nodes visited for the previous 5 inserts on the two B+trees above. Assuming trees of the same depth, you should see random one being slightly higher, meaning worse performance.If you are curious about the effect of the split percentage on sequential vs random insert patterns, check out the interactive visualization below. Use the slider to set the split percentage. The line graph will update to show how many nodes needed to be visited for the prior 5 at various points in a 400-key insertion sequence. Notice that in most cases, the sequential inserts require much fewer node visits than random inserts, and are also more predictable.Data orderIt&#39;s common to search for data from a database in time-sequenced order. Consider viewing the timeline on X, or a chat history in Slack. We typically want to see the posts and chat messages in time (or reverse-time) sequences. This means we&#39;ll often read chunks of database that are &quot;near&quot; each other in time. These queries take the form:SELECT username, message_text, ... FROM post WHERE sent &gt; $START_DATETIME AND sent &lt; $END_DATETIME ORDER BY sent DESC; Consider what this would be like if we have UUIDv4s for our primary key. In the B+tree below, a bunch of random keys and corresponding values have been inserted into the table. Try finding ranges of values. What do you see?Notice that the value sequences are spread out across many non-sequential leaf nodes. On the other hand, consider finding sequentially inserted values instead.In such cases, all pages with the search results will be next to each other. It&#39;s even possible to search for several rows, and all of them will be next to each other in a single page. For this variety of query pattern, we can mitigate the number of pages that need to be read using a sequential primary key.Primary key sizeAnother important consideration is key size. We always want our primary keys to be:Big enough to never face exhaustionSmall enough to not use excessive storageFor integer sequences, we can sometimes get away with a MEDIUMINT (16 million unique values) or INT (4 billion unique values) for smaller tables. For big tables, we often jump to BIGINT to be safe (18 sextillion possible values). BIGINTs are 64 bits (8 bytes). UUIDs are typically 128 bits (16 bytes), twice the size of even the largest integer type in MySQL. Since B+tree nodes are a fixed size, a BIGINT will allow us to fit more keys per-node than UUIDs. This results in shallower trees and faster lookups.Consider a case where each tree node is only 100 bytes, child pointers are 8 bytes, and values are 8 bytes. We could fit 4 UUIDs (plus 4 child pointers) in each node. Hit the play insertion sequence button below to see the inserts.If we had used a BIGINT instead, we could fit 6 keys (and corresponding child pointers) in each node instead. This would lead to a shallower tree, better for performance.Pages and InnoDBRecall that one of the big benefits of a B+tree is the fact that we can set the node size to whatever we want. In InnoDB, the B+tree nodes are typically set to 16k, the size of an InnoDB page.When fulfilling a query (and therefore traversing B+trees), InnoDB does not read individual rows and columns from disk. Whenever it needs to access a piece of data, it loads the entire associated page from disk.InnoDB has some tricks up its sleeve to mitigate this, the main one being the buffer pool. The buffer pool is an in-memory cache for InnoDB pages, sitting between the pages on-disk and MySQL query execution. When MySQL needs to read a page, it first checks if it&#39;s already in the buffer pool. If so, it reads it from there, skipping the disk I/O operation. If not, it finds the page on-disk, adds it to the buffer pool, and then continues query execution.The buffer pool drastically helps query performance. Without it, we&#39;d end up doing significantly more disk I/O operations to handle a query workload. Even with the buffer pool, minimizing the number of pages that need to be visited helps performance (1) because there&#39;s still a (small) cost to looking up a page in the buffer pool, and (2) it helps reduce the number of buffer pool loads and evictions that need to take place.Other situationsHere, we mostly focused on comparing a sequential key to a random / UUID key. However, the principles shown here are useful to keep in mind no matter what kind of primary or secondary key you are considering.For example, you may also consider using a user.created_at timestamp as a key for an index. This will have similar properties to a sequential integer. Insertions will generally always go to the right-most path, unless legacy data is being inserted.Conversely, something like a user.email_address string will have more similar characteristics to a random key. Users won&#39;t be creating accounts in email-alphabetical order, so insertions will happen all over the place in the B+tree.ConclusionThis is already a long blog post, and yet, much more could be said about B+trees, indexes, and primary key choice in MySQL. On the surface it may seem simple, but there&#39;s an incredible amount of nuance to consider if you want to squeeze every ounce of performance out of your database. If you&#39;d like to experiment further, you can visit the dedicated interactive B+tree website. If you want a regular B-tree, go here instead. I hope you learned a thing or two about indexes!Special thanks to Sam Rose for early review.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 03:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦嘿嘿，这是我写的！很高兴在这里讨论更多关于这篇文章的内容。数据库是我的事。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh hey, I wrote this! Happy to chat more about the article here. Databases are kinda my thing.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756976" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">amarant</span>
+        <span class="meta-time">2026/04/14 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您写这篇文章！与纯文本相比，可视化确实可以更好地理解，而且很明显，您比我更了解数据库的底层功能。<p>因此，我有一个问题要问你：与你的文章相反，我一直被教导随机主键比顺序主键更好。有人告诉我，这样做的原因是为了避免“热点”。我想它只有在分片发挥作用时才真正适用，也许也只有当您的主键是分片键时才适用，但我认为这是一个非常常见的设置。</p><p>我不太确定如何在这里提出一个具体问题，我想我想听听您对分片设置中顺序密钥与随机密钥的任何权衡的想法？是否有随机密钥有效的情况，或者我被教导是胡说八道？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for writing this! The visualisations really drive a better understanding than pure text does, and it's quite clear that you have a better understanding of what database do under the hood than I do.<p>As such, I have a question for you: contrary to your article, I've always been taught that random primary keys are better than sequential ones. The reason for this, I was told, was to avoid "hotspots". I guess it only really applies once sharding comes into play, and perhaps also only if your primary key is your sharding key, but I think that's a pretty common setup.</p><p>I'm not really sure how to formulate a concrete question here, I guess I would like to hear your thoughts on any tradeoffs on sequential Vs random keys in sharded setups? Is there a case there random keys are valid, or have I been taught nonsense?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 05:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">B+树与顺序 ID 相结合非常适合写入。这是因为我们本质上只是将新行附加到树底层的“链接列表”中。如果我们知道没有大量数据流失，我们还可以保持较高的填充率。<p>如果您纯粹基于顺序 ID 范围进行分片，那么这是一个问题。更好的做法是基于 <i>散列</i> 您的 ID，因此顺序 ID 分配会变成非顺序分片键，从而保持均匀分布。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">B+trees combined with sequential IDs are great for writes. This is because we are essentially just appending new rows to the "linked list" at the bottom level of the tree. We can also keep a high fill % if we know there isn't a lot of data churn.<p>If you're sharding based purely on sequential ID ranges, then yes this is a problem. Its better practice to shard based on a <i>hash</i> of your ID, so sequential id assignments turn into non-sequential shard keys, keeping things evenly distributed.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757860" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">amarant</span>
+        <span class="meta-time">2026/04/14 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇哦，这是一个超级简单的解决方案，我可以立即看到这如何让您两全其美！<p>由于它仅用于快速查找，我们甚至可以使用快速、廉价且非安全的哈希算法，因此这确实是一种低成本操作！</p><p>谢谢！这真的是一个顿悟的时刻，我觉得自己没有想到这一点真是太愚蠢了！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh wow, that's a super simple solution, and I can immediately see how this gets you the best of both worlds!<p>And since it's only used for speedy lookup we can even use a fast, cheap and non-secure hashing algorithm, so it's really a low-cost operation!</p><p>Thanks! This was really one of those aha-moments where I feel kinda stupid to not have thought of it myself!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757945" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我还写过有关分片的文章。<p><a href="https://planetscale.com/blog/database-sharding" target="_blank" rel="noopener noreferrer">https://planetscale.com/blog/database-sharding</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've also written about sharding.<p><a href="https://planetscale.com/blog/database-sharding" target="_blank" rel="noopener noreferrer">https://planetscale.com/blog/database-sharding</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757971" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">amarant</span>
+        <span class="meta-time">2026/04/14 05:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢！又一篇很棒的文章！让我印象深刻的是，对顺序 id 进行模分片可能会效果很好，但本文并未提及。我有什么理由没有看到这很糟糕吗？我想重新分片可能会有问题，因为如果你这样做，你不能轻易地将一个分片分成两部分而不重写每个分片......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks! Another great article! It strikes me that modulo sharding on a sequential id would probably work rather well, but it was not mentioned in this article. Is there a reason I'm not seeing that this is bad? I guess resharding might be problematic, as you can't easily split a shard in two without rewriting every shard if you do that...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">evil-olive</span>
+        <span class="meta-time">2026/04/14 09:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我猜重新分片可能会有问题<p>是的，这就是问题的关键。当您拥有分片数据库时，通常您希望能够轻松且无中断地添加（和/或删除）分片。</p><p>例如 - 您的数据库当前跨 N 个节点进行分片，并且由于流量增加而过载，因此您希望将其增加到 N+1 个节点（或 N+M 个节点，这在某些情况下会增加复杂性）</p><p>如果添加分片导致数据库负载显着增加，那么对于生产工作负载来说这通常是不可能的，因为在您想要这样做时， <i>数据库已经超载</i></p><p>您可以在大约 20 年前的原始 Dynamo 论文 [0] 中了解这一点 - 使用一致性哈希来选择 N 个节点中的 3 个来托管给定密钥。当添加节点 N+1 时，它加入集群的方式将“接管”托管 N 个节点中每个节点的 1/N 数据 - 这意味着 a) 加入过程对这 N 个节点中的每个节点施加相对较小的负载，b) 一旦节点完全加入，它就会均匀地减少所有 N 个节点的总体负载。</p><p>0: <a href="https://www.allthingsdistributed.com/2007/10/amazons_dynamo.html" target="_blank" rel="noopener noreferrer">https://www.allthingsdistributed.com/2007/10/amazons_dynamo....</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I guess resharding might be problematic<p>yes, that's the crux of the problem. when you have a sharded database, typically you want to be able to add (and/or remove) shards easily and non-disruptively.</p><p>for example - your database is currently sharded across N nodes, and it's overloaded due to increased traffic, so you want to increase it to N+1 nodes (or N+M nodes, which can add complexity in some cases)</p><p>if adding a shard causes a significant increase in load on the database, that's usually a non-starter for a production workload, because at the time you want to do it, <i>the database is already overloaded</i></p><p>you can read about this in the original Dynamo paper [0] from almost 20 years ago - consistent hashing is used to select 3 of the N nodes to host a given key. when node N+1 is added, it joins the cluster in such a way that it will "take over" hosting 1/Nth of the data, from each of the N nodes - meaning that a) the joining process places a relatively small load on each of those N nodes and b) once the node is fully joined, it reduces overall load evenly across all N nodes.</p><p>0: <a href="https://www.allthingsdistributed.com/2007/10/amazons_dynamo.html" target="_blank" rel="noopener noreferrer">https://www.allthingsdistributed.com/2007/10/amazons_dynamo....</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760353" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/04/14 06:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于我们的数据库（通常是未分片的），我们发现使用用户帐户 ID 作为集群键的第一部分，然后使用记录的顺序 ID 作为第二部分，可以获得最佳性能。<p>在减少碎片和数据移动方面，它不如顺序 ID 那么好。  然而，它最终确实会为我们带来最佳的写入性能，因为用户数据最终可能仍会附加到空页。  它允许对同一个表进行更多并发写入，因为它们并不都争夺该结束页。</p><p>UUIDv4 太疯狂了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For our DBs (which are often unsharded), we've found the best performance using the user account ID as the first part of the cluster key and then a sequential id for whatever the record is as the second.<p>It's not as good as just a sequential ID at keeping the fragmentation and data movement down.  However, it does ultimately lead to the best write performance for us because the user data ends up likely still appending to an empty page.  It allows for more concurrent writes to the same table because they aren't all fighting over that end page.</p><p>UUIDv4 is madness.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758667" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">traderj0e</span>
+        <span class="meta-time">2026/04/14 05:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Spanner 特别需要随机主键。但有些分片 DBMS 仍然使用顺序 PK，例如 Citus。还有一些半顺序 PK 的用例，例如 uuid7。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Spanner in particular wants random primary keys. But there are sharded DBMSes that still use sequential PKs, like Citus. There are also some use cases for semi-sequential PKs like uuid7.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758052" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 06:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与顺序 ID 相比，spanner 特别受益于随机 id 呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What about spanner specifically benefits from random ids over sequential ones?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mamcx</span>
+        <span class="meta-time">2026/04/14 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得这篇文章是我研究的时候写的 <a href="https://spacetimedb.com/" target="_blank" rel="noopener noreferrer">https://spacetimedb.com/</a>。顺便说一句，交互性非常酷！<p>一个巧妙的认识是，数据库实际上更多地是关于索引而不是实际的原始表（在这个假设下所有有趣的事情都工作），以至于实现引擎时你会得到这样的印象：一切都以“CREATE INDEX”而不是“CREATE TABLE”开始。这 <i>包括</i> 顺序扫描，如您的文章中所示，顺序扫描数据实际上是索引的一种形式。</p><p>现在，我有一个梦想，就是让一款引擎更加融入这个愿景……</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I remember this article for when I was researching for <a href="https://spacetimedb.com/" target="_blank" rel="noopener noreferrer">https://spacetimedb.com/</a>. The interactivity is very cool, BTW!<p>One neat realization is that a database is in fact more about indexes than the actual raw tables (all things interesting work under this assumption), to the point that implementing the engine you get the impression that everything start with "CREATE INDEX" than "CREATE TABLE". This <i>includes</i> sequential scans, where as visualized in your article show that lay the data sequentially is in fact a form of index.</p><p>Now, I have the dream of make a engine more into this vision...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757626" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">game_the0ry</span>
+        <span class="meta-time">2026/04/14 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这之前已经发布过，但是 Planetscale 也有一个很棒的针对开发人员的 sql 课程：<p><a href="https://planetscale.com/learn/courses/mysql-for-developers" target="_blank" rel="noopener noreferrer">https://planetscale.com/learn/courses/mysql-for-developers</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This has been post before, but planetscale also has a great sql for developers course:<p><a href="https://planetscale.com/learn/courses/mysql-for-developers" target="_blank" rel="noopener noreferrer">https://planetscale.com/learn/courses/mysql-for-developers</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kuharich</span>
+        <span class="meta-time">2026/04/14 11:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">过去的评论： <a href="https://news.ycombinator.com/item?id=41489832" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=41489832</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Past comments: <a href="https://news.ycombinator.com/item?id=41489832" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=41489832</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760992" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">traderj0e</span>
+        <span class="meta-time">2026/04/14 05:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很久以前就知道你 <i>通常</i> 想要在 Postgres/MySQL 中使用 b 树，但一直不太了解它们实际上是如何工作的。这是迄今为止最好的解释。<p>此外，由于某种原因，有很多 HN 文章错误地建议人们在 Postgres 中使用 uuid4 或 v7 PK。不知何故，这是我第一次看到有人说只使用串行。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've known for a long time that you <i>usually</i> want b-tree in Postgres/MySQL, but never understood too well how those actually work. This is the best explanation so far.<p>Also, for some reason there have been lots of HN articles incorrectly advising people to use uuid4 or v7 PKs with Postgres. Somehow this is the first time I've seen one say to just use serial.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757966" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">evil-olive</span>
+        <span class="meta-time">2026/04/14 08:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 错误地建议人们在 Postgres 中使用 uuid4 或 v7 PK<p>随机 UUID 与基于时间的 UUID 与顺序整数相比，有太多的权衡和微妙之处，无法像您在这里所做的那样将其中一个选项称为“不正确”。</p><p>举个例子，任何“到处使用序列号”的建议都应该提到德国坦克问题 [0] 及其可能对现代的影响。</p><p>例如，如果您正在运行一个在线购物网站，连续订单 ID 意味着下两个订单的任何人都能够推断出您的网站随着时间的推移正在处理多少订单。商界人士通常不喜欢将这些信息泄露给竞争对手。告诉他们“每个订单节省 8 个字节”的技术理由不太可能动摇他们。</p><p>0: <a href="https://en.wikipedia.org/wiki/German_tank_problem" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/German_tank_problem</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; incorrectly advising people to use uuid4 or v7 PKs with Postgres<p>random UUIDs vs time-based UUIDs vs sequential integers has too many trade-offs and subtleties to call one of the options "incorrect" like you're doing here.</p><p>just as one example, any "just use serial everywhere" recommendation should mention the German tank problem [0] and its possible modern-day implications.</p><p>for example, if you're running a online shopping website, sequential order IDs means that anyone who places two orders is able to infer how many orders your website is processing over time. business people usually don't like leaking that information to competitors. telling them the technical justification of "it saves 8 bytes per order" is unlikely to sway them.</p><p>0: <a href="https://en.wikipedia.org/wiki/German_tank_problem" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/German_tank_problem</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759674" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jim33442</span>
+        <span class="meta-time">2026/04/14 12:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">PK 与公共 ID 不同，尽管您可以使它们相同。通常，您有一个 uuid4 或其他任何公共 ID 来查找，但所有内部连接等都使用串行 PK。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">PK isn't the same as public ID, even though you could make them the same. Normally you have a uuid4 or whatever as the public one to look up, but all the internal joins etc use the serial PKs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761361" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">omcnoe</span>
+        <span class="meta-time">2026/04/14 09:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">撇开数据库性能考虑不谈，围绕幂等性/安全重试/水平缩放/分布式系统的许多软件模式对于串行 pk 来说都非常尴尬，因为在数据库写入成功之前，您没有任何类型的明确的唯一记录标识符。<p>DB 本身是“分布式”的，因为在 99% 的情况下，它在服务自己的内存之外运行，在复杂的系统中，实际的 DB 写入可能隐藏在跨多个主机的多层服务间接下。尝试正确设计它，同时处理记录 id 上的写前/写后分割是一场噩梦。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">DB perf considerations aside, a lot of software pattern around idempotency/safe retries/horiz-scaling/distributed systems are super awkward with a serial pk because you don’t have any kind of unambiguous unique record identifier until after the DB write succeeds.<p>DB itself is “distributed” in that it’s running outside the services own memory in 99% of cases, in complex systems the actual DB write may be buried under multiple layers of service indirection across multiple hosts. Trying to design that correctly while also dealing with pre-write/post-write split on record id is a nightmare.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760012" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">简单的顺序 ID 就很棒。如果您需要 UUID，v7 是最佳选择，因为它保持顺序排序。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Simple sequential IDs are great. If you want UUID, v7 is the way to go since it maintains sequential ordering.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">omcnoe</span>
+        <span class="meta-time">2026/04/14 09:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与串行相比，顺序 UUID 存在一些微妙的问题，具体取决于生成 UUID 的位置。如果您在数据库主机本身的写入时生成它们，那么您只能获得硬顺序保证。<p>但是，对于 Serial 和 db-gen’d 顺序 UUID，您仍然可能会遇到事务提交顺序意外。我认为依赖顺序记录的软件应该使用 Id/PK 以外的某种机制来确定它。我个人多次遇到与事务提交顺序和顺序 ID 假设相关的极其微妙的错误。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are subtle gotchas around sequential UUID compared to serial depending on where you generate the UUIDs. You can kinda only get hard sequential guarantee if you are generating them at write time on DB host itself.<p>But, for both Serial &amp; db-gen’d sequential UUID you can still encounter transaction commit order surprises. I think software relying on sequential records should use some mechanism other than Id/PK to determine it. I’ve personally encountered extremely subtle bugs related to transaction commit order and sequential Id assumptions multiple times.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760077" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jwpapi</span>
+        <span class="meta-time">2026/04/14 07:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所有这些都适用于 Postgresql 还是仅适用于 Mysql？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does all of that apply to Postgresql as well or only Mysql?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759315" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sgarland</span>
+        <span class="meta-time">2026/04/14 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">假设您要为其建立索引，两者都使用 B+ 树的形式作为其基本索引。<p>如果只是存到表里，那也没关系，不过如果没关系的话，就用v7吧。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Both, assuming you’re ever going to index it - both use a form of a B+tree for their base indices.<p>If it’s just being stored in the table, it doesn’t matter, but also if it doesn’t matter, just use v7.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sgarland</span>
+        <span class="meta-time">2026/04/14 08:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 只需使用串口<p>理想情况下，您将 IDENTITY 与 Postgres 一起使用，但最终结果是相同的，是的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; just use serial<p>Ideally you use IDENTITY with Postgres, but the end result is the same, yes.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759645" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">daneel_w</span>
+        <span class="meta-time">2026/04/14 04:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>“树越深，查找元素的速度就越慢。因此，我们的数据库需要浅树！”</i><p>对于 InnoDB 中的复合索引，保持树的精简并根据数据基数使其扇形分布更为重要： <a href="https://news.ycombinator.com/item?id=34404641" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=34404641</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>"The deeper the tree, the slower it is to look up elements. Thus, we want shallow trees for our databases!"</i><p>With composite indices in InnoDB it's even more important to keep the tree streamlined and let it fan out according to data cardinality: <a href="https://news.ycombinator.com/item?id=34404641" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=34404641</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757445" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">whartung</span>
+        <span class="meta-time">2026/04/14 04:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不断听说 DB 的 B(+)-Tree 的缺点，即它们在某些场景下存在问题，但我从未见过关于它们、它们是什么以及它们在哪些场景中表现不佳的简单、详细的列表。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I keep hearing about the downside of B(+)-Trees for DBs, that they have issues for certain scenarios, but I've never seen a simple, detailed list about them, what they are, and the scenarios they perform badly in.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757198" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这实际上只是一个权衡的问题。 B 树很棒，但更适合高读取百分比和中/低写入量。在相反的情况下，像 LSM 这样的东西通常更适合。<p>如果您想要全面的资源，我建议您阅读设计数据密集型应用程序 (Kleppman) 或数据库内部 (Petrov)。两者都有关于 B 树和 LSM 的章节。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's really just a matter of tradeoffs. B-trees are great, but are better suited for high read % and medium/low write volume. In the opposite case, things like LSMs are typically better suited.<p>If you want a comprehensive resource, I'd recommend reading either Designing Data Intensive Applications (Kleppman) or Database Internals (Petrov). Both have chapters on B-trees and LSMs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757625" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">faangguyindia</span>
+        <span class="meta-time">2026/04/14 10:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您的应用程序是写入密集型的，那么 LSM 比 Btree 更好。<p>但你很少需要它。我们大多有写密集型计数器。我们只是先写入redis，然后聚合并写入postgres。</p><p>这大大减少了我们在 postgres 中需要的写入次数</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If your application is write intensive LSM is better than Btree.<p>But you'd rarely need it. We mostly have write intensive counters. We just write to redis first then aggregate and write to postgres.</p><p>This reduces number of writes we need in postgres a lot</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760370" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">daneel_w</span>
+        <span class="meta-time">2026/04/14 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请参阅我在主线程中的评论作为示例。在最坏的情况下，某些数据太“卷曲”，无法在 B 树中有效地进行索引/搜索并具有良好的性能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">See my comment in the main thread for an example. In a worst case scenario, some data is simply too "frizzy" to index/search efficiently and with good performance in a B-tree.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757837" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/04/14 04:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于纯写入吞吐量，LSM 树往往优于 B 树。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For pure write throughput, LSM trees tend to beat btrees.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757285" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">+1</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">+1</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757978" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">threatofrain</span>
+        <span class="meta-time">2026/04/14 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也很想听听人们对 Bf-tree 的看法。<p></p><pre><code>  https://vldb.org/pvldb/vol17/p3442-hao.pdf
+  https://github.com/microsoft/bf-tree</code></pre></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also curious to hear what people think of Bf-tree.<p></p><pre><code>  https://vldb.org/pvldb/vol17/p3442-hao.pdf
+  https://github.com/microsoft/bf-tree</code></pre></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757057" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 04:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我读过这篇论文，这是一个好主意。它尚未被引入流行的 oss 数据库，如 postgres 和 mysql，我的理解是，与本文中提出的简单基准相比，它在实际产品使用中存在一些缺点。<p>我很想知道是否有人在学术测试之外使用它构建了一些东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've read this paper and it's a neat idea. It hasn't been introduced into popular oss databases like postgres and mysql, and my understanding is it has some drawbacks for real prod use vs ths simplistic benchmarks presented in the paper.<p>Would love to know if anyones built something using it outside of academic testing.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757115" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">viccis</span>
+        <span class="meta-time">2026/04/14 09:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">带有删除的 B+ 树是我在大学时必须做的最困难的算法之一。经过数十亿次插入后，您会遇到边缘情况......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A B+ tree with deletion was one of the most difficult algorithms I had to do back in college. You'd hit edge cases after billions of insertions...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760009" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hybirdss</span>
+        <span class="meta-time">2026/04/14 08:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">与文本相比，此类主题的交互式可视化是不公平的</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">interactive viz on this kind of topic is just unfair compared to text</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759783" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">photochemsyn</span>
+        <span class="meta-time">2026/04/14 09:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Sqlite 的 btree 可以在这里找到：<p><a href="https://github.com/sqlite/sqlite/blob/master/src/btree.c" target="_blank" rel="noopener noreferrer">https://github.com/sqlite/sqlite/blob/master/src/btree.c</a></p><p>我一直认为这太复杂了，每个人都无法真正理解它是如何工作的，尤其是锁定策略，但现在有了法学硕士（在 sqlite 非常全面的评论策略的协助下），即使是相对新手也可以开始理解它是如何协同工作的。  今天该文件的介绍也值得一读：</p><p>* 2004 年 4 月 6 日
+*
+* 作者放弃对此源代码的版权。  代替
+* 法律声明，这里有祝福：
+*
+* 愿你多行善，不作恶。
+* 愿你宽恕自己并宽恕他人。
+* 愿你自由地分享，永远不要索取多于给予。
+*
+**************************************
+* 该文件使用 BTree 实现外部（基于磁盘）数据库。
+* 有关其他信息，请参阅“btreeInt.h”的标题注释。
+* 包括文件格式说明和操作概述。
+*/</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sqlite’s btree is available here:<p><a href="https://github.com/sqlite/sqlite/blob/master/src/btree.c" target="_blank" rel="noopener noreferrer">https://github.com/sqlite/sqlite/blob/master/src/btree.c</a></p><p>I always thought this was too complicated to every really understand how it worked, especially the lock policy, but now with LLMs (assisted with sqlite’s very comprehensive comment policy) even a relative neophyte can start to understand how it all works together.  Also the intro to the file is worth reading today:</p><p>* 2004 April 6
+*
+* The author disclaims copyright to this source code.  In place of
+* a legal notice, here is a blessing:
+*
+*    May you do good and not evil.
+*    May you find forgiveness for yourself and forgive others.
+*    May you share freely, never taking more than you give.
+*
+*************************************
+* This file implements an external (disk-based) database using BTrees.
+* See the header comment on "btreeInt.h" for additional information.
+* Including a description of file format and an overview of operation.
+*/</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760346" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jiveturkey</span>
+        <span class="meta-time">2026/04/14 03:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; MySQL，可以说是世界上最流行的数据库管理系统，</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; MySQL, arguably the world's most popular database management system,</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757032" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bddicken</span>
+        <span class="meta-time">2026/04/14 06:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它可能不像以前那样受欢迎，但 MySQL 仍然为互联网的很大一部分提供支持。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It may not have the popularity it once did, but MySQL still powers a huge % of the internet.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758696" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">traderj0e</span>
+        <span class="meta-time">2026/04/14 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这有问题吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a problem with that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757979" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">shawn_w</span>
+        <span class="meta-time">2026/04/14 05:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是最初的评论者，但我认为 sqlite 有这个标题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not the original commenter, but I thought sqlite had that title.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758097" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Retr0id</span>
+        <span class="meta-time">2026/04/14 06:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">sqlite 可以说并不是真正的 DBMS，只是一个 DB</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">sqlite is arguably not really a DBMS, just a DB</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758677" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">somat</span>
+        <span class="meta-time">2026/04/14 12:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">数据库就是文件，管理系统就是使用文件的api。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The database is the file, the management system is the api to use the file.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761352" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alexwelsh</span>
+        <span class="meta-time">2026/04/14 11:37</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760966" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

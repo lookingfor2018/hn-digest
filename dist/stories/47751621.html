@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rockchip RK3588 的初始主线视频采集和摄像头支持 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-14-1402/">返回本批次</a>
+      <h1>Rockchip RK3588 的初始主线视频采集和摄像头支持</h1>
+      <p class="subtitle">Initial mainline video capture and camera support for Rockchip RK3588</p>
+      <div class="meta-line">
+        <span>www.collabora.com</span>
+        <span>作者 mfilion</span>
+        <span>分数 80</span>
+        <span>评论 24</span>
+        <span>2026/04/13 21:23</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47751621" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.collabora.com/news-and-blog/news-and-events/mainline-video-capture-and-camera-support-for-rockchip-rk3588.html" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>迈克尔·里施 2026 年 4 月 13 日</li><li>正如当今许多片上系统 (SoC) 所做的那样，最近的 Rockchip SoC（即 RK35 系列）集成了用于视频采集和图像信号处理的专用 IP 模块。这些新增内容为各种有趣的多媒体应用打开了大门。然而，主线 Linux 中对这些模块的支持仍然是其他得到良好支持的 SoC 系列中最后缺失的部分之一。是时候缩小这一差距了！使命 在过去几年中，Collabora 投入了大量精力来支持 Rockchip RK3588 SoC 的主线。我们的 RK3588 上游状态矩阵和最近的评论博客文章在 Rockchip 上运行主线 Linux、U-Boot 和 Mesa：一年回顾表明了这一任务的成功。可以说，与充满活力的linux-rockchip社区和Rockchip本身一起，我们能够为RK3588的大部分功能提供上游支持。另一方面，仍然有一些不受支持的硬件块需要处理。众所周知，视频捕获模块和图像信号处理器 (ISP) 属于在后期获得主线支持（如果有的话）的硬件模块类别。造成这种情况的原因是多方面的：虽然用户群很大，但比其他功能（例如视频输出）的用户群要小。硬件文档通常不可用，至少对于 ISP 来说是这样，这在知识产权方面似乎被认为是特殊的。然后，底层硬件并不完全是微不足道的，这使得业余爱好者很难（如果不是不可能的话）在空闲时间处理。即使对于公司来说，开发此类硬件所需的初始努力也是一项耗时且成本高昂的工作。因此，这些强大硬件模块的用户倾向于求助于供应商 Linux 内核，这可能会导致监管合规性问题，例如《网络弹性法案》(CRA) 下的问题。 （走向）解决方案 为了克服这一僵局，Collabora 决定从第一步开始：推出 RK3588 视频采集 (VICAP) 单元。从一开始就很明显，这不是一场短跑，而是一场马拉松。该计划是让 rkcif 驱动程序支持 RK3588 VICAP，自 2020 年以来，该驱动程序一直在各自的邮件列表上进行讨论！ Collabora 于 2022 年初加入了主线讨论，补丁系列在 Bootlin 的推动下经历了九次迭代。然后，要求对以媒体控制器为中心的 V4L2 驱动程序进行重大修改。这导致了对驱动程序的彻底重构，并重新推动将其纳入主线 Linux。在对所得补丁系列进行了另外七次迭代并两次重命名驱动程序之后，该工作在阿姆斯特丹举行的 2025 年欧洲开源峰会上进行了展示。 “为最新的瑞芯微 SoC 提供主线视频捕捉和摄像头支持”的演讲概述了现代多媒体 SoC 的软件堆栈，并分别介绍了已经在主线落地和目前正在进行的贡献。随后对 rkcif 驱动程序进行了几次迭代，为 PX30 VIP 和 RK3568 VICAP 提供支持的基本驱动程序被接受（2025 年 10 月）。经过五年多的开发，包括 25 次迭代和 3 次重命名，这是一个重要的里程碑。当然，另一方面，还有很多事情要做。例如，与 VICAP 紧密耦合的 Rockchip MIPI CSI-2 接收器单元也需要主线驱动器。事实再次证明，软件开发中最困难的部分是命名。经过多次迭代和三次重命名和/或重新定位后，该驱动程序在主线 Linux 内核中找到了自己的名字和位置（2026 年 1 月）。这在布鲁塞尔举行的 FOSDEM 2026 大会上恰逢其时，Collabora 在会上展示了“上游进展：对最新瑞芯微 SoC 的视频捕捉和相机支持”。除了完善和更新的状态矩阵（参见幻灯片 15 和 17）之外，该演讲还展示了使用连接到 RK3588 VICAP 的索尼 IMX415 传感器拍摄的第一张图片。当然，在这种设置中，来自传感器的原始图像数据在软件中进行了去拜耳处理（产生了 1 fps 的糟糕帧速率），并且没有自动白平衡等图像处理（这解释了绿色图像），但当时它代表了这一旅程的一个重要阶段。需要对 rkcif 驱动程序进行一些扩展补丁才能添加 RK3588 支持。这些补丁已经开发了一段时间，最近被送去审查。下一步 当然，我们都希望使用 RK3588 ISP 在专用硬件中处理来自相机传感器的图像。为此，我们基本上需要三件事。剩下的第一个问题是对 RK3588 VICAP MUX-TOISP 单元的支持，该单元构成了将数据从 VICAP 传递到 ISP 的直接硬件连接。从技术上讲，这并不是严格需要的。截至目前RK3588 VICAP 能够将原始图片流式传输到内存中，ISP 可以从内存中获取数据。这种方法允许更复杂的用例，例如每个 ISP（时分复用）处理多个摄像机流。然而，对于每个 ISP 一个摄像机流的简单用例来说，这有几个缺点：除其他外，它会导致内存带宽要求增加以及延迟增加。另外，应该注意的是，直接硬件连接会影响这些（否则独立的）硬件块的软件架构的设计。尽早考虑这种连接非常重要，否则以后可能很难添加对它的支持。因此，除了控制与硬件的交互之外，这一步还需要考虑如何将内核驱动程序集成到V4L2媒体控制器框架中。初步测试已经显示出该单元的初步生命力，尽管代码准备好集成到主线 Linux 中还需要一些时间。第二个问题是 RK3588 ISP 缺少 Linux 内核驱动程序，因为供应商内核驱动程序由于各种原因无法上传。为了帮助上游，Rockchip 提供了一个精简的驱动程序，可在此处获取。该驱动程序仅支持内存到内存操作和去拜耳（并且没有进一步的图像处理功能），但对于硬件启动非常有帮助。然而，为了纳入主线 Linux，计划是从头开始开发新的 rkisp2 驱动程序，旨在支持 RK35 一代的所有 ISP。为了实现这一雄心勃勃的里程碑，Collabora 与 Rockchip 和 Ideas on Board 合作，以这个新的 ISP 作为共同目标。在此基础上，第三期的重点是 libcamera 对 RK3588 图像处理管道的支持，包括合适的图像处理算法 (IPA)。 Ideas on Board 的团队已经在这个方向上积极行动，并报告了在第一个图像处理模块的开发方面取得了初步成功。有关更多详细信息，请参阅他们的博客文章。同时，不耐烦的用户可以尝试使用 libcamera 软件 ISP 作为权宜之计。但对于真正的交易（完整的 RK3588 ISP 内核驱动程序和 libcamera 支持），请继续关注！不要错过我们在尼斯嵌入式食谱（5 月 27 日至 28 日）举行的 RK3588 ISP 演示！</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Michael Riesch April 13, 2026</li><li>As many System-on-a-Chips (SoCs) do these days, recent Rockchip SoCs (namely, those of the RK35 generation) integrate dedicated IP blocks for video capture and image signal processing. These additions open the door to a wide range of interesting multimedia applications. However, support for these blocks in mainline Linux remains one of the last missing pieces in an otherwise well-supported SoC lineup. It is time to close that gap! The mission Over the last few years, Collabora has invested significant efforts into mainline support for the Rockchip RK3588 SoC. Our RK3588 upstream status matrix and the recent review blog post Running Mainline Linux, U-Boot, and Mesa on Rockchip: A year in review show the success of this mission. It is fair to say that together with the vibrant linux-rockchip community and Rockchip themselves, we were able to provide upstream support for most of the features of the RK3588. On the other hand, there are still a few unsupported hardware blocks that need to be taken care of. The problem Video capture blocks and image signal processors (ISPs) notoriously fall into the category of hardware blocks that gain mainline support at a late stage (if at all). The reasons for this are manifold: while the user base is substantial, it&#39;s smaller than that of other features, such as video output for instance. The hardware documentation is often not available, at least for ISPs, which seem to be considered special in terms of intellectual property. Then, the underlying hardware is not exactly trivial, making it difficult (if not impossible) for a hobbyist contributor to tackle in their free time. Even for companies, the initial efforts required to bring up that sort of hardware are a time-consuming and hence costly endeavor. As a consequence, users of these powerful hardware blocks tend to resort to a vendor Linux kernel, which can lead to regulatory compliance issues, such as under the Cyber Resilience Act (CRA). (Towards) the solution In a quest to overcome this deadlock, Collabora decided to start with the first step: bringing up the RK3588 video capture (VICAP) unit. It was obvious from the very start that this would not be a sprint, but a marathon. The plan was for the rkcif driver to support the RK3588 VICAP, and this driver had been under discussion on the respective mailing lists since 2020! Collabora joined the mainlining discussion in early 2022 and the patch series went through nine iterations driven by Bootlin. Then, a major rework towards a media-controller centric V4L2 driver was requested. This led to a complete refactoring of the driver and a renewed push towards inclusion in mainline Linux. After another seven iterations of the resulting patch series and renaming the driver twice, the work was presented at Open Source Summit Europe 2025 in Amsterdam. The talk &quot;Towards Mainline Video Capture and Camera Support for Recent Rockchip SoCs&quot; provided an overview of the software stack for modern multimedia SoCs and covered the contributions that had already landed in mainline and were currently in flight, respectively. A few iterations of the rkcif driver later, the basic driver providing support for the PX30 VIP and the RK3568 VICAP was accepted (October 2025). After more than five years of development, including 25 iterations and three renamings, this was a major milestone. On the other hand, there was still a lot to do, of course. For instance, the Rockchip MIPI CSI-2 receiver unit that is coupled closely to the VICAP required a mainline driver as well. Again, the hardest part in software development proved to be naming things. After several iterations and three renamings and/or relocations, the driver found its name and place in the mainline Linux kernel (January 2026). This came to pass right in time for FOSDEM 2026 in Brussels, where Collabora presented &quot;Upstreaming Progress: Video Capture and Camera Support for Recent Rockchip SoCs&quot; Apart from the refined and updated status matrix (see slides 15 and 17), the talk featured a first picture made with a Sony IMX415 sensor attached to the RK3588 VICAP. Of course, in this setup the raw image data from the sensor was debayered in software (which yielded an abysmal frame rate of 1 fps) and there was no image processing such as auto white balance (which explained the greenish image), but at that time it represented a significant stage of this journey. A few extension patches to the rkcif driver were required to add RK3588 support. Those patches had been in development for some time, and were recently sent out for review. The next step(s) Naturally, we all would like to use the RK3588 ISP to process the images from the camera sensor in the dedicated hardware. To that end, we essentially need three things. The first of the remaining issues is the support for the RK3588 VICAP MUX-TOISP unit, which constitutes a direct hardware connection that passes the data from the VICAP to the ISP(s). Technically, this is not strictly needed. As of now the RK3588 VICAP is able to stream the raw pictures into memory and the ISP can fetch the data from memory. This approach allows for more elaborate use cases, such as processing more than one camera stream per ISP (time-division multiplexing). However, for the simple use case with one camera stream per ISP, this has a couple of disadvantages: Amongst other things, it results in increased memory bandwidth requirements as well as increased latency. Also, it should be noted that the direct hardware connection affects the design of the software architecture for these (otherwise independent) hardware blocks. It is important to take this connection into consideration early on, otherwise it might be very hard to add support for it at a later step. Thus, apart from controlling the interaction with the hardware, this step requires considerations as to how to integrate the kernel drivers into the V4L2 media controller framework. Initial testing has already shown the first signs of life from this unit, though it will take some time until the code is ready to be integrated into mainline Linux. The second issue is the missing Linux kernel driver for the RK3588 ISP, as the vendor kernel driver is not upstreamable for various reasons. In an effort to aid upstreaming, Rockchip provided a stripped down driver that is available here. This driver only supports memory-to-memory operation and debayering (and no further image processing capabilities), but it is very helpful for hardware bringup. For the inclusion in mainline Linux, however, the plan is for a new rkisp2 driver that is developed from scratch, aiming to support all ISPs of the RK35 generation. To achieve this ambitious milestone, Collabora teamed up with Rockchip and Ideas on Board with this new ISP as a shared goal in mind. Based on that, the third issue centers on libcamera support for the RK3588 image processing pipeline including suitable image processing algorithms (IPA). The team at Ideas on Board is already active in that direction and has reported initial success with regard to the bring-up of the first image processing blocks. See their blog post for more details. In the meantime, impatient users can try the libcamera software ISP as a stopgap solution. But for the real deal (full RK3588 ISP kernel driver and libcamera support), stay tuned! And don&#39;t miss our RK3588 ISP demo at Embedded Recipes in Nice (May 27-28)!</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Aurornis</span>
+        <span class="meta-time">2026/04/13 23:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴看到在对通用和强大芯片的更多支持方面取得了进展。<p>使这一块进入主线所需的工作需要 5-6 年时间，这揭示了为什么大多数芯片供应商默认情况下并不瞄准主线：</p><p>&gt; 随后对 rkcif 驱动程序进行了几次迭代，为 PX30 VIP 和 RK3568 VICAP 提供支持的基本驱动程序已被接受（2025 年 10 月）。经过五年多的开发，包括 25 次迭代和 3 次重命名，这是一个重要的里程碑。当然，另一方面，还有很多事情要做。例如，与 VICAP 紧密耦合的 Rockchip MIPI CSI-2 接收器单元也需要主线驱动器。</p><p>它从来都不像向上游提交现有工作并进行一些更改那么简单。需要大量的开发和重写所有内容（可能是多次）的意愿，才能跟踪上游的目标。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great to see progress on mainlining more support for common and powerful chips.<p>The work required to get this one piece into mainline over 5-6 years reveals why most chip vendors aren’t aiming for mainline by default:</p><p>&gt; A few iterations of the rkcif driver later, the basic driver providing support for the PX30 VIP and the RK3568 VICAP was accepted (October 2025). After more than five years of development, including 25 iterations and three renamings, this was a major milestone. On the other hand, there was still a lot to do, of course. For instance, the Rockchip MIPI CSI-2 receiver unit that is coupled closely to the VICAP required a mainline driver as well.</p><p>It’s never as simple as submitting existing work upstream and making a few changes. It takes a lot of development and a willingness to rewrite everything, possibly multiple times, to track the goals of upstream.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47753490" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Palomides</span>
+        <span class="meta-time">2026/04/14 00:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不过，我真的觉得如果你的整个企业都在制造运行 Linux 的芯片，那么这应该成为赌注<p>在专业地使用他们的产品之后，我真的不是 Rockchip 的粉丝</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really feel like that should be table stakes if your entire business is making chips to run Linux, though<p>after working professionally with their stuff I'm really not a fan of Rockchip</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754238" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aurornis</span>
+        <span class="meta-time">2026/04/14 00:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也希望一切都立即成为主流，但我对完成这件事需要什么很现实。<p>有些芯片供应商更加重视主线支持，但即使那些没有完全主线支持，他们的芯片通常也贵得多。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish everything was mainlined right away, too, but I’m realistic about what it takes to get that done.<p>There are chip providers that put more emphasis on mainline support but even those aren’t fully mainlined and their chips are generally much more expensive.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754483" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">le-mark</span>
+        <span class="meta-time">2026/04/14 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有您更喜欢的 SOC，为什么？ Linux 支持似乎与大多数支持相当？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a SOC you prefer, why? Linux support seems about on par with most?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758391" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">packetlost</span>
+        <span class="meta-time">2026/04/14 00:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是为什么？他们的 IME 几乎所有软件都是一团糟，硬件也有一些错误/问题 iirc，但其他方面还可以吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why is that? IME pretty much all of their software is a mess and the hardware has some bugs/issues iirc but is otherwise ok?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754334" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mcmcmc</span>
+        <span class="meta-time">2026/04/14 01:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 他们所有的软件都是一团糟，硬件也有一些错误/问题<p>这理由还不够充分吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; all of their software is a mess and the hardware has some bugs/issues<p>Is that not enough of a reason?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755293" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">packetlost</span>
+        <span class="meta-time">2026/04/14 05:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">公平的！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fair!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758398" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">chucklenorris</span>
+        <span class="meta-time">2026/04/14 07:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，我有一些这样的东西。我还购买了一些我想与它们一起使用的 IMX678 传感器。我非常努力地尝试让驱动程序与这些一起工作，但是如果不修改内核本身就不可能让 isp 工作，所以我放弃了。这使我永远不会购买主线内核中没有驱动程序的硬件。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">wow, i have a few of these laying around. i also bought some imx678 sensors i wanted to use with them. i tried pretty hard to make a driver work with these but it was impossible to get the isp working without modifying the kernel itself so i gave up. That convinced me to never buy hw that doesn't have drivers in the mainline kernel.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759374" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/14 01:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 为什么大多数芯片供应商默认不瞄准主线：<p>&gt; 它从来都不像向上游提交现有工作并进行一些更改那么简单。</p><p>如果他们一开始就与上游合作，那么他们就不必进行不必要的修改来尝试适应他们已经编写的内容。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; why most chip vendors aren’t aiming for mainline by default:<p>&gt; It’s never as simple as submitting existing work upstream and making a few changes.</p><p>If they had started by working with upstream, then they wouldn't have to go through unnecessary revisions trying to adapt the thing they already wrote.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755083" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Aurornis</span>
+        <span class="meta-time">2026/04/14 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我引用的部分来自与上游合作的团队，而不是RockChip团队。<p>他们在与上游合作方面经验丰富，但仍然花了很长时间才做到这一点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The part I quoted was from a team that was working with upstream, not the RockChip team.<p>They were experienced with working with upstream and it still took them that long to do it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757943" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/13 23:57</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47753945" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tov_objorkin</span>
+        <span class="meta-time">2026/04/14 05:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该产品的典型使用寿命为 3-5 年，他们只是不需要 LTS。 
+RKISP（ImageSignalProcessor）是粘在内核上的一段代码，快速且便宜。主流版本提供了与Linux多媒体子系统的适当集成。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The product has a typical lifespan of 3–5 years, they just don't need LTS. 
+RKISP(ImageSignalProcessor) is piece of code glued to the kernel, fast and cheap. The mainstream version provides proper integration with Linux multimedia subsystems.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757882" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">4fterd4rk</span>
+        <span class="meta-time">2026/04/14 00:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想我不明白……如果 SOC 制造商不打算花钱在软件方面启用它，为什么还要花钱来集成这些东西呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I guess I don't understand... why would the SOC manufacturer spend the money on integrating this stuff if they don't intend on also spending the money to enable it on the software side?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754552" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">MisterTea</span>
+        <span class="meta-time">2026/04/14 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们做到了，但不是主线。人们忘记了这些是嵌入式芯片——它们的目的是进入某些东西并做一件事。这些芯片缺乏自动硬件发现功能，因为制造商假设客户只会打开其特定用例所需的硬件外设，并构建静态内核映像来满足该要求。他们推出的产品可能很少有软件更新，最终会被扔进垃圾填埋场。<p>正是由于 Raspberry Pi 基础，我们才认为嵌入式 Arm 芯片就像运行 Linux 桌面的通用台式计算机。最初的 Pi SoC 是为电视机顶盒和机顶盒设计的，因此从 GPU 进行循环启动，这可能是某些混淆的安全启动链的一部分，以阻止机顶盒黑客。 Pi 是一款废弃的业余爱好玩具，基于博通将要报废的芯片，因此他们达成了一项垃圾箱交易。社区花了很大的努力才完全扭转了 Broadcom SoC 并将所有 Pi 硬件带入主线。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They did, jut not mainline. People forget these are embedded chips - they are intended to go inside of something and do one thing. These chips lack auto hardware discovery because the manufacturer assumes the customer will only turn on the hardware peripherals they need for their specific use case and build a static kernel image to meet that requirement. They ship a product that will likely see few, if any software updates and end up in a landfill.<p>It's because of the Raspberry Pi foundation we have this perception that embedded Arm chips are like general purpose desktop computers that run Linux desktops. The original Pi SoC was designed for TV set top boxes, STB's hence the loopy booting from GPU which was likely part of some obfuscated secure boot chain to thwart STB hackers. The Pi was a throw away hobby toy based on a chip Broadcom was going to scrap so they got a dumpster deal. It took a lot of effort for the community to fully reverse the Broadcom SoC and bring all the Pi hardware to mainline.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755393" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">frankharv</span>
+        <span class="meta-time">2026/04/14 07:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意你所说的大部分内容。添加第二个显示端口并不是任何人都需要的。<p>台式电脑是触手可及的。即使对于 BeagleBone 也是如此。</p><p>我很惊讶 RK3566 和 RK3568 仍然没有良好的 UEFI-EDK2 支持。</p><p>RK3588 具有出色的 UEFI-EDK2 支持。我希望有人能够向后移植 RK356x 和 RK3399 板......</p><p>发展速度太快了。
+我们不需要更多的 aarch64 CPU 但需要更好的支持。
+RISC-V 加剧了混乱。</p><p>就像我们需要那样...</p><p>开源硬件梦想。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree with much of what you say. Adding a second display port was not something anybody needed.<p>Desktop computer was a reach. Even for BeagleBone.</p><p>I am surprised RK3566 and RK3568 still don't have good UEFI-EDK2 support.</p><p>RK3588 has great UEFI-EDK2 support. I wish somebody would backport RK356x and RK3399 boards....</p><p>The pace of development is too fast.
+We don't need more aarch64 CPU but better support.
+RISC-V adds to the mayhem.</p><p>Like we need that...</p><p>The Open Source Hardware Dream.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759220" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">EdNutting</span>
+        <span class="meta-time">2026/04/14 00:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">软件！= Linux 主线。<p>软件由供应商提供，但它不是开源的和/或不是 Linux 主线的一部分。</p><p>因此，我们需要努力开发一个开源（并主流化）的替代方案。</p><p>这是否是一个很好的努力和/或您是否认为供应商应该进行 Linux 开发，和/或他们是否应该开源其专有驱动程序，将取决于您的个人观点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Software != Linux Mainline.<p>Software exists from the vendor, but it’s not open source and/or not part of Linux mainline.</p><p>Hence the effort to develop an open source (and mainlined) alternative.</p><p>Whether this is a good use of effort and/or whether you believe the vendor should be doing the Linux development or not, and/or whether they should open-source their proprietary drivers, will depend on your personal views.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754630" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Manuel_D</span>
+        <span class="meta-time">2026/04/14 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这样他们就可以在销售硬件的基础上销售专有软件实施的许可证。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So that they can sell licenses to proprietary software implementations on top of selling the hardware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756550" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bullen</span>
+        <span class="meta-time">2026/04/14 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大约 3588 个 CM 已售罄。<p>所以可能为时已晚，因为 3688 太热了……</p><p>就像路由器卖完就送dd-wrt一样！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Some 3588 CMs are sold out.<p>So it might be too late as 3688 will be too hot...</p><p>Just like routers get dd-wrt when sold out!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754488" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ACCount37</span>
+        <span class="meta-time">2026/04/14 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好的。二年级 Linux SoC 上的视频捕获简直就是地狱 - 有很多斑点和奇怪的自定义供应商 SDK，它们与供应商自己的快乐路径用例演示配合使用，仅此而已。<p>我希望越多的 SoC 获得主线 V4L2，未来的 SoC 就越有可能使用它，而不是做一些非标准和糟糕的事情。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good. Video capture on second grade Linux SoCs is hell - lots of blobs and weird custom vendor SDKs that work with the vendor's own happy path use case demos and nothing else.<p>I hope that the more SoCs get mainline V4L2, the more likely the future SoCs are going to be to use it instead of doing something non-standard and awful.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756519" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jauntywundrkind</span>
+        <span class="meta-time">2026/04/14 01:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">值得注意的是，好吧，唉，相机支持真是令人难以置信的令人难以置信的诅咒，就这样。从广义上讲，感觉就像所有图像块一样，每个人都制作了非常整洁、非常好的硬件，这些硬件充满了未记录或记录不足或由于原因而很难支持的功能。它是一个非常定制的高吞吐量管道，具有许多特殊的领域知识，与计算上的其他任何东西都非常不同。<p>英特尔的 IPU6 历经了大约 4 年的磨难才得以启动（值得庆幸的是 IPU7 很快就落地了！） <a href="https://www.phoronix.com/news/Intel-IPU6-Camera-Challenge-25" target="_blank" rel="noopener noreferrer">https://www.phoronix.com/news/Intel-IPU6-Camera-Challenge-25</a> <a href="https://www.phoronix.com/news/Intel-IPU7-Linux-6.17" target="_blank" rel="noopener noreferrer">https://www.phoronix.com/news/Intel-IPU7-Linux-6.17</a></p><p>AMD 同样刚刚让 Strix Halo ISP 接近工作：
+<a href="https://www.phoronix.com/news/AMD-ISP4-For-Linux-7.2" target="_blank" rel="noopener noreferrer">https://www.phoronix.com/news/AMD-ISP4-For-Linux-7.2</a></p><p>整个视频世界就像一场噩梦。困难的硬件世界。只是最糟糕的知识产权人质，从各地可怕的合法掠夺者手中夺走强盗，如果你敢使用计算来处理代表移动图像的位，那么黑暗的森林就会从黑暗中跳出来攻击你。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Worth noting that, well, alas, camera support is incredibly incredibly incredibly cursed, period. It feels like, broadly, with all the image blocks, everyone makes really neat really good hardware thats chock-a-block full of capabilities that are un- or poorly documented or really hard to support for reasons, etc. Its a pretty bespoke high throughput pipeline with a lot of special domain knowledge very unlike anything else on computing.<p>Intel's IPU6 has been a ~4 year travail to get going (thankfully IPU7 landed fairly quickly however!) <a href="https://www.phoronix.com/news/Intel-IPU6-Camera-Challenge-25" target="_blank" rel="noopener noreferrer">https://www.phoronix.com/news/Intel-IPU6-Camera-Challenge-25</a> <a href="https://www.phoronix.com/news/Intel-IPU7-Linux-6.17" target="_blank" rel="noopener noreferrer">https://www.phoronix.com/news/Intel-IPU7-Linux-6.17</a></p><p>AMD similarly has only just gotten the Strix Halo ISP near working:
+<a href="https://www.phoronix.com/news/AMD-ISP4-For-Linux-7.2" target="_blank" rel="noopener noreferrer">https://www.phoronix.com/news/AMD-ISP4-For-Linux-7.2</a></p><p>The whole video world seems like a nightmare. Difficult world of hardware. Just the worst Intellectual Property hostage taking banditry from awful awful valent legally predatory people everywhere, a dark forest ready to leap out of the dark and attack you if you dare use a computing to deal in bits that represent moving images.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755344" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ironman1478</span>
+        <span class="meta-time">2026/04/14 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在这个领域工作，这是百分百正确的。确实也很难学。许多教科书都以理想化的形式介绍了芯片中的算法。实际版本是如此混乱和不同，以至于教科书有时甚至没有用，特别是如果您在定制 ISP 上工作。虽然被诅咒了，但是很有趣。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I work in this field and this is 100 percent true. It's really hard to learn about too. A lot of textbooks go over the algorithms in the chips in an idealized form. The actual versions are so messy and different that the textbooks aren't even useful sometimes, especially if you work on custom ISPs. It's cursed, but it's fun.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756835" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skoocda</span>
+        <span class="meta-time">2026/04/14 04:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您是否有推荐的资源来了解实际实施？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are there any resources you would recommend for learning about real implementations?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">XorNot</span>
+        <span class="meta-time">2026/04/14 05:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">等等，IPU6 现在可以工作吗？我的工作笔记本电脑有它，我唯一知道的就是它 <i>可能</i> 工作前提是我使用一些用户空间中继驱动程序和一堆其他东西。<p>这种情况有改善吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wait is IPU6 working now? My work laptop has it and the only thing I know is it <i>might</i> work provided I use some user space relay driver and a bunch of other things.<p>Has this situation improved?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758003" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jauntywundrkind</span>
+        <span class="meta-time">2026/04/14 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我看了又看。我不知道为什么，但据说 IPU7 相当不错。但 IPU6 可能仍处于永久的不确定状态；我不知道。顺便说一句，你用的是什么内核？对你的痛苦感到抱歉。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I looked and looked and looked. I don't know why but IPU7 is reported to be pretty good. But IPU6 might still be in perpetual limbo; I don't know. What kernel are you on btw? Sorry for your pain.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758814" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rasz</span>
+        <span class="meta-time">2026/04/14 07:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;RK3588 ISP，由于各种原因供应商内核驱动程序无法上传<p>它始终是IP。公平地说，连 Raspberry Pi 都没有开放 ISP，对 MIPI 的支持也花了很多年。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;RK3588 ISP, as the vendor kernel driver is not upstreamable for various reasons<p>Its always IP. Afair even Raspberry Pi didnt open ISP, and support for MIPI took yeaaaaars.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759465" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

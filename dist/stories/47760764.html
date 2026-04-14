@@ -1,0 +1,1710 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>针对“后退按钮劫持”的新垃圾邮件政策 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-14-1402/">返回本批次</a>
+      <h1>针对“后退按钮劫持”的新垃圾邮件政策</h1>
+      <p class="subtitle">A new spam policy for &quot;back button hijacking&quot;</p>
+      <div class="meta-line">
+        <span>developers.google.com</span>
+        <span>作者 zdw</span>
+        <span>分数 162</span>
+        <span>评论 82</span>
+        <span>2026/04/14 11:06</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47760764" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://developers.google.com/search/blog/2026/04/back-button-hijacking" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026 年 4 月 13 日</li><li>今天，我们正在扩展我们的垃圾邮件政策，以解决一种称为“后退按钮劫持”的欺骗行为，这种行为将成为明显违反垃圾邮件政策的“恶意行为”，从而导致潜在的垃圾邮件行为。</li><li>什么是后退按钮劫持？</li><li>当用户点击浏览器中的“后退”按钮时，他们有一个明确的期望：他们想要返回到上一页。后退按钮劫持打破了这一基本期望。当网站干扰用户的浏览器导航并阻止他们使用后退按钮立即返回到原来的页面时，就会发生这种情况。相反，用户可能会被发送到他们以前从未访问过的页面，收到未经请求的推荐或广告，或者只是被阻止正常浏览网络。</li><li>我们为什么要采取行动？</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>April 13, 2026</li><li>Today, we are expanding our spam policies to address a deceptive practice known as &quot;back button hijacking&quot;, which will become an explicit violation of the &quot;malicious practices&quot; of spam policies, leading to potential spam actions.</li><li>What is back button hijacking?</li><li>When a user clicks the &quot;back&quot; button in the browser, they have a clear expectation: they want to return to the previous page. Back button hijacking breaks this fundamental expectation. It occurs when a site interferes with a user&#39;s browser navigation and prevents them from using their back button to immediately get back to the page they came from. Instead, users might be sent to pages they never visited before, be presented with unsolicited recommendations or ads, or are otherwise just prevented from normally browsing the web.</li><li>Why are we taking action?</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">oliwarner</span>
+        <span class="meta-time">2026/04/14 13:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在做亚马逊应用程序。<p>我有多少次在手机上寻找某些东西，进入亚马逊上的产品页面，但随后不得不多次退出才能返回搜索列表。有时它是以前查看过的产品，有时它“只是”亚马逊主页。它 <i>应该是</i> 一劳永逸。</p><p>易趣也是。我确信还有其他人。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now do the Amazon app.<p>Number of times I've looked for something on my phone, gone through to a product page on Amazon but then have had to back out multiple times to get back to the search listing. Sometimes it's previously viewed products, sometimes it's "just" the Amazon home page. It <i>should be</i> one-and-done.</p><p>eBay too. I'm sure there are others.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761764" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andreareina</span>
+        <span class="meta-time">2026/04/14 13:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 值得注意的是，某些后退按钮劫持实例可能源自该网站的……广告平台<p>我觉得从第三方域加载的任何内容都不应该允许破坏历史堆栈。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Notably, some instances of back button hijacking may originate from the site's ... advertising platform<p>I feel like anything loaded from a third party domain shouldn't be allowed to fiddle with the history stack.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761535" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kvdveer</span>
+        <span class="meta-time">2026/04/14 13:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然我同意，但当前的 JS 安全模型集会不允许区分 JS 代码的来源。如果这种情况发生变化，广告商只会要求您将他们的库编译到第一方 js 代码中，从而否定了这种安全模型的任何好处。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While i agree, the current JS security model rally doesn't allow for distinguishing origin for JS code. Should that ever change, advertisers will just require that you compile their library into the first party js code, negating any benefit from such a security model.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761689" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">lmm</span>
+        <span class="meta-time">2026/04/14 13:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 广告商只会要求您将他们的库编译到第一方 js 代码中，从而否定了这种安全模型的任何好处。<p>如果广告商必须提前提交广告，那么他们将更难否认对违反其既定政策的广告的责任。此外，网站运营商还需要一定水平的技术能力才能做到这一点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; advertisers will just require that you compile their library into the first party js code, negating any benefit from such a security model.<p>It will become harder for advertisers to deny responsibility for ads that violate their stated policies if they have to submit the ads ahead of time. Also site operators will need a certain level of technical competence to do this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761738" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bob1029</span>
+        <span class="meta-time">2026/04/14 13:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这似乎是宣传 post/redirect/get 模式的好时机。<p><a href="https://en.wikipedia.org/wiki/Post/Redirect/Get" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Post/Redirect/Get</a></p><p>严格来说并不是劫持返回导航，但如果您在路径中间提交了表单，它可以使体验不那么坎坷。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This seems like a good time to advertise the post/redirect/get pattern.<p><a href="https://en.wikipedia.org/wiki/Post/Redirect/Get" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Post/Redirect/Get</a></p><p>Not strictly about hijacking back navigation but it can make experience less bumpy if you've got form submissions in the middle of the path.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761769" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">karim79</span>
+        <span class="meta-time">2026/04/14 14:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我是这种模式的超级粉丝（并且作为一个灰胡子）。老实说，我想知道在这个万物皆有反应的时代，人们是否会思考这些事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm a huge fan of this pattern (and as a greybeard). I honestly wonder if people think about such things this day and age where everything is react.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761794" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">p4bl0</span>
+        <span class="meta-time">2026/04/14 13:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果他们能让它发挥作用那就太酷了。<p>我不明白谷歌的索引是如何工作的。我多年来一直对一些网站进行了良好的索引，但这些网站突然从索引中消失，没有任何解释，甚至在搜索控制台上也是如此（“已访问，未编入索引”）。简单的博客条目、轻量级页面、无 JavaScript、无广告、无不良做法、启用 https、从其他地方链接的信息内容，包括索引良好的网站（有些条目甚至在 Reddit 上表现良好）。
+与此同时，在过去的几年里，我发现谷歌搜索是一个越来越不可靠的工具，因为结果通常不是我所需要的。</p><p>不管怎样，希望这项新政策能够让情况有所改善。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's cool if they can make it work.<p>I don't understand how Google's indexing work anymore. I've had some website very well indexed for years and years which suddenly disappeared from the index with no explanation, even on the Search Console ("visited, not indexed"). Simple blog entries, lightweight pages, no JavaScript, no ads, no bad practices, https enabled, informative content that is linked from elsewhere including well indexed websites (some entries even performed well on Reddit).
+At the same time, for the past few years I've found Google search to be a less and less reliable tool because the results are less often what I need.</p><p>Anyway, let's hope this new policy can improve things a little.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761736" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">musicale</span>
+        <span class="meta-time">2026/04/14 11:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">网络普及的铁律：每个网络功能（如果可能）都会被用来滥用用户，通常是为了推送广告。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The iron law of web encrapification: every web feature will (if possible) be employed to abuse the user, usually to push advertising.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761026" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">endgame</span>
+        <span class="meta-time">2026/04/14 12:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我什至无法再可靠地按 [空格] 来向下翻阅本来都是关于内容的网站！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I cannot even reliably press [Space] any more to page down through sites that are meant to be all about content!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761188" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">kiddico</span>
+        <span class="meta-time">2026/04/14 13:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我总是发现这种行为令人困惑，所以听到有人按预期使用它而不是因它而感到沮丧是很有趣的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've always found that behavior baffling so it's interesting to hear someone using it as intended instead of being frustrated by it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761468" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">turtleyacht</span>
+        <span class="meta-time">2026/04/14 13:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">再按一个空格键即可翻页。从未遇到过损坏的站点（到目前为止）。手指交叉。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One more for the spacebar to advance the page. Have never encountered a broken site (so far). Fingers crossed.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761601" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">chongli</span>
+        <span class="meta-time">2026/04/14 12:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这实际上取决于 JavaScript。当网站是静态 HTML、图像和带有服务器端渲染的表单（允许论坛和博客）时，网络就很好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It really comes down to JavaScript. The web was fine when sites were static HTML, images, and forms with server-side rendering (allowing for forums and blogs).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761102" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pottertheotter</span>
+        <span class="meta-time">2026/04/14 12:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您在 1995 年使用过网络吗？这很有趣，但与我们现在所拥有的相比，它也很糟糕。没有什么是完美的，但我不想回去。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Did you use the web back in 1995? It was fun,  but it also sucked compared to what we have now. Nothing is ever perfect, but I wouldn’t want to go back.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761192" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ryandrake</span>
+        <span class="meta-time">2026/04/14 12:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我会立刻回去。让网络成为一个软件 SDK 是发生在它身上的最糟糕的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’d go back in a heartbeat. Making the web a software SDK was the worst thing to happen to it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761285" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">arjie</span>
+        <span class="meta-time">2026/04/14 13:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Gemini 网站几乎是旧网站： <a href="https://en.wikipedia.org/wiki/Gemini_(protocol)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Gemini_(protocol)</a><p>无论是在综合性方面还是在功能性方面。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Gemini websites are pretty much the old web: <a href="https://en.wikipedia.org/wiki/Gemini_(protocol)" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Gemini_(protocol)</a><p>Both in terms of comprehensiveness and in terms of functionality.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761516" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">collabs</span>
+        <span class="meta-time">2026/04/14 12:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你说的是1995年，但我什至都不愿意回到1999年。拨号太痛苦了。广告上说是 56 知道，但实际上我从来没有说过 48...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You talk about 1995 but I wouldn't even go back to 1999. Dialup was so painful. It advertised 56 know but in practice I never even say 48...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761296" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">yjftsjthsd-h</span>
+        <span class="meta-time">2026/04/14 12:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这似乎是一个单独的事情。您可以通过千兆位连接发送 199x 时代的 HTML。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That seems like a separate thing. You can send 199x-era HTML over a gigabit connection.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761357" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bonesss</span>
+        <span class="meta-time">2026/04/14 13:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在 1995 年发布了我的第一个网站（虽然它甚至没有一点受欢迎，但最终出现了一个垃圾邮件同性恋色情网站，并且具有完全相同的笑话名称，导致了一个相当奇怪的早期“<i>如果您搜索自己的网站怎么办</i>“ 经验）。<p>如果你把 2026 年的媒体播放器（具有现代带宽）放在 95 年手动策划的小型编辑网站上，那就太棒了。</p><p>我们曾经有桌面应用程序，这些 SPA JS 怪物是 MS 缺少网络然后 MS 缺少移动的结果。我们不再出现 ActiveX 出现的桌面垄断（在许多情况下提供比人们想象的更好的应用程序体验），而是跨平台的电子怪物和胖反应应用程序，这些应用程序很糟糕，速度很慢，而且它们会崩溃。很糟糕。并且吃掉资源。复制和粘贴中断、滚动中断、导航被劫持、深色模式被覆盖。</p><p>我认为 Netflix、Spotify、MS 的应用程序在主要主流硬件上打破了常规。我的现代游戏 Windows 笔记本电脑，对于所有 LLM 和本地 kubernetes 管理员来说都是额外多汁的 GPU，对 Windows 渲染感到窒息。 Windows 不仅在倒退，它们的整个堆栈也在积极腐烂，而这一切都在花哨的网页按钮背后。</p><p>老人对云大喊大叫，但是：天哪，孩子们，我想回去。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I published my first website in 1995 (and while it wasn’t even a little popular, eventually a spammy gay porn site popped up with the exact same joke name, leading to a pretty odd early “<i>what if you search for your own site</i>” experience).<p>If you put 2026 media players (with modern bandwidth), on the manually curated small-editorial web of ‘95 it’d be amazing.</p><p>We used to have desktop apps, these SPA JS monstrosities are the result of MS missing the web then MS missing mobile. Instead of a desktop monopoly where ActiveX could pop up (providing better app experiences in many cases than one would think), we have cross-platform electron monstrosities and fat react apps that suck, are slow, and omfgbbq do they break. And suck. And eat up resources. Copy and paste breaks, scrolling breaks, nav gets hijacked, dark mode overridden.</p><p>Netflix, Spotify, MS have apps I see breaking on the regular on prime mainstream hardware. My modern gaming windows laptop, extra juicy GPU for all the LLM and local kubernetes admin, chokes on windows rendering. Windows isn’t just regressing, their entire stack is actively rotting, and all behind fancy web buttons.</p><p>Old man yelling at cloud, but: geeeez boys, I want to go back.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761481" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wmf</span>
+        <span class="meta-time">2026/04/14 13:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你没有错，但我们从未真正尝试过现代 CSS 与无 JS 的结合。它可以产生加载速度非常快的优雅设计……或者充满广告但具有声明性的设计。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You're not wrong but we've never really tried the combination of modern CSS with no JS. It could produce elegant designs that load really fast... or ad-filled slop but declarative.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761425" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/14 13:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 您在 1995 年使用过网络吗？<p>我还没有从失去 Gopher 的阴影中走出来。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Did you use the web back in 1995?<p>I'm still not over the loss of Gopher.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761506" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">AuthAuth</span>
+        <span class="meta-time">2026/04/14 12:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这并不“好”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It wasnt "fine".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761150" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">atoav</span>
+        <span class="meta-time">2026/04/14 12:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，社交媒体很多， <i>很多</i> 更好的。人们更加开放，跟踪不存在。所有的白痴仍然认为计算机只是书呆子和孩子的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh, the social media was much, <i>much</i> better. People much more open, tracking didn't exist. All the idiots still thought computers were only a thing for nerds and kids.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">al_borland</span>
+        <span class="meta-time">2026/04/14 11:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一些微软网站对此深感内疚。它们是我最近记忆中的记忆。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Some Microsoft sites have been very guilty of this. They are the ones that stick in my head in recent memory.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761003" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lamasery</span>
+        <span class="meta-time">2026/04/14 12:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">IIRC Azure“门户”就是这样做的。也喜欢 <i>不是</i> 将事情记录为真正感觉应该的导航事件。回击这个东西就像点击 Android 上的后退按钮，这是“我感到幸运”按钮。什么事情都可能发生。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">IIRC the Azure “portal” does this. Also likes to <i>not</i> record things as navigation events that really feel like they should be. Hitting back on that thing is like hitting the back button on Android, it’s the “I feel lucky” button. Anything could happen.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761118" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">PhageGenerator</span>
+        <span class="meta-time">2026/04/14 13:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这是因为某些“页面”确实是全屏模式。因此，后退按钮确实会将您带回上一页，但看起来您已经返回了两页（关闭模式+返回）。我不会在 Azure 门户上花费太多时间，但这种行为在 Entra 管理中心非常猖獗。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think that is because some "pages" are really full screen modals. So the back button does take you back to the previous page, but it looks like you went back two pages (closes modal + goes back). I don't spend too much time in the Azure portal but this behavior is rampant in the Entra admin center.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761568" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">542458</span>
+        <span class="meta-time">2026/04/14 12:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们是吗？这似乎是关于欺骗性或恶意内容（即重定向到广告），而不是“我的历史记录中的某些内容触发了 JS 重定向”。我在多发性硬化症中肯定经历过后者，但从未经历过前者。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are they? This seems about deceptive or malicious content (i.e., redirecting to ads) rather than “something in my history triggers a JS redirect”. I’ve definitely experienced the latter with MS, but never the former.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761106" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">surround</span>
+        <span class="meta-time">2026/04/14 12:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谷歌的政策似乎与这种做法的意图无关。如果网站 JS 重定向破坏了后退按钮，从而破坏了用户体验，那么它将在搜索结果中被降级。无论重定向是否具有欺骗性或恶意，网站都不应该破坏用户体验。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It seems like Google's policy is unconcerned with the intent of the practice. If a website JS redirect ruins the user experience by breaking the back button, it will be demoted in search results. It doesn't matter whether or not the redirect was meant to be deceptive or malicious, websites shouldn't be ruining the user experience.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761184" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dataflow</span>
+        <span class="meta-time">2026/04/14 13:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 谷歌的政策似乎与这种做法的意图无关。<p>我正在读相反的内容：“如果您当前正在使用任何插入或替换的脚本或技术 <i>欺骗性或操纵性页面</i> 进入用户的浏览器历史记录 [...]”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; It seems like Google's policy is unconcerned with the intent of the practice.<p>I'm reading the opposite: "If you're currently using any script or technique that inserts or replaces <i>deceptive or manipulative pages</i> into a user's browser history that [...]"</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761496" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sixothree</span>
+        <span class="meta-time">2026/04/14 12:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Epic store 至少无法在移动设备上从结账处向后导航。不确定这是设计问题还是设计不佳。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Epic store makes it impossible to navigate backwards from the checkout on mobile at least. Not sure if it's design or just poor design.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761091" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SuperNinKenDo</span>
+        <span class="meta-time">2026/04/14 12:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">昨天通过这里的链接发生在我身上。我已经预料到它会在给定的域中出现，但通常足够快的混搭最终会达到目的。这次不是。不得不杀死标签。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Happened to me yesterday through a link off here. I was already expecting it given the domain, but usually mashing back fast enough does the trick eventually. Not this time. Had to kill the tab.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761302" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Tepix</span>
+        <span class="meta-time">2026/04/14 13:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在大多数浏览器中，您可以按住后退按钮一秒钟，这样您就可以向后跳不止一个步骤。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In most browsers you can hold the back button for a second and it will let you skip back more than one step.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Kab1r</span>
+        <span class="meta-time">2026/04/14 13:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有些网站会消耗浏览器在该菜单中显示的整个历史记录</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And some websites consume the entire history that a browser displays in that menu</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761507" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">NooneAtAll3</span>
+        <span class="meta-time">2026/04/14 13:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是否有针对“主页按钮劫持”的政策？<p>我厌倦了拦截主页按钮来询问“你确定吗？”的应用程序。 - 主页按钮是主页按钮，让我返回手机主屏幕</p><p>另外，屏幕底部有广告，这样如果你错过了主页按钮，你就可以打开一个网站</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">is there a policy on "home button hijacking"?<p>I'm tired of apps that intercept home button to ask "are you sure?" - home button is home button, return me to the main phone screen</p><p>also, ads at the bottom of the screen, so that if you miss home button you open a website</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761776" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">monegator</span>
+        <span class="meta-time">2026/04/14 13:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">唷。有那么一会儿，我以为他们会开始阻止应用程序中后退按钮的交替使用（例如，当它意味着“返回”时，当它意味着“关闭所有内容”时）<p>那会严重扰乱我的吉米</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Phew. for a moment there i thought they would start blocking alternate uses of the back button in apps (for like when it means "go back" and when it means "close everything")<p>That would have severely rustled my jimmies</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761734" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mlmonkey</span>
+        <span class="meta-time">2026/04/14 12:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但问题是：为什么 <i>是</i> 网站允许劫持后退按钮？！？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But the question is: why <i>are</i> sites allowed to hijack the Back Button?!?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761309" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">josephcsible</span>
+        <span class="meta-time">2026/04/14 12:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因此，在单页应用程序中，它可以直观地工作，而不是总是带您离开应用程序。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So that in single-page applications, it can work intuitively instead of always taking you all the way out of the app.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">not2b</span>
+        <span class="meta-time">2026/04/14 13:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果导航模拟我们跟随指向 SPA#pos1、SPA#pos2 等的链接会发生什么，这样，如果我在 SPA 中单击两次，然后按“后退”三次，我就会返回到我访问 SPA 所遵循的任何链接，我想这是可以的，并且符合用户期望。但如果以此为借口将用户困在 SPA 中，除非他们杀死该选项卡，那就不行了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If the navigation simulates what would happen if we follow links to SPA#pos1, SPA#pos2, etc so that if I do two clicks within the SPA, and then hit Back three times I'm back to whatever link I followed to get to the SPA, I guess it's OK and follows user expectations. But if it is used as an excuse to trap the user in the SPA unless they kill the tab, not OK.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761452" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bonesss</span>
+        <span class="meta-time">2026/04/14 13:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但从浏览器的角度来看，它们是同一件事。这是一个范式边界。<p>真正的答案是拥有像应用程序一样工作的桌面应用程序（按钮做感觉正确的事情），以及像网站一样工作的网站。</p><p>SPA，是一个页面应用程序。页面不是应用程序，应用程序也不是页面。 AutoCAD 是一个应用程序，《太空堡垒百科全书》是内容。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the browsers perspective those are the same thing though. It’s a paradigm boundary.<p>The real answer is to have desktop applications that work like applications (buttons do what feels right), and websites that work like websites.</p><p>SPA, is a page application. Pages aren’t applications, applications aren’t pages. AutoCAD is an app, the Robotech Encyclopedia is content.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761544" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mock-possum</span>
+        <span class="meta-time">2026/04/14 13:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当然可以，但是从编程角度来说，如何强制执行呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Of course, but programmatically, how do you enforce that?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">JoshTriplett</span>
+        <span class="meta-time">2026/04/14 13:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">某些浏览器 API（例如播放视频）被锁定在用户交互之后。对历史记录 API 执行相同的操作：在用户单击链接之前，您无法向历史记录添加任何项目，然后您只能添加 <i>一</i>。<p>这并不完美，它仍然可能被滥用，但它可能会防止最常见的滥用。</p><p>编辑：显然 Chrome 尝试了这一点，但这还不够： <a href="https://news.ycombinator.com/item?id=47761349" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47761349</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Some browser APIs (such as playing video) are locked behind a user interaction. Do the same for the history API: make it so you can't add any items to history until the user clicks a link, and then you can only add <i>one</i>.<p>That's not perfect, and it could still be abused, but it might prevent the most common abuses.</p><p>EDIT: apparently Chrome tried that and it wasn't sufficient: <a href="https://news.ycombinator.com/item?id=47761349" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47761349</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761577" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">filcuk</span>
+        <span class="meta-time">2026/04/14 12:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为它有合法的用途。无论如何，这些工具都会被恶意行为者滥用</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because it has a legitimate use. As anything, the tools will be abused by malicious actors</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hysan</span>
+        <span class="meta-time">2026/04/14 13:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">花了足够长的时间。也许我错过了，但我没有看到他们说他们在解决这个问题上投入了多少。推广规则是一回事，但与 SEO 相关的一切都变成了猫捉老鼠的游戏。我对这是否有效没有很高的信心。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Took long enough. Maybe I missed it, but I didn’t see them say how invested they are in tackling this. Promoting a rule is one thing, but everything SEO related becomes a cat and mouse game. I don’t have high confidence that this will work.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761574" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">onli</span>
+        <span class="meta-time">2026/04/14 14:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[延迟]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[delayed]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761795" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">CableNinja</span>
+        <span class="meta-time">2026/04/14 11:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人沮丧的是，花了这么长时间才采取行动，但很高兴现在已经采取了行动。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Frustrating it took this long for something to be done about this, but glad its now got something being done.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760805" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">throwaway81523</span>
+        <span class="meta-time">2026/04/14 12:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 当用户点击浏览器中的“后退”按钮时，他们有一个明确的期望：他们想要返回到上一页。后退按钮劫持打破了这一基本期望。<p>这看起来很愚蠢。  与其扩大 SEO 政策官僚机构来解决垃圾邮件发送者劫持后退按钮的情况，浏览器应该首先被设计为绝不允许劫持发生。  第二个最佳方法是立即修改它。  当他们这样做的时候，他们也应该让模式一不可能被劫持……哦，是的，谷歌本身就是这么做的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; When a user clicks the "back" button in the browser, they have a clear expectation: they want to return to the previous page. Back button hijacking breaks this fundamental expectation.<p>It seems pretty stupid.  Instead of expanding the SEO policy bureaucracy to address a situation where a spammer hijacks the back button, the browser should have been designed in the first place to never allow that hijacking to happen.  Second best approach is modify it now.  While they're at it, they should also make it impossible to hijack the mode one.... oh yes, Google itself does that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761211" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">spankalee</span>
+        <span class="meta-time">2026/04/14 12:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">以编程方式添加历史条目的所有合法用途又如何呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What about all the very legitimate uses of programmatically adding history entries?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761387" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jack1243star</span>
+        <span class="meta-time">2026/04/14 13:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请解释合法用途。我从来没有遇到过一个网站可以通过修改我的浏览历史记录的行为来完成一些有用的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please explain the legitimate uses. Not once I have ever encountered a website that does something useful by modifying the behavior of my browsing history.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761521" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">venussnatch</span>
+        <span class="meta-time">2026/04/14 13:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">任何单页应用程序，例如 YouTube、Gmail 或 Discord。<p>它允许持久内容（视频）或连接（聊天）持续存在，同时模拟分页浏览体验。</p><p>当它做得正确时，你根本不会注意到它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Any single page application, such as YouTube, Gmail, or discord.<p>It lets persistent content (videos) or connections (chat) persist while emulating a pagenated browsing experience.</p><p>When it's done right you don't notice it at all.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761651" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">imiric</span>
+        <span class="meta-time">2026/04/14 14:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我们相信用户体验是第一位的。<p>如果您所说的“用户”指的是广告商，那么您肯定是指的。其他人都是可以从中获取尽可能多价值的资产。你主动破坏了他们的体验。</p><p>这些公司控制网络及其主要平台的事实是现代最大的悲剧之一。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; We believe that the user experience comes first.<p>If by "user" you mean advertisers, sure you do. Everyone else is an asset to extract as much value from as possible. You actively corrupt their experience.</p><p>The fact these companies control the web and its major platforms is one of the greatest tragedies of the modern era.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761792" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Animats</span>
+        <span class="meta-time">2026/04/14 14:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在可以防止滚动条劫持。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now to prevent scroll bar hijacking.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761800" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dnnddidiej</span>
+        <span class="meta-time">2026/04/14 13:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">轻松修复：<p>JS 不允许您更改后退按钮的行为。</p><p>问：那么 SPA 呢？</p><p>A. 在页面左上角绘制您自己的应用程序级后退按钮。</p><p>另一个解决方案：使其成为许可。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Easy fix:<p>JS doesn't let you change back button behaviour.</p><p>Q. But what about SPA?</p><p>A. Draw your own app-level back button top left of page.</p><p>Another solution: make it a permisson.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761611" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kaelwd</span>
+        <span class="meta-time">2026/04/14 13:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可以阻止 mouse5 上的默认行为吗？ Android 上的物理后退按钮怎么样？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can I preventDefault on mouse5? What about the physical back button on Android?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761725" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Hamuko</span>
+        <span class="meta-time">2026/04/14 13:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;<i>在页面左上角绘制您自己的应用程序级后退按钮。</i><p>这是我一整天听到的最糟糕的想法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;<i>Draw your own app-level back button top left of page.</i><p>This is the worst idea I’ve heard all day.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761685" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">psidium</span>
+        <span class="meta-time">2026/04/14 13:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">具有讽刺意味的是，我们现在在 HN (nypost) 的首页上有一个侵权网站。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ironically, we have an infringing website right now on the front-page of HN (nypost).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761592" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">twism</span>
+        <span class="meta-time">2026/04/14 12:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">红迪特！我在看着你？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Reddit! I'm looking at you?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761247" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">itopaloglu83</span>
+        <span class="meta-time">2026/04/14 13:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在移动设备上滚动 Reddit，然后单击链接。评论将在新选项卡中打开。关闭选项卡，上一个选项卡也在您刚刚关闭的链接处。<p>导致无法浏览，长按在新选项卡上打开也无法解决问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Scroll on Reddit on mobile and click on a link. The comments open in a new tab. Close the tab and the previous tab is also at the link you’ve just closed.<p>Makes it impossible to browse around and long click to open on a new tab doesn’t solve the issue either.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761434" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rc_kas</span>
+        <span class="meta-time">2026/04/14 13:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得 Facebook 是这件事的最大罪魁祸首</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like facebook is the worst culprit with this</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761446" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kstenerud</span>
+        <span class="meta-time">2026/04/14 13:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在，如果他们能为 Android 应用程序执行此操作，劫持后退按钮以弹出内容，或者说“您确定要离开吗？”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now if only they'd do this for Android apps that hijack the back button to pop up things, or say "are you sure you want to leave?"</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761740" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bschwindHN</span>
+        <span class="meta-time">2026/04/14 12:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">酷，现在也许让我们做点什么，在我可以阅读一个简单的网页之前，我必须清理掉我脸上的所有垃圾。例如，在这篇文章中，我必须为 cookie 单击“不，谢谢”，然后为调查或其他内容单击“不，谢谢”。然后顶部有一个应用程序的广告，我也关闭了它。<p>这就像走进某个房间，在做任何你想做的事情之前必须拍掉一堆蜘蛛网（基本上是阅读一些文字）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool, now maybe let's do something about all the shit I have to clear out out my face before I can read a simple web page. For example, on this very article I had to click "No thanks" for cookies and then "No thanks" for a survey or something. And then there was an ad at the top for some app that I also closed.<p>It's like walking into some room and having to swat away a bunch of cobwebs before doing whatever it is you want to do (read some text, basically).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">not_your_vase</span>
+        <span class="meta-time">2026/04/14 12:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，我们有一个解决方案，称为弹出窗口拦截器。然后，当它们变得非常有用时，每个人都转而使用注入了 javascript 的覆盖层，因此它们变得不可阻挡。<p>但此刻想到这一点，这对于本地运行的法学硕士来说可能是一个很好的用途，可以动态地摆脱所有这些废话。我想知道为什么 Firefox 在将 AI 固定在 Firefox 之上时不使用这个作为用例。也许我是时候检查一下 FF 有哪些 api 了</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Haha, we had a solution for that, called pop-up blockers. Then when they became very usable, everyone switched to overlays injected with javascript, so they became unblockable.<p>But thinking of this at this moment, this could be a good use for a locally ran LLM, to get rid of all this crap dynamically. I wonder why Firefox didn't use this as a usecase when they bolted AI on top of Firefox. Maybe it is time for me to check what api FF has for this</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761271" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">Terr_</span>
+        <span class="meta-time">2026/04/14 12:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我正在等待有人开发一个增强现实系统，该系统可以检测品牌广告或产品，将它们与公司所有权数据库进行比较，应用用户选择的策略，然后在用户选择的内容上添加警告条纹或审查栏。<p>它最终将打破知情消费者的神话，并且企业将展开极其荒谬的法庭斗争。 （“这是我们的言论和商业自由，这一点至关重要，如果人们不喜欢我们所做的事情，他们可以用钱包投票……而不是停止使用言论和商业！”）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm waiting for someone to develop an augmented-reality system that detects branded ads or products, compares them against a corporate-ownership database, applies policies chosen by the user, and then adds warning-stripes or censor-bars over things the user has selected against.<p>It would finally put some teeth behind the myth of the informed consumer, and there would be gloriously absurd court-battles from corporations. ("This is our freedom of speech and commerce, it's essential, if people don't like what we're doing they can vote with their wallets... NOT LIKE THAT STOP USING SPEECH AND COMMERCE!")</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761330" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">internet101010</span>
+        <span class="meta-time">2026/04/14 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不要忘记无用的“明白了！”弹出窗口，尤其是当网站模糊屏幕以引导您找到它时。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Don't forget the useless "Got it!" popups, especially when the site blurs the screen to guide you to it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761142" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pwg</span>
+        <span class="meta-time">2026/04/14 12:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当 uBlockOrigin 设置为默认拒绝页面上的所有 javascript 时，有：<p>零 cookie 横幅</p><p>零调查出现</p><p>零广告关闭</p><p>只有页面的文本，没有其他干扰。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With uBlockOrigin set to default deny all the javascript on the page there are:<p>zero cookie banners</p><p>zero surveys popping up</p><p>zero ads to be closed</p><p>Just the text of the page with no other distractions in the way.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761156" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">carlosjobim</span>
+        <span class="meta-time">2026/04/14 12:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你的问题已经解决了十多年了。将浏览器设置为默认以读者视图打开页面，就不会遇到这些问题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Your problems have been solved for more than a decade. Set your browser to open pages in reader view by default and you don't have these issues.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761381" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">93po</span>
+        <span class="meta-time">2026/04/14 12:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">开启烦恼过滤器的 ublock origin 解决了 95% 的问题</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ublock origin with annoyance filters on solves 95% of this</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761298" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">transcriptase</span>
+        <span class="meta-time">2026/04/14 13:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;我们相信用户体验至上<p>我会相信，当 YouTube 让我能够屏蔽某些频道时，我会相信“不感兴趣”和“不推荐频道”按钮完全不符合我的要求。</p><p>或者还有上千件事，但最近最受关注的就是这一件事。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;We believe that the user experience comes first<p>I’ll believe that when YouTube gives me the ability to block certain channels versus “not interested” and “don’t recommend channel” buttons that do absolutely nothing close to what I want.</p><p>Or a thousand other things, but that one in particular has been top of mind recently.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761438" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">PeterStuer</span>
+        <span class="meta-time">2026/04/14 13:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">让我永久隐藏“短裤”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Let me permanently hide "shorts".</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761656" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bot403</span>
+        <span class="meta-time">2026/04/14 13:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者，如果他们恢复了“忽略此域”功能，那么我们就可以忽略 ai slop 和山寨网站。<p>这就是我去卡吉的原因。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Or if they ever bring back the "ignore this domain" feature so we can ignore ai slop and copycat sites.<p>It's why I went to Kagi.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761579" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">synack</span>
+        <span class="meta-time">2026/04/14 12:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们是否认为 window.history.pushState 的所有使用都是劫持？如果是这样，为什么不从 Chrome 中删除该功能呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Are they considering all uses of window.history.pushState to be hijacking? If so, why not remove that function from Chrome?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761107" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">kro</span>
+        <span class="meta-time">2026/04/14 12:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们如何检测它是一个有效的问题。由于存在有效的用法，仅检查函数调用是否存在是不正确的。<p>这些网站可能会在同意操作上推送状态，因此看起来就像任何用户交互一样。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a valid question how they detect it. As there are valid usages, just checking for the existence of the function call would not be correct.<p>These sites likely pushState on consent actions so it appears like any user interaction.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761420" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tgsovlerkhgsel</span>
+        <span class="meta-time">2026/04/14 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为单击 Web 应用程序中的导航按钮是 window.history.pushState 的一个很好的理由，该状态将使用户返回到单击该按钮时所在的位置。<p>单击 cookie 横幅上的“关闭”按钮并不是推动用户尝试离开时向其显示充满广告的屏幕的状态的理由。 （提到 cookie 横幅是因为 AFAIK Chrome 需要“用户手势”才能使 PushState 正常工作， <a href="https://groups.google.com/a/chromium.org/g/blink-dev/c/T8d4_BRb2xQ/m/WSdOiOFcBAAJ?pli=1" target="_blank" rel="noopener noreferrer">https://groups.google.com/a/chromium.org/g/blink-dev/c/T8d4_...</a>）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because clicking on a navigation button in a web app is a good reason to window.history.pushState a state that will return the user to the place where they were when they clicked the button.<p>Clicking the dismiss button on the cookie banner is not a reason to push a state that will show the user a screen full of ads when they try to leave. (Mentioning the cookie banner because AFAIK Chrome requires a "user gesture" before pushState works normally, <a href="https://groups.google.com/a/chromium.org/g/blink-dev/c/T8d4_BRb2xQ/m/WSdOiOFcBAAJ?pli=1" target="_blank" rel="noopener noreferrer">https://groups.google.com/a/chromium.org/g/blink-dev/c/T8d4_...</a>)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761145" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">omcnoe</span>
+        <span class="meta-time">2026/04/14 12:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不，只有当您的网站滥用 window.history.pushState 将用户重定向到垃圾邮件/广告内容时才被视为滥用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No, only if your website abuses window.history.pushState to redirect the user to spam/ad content is it considered abuse.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761141" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sublinear</span>
+        <span class="meta-time">2026/04/14 13:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 值得注意的是，某些后退按钮劫持实例可能源自网站包含的库或广告平台。我们鼓励网站所有者 <i>彻底审查其技术实施</i>...<p>哈。在我与营销团队合作的时间里，这种情况极不可能发生。他们对代码过敏，而且他们的数量远远超过这个领域的其他人。他们的最佳实践成为其他新手的标准。</p><p>他们可能会做的是更改 SERP 上显示的虚荣 URL 以指向满足要求的登录页面。该页面将包含用户想要的链接。它将被打扮得尽可能令人无法抗拒。这将成为所有 SEO 相关工具文档中的新最佳实践。天哪，即使谷歌自己最终也可能会把它放到他们的文档中。</p><p>换句话说，用户现在必须点击两次才能找到后退按钮被劫持的页面。更甜蜜的是，不受约束的后退按钮无论如何都不会离开他们的领域。</p><p>这听起来像是另一层更多的挫败感。与普遍的看法相反，如果用户认为自己要去某个好的地方，他们就会忍受很多额外的摩擦。这只是额外的点击。大多数用户可能根本不会注意到这一变化。如果有的话，将会有针对有抱负的网络开发人员和高级用户的宣传，告诉他们对谷歌“要求”登陆页面感到愤怒。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Notably, some instances of back button hijacking may originate from the site's included libraries or advertising platform. We encourage site owners to <i>thoroughly review their technical implementation</i>...<p>Hah. In my time working with marketing teams this is highly unlikely to happen. They're allergic to code and they far outnumber everyone else in this space. Their best practices become the standard for everyone else that's uninitiated.</p><p>What they will probably do is change that vanity URL showing up on the SERP to point to a landing page that meets the requirements. This page will have the link the user wants. It will be dressed up to be as irresistible as possible. This will become the new best practice in the docs for all SEO-related tools. Hell, even google themselves might eventually put that in their docs.</p><p>In other words, the user must now click twice to find the page with the back button hijacking. Even sweeter is that the unfettered back button wouldn't leave their domain anyway.</p><p>This just sounds like another layer of yet more frustration. Contrary to popular belief, the user will put up with a lot of additional friction if they think they're going somewhere good. This is just an extra click. Most users probably won't even notice the change. If anything there will be propaganda aimed at aspiring web devs and power users telling them to get mad at google for "requiring" landing pages.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761667" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">incognito124</span>
+        <span class="meta-time">2026/04/14 13:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在，如果他们只是宣布滚动劫持为垃圾邮件......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now, if they only declared scroll hijacking as spam...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761515" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">charcircuit</span>
+        <span class="meta-time">2026/04/14 12:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谷歌实际上应该从浏览器端解决这个问题，而不是试图严重惩罚可能存在错误的网站。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Google should actually fix this from the browser side instead of trying to seriously punish potentially buggy sites.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761146" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">domenicd</span>
+        <span class="meta-time">2026/04/14 12:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们尝试了几次。我们已经掌握了在用户激活（例如点击）之后推送到“真实历史堆栈”[1] 的能力。但是，让用户点击某个地方很容易：只需抛出一个 cookie 横幅或“展开以查看完整文章”或类似内容即可。<p>除此之外，我们确实无法找到任何技术解决方案。它将依赖于某种点击分类是否会导致“真正的”同文档导航。</p><p>只要您与该网站保持合作关系，就可以很好地完成此操作。例如，如果您尝试对点击是否应发出单页导航性能条目进行分类以进行 Web 性能测量。 （参见 [2]。）在这种情况下，如果浏览器可以通过良好的启发式默认达到（比如说）99% 的准确度，并为网站所有者提供有关如何注释或调整剩余 1% 代码的指导，那么您就处于良好状态。</p><p>但如果您与该网站处于敌对关系，即某个恶意垃圾邮件发送者试图劫持后退按钮，那么恶意网站将始终沿着浏览器启发式的 1% 路径前进。您可以尝试使用某些代码模式玩打地鼠游戏，但它永远不会结束，并且不能很好地利用工程资源，并且很可能会意外地开始降低表现良好的网站的体验。</p><p>因此，基于策略的解决方案对我来说很有意义。</p><p>[1]：“真实历史堆栈”：我指的是浏览器后退按钮 UI 遍历的用户可见堆栈。这与 `navigation.entries()` 中程序员可见的不同，由 `navigation.back()` 或 `history.back()` 遍历。浏览器的后退按钮明确允许跳过程序员可见的条目。 <a href="https://html.spec.whatwg.org/multipage/speculative-loading.html#nav-traversal-ui" target="_blank" rel="noopener noreferrer">https://html.spec.whatwg.org/multipage/speculative-loading.h...</a></p><p>[2]： <a href="https://developer.chrome.com/docs/web-platform/soft-navigations-experiment" target="_blank" rel="noopener noreferrer">https://developer.chrome.com/docs/web-platform/soft-navigati...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We tried a few times. We got as far as gating the ability to push into the "real history stack" [1] behind a user activation (e.g. click). But, it's easy to get the user to click somewhere: just throw up a cookie banner or an "expand to see full article" or similar.<p>We weren't really able to figure out any technical solution beyond this. It would rely on some sort of classification of clicks as leading to "real" same-document navigations or not.</p><p>This can be done reasonably well as long as you're in a cooperative relationship with the website. For example, if you're trying to classify whether a click should emit single-page navigation performance entries for web performance measurement. (See [2].) In such a case, if the browser can get to (say) 99% accuracy by default with good heuristics and provide site owners with guidance on how to annotate or tweak their code for the remaining 1%, you're in good shape.</p><p>But if you're in an adversarial relationship with the website, i.e. it's some malicious spammer trying to hijack the back button, then the malicious site will just always go down the 1% path that slips through the browser's heuristics. And you can try playing whack-a-mole with certain code patterns, but it just never ends, and isn't a great use of engineering resources, and is likely to start degrading the experience of well-behaved sites by accident.</p><p>So, policy-based solutions make sense to me here.</p><p>[1]: "real history stack": by this I mean the user-visible one that is traversed by the browser's back button UI. This is distinct from the programmer-visible one in `navigation.entries()`, traversed by `navigation.back()` or `history.back()`. The browser's back button is explicitly allowed to skip over programmer-visible entries. <a href="https://html.spec.whatwg.org/multipage/speculative-loading.html#nav-traversal-ui" target="_blank" rel="noopener noreferrer">https://html.spec.whatwg.org/multipage/speculative-loading.h...</a></p><p>[2]: <a href="https://developer.chrome.com/docs/web-platform/soft-navigations-experiment" target="_blank" rel="noopener noreferrer">https://developer.chrome.com/docs/web-platform/soft-navigati...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761349" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">themafia</span>
+        <span class="meta-time">2026/04/14 13:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">后退按钮本身感觉超载。  有“转到上一个状态”，然后有“转到上一个原点”。  在理想的情况下，当我双击后退按钮时，我的意思是：“现在就让我离开这个网站。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The back button itself feels overloaded.  There's "go to previous state" and then there's "go to previous origin."  In an ideal world when I doubleclick on the back button what I mean is:  "get me off of this site,  now."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761581" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">josephcsible</span>
+        <span class="meta-time">2026/04/14 12:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这与网站有错误有什么关系？这一变化是关于明显的故意滥用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What does this have to do with sites being buggy? This change is about obvious intentional abuse.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761342" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">SuperNinKenDo</span>
+        <span class="meta-time">2026/04/14 12:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">老实说，如果您的网站存在严重破坏浏览器的错误，也许您应该受到惩罚。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Honestly if your site is buggy in a way that effectively breaks the browser, maybe you should be punished.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761318" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bot403</span>
+        <span class="meta-time">2026/04/14 13:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我建议网站所有者入狱 14 天，如果行为过分，工程师也入狱 14 天。<p>不会毁掉生活，但足以令人烦恼。就像他们的网站一样。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I recommend 14 days in jail for the site owner, and, if egregarious, the engineer as well.<p>Not life ruining but just enough to be annoying. Just like their website.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761612" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tgsovlerkhgsel</span>
+        <span class="meta-time">2026/04/14 12:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在下一步要做付费墙。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now do paywalls next.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761108" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ladberg</span>
+        <span class="meta-time">2026/04/14 13:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您如何建议有价值内容的创作者获得报酬？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">How would you recommend that creators of valuable content get paid?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761503" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">renewiltord</span>
+        <span class="meta-time">2026/04/14 13:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">理想情况下，当我创建有价值的内容时，我会得到报酬，而当我消费有价值的内容时，我不会付费。广告可以做到这一点，但我讨厌它，所以我不想那样。因此，理想情况下，我无法从我身上获取价值，但我能够从他人身上获取价值。我想我会支持找到一种方法来执行这一点的人。<p>但如果有价值的内容足够有价值，我也愿意支付高昂的费用。例如，对于绝对重要的信息，我可能每月支付 0.79 欧元。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ideally, when I create valuable content I am paid and when I consume valuable content I don't pay. Advertising does this but I hate it so I don't want that. So ideally, there is no way to extract value from me but I am able to extract value from others. I think I would support someone who finds a way to enforce this.<p>But I am also willing to pay for valuable content an exorbitant amount if it is valuable enough. For instance, for absolutely critical information I might pay 0.79€ a month.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761538" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andrewmcwatters</span>
+        <span class="meta-time">2026/04/14 12:27</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

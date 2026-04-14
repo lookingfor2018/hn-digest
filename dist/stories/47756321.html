@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>如何使 Firefox 的构建速度提高 17% | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-14-1402/">返回本批次</a>
+      <h1>如何使 Firefox 的构建速度提高 17%</h1>
+      <p class="subtitle">How to make Firefox builds 17% faster</p>
+      <div class="meta-line">
+        <span>blog.farre.se</span>
+        <span>作者 mbitsnbites</span>
+        <span>分数 159</span>
+        <span>评论 28</span>
+        <span>2026/04/14 02:50</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47756321" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://blog.farre.se/posts/2026/04/10/caching-webidl-codegen/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>在上一篇文章中，我提到与 ccache 和 sccache 相比，buildcache 有一些独特的属性。其中之一是它的 Lua 插件系统，它允许您为不是传统意义上的编译器的程序编写自定义包装器。现在合并了 Bug 2027655，我们可以使用它来缓存 Firefox 的 WebIDL 绑定代码生成。</li><li>WebIDL 步骤是什么？</li><li>当您构建 Firefox 时，前面的步骤之一会运行 python3 -m mozbuild.action.webidl 从数百个 .webidl 文件生成 C++ 绑定代码。它生成数千个输出文件：标头、cpp 文件、前向声明、事件实现等。该步骤本身并不是很慢，但它在每个破坏构建上运行，并且在给定相同输入的情况下，输出是完全确定性的。这使得它成为缓存的完美候选者。</li><li>问题是编译器缓存从未传递到此步骤。 Buildcache 仅包装实际的编译器调用，而不是 Python 代码生成。</li><li>改变</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>In the previous post, I mentioned that buildcache has some unique properties compared to ccache and sccache. One of them is its Lua plugin system, which lets you write custom wrappers for programs that aren’t compilers in the traditional sense. With Bug 2027655 now merged, we can use this to cache Firefox’s WebIDL binding code generation.</li><li>What’s the WebIDL step?</li><li>When you build Firefox, one of the earlier steps runs python3 -m mozbuild.action.webidl to generate C++ binding code from hundreds of .webidl files. It produces thousands of output files: headers, cpp files, forward declarations, event implementations, and so on. The step isn’t terribly slow on its own, but it runs on every clobber build, and the output is entirely deterministic given the same inputs. That makes it a perfect candidate for caching.</li><li>The problem was that the compiler cache was never passed to this step. Buildcache was only wrapping actual compiler invocations, not the Python codegen.</li><li>The change</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mmastrac</span>
+        <span class="meta-time">2026/04/14 06:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你能（呃……buildcache）缓存Rust proc-macros吗？我一直在用 sccache 解决这个问题，现在我正在为 next.js 构建 CI 维护一个 10 补丁深度堆栈。<p>由于无法弄清楚的非确定性，Windows 版本的缓存命中率也非常差。</p><p>我很乐意测试一下。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can you (err... buildcache) cache Rust proc-macros? I've been battling this with sccache and I'm now maintaining a 10-patch deep stack for the next.js build CI.<p>Windows builds were ridiculously poor on cache hits rates too because of non-determinism that was not able to figure out.</p><p>I'd be happy to test it out.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759018" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">estebank</span>
+        <span class="meta-time">2026/04/14 07:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有一个实验性 PR 将 proc 宏视为幂等，并具有相应的 colpike 加速。我不知道它发生了什么，稳定性需要大量的设计工作才能不破坏向后兼容。但这是团队关注的事情。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There was an experimental PR that treats proc macros as idempotent with the corresponding colpike speed up. I don't know what happened with it, and stabilization required a lot of design work to not break backcompat. But this is something in the team's radar.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759101" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">staticassertion</span>
+        <span class="meta-time">2026/04/14 07:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是否可以做类似 proc 宏的版本之类的事情，或者让板条箱建立“这是 v2 proc 宏”之类的东西？我希望看到 v2 中发生很多变化，但这一切都会被破坏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Would it be possible to do somethign like editions for proc macros, or have crates establish "this is a v2 proc macro" or something? There are a lot of things I'd love to see change in a v2 but it'd all be breaking.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759488" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">estebank</span>
+        <span class="meta-time">2026/04/14 10:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我认为这里有可行的设计。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, I think here are workable designs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760410" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mmastrac</span>
+        <span class="meta-time">2026/04/14 07:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你有这个的链接吗？很想看看。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you have a link for this one? Would love to see it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759511" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">estebank</span>
+        <span class="meta-time">2026/04/14 10:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是我记得的那个，而是另一个完成我所描述的部分内容的。<p><a href="https://github.com/rust-lang/rust/pull/145354" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rust/pull/145354</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is not the one I remember but another one that does part of what I'm describing.<p><a href="https://github.com/rust-lang/rust/pull/145354" target="_blank" rel="noopener noreferrer">https://github.com/rust-lang/rust/pull/145354</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760557" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">NooneAtAll3</span>
+        <span class="meta-time">2026/04/14 08:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">幂等和colpike是什么意思？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">what do you mean by idempotent and colpike?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759663" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">estebank</span>
+        <span class="meta-time">2026/04/14 10:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">幂等性，如果输入中的令牌流不改变，则在增量过程中使用先前宏扩展的缓存结果，而不是悲观地重新运行宏。<p>Colpike 与编译错误相同。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Idempotent as in if the token stream in the input doesn't change, the cached result of the previous macro expansion is used during incremental, instead of being pessimistic and rerunning the macro.<p>Colpike as in compile typo.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760534" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">evmar</span>
+        <span class="meta-time">2026/04/14 09:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对 Firefox 的构建不太熟悉。  为什么破坏构建很常见？  乍一看，在构建系统周围添加缓存与修复构建系统似乎很奇怪。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m not too familiar with Firefox builds.  Why are clobber builds common?  At first glance it seems weird to add a cache around your build system vs fixing your build system.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759960" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jagged-chisel</span>
+        <span class="meta-time">2026/04/14 10:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">定义“修复”。如果您正在构建临时容器，则对于不会更改的文件需要外部缓存。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Define “fixing.” If you’re building on ephemeral containers, an external cache is necessary for files that don’t change.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760368" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">allenrb</span>
+        <span class="meta-time">2026/04/14 07:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我猜“清除 17% 的代码”不是正确答案？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I guess “purge 17% of the code” is not the correct answer?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759151" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">eru</span>
+        <span class="meta-time">2026/04/14 13:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">仅当您的构建线性扩展时。  否则，它可能是不同的百分比。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Only if your build scales linearly.  Otherwise, it might be a different percentage.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761669" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">K0IN</span>
+        <span class="meta-time">2026/04/14 05:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，如此简单的修复，17% 的比例令人印象深刻。我想知道我们是否可以将其构建为一个单独的项目并将 webidl 文件作为依赖项。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">wow, 17% is impressive with such an easy fix. i wonder if we could just build this as a separate project and pull the webidl files as a dependency.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758051" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rtpg</span>
+        <span class="meta-time">2026/04/14 09:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">将 deps 作为一个单独的项目进行管理会带来很多日常烦恼，特别是如果文件实际上经常被适当更改的话。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">managing deps as a separate project introduces a lot of day-to-day annoyances, especially if the files are actually changed decently often.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760351" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Devorlon</span>
+        <span class="meta-time">2026/04/14 04:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么 ccache 编译代码更快</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why compile code when ccache faster</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757529" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">amelius</span>
+        <span class="meta-time">2026/04/14 05:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ccache 是否使用校验和从中央服务器获取编译后的代码？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Does ccache fetch compiled code from a central server using checksums?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758058" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fishgoesblub</span>
+        <span class="meta-time">2026/04/14 07:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">buildcache，这篇文章所涉及的程序可以使用远程服务器来存储缓存。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">buildcache, the program the post is about can use a remote server for storing the cache.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759201" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mbitsnbites</span>
+        <span class="meta-time">2026/04/14 13:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">以及本地缓存（1 级和 2 级缓存）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And a local cache (kind of level 1 and level 2 caches)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761636" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">01HNNWZ0MV43FF</span>
+        <span class="meta-time">2026/04/14 05:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">sccache 可以，但我们大多数人无权访问 sccache 实例： <a href="https://github.com/mozilla/sccache" target="_blank" rel="noopener noreferrer">https://github.com/mozilla/sccache</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">sccache can, but most of us don't have access to an sccache instance: <a href="https://github.com/mozilla/sccache" target="_blank" rel="noopener noreferrer">https://github.com/mozilla/sccache</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758423" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">firesteelrain</span>
+        <span class="meta-time">2026/04/14 10:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们在本地使用 sccache 和 MinIO。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We use sccache on prem with MinIO.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">mmastrac</span>
+        <span class="meta-time">2026/04/14 08:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">sccache 非常容易设置，您可以使用 S3、memcache、redis 等支持它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">sccache is pretty easy to set up and you can back it with S3, memcache, redis, etc.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759758" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shevy-java</span>
+        <span class="meta-time">2026/04/14 05:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">所以……也许 Mozilla 应该关注用户份额下降。<p>我知道速度很重要，但要重点关注
+当恐龙般的灭绝时，策略并没有真正发挥作用
+即将到来。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So ... perhaps Mozilla should focus on user share dropping.<p>I understand that speed is relevant, but focusing on that
+strategy does not really work when dinosaur-like extinction
+is around the corner.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758372" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mbitsnbites</span>
+        <span class="meta-time">2026/04/14 13:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就其价值而言，浏览器的使用很大程度上取决于某些主要操作系统默认附带的浏览器。很少有用户做出主动选择（从统计上来说）。<p>Safari 很受欢迎，因为它随 iOS 和 macOS 一起提供。</p><p>Edge（以前的 IE）很受欢迎，因为它随 Windows 一起提供。</p><p>然而，Chrome 之所以受欢迎有几个原因。原因之一是它随 Android 和 ChromeOS 一起提供，但在此之前，Google 进行了一场非常激进的多渠道活动，他们在 Google 搜索上用大横幅推送它（每个人都使用 Google），并与 Windows AV 供应商达成协议，以便当用户在计算机上安装防病毒软件时，Chrome 会自动安装并成为默认浏览器。另一个原因是 Google 一直将 Chrome 与其网络服务一起开发，因此搜索、地图、gmail、文档等内容往往在 Chrome 中运行得最好。</p><p>据我所知，Firefox 唯一的默认渠道是各种 Linux 发行版，而且它们的市场份额相当薄弱。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For what it's worth, browser uptake is largely dictated by the browser being default shipped with some major OS. Very few users make an active choice (statistically speaking).<p>Safari is popular because it ships with iOS and macOS.</p><p>Edge (previously IE) is popular because it ships with Windows.</p><p>Chrome, however, is popular for several reasons. One reason is that it ships with Android and ChromeOS, but before that Google had a very aggressive multi-channel campaign where they pushed it with large banners on Google search (everyone used Google) and they made deals with Windows AV vendors so that when a user installed anti-virus on their computer Chrome was automatically installed and made the default browser. Another reason is that Google has consistently develeoped Chrome together with their web services, so things like search, maps, gmail, docs etc tend to work best in Chrome.</p><p>The only default channels that Firefox has, that I'm aware of, are verious Linux distros, and they have a pretty thin market slice.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761780" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">sfink</span>
+        <span class="meta-time">2026/04/14 12:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">噢，糟糕，我们从来没有想到过这一点。我们在这里，每一位开发人员都致力于加快构建速度，但我们从未想过要增加我们的用户份额。回想起来，那真是太愚蠢了！好的，抱歉，我们会尽快处理的。<p>说真的，假设项目中任何人所做的任何事情都假设它是项目的主要目标并且所有其他目标都已被放弃，这种趋势是什么呢？ “Firefox 的前端设计师正在做前端设计工作，而不是实施 WebUSB，这将立即扭转他们不断下降的用户份额趋势，并带来价值数十亿美元的捐款！他们在想什么？！！”</p><p>（我会因为这篇文章而受到很多人的讨厌，不是吗？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Aw shucks, we never thought of that. Here we were, dedicating every one of our developers to speeding up the build, and we never thought to increase our user share instead. In retrospect, that was pretty dumb! Ok, sorry, we'll get right on that.<p>Seriously, what is with the trend of assuming that anything anyone in a project does, it is assumed that it has been the main goal of the project and all other objectives have been abandoned? "Firefox's frontend designers are doing frontend design work instead of implementing WebUSB which would immediately reverse their declining user share trend and make billions of dollars worth of donations! What are they thinking?!!"</p><p>(I'm gonna get a lot of hate for this post, aren't I?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761196" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tadfisher</span>
+        <span class="meta-time">2026/04/14 06:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只想说：不幸的是，您选择不参与文章的内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I will just say this: it is unfortunate that you have chosen not to engage with the content of the article.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">__farre__</span>
+        <span class="meta-time">2026/04/14 12:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在此发表。我应该预料到会有这些评论，这让我想澄清一些事情。<p>1. 仅仅因为我是 Mozilla 的开发人员并且我在 Firefox 存储库中获得了对 buildcache 的支持，并不意味着这就是一个 Mozilla 项目。我在自己的时间做这件事，以帮助我在实际工作时提高效率。</p><p>2.我这样做主要是因为它很有趣。包括博客。</p><p>3. Sccache 仍然是我们在 Mozilla 官方开发的编译器缓存</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Post author here. I should've expected these comments, which makes me want to clarify a couple of things.<p>1. Just because I'm a dev at Mozilla and I got support for buildcache landed in the Firefox repo doesn't make this a Mozilla project. I do this on my own time to help me be more efficient when I actually work.</p><p>2. I mainly do this because it's fun. Including the blogging.</p><p>3. Sccache is still the compiler cache we're officially developing at Mozilla</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761380" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rebelwebmaster</span>
+        <span class="meta-time">2026/04/14 08:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">显然，开发人员花更多时间等待代码编译会提高效率，而不是创建一个简单的构建性能胜利，让他花更多时间改进 Firefox。更不用说所有其他可以从更快的构建中受益的开发人员了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Obviously it'll make the developer more efficient to spend more time twiddling his thumbs waiting for his code to compile rather than creating a simple build performance win that allows him to, you know, spend more time improving Firefox. Not to mention all the other developers who stand to benefit from faster builds.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759614" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jeffbee</span>
+        <span class="meta-time">2026/04/14 06:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到 Firefox 主要吸引其自身的贡献者，因此改善开发人员体验非常重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Considering that Firefox mainly appeals to its own contributors, making the developer experience better would be important.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758735" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

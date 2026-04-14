@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>可视化 CPU 流水线 (2024) | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-14-1402/">返回本批次</a>
+      <h1>可视化 CPU 流水线 (2024)</h1>
+      <p class="subtitle">Visualizing CPU Pipelining (2024)</p>
+      <div class="meta-line">
+        <span>timmastny.com</span>
+        <span>作者 flipacholas</span>
+        <span>分数 76</span>
+        <span>评论 10</span>
+        <span>2026/04/14 02:26</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47756036" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://timmastny.com/blog/visualizing-cpu-pipelining/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">inetknght</span>
+        <span class="meta-time">2026/04/14 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我见过的关于与管道、分支预测和推测执行相关的 CPU 性能的最佳演示是 Chandler Carruth 在 CppCon 2017 上的“Going Nowhere Faster”演示 [0]。我建议观看 <i>所有的</i> 演示文稿，但如果您不看其他内容，则只需观看链接时间戳中的 5 分钟左右即可。<p>[0]: <a href="https://youtu.be/2EWejmkKlxs?t=2511" target="_blank" rel="noopener noreferrer">https://youtu.be/2EWejmkKlxs?t=2511</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The best presentation I've seen about CPU performance related to pipelining, branch prediction, and speculative execution was Chandler Carruth's "Going Nowhere Faster" presentation at CppCon 2017 [0]. I do recommend watching the <i>whole</i> presentation, but if you watch nothing else then just watch the 5 minutes or so from the linked timestamp.<p>[0]: <a href="https://youtu.be/2EWejmkKlxs?t=2511" target="_blank" rel="noopener noreferrer">https://youtu.be/2EWejmkKlxs?t=2511</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757051" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">omcnoe</span>
+        <span class="meta-time">2026/04/14 06:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它还包含在演讲结束时提出的一个非常有先见之明的问题：“......处理器会推测，在数组范围之外执行一些负载，它如何在硬件中工作而不崩溃？”<p>当时没有得到答复。我相信 Spectre 是已知的，但此时尚未公开披露。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It also contains a wonderfully prescient question asked right at the end of the talk: "... the processor gonna speculate, doing some loads out of the bounds of the array, how does it work in the hardware that it doesn't crash?"<p>Left unanswered at the time. I believe Spectre was known but not publicly disclosed at this time.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758807" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">smallpipe</span>
+        <span class="meta-time">2026/04/14 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">半个世纪以来，除了微控制器之外，CPU 从未像这样工作过</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">CPUs haven't worked like that in anything but a microcontroller for half a century</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758090" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">alain94040</span>
+        <span class="meta-time">2026/04/14 05:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">正确（嗯，也许不是半个世纪，也许是 30 年左右）。我正要回答说我想要一个显示进出重新排序缓冲区的指令的版本。这将是有启发性的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Correct (well, maybe not half a century, maybe 30 years or so). I was just about to reply that I'd love a version of this that shows instructions going in and out of a re-order buffer. That would be enlightening.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758304" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">userbinator</span>
+        <span class="meta-time">2026/04/14 12:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">廉价路由器 SoC 等小型 MIPS（或兼容）内核可能仍然是这样。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The tiny MIPS (or compatible) cores in things like cheap router SoCs might still be like that.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761316" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">risingedge</span>
+        <span class="meta-time">2026/04/14 04:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果有人有兴趣，请在 <a href="https://sonic-rv.ics.jku.at/" target="_blank" rel="noopener noreferrer">https://sonic-rv.ics.jku.at/</a> 我们构建了一个教育平台，用于 RISC-V 处理器架构的基于网络的模拟和可视化。<p>我们的管道可视化是根据真实的 RTL 跟踪重建的（您可以在使用 GHDL 模拟的程序上运行）。</p><p>在示例中，您可以找到一些基于 Harris&amp;Harris 有关计算机体系结构的书籍的不同体系结构。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If anyone is interested, at <a href="https://sonic-rv.ics.jku.at/" target="_blank" rel="noopener noreferrer">https://sonic-rv.ics.jku.at/</a> we built an educational platform for web-based simulation and visualization of RISC-V processor architectures.<p>Our pipeline visualization is reconstructed from real RTL traces (you can run your on programs which are simulated using GHDL).</p><p>Under examples you can find some different architectures based on the Harris&amp;Harris book on computer architecture.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757213" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">empiricus</span>
+        <span class="meta-time">2026/04/14 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许只有我这么认为，但可视化对我根本没有帮助。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe it's just me, but the visualizations do not help me at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756861" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">artemonster</span>
+        <span class="meta-time">2026/04/14 04:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我总是对这样的文章感到困惑——它实际上制作得很好，绘图很好，小的交互式管道动画也很好。但为了遵循它，你必须已经知道并理解它所写的内容，如果你不知道，那么这些内容对你来说只是噪音。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am always puzzled by such articles - its actually very well made, drawings are good, little interactive pipeline animations are fine. But in order to follow it you must already know and understand what its writeen about and if you dont - the content is just noise for you.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757120" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cogman10</span>
+        <span class="meta-time">2026/04/14 04:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这篇文章确实说了它希望您在阅读之前了解的内容。  然而，它与它想让你知道的知识有一个死链接。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The article does say what it expects you to know before reading.  However, it has a dead link to the knowledge it wants you to know.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757325" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jhallenworld</span>
+        <span class="meta-time">2026/04/14 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">现在做一个动态调度无序引擎，具有重命名、20 个管道、推测执行和数百条运行中的指令。  我想你可以为此制作一个多人游戏。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Now do a dynamic scheduling out of order engine with renaming, 20 pipes, speculative execution and hundreds of instructions in flight.  I guess you could make a multi-person game for this.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757618" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

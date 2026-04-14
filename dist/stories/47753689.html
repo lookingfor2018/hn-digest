@@ -1,0 +1,1930 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>为整个 Cloudflare 构建 CLI | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-14-1402/">返回本批次</a>
+      <h1>为整个 Cloudflare 构建 CLI</h1>
+      <p class="subtitle">Building a CLI for all of Cloudflare</p>
+      <div class="meta-line">
+        <span>blog.cloudflare.com</span>
+        <span>作者 soheilpro</span>
+        <span>分数 288</span>
+        <span>评论 94</span>
+        <span>2026/04/13 23:44</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47753689" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://blog.cloudflare.com/cf-cli-local-explorer/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>2026-04-136 分钟 readCloudflare 具有广阔的 API 表面。我们拥有 100 多种产品和近 3,000 个 HTTP API 操作。代理商越来越多地成为我们 API 的主要客户。开发人员携带他们的编码代理来构建应用程序、代理和平台并将其部署到 Cloudflare，配置他们的帐户，并查询我们的 API 以进行分析和日志。我们希望以代理所需的所有方式提供每个 Cloudflare 产品。例如，我们现在使 Cloudflare 的整个 API 在使用少于 1,000 个令牌的单个代码模式 MCP 服务器中可用。不过，还有更多的表面区域需要覆盖：CLI 命令。 Workers Bindings — 包括用于本地开发和测试的 API。跨多种语言的 SDK。我们的配置文件。地形。开发人员文档。 API 文档和 OpenAPI 架构。座席技能。如今，我们的许多产品无法在所有这些界面上使用。对于我们的 CLI — 牧马人来说尤其如此。许多 Clo​​udflare 产品在 Wrangler 中没有 CLI 命令。代理喜欢 CLI。因此，我们一直在重建 Wrangler CLI，使其成为整个 Cloudflare 的 CLI。它为所有 Cloudflare 产品提供命令，并允许您使用基础设施即代码将它们一起配置。今天，我们将分享下一版本 Wrangler 的早期版本作为技术预览。现在还很早，但是当我们公开工作时，我们会得到最好的反馈。您今天可以通过运行 npx cf 来尝试技术预览版。或者，您可以通过运行 npm install -g cf 来全局安装它。现在，cf 只为 Cloudflare 产品的一小部分提供命令。我们已经在测试支持整个 Cloudflare API 表面的 cf 版本 - 我们将有意审查和调整每个产品的命令，以获得对代理和人类都符合人体工程学的输出。需要明确的是，此技术预览版只是未来牧马人 CLI 的一小部分。在接下来的几个月里，我们将把它与您熟悉和喜爱的 Wrangler 部分结合在一起。为了以与 Cloudflare 快速产品开发节奏保持同步的方式构建它，我们必须创建一个新系统，允许我们生成命令、配置、绑定 API 等。从首要原则重新思考架构和我们的代码生成管道 我们已经基于 Cloudflare API 的 OpenAPI 架构生成了 Cloudflare API SDK、Terraform 提供程序和代码模式 MCP 服务器。但更新我们的 CLI、Workers Bindings、wrangler.jsonc 配置、代理技能、仪表板和文档仍然是一个手动过程。这已经很容易出错，需要太多来回，并且无法扩展以支持下一个版本的 CLI 中的整个 Cloudflare API。为此，我们需要的不仅仅是 OpenAPI 模式所能表达的。 OpenAPI 架构描述了 REST API，但我们有交互式 CLI 命令，涉及结合本地开发和 API 请求的多个操作、表示为 RPC API 的 Workers 绑定，以及将这一切联系在一起的代理技能和文档。我们在 Cloudflare 编写了大量 TypeScript。它是软件工程的通用语言。我们不断发现，用 TypeScript 表达 API 效果更好——就像我们对 Cap n’ Web、代码模式和 Workers 平台内置的 RPC 系统所做的那样。因此，我们引入了一个新的 TypeScript 模式，它可以定义 API 的完整范围、CLI 命令和参数，以及生成任何接口所需的上下文。模式格式“只是”一组带有约定、linting 和护栏的 TypeScript 类型，以确保一致性。但因为它是我们自己的格式，所以它可以轻松地适应我们今天或将来需要的任何接口，同时仍然能够生成 OpenAPI 模式：迄今为止，我们的大部分重点都在这一层 - 构建我们需要的机器，以便我们现在可以开始构建 CLI 和我们多年来希望能够提供的其他接口。这让我们开始梦想更大的梦想，我们可以在 Cloudflare 上实现标准化，并为代理提供更好的服务——尤其是在我们的 CLI 的上下文工程方面。代理和 CLI — 一致性和上下文工程 代理希望 CLI 保持一致。如果一个命令使用 &lt;command&gt; info 作为获取资源信息的语法，而另一个命令使用 &lt;command&gt; get，则代理将期望其中一个命令，并为另一个命令调用不存在的命令。在拥有数百或数千人的大型工程组织中，并且拥有许多产品，通过评论手动强制一致性是瑞士奶酪。您可以在 CLI 层强制执行它，但 CLI、REST API 和 SDK 之间的命名有所不同，这可能会使问题变得更糟。我们所做的第一件事就是开始创建规则和护栏，在架构层强制执行。它总是得到，而不是信息。总是--强制，绝不--跳过确认。始终 --json，从不 --format，并且始终支持跨命令。 Wrangler CLI 也相当独特 - 它提供的命令和配置可以与模拟本地资源或远程资源（例如 D1 数据库、R2 存储桶和 KV 命名空间）一起使用。这意味着一致的默认值更加重要。如果代理认为它正在修改远程数据库，但实际上正在向本地数据库添加记录，并且开发人员正在使用远程绑定针对远程数据库进行本地开发，则他们的代理将无法理解为什么当代理向本地开发服务器发出请求时，新添加的记录没有显示。一致的默认值以及清楚表明命令是应用于远程还是本地资源的输出，可确保代理获得明确的指导。 Local Explorer — 您可以远程执行的操作，现在可以在本地执行 今天我们还发布了 Local Explorer，这是 Wrangler 和 Cloudflare Vite 插件中开放测试版中提供的一项新功能。Local Explorer 可让您反思 Worker 在本地开发时使用的模拟资源，包括 KV、R2、D1、持久对象和工作流程。您可以通过 Cloudflare API 和 Dashboard 执行相同的操作，您也可以完全在本地完成，由相同的底层 API 结构提供支持。多年来，我们一直致力于完全本地开发 - 不仅针对 Cloudflare Workers，而且针对整个平台。当您使用 D1 时，即使 D1 是托管的无服务器数据库产品，您也可以完全在本地运行数据库并通过绑定与其进行通信，而无需任何额外的设置或工具。通过我们的本地开发平台模拟器 Miniflare，Workers 运行时在本地开发中提供与生产中完全相同的 API，并使用本地 SQLite 数据库来提供相同的功能。这使得编写和运行快速运行的测试变得容易，无需网络访问，并且可以离线工作。但到目前为止，计算出本地存储的数据需要您进行逆向工程、内省 .wrangler/state 目录的内容或安装第三方工具。现在，每当您使用 Wrangler CLI 或 Cloudflare Vite 插件运行应用程序时，系统都会提示您打开本地资源管理器（键盘快捷键 e）。这为您提供了一个简单的本地界面，用于查看您的 Worker 当前附加了哪些绑定，以及针对它们存储了哪些数据。当您使用代理进行构建时，本地资源管理器是了解代理如何处理数据的好方法，从而使本地开发周期更具交互性。您可以随时使用本地资源管理器来验证架构、播种一些测试记录，或者重新开始并删除表。我们的目标是提供仅修改本地数据的 Cloudflare API 镜像，以便您可以通过远程使用的相同 API 来使用所有本地资源。通过使 API 形状在本地和远程之间匹配，当您在即将推出的 CLI 版本中运行 CLI 命令并传递 --local 标志时，这些命令就可以正常工作。唯一的区别是，该命令改为向 Cloudflare API 的本地镜像发出请求。从今天开始，这个 API 可在任何 Wrangler 或 Vite 插件驱动的应用程序上的 /cdn-cgi/explorer/api 中使用。通过将您的代理指向此地址，它会找到一个 OpenAPI 规范，只需与您的代理对话即可为您管理本地资源。告诉我们您对 Cloudflare 范围内的 CLI 的希望和梦想 现在我们已经构建了机器，现在是时候采用 Wrangler 的最佳部分，将它们与现在可能的功能相结合，并使 Wrangler 成为使用所有 Cloudflare 的最佳 CLI 。您今天可以通过运行 npx cf 来尝试技术预览。或者，您可以通过运行 npm install -g cf 来全局安装它。对于这个非常早期的版本，我们希望获得您的反馈 - 不仅仅是关于今天的技术预览版的功能，还有您对 Cloudflare 整个平台的 CLI 的期望。告诉我们您希望的是一个简单的单行 CLI 命令，但今天只需在我们的仪表板中单击几下即可。您希望在 wrangler.jsonc 中配置的内容 — 例如 DNS 记录或缓存规则。以及您在哪里看到您的代理陷入困境，以及您希望我们的 CLI 为您的代理提供哪些命令。跳转到 Cloudflare 开发者 Discord 并告诉我们您希望我们首先添加到 CLI 中，并很快关注更多更新。感谢 Emily Shen 为启动 Local Explorer 项目做出的宝贵贡献。Cloudflare 的连接云可保护整个企业网络，帮助客户高效构建互联网规模的应用程序，加速任何网站或互联网应用程序，抵御 DDoS 攻击，阻止黑客入侵，并可以帮助您实现零信任。从任何设备访问 1.1.1.1 即可开始使用我们的免费应用程序让您的互联网更快、更安全。要详细了解我们帮助建立更好的互联网的使命，请从这里开始。如果您正在寻找新的职业方向，请查看我们的空缺职位。开发者开发者平台Cloudflare Workers产品新闻D1API代理周</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>2026-04-136 min readCloudflare has a vast API surface. We have over 100 products, and nearly 3,000 HTTP API operations.Increasingly, agents are the primary customer of our APIs. Developers bring their coding agents to build and deploy applications, agents, and platforms to Cloudflare, configure their account, and query our APIs for analytics and logs.We want to make every Cloudflare product available in all of the ways agents need. For example, we now make Cloudflare’s entire API available in a single Code Mode MCP server that uses less than 1,000 tokens. There’s a lot more surface area to cover, though: CLI commands. Workers Bindings — including APIs for local development and testing. SDKs across multiple languages. Our configuration file. Terraform. Developer docs. API docs and OpenAPI schemas. Agent Skills.Today, many of our products aren’t available across every one of these interfaces. This is particularly true of our CLI — Wrangler. Many Cloudflare products have no CLI commands in Wrangler. And agents love CLIs.So we’ve been rebuilding Wrangler CLI, to make it the CLI for all of Cloudflare. It provides commands for all Cloudflare products, and lets you configure them together using infrastructure-as-code.Today we’re sharing an early version of what the next version of Wrangler will look like as a technical preview. It’s very early, but we get the best feedback when we work in public.You can try the Technical Preview today by running npx cf. Or you can install it globally by running npm install -g cf.Right now, cf provides commands for just a small subset of Cloudflare products. We’re already testing a version of cf that supports the entirety of the Cloudflare API surface — and we will be intentionally reviewing and tuning the commands for each product, to have output that is ergonomic for both agents and humans. To be clear, this Technical Preview is just a small piece of the future Wrangler CLI. Over the coming months we will bring this together with the parts of Wrangler you know and love.To build this in a way that keeps in sync with the rapid pace of product development at Cloudflare, we had to create a new system that allows us to generate commands, configuration, binding APIs, and more. Rethinking schemas and our code generation pipeline from first principles We already generate the Cloudflare API SDKs, Terraform provider, and Code Mode MCP server based on the OpenAPI schema for Cloudflare API. But updating our CLI, Workers Bindings, wrangler.jsonc configuration, Agent Skills, dashboard and docs is still a manual process. This was already error-prone, required too much back and forth, and wouldn’t scale to support the whole Cloudflare API in the next version of our CLI. To do this, we needed more than could be expressed in an OpenAPI schema. OpenAPI schemas describe REST APIs, but we have interactive CLI commands that involve multiple actions that combine both local development and API requests, Workers bindings expressed as RPC APIs, along with Agent Skills and documentation that ties this all together.We write a lot of TypeScript at Cloudflare. It’s the lingua franca of software engineering. And we keep finding that it just works better to express APIs in TypeScript — as we do with Cap n’ Web, Code Mode, and the RPC system built into the Workers platform.So we introduced a new TypeScript schema that can define the full scope of APIs, CLI commands and arguments, and context needed to generate any interface. The schema format is “just” a set of TypeScript types with conventions, linting, and guardrails to ensure consistency. But because it is our own format, it can easily be adapted to support any interface we need, today or in the future, while still also being able to generate an OpenAPI schema: To date most of our focus has been at this layer — building the machine we needed, so that we can now start building the CLI and other interfaces we’ve wanted for years to be able to provide. This lets us start to dream bigger about what we could standardize across Cloudflare and make better for Agents — especially when it comes to context engineering our CLI. Agents and CLIs — consistency and context engineering Agents expect CLIs to be consistent. If one command uses &lt;command&gt; info as the syntax for getting information about a resource, and another uses &lt;command&gt; get, the agent will expect one and call a non-existent command for the other. In a large engineering org of hundreds or thousands of people, and with many products, manually enforcing consistency through reviews is Swiss cheese. And you can enforce it at the CLI layer, but then naming differs between the CLI, REST API and SDKs, making the problem arguably worse.One of the first things we’ve done is to start creating rules and guardrails, enforced at the schema layer. It’s always get, never info. Always --force, never --skip-confirmations. Always --json, never --format, and always supported across commands. Wrangler CLI is also fairly unique — it provides commands and configuration that can work with both simulated local resources, or remote resources, like D1 databases, R2 storage buckets, and KV namespaces. This means consistent defaults matter even more. If an agent thinks it’s modifying a remote database, but is actually adding records to local database, and the developer is using remote bindings to develop locally against a remote database, their agent won’t understand why the newly-added records aren’t showing up when the agent makes a request to the local dev server. Consistent defaults, along with output that clearly signals whether commands are applied to remote or local resources, ensure agents have explicit guidance. Local Explorer — what you can do remotely, you can now do locally Today we are also releasing Local Explorer, a new feature available in open beta in both Wrangler and the Cloudflare Vite plugin.Local Explorer lets you introspect the simulated resources that your Worker uses when you are developing locally, including KV, R2, D1, Durable Objects and Workflows. The same things you can do via the Cloudflare API and Dashboard with each of these, you can also do entirely locally, powered by the same underlying API structure.For years we’ve made a bet on fully local development — not just for Cloudflare Workers, but for the entire platform. When you use D1, even though D1 is a hosted, serverless database product, you can run your database and communicate with it via bindings entirely locally, without any extra setup or tooling. Via Miniflare, our local development platform emulator, the Workers runtime provides the exact same APIs in local dev as in production, and uses a local SQLite database to provide the same functionality. This makes it easy to write and run tests that run fast, without the need for network access, and work offline.But until now, working out what data was stored locally required you to reverse engineer, introspect the contents of the .wrangler/state directory, or install third-party tools.Now whenever you run an app with Wrangler CLI or the Cloudflare Vite plugin, you will be prompted to open the local explorer (keyboard shortcut e). This provides you with a simple, local interface to see what bindings your Worker currently has attached, and what data is stored against them.When you build using Agents, Local Explorer is a great way to understand what the agent is doing with data, making the local development cycle much more interactive. You can turn to Local Explorer anytime you need to verify a schema, seed some test records, or just start over and DROP TABLE.Our goal here is to provide a mirror of the Cloudflare API that only modifies local data, so that all of your local resources are available via the same APIs that you use remotely. And by making the API shape match across local and remote, when you run CLI commands in the upcoming version of the CLI and pass a --local flag, the commands just work. The only difference is that the command makes a request to this local mirror of the Cloudflare API instead.Starting today, this API is available at /cdn-cgi/explorer/api on any Wrangler- or Vite Plugin- powered application. By pointing your agent at this address, it will find an OpenAPI specification to be able to manage your local resources for you, just by talking to your agent. Tell us your hopes and dreams for a Cloudflare-wide CLI Now that we have built the machine, it’s time to take the best parts of Wrangler today, combine them with what’s now possible, and make Wrangler the best CLI possible for using all of Cloudflare.You can try the technical preview today by running npx cf. Or you can install it globally by running npm install -g cf.With this very early version, we want your feedback — not just about what the technical preview does today, but what you want from a CLI for Cloudflare’s entire platform. Tell us what you wish was an easy one-line CLI command but takes a few clicks in our dashboard today. What you wish you could configure in wrangler.jsonc — like DNS records or Cache Rules. And where you’ve seen your agents get stuck, and what commands you wish our CLI provided for your agent to use.Jump into the Cloudflare Developers Discord and tell us what you’d like us to add first to the CLI, and stay tuned for many more updates soon.Thanks to Emily Shen for her valuable contributions to kicking off the Local Explorer project.Cloudflare&#39;s connectivity cloud protects entire corporate networks, helps customers build Internet-scale applications efficiently, accelerates any website or Internet application, wards off DDoS attacks, keeps hackers at bay, and can help you on your journey to Zero Trust.Visit 1.1.1.1 from any device to get started with our free app that makes your Internet faster and safer.To learn more about our mission to help build a better Internet, start here. If you&#39;re looking for a new career direction, check out our open positions. DevelopersDeveloper PlatformCloudflare WorkersProduct NewsD1APIAgents Week</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">8cvor6j844qw_d6</span>
+        <span class="meta-time">2026/04/14 00:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 告诉我们您对 Cloudflare 范围内的 CLI 的希望和梦想<p>如果 Wrangler CLI 能够在本地开发期间预先显示所需的 API 令牌权限，那就太好了，这样您就可以在部署之前确切地知道要配置什么。如果有类似 `cf permissions check` 命令的东西可以告诉您使用 API 键缺少或不需要的权限，那就更好了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Tell us your hopes and dreams for a Cloudflare-wide CLI<p>It'd be great if the Wrangler CLI could display the required API token permissions upfront during local dev, so you know exactly what to provision before deploying. Even better if there were something like a `cf permissions check` command that tells you what's missing or unneeded perms with an API key.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754283" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">LaurensBER</span>
+        <span class="meta-time">2026/04/14 05:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那将是多么光荣啊！如果 ChatGPT 在第一次尝试时没有获得正确的权限，我知道我将不得不花接下来的几个小时阅读文档或尝试随机组合才能获得有效的令牌。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That would be glorious! If ChatGPT doesn't get the permissions right on the first try I know that I'm going to have to spend the next hours reading the documentation or trying random combinations to get a token that works.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758330" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/14 11:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么“第一次尝试”如此重要？告诉它你的最终目标并让它找出正确的组合，而你却去忙其他事情，这有什么问题吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why is "on the first try" so important? What's wrong with telling it your end goal and letting it figure out the exact right combo while you go off and work on something else?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760763" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">martyz</span>
+        <span class="meta-time">2026/04/14 11:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因为我不想让地球融化。也许如果我们都更有效率一点，我们就能把我们的厄运推迟一点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Because I don’t want the earth to melt. Maybe if we’re all a bit more efficient we can postpone our doom for a bit.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760819" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">duc_minh</span>
+        <span class="meta-time">2026/04/14 11:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这也是我的经历。如果第一次尝试不起作用，模型可能会继续与这个问题作斗争，除非我照顾它。<p>所以我更喜欢挖掘真相的来源，这也有助于我围绕问题建立我的思维模型。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's also my experience. If it does not work on the first try, the model will likely continue to struggle with the problem, unless I babysit it.<p>So I prefer to dig through the source of truth, which also helps me build my mental model around the problem.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760989" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">contrahax</span>
+        <span class="meta-time">2026/04/14 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">医生的命令这样做总是好的！希望更多的服务有这个</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A doctor command that does this is always nice! Wish more services would have this</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756263" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tstrimple</span>
+        <span class="meta-time">2026/04/14 12:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为这可以归结为整个 API 的可发现性更高。虽然我不一定是 GraphQL 的粉丝，但它确实提供了非常强大的 LLM 使用工具，通常是因为与大多数“REST”API 相比，它们实际上遵循的可发现性和 HATEOAS 方面。如果法学硕士能够通过根入口点的链接来学习他们需要的关于 API 的一切，我会很高兴。这大大减少了它需要执行的“吸收的知识”和文档读取（错误版本）。如果该工具能够帮助您“发现”其特性和功能，那么过时的文档通常可能比没有文档更糟糕。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think this boils down to more discoverability of the entire API. While I'm not a fan of GraphQL necessarily, it does provide the tools for very robust LLM usage typically because of the discoverability and HATEOAS aspects they actually follow compared to most "REST" APIs. I would love if LLMs could learn everything they need to about an API just by following links from its root entry point. That drastically cuts down on the "ingested knowledge" and documentation reads (of the wrong version) it needs to perform. Outdated documentation can often be worse than no documentation if the tool has the capability of helping you "discover" its features and capabilities.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761288" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jbethune</span>
+        <span class="meta-time">2026/04/14 04:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我会附议这一点。会很有帮助的。不久前有一个手指肥大的问题，这本来可以挽救。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would second this. Would be very helpful. Had a fat finger issue a while ago that this would have saved.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757234" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">csomar</span>
+        <span class="meta-time">2026/04/14 08:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许更好：为您创建该密钥。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe even better: create that key for you.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759549" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aetherspawn</span>
+        <span class="meta-time">2026/04/14 08:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在执行此操作之前，请添加资源组以及对每个资源组强制执行权限的能力，以便我们没有代理（或人员）从命令行破坏产品。谢谢。<p>目前，您只能强制执行基于区域的权限（基于域），但大量资源（例如工作人员）不属于区域，因此本质上可以使用最低级别的权限替换或删除它们的代码。而且没有办法阻止它……</p><p>或者，如果您可以允许我们创建共享一个超级帐户（用于 SSO 等）的多个帐户，类似于具有企业和组织的 GitHub Enterprise。然后我们可以拥有 ACME Corp. 和 ACME Corp (Prod)，并将两者分开，并且不需要严格要求资源组。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please add resource groups and the ability to enforce permissions per resource group before you do this so that we don’t have agents (or people) blowing up prod from their command line. Thank you.<p>Currently you can only enforce zone-based permissions (domain based) BUT plenty of resources, such as workers, don’t belong to zones so essentially their code can be replaced or deleted with the lowest level permission. And there’s no way to block it…</p><p>Alternatively if you could please allow us to create multiple accounts that share a single super account (for SSO and such), similar to GitHub Enterprise which has Enterprises and Organisations. Then we could have ACME Corp. and ACME Corp (Prod) and segregate the two and resource groups wouldn’t be strictly required.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759681" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">stingraycharles</span>
+        <span class="meta-time">2026/04/14 11:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">超级帐户 + 子帐户会很棒，即使这意味着域不能在它们之间共享。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Superaccount + subaccounts would be great, even if that meant domains can’t be shared between them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760987" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">speak_on</span>
+        <span class="meta-time">2026/04/14 08:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">第二个这个不按区域划分的员工对我来说不太有用。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Second this. Workers being non zone-based makes them less useful to me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759862" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">renewiltord</span>
+        <span class="meta-time">2026/04/14 14:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">使用更好的标准库构建使用生态系统。节点太少，因此您必须安装大量依赖项。我必须将你的工具封装在docker中以防止节点供应链攻击。如果您使用具有更大标准库的更好生态系统，您将安装更少的随机依赖。你可以做到的。你们是非常人工智能前沿的组织。更少的依赖性并自己编写所有代码。你有法学硕士学位。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Build using ecosystem  with a  better standard library. Too little in node so you have to install lots of deps. I have to encapsulate your tool in docker to prevent node supply chain attack. If you use a better ecosystem with larger standard library you will be installing fewer rando deps. You can do it. You are very AI forward organization. Fewer dependencies and write all code yourself. You have LLM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761793" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jbethune</span>
+        <span class="meta-time">2026/04/14 13:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很棒的工作。我喜欢创建模式来使用 OpenAPI 规范的方法。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great work. I like the approach of creating a schema to work with the OpenAPI spec.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761743" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cleverdash</span>
+        <span class="meta-time">2026/04/14 04:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">CLI-优先设计的趋势是因为人工智能代理需要它，这很有趣。我们最终在同一个地方构建开发人员工具，CLI 和 API 排在第一位，因为那是代理实际消耗的东西。仪表板随后出现。<p>顶部评论中的 cf 权限检查想法很棒。我发现的一件事是，代理非常擅长使用 CLI，但在诊断命令失败的原因方面却很糟糕。通过确切的修复清除错误消息（“缺少作用域 X，运行 cf token add --scope X”）对于代理可用性而言比快乐路径更重要。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The trend of CLI-first design because AI agents need it is interesting. We ended up in the same place building developer tools, the CLI and API came first because that's what agents actually consume. The dashboard came after.<p>The cf permissions check idea from the top comment is great. One thing I've found is that agents are surprisingly good at using CLIs but terrible at diagnosing why a command failed. Clear error messages with the exact fix ("missing scope X, run cf token add --scope X") matter way more for agent usability than the happy path.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757697" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jorl17</span>
+        <span class="meta-time">2026/04/14 13:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">极好的。我最近使用代理、API 密钥和一堆 HTTP 请求自动化了约 50 个域的一系列操作。我一直在想，cloudflare 肯定必须为此致力于更好的人体工程学设计——很高兴看到他们这样做：D</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fantastic. I recently automated a bunch of operations across ~50 domains with an agent, an API key, and a bunch of HTTP requests. I kept thinking that surely cloudflare had to be working on better ergonomics for this -- glad to see they were :D</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dcre</span>
+        <span class="meta-time">2026/04/14 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">精彩的帖子，我将从中获得灵感。很惊讶没有看到 TypeSpec <a href="https://typespec.io/" target="_blank" rel="noopener noreferrer">https://typespec.io/</a> 提到过，这是一种类似 TypeScript 的模式语言，我喜欢将其描述为“如果 OpenAPI 很好的话会怎样”。我猜他们考虑过这一点并决定构建自己的会更简单、更灵活。由于代理商的帮助，BYO 的成本下降了很多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wonderful post and I will be taking inspiration from it. Surprised not to see TypeSpec <a href="https://typespec.io/" target="_blank" rel="noopener noreferrer">https://typespec.io/</a> mentioned, which is a TypeScript-like schema language that I like to describe as "what if OpenAPI was good". I'm guessing they considered it and decided building their own would be both simpler and more flexible. The cost of BYO has come down a lot thanks to agents.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754848" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">thegagne</span>
+        <span class="meta-time">2026/04/14 01:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">喜欢 TypeSpec，同意它使编写 OpenAPI 变得非常容易。<p>但我已经开始使用 <a href="https://aep.dev" target="_blank" rel="noopener noreferrer">https://aep.dev</a> 尽可能多地设计 API（有时使用 TypeSpec 编写），因为一致性允许您使用预烘焙的 aepcli 或非常轻松地编写自己的 API，因为一切都表现得像具有一致模式的已知“资源”。</p><p>Terraform 也可以开箱即用，无需编写提供程序。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Love TypeSpec, agree it makes writing OpenAPI really easy.<p>But I’ve moved to using <a href="https://aep.dev" target="_blank" rel="noopener noreferrer">https://aep.dev</a> style APIs as much as possible (sometimes written with TypeSpec), because the consistency allows you to use prebaked aepcli or very easily write your own since everything behaves like know “resources” with a consistent pattern.</p><p>Also Terraform works out of the box, with no needing to write a provider.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754970" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/14 02:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它修复了 Openapi 的哪些部分？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Which parts of Openapi does it fix?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755889" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">speak_on</span>
+        <span class="meta-time">2026/04/14 08:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看第一个例子——它远没有那么冗长。虽然，似乎是最小的，所以我什至无法从单个 .tsp 路由定义中判断出期望的响应内容类型（application/json 是最有可能的默认值）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looking at the first example - it's far less verbose. Although, seems to be suspiciously minimal, so I can't even tell from a single .tsp route definition what response content type to expect (application/json is the default most likely).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759562" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcre</span>
+        <span class="meta-time">2026/04/14 08:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我猜这是由 `@route` 装饰器定义的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would guess that is defined by the `@route` decorator.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759720" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">dcre</span>
+        <span class="meta-time">2026/04/14 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它实际上是人类可读的，它有泛型，它以更自然的方式支持总和和乘积类型。还有很多，这些就在我的脑海里。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It’s actually human-readable, it has generics, it supports sum and product types in a much more natural way. There’s a lot more, that’s just off the top of my head.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">amluto</span>
+        <span class="meta-time">2026/04/14 04:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 告诉我们您对 Cloudflare 范围内的 CLI 的希望和梦想<p>没有长期存在的令牌，或者至少有一个非常简单的配置来避免它们。</p><p>一个选择：一个简单的工具，可以在文件中创建范围狭窄、生命周期非常短的令牌，甚至可能是一种实时更新文件的方法（这样您就可以绑定挂载它）。</p><p>另一种选择：可以缩小范围的代理模式。因此，我将其设置在一台主机上，然后，如果我想让容器访问一个域或一个存储桶或其他任何内容，我会要求主机 CLI 成为代理，将其权限的相关子集提供给代理客户端，然后将容器连接到它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Tell us your hopes and dreams for a Cloudflare-wide CLI<p>No long lived tokens, or at least a very straightforward configuration to avoid them.</p><p>One option: an easy tool to make narrowly scoped, very short lived tokens, in a file, and maybe even a way to live-update the file (so you can bind mount it).</p><p>Another option: a proxy mode that can narrow the scope. So I set it up on a host, then if I want to give a container access to one domain or one bucket or whatever, I ask the host CLI to become a proxy that gives the relevant subset of its permissions to the proxied client, and I connect the container to it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757544" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">chatmasta</span>
+        <span class="meta-time">2026/04/14 09:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢 GitLab 的做法，它的 SSH 服务器仅实现几个用于创建 PAT 的命令，因此您可以使用 SSH 密钥进行身份验证并在一个命令中创建短期 PAT。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like how GitLab does this, with an SSH server that implements only a few commands for creating PATs, so you can authenticate with your SSH keys and create a short-lived PAT in one command.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760287" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kodablah</span>
+        <span class="meta-time">2026/04/14 00:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 您今天可以通过运行 npx cf 来尝试技术预览。或者您可以通过运行 npm install -g cf 来全局安装它。<p>几个明显的问题 - 它是开源的（npmjs 方面没有指向 repo）吗？一般来说，它是否可以作为单个二进制文件提供，而不需要安装/使用 Nodejs 工具？如果是这样，使用最近获得的 Bun 或其他产品/方法？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; You can try the technical preview today by running npx cf. Or you can install it globally by running npm install -g cf.<p>A couple of obvious questions - Is it open source (npmjs side doesn't point to repo)? And in general will it be available as a single binary instead of requiring nodejs tooling to install/use? If so, using recently-acquired Bun or another product/approach?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754314" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bakugo</span>
+        <span class="meta-time">2026/04/14 00:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也找不到任何存储库，但该包被列为 MIT 许可并包含源映射，因此我认为它将很快发布。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I can't find any repository, either, but the package is listed as MIT-licensed and includes source maps, so I assume it will be published soon.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754649" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gpm</span>
+        <span class="meta-time">2026/04/14 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想你可能可以合法地证明通过许可证从源映射中对包进行克劳德编码是合理的，如果他们不这样做......</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I suppose you could probably legally justify claude-code-ing the package from the source maps by the license if they don't...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759905" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">porphyra</span>
+        <span class="meta-time">2026/04/14 01:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">讽刺的是，随着人工智能代理和其他东西的出现，我们正在从 GUI 网页中的“复选框工程”回到 CLI 工具。每当我上传新版本的资产时需要清除 cloudflare 中的缓存时，我都必须单击一堆内容。最好给我的 openclaw 代理发消息让他去做。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ironically, with the advent of AI agents and stuff, we're going back from "checkbox engineering" in GUI webpages to CLI tools. Every time I need to clear cache in cloudflare when I upload a new version of an asset, I have to click through a bunch of things. Would be nice to just message my openclaw agent to do it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755091" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">deadbabe</span>
+        <span class="meta-time">2026/04/14 02:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么要为 OpenClaw 烦恼呢？直接调用CLI命令即可。这就是 CLI 的要点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why bother with OpenClaw? Just call the CLI command directly. That is the point of a CLI.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756429" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">porphyra</span>
+        <span class="meta-time">2026/04/14 07:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">实际上，如果您阅读本文的前五句话，CLI 的要点是对 AI 代理更加友好（除了对人类有用之外）。<p>&gt; 代理商越来越多地成为我们 API 的主要客户。开发人员使用他们的编码代理来构建应用程序、代理和平台并将其部署到 Cloudflare、配置他们的帐户以及查询我们的 API 以进行分析和日志。</p><p>&gt; 我们希望以代理商所需的所有方式提供每款 Cloudflare 产品。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Actually if you read the first five sentences of the article, the point of the CLI is to be friendlier for AI agents (in addition to being useful for humans presumably).<p>&gt; Increasingly, agents are the primary customer of our APIs. Developers bring their coding agents to build and deploy applications, agents, and platforms to Cloudflare, configure their account, and query our APIs for analytics and logs.</p><p>&gt; We want to make every Cloudflare product available in all of the ways agents need.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tills13</span>
+        <span class="meta-time">2026/04/14 04:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为重点是我不必记住命令。我只需要用简单的英语告诉我的经纪人去做某件事。<p>例如，我们在我们的组织中将 Github Config 作为 Terraform 拖拖拉拉，因此与此同时，我一直在使用 Claude + gh cli 来跨存储库部署更改。我不需要知道/记住 gh cli 命令来拉或推规则集，或者在 Bash 中编写循环脚本，我只需说</p><p>&gt; Claude 从 &lt;known good repo&gt; 中提取规则集并将其推送到 &lt;repo 1&gt;、&lt;repo 2&gt;、&lt;repo 3&gt;</p><p>CLI 也很好，因为它抽象了身份验证。我有另一个没有 CLI 的流程，Claude 非常乐意将从配置文件中读取的 API 键插入到聊天历史记录中（可怕）。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think the point is that I don't have to remember the command. I just have to tell my agent in plain-English to do X.<p>For example, we're dragging our feet on Github Config as Terraform at our org so in the meantime I've been using Claude + the gh cli to deploy changes across repos. I don't need to know / remember the gh cli command to pull or push a ruleset, or script a loop in Bash, I just have to say</p><p>&gt; Claude pull the ruleset from &lt;known good repo&gt; and push it to &lt;repo 1&gt;, &lt;repo 2&gt;, &lt;repo 3&gt;</p><p>The CLI is also nice because it abstracts away authentication. I have another flow which doesn't have a CLI and Claude is more than happy to interpolate the API key that it read from a config file into the chat history (horrifying).</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757318" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">porphyra</span>
+        <span class="meta-time">2026/04/14 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确切地。用简单的英语交谈比阅读手册页并找出正确的命令要少得多的精神负担。现在我只是使用人工智能而不是记住 ffmpeg 命令。您关于身份验证的观点也很重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly. Talking in plain English is a lot less mental overhead than reading the man page and figuring out the right command. Nowadays I just use AI instead of remembering ffmpeg commands too. Your point about authentication is important too.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758033" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">deadbabe</span>
+        <span class="meta-time">2026/04/14 09:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我到底在读什么，你们知道可以为带有预填充选项的命令制作小脚本，甚至可以接受参数吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What the hell am I reading, you guys know you can make little scripts for commands with prefilled options or even take in parameters?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760325" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">shimman</span>
+        <span class="meta-time">2026/04/14 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，但是你可能会浪费 10-50 美元让法学硕士为你做这件事，而不是利用你的工程经验来做这件事。想想股东价值！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah but you can waste $10-50 having an LLM do that for you instead rather than using your engineering experience to do it. Think of the shareholder value!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756751" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">amingilani</span>
+        <span class="meta-time">2026/04/14 02:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 因此，我们引入了一个新的 TypeScript 模式，它可以定义 API 的完整范围、CLI 命令和参数，以及生成任何接口所需的上下文。模式格式“只是”一组带有约定、linting 和护栏的 TypeScript 类型，以确保一致性。<p>我很困惑，但为什么不呢 <i>那</i> 此处显示的工具/框架。它是什么以及它是如何工作的？它类似于其他人发布的 TypeSpec 工具吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; So we introduced a new TypeScript schema that can define the full scope of APIs, CLI commands and arguments, and context needed to generate any interface. The schema format is “just” a set of TypeScript types with conventions, linting, and guardrails to ensure consistency.<p>I'm confused though, why isn't <i>that</i> tool/framework being shown here. What is it and how does it work? It is similar to the TypeSpec tool someone else posted?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756147" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">joshka</span>
+        <span class="meta-time">2026/04/14 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 告诉我们您对 Cloudflare 范围内的 CLI 的希望和梦想<p>初步印象：</p><p>-h 和 --help 应遵循提供更多/更少信息的短/长标准。当前使用的方法是 -h 和 --help 显示命令列表并指向 --help-full 标志。 --help-full 输出似乎给出了我对 -h 的期望。这需要做得更好——它应该提供足够的信息，使用户/编码机构不必阅读网站/文档来了解该功能的工作原理。</p><p>与实际的命令列表相比，默认情况下完成内容会被破坏 - 即 dns 没有显示在列表中。</p><p>当我运行 cf start -h 时，它提示安装补全（这很奇怪，因为补全已经安装/检测到）。但无论哪种方式，-h 都不应该做任何交互的事情</p><p>cli 的某些部分看起来与其他部分非常不同（例如 cf fields -h 与 cf dns -h 非常不同）。颜色/缺少颜色、选项等</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Tell us your hopes and dreams for a Cloudflare-wide CLI<p>Initial impression:</p><p>-h and --help should follow the short / long standard of providing more / less info. The approach currently used is -h and --help show command lists and point at a --help-full flag. The --help-full output seems to give what I'd expect on -h. This needs to be much better - it should give enough information that a user / coding agen doesn't have to read websites / docs to understand how the feature works.</p><p>Completions are broken by default compared to the actual list of commands - i.e. dns didn't show up in the list.</p><p>When I ran cf start -h it prompted to install completions (this was odd because completions were already installed / detected). But either way, -h should never do anything interactive</p><p>Some parts of the cli seem very different to the others (e.g. cf domains -h is very different to cf dns -h). Color / lack of color, options, etc.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757371" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dec0dedab0de</span>
+        <span class="meta-time">2026/04/14 04:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请不要使 cli 标志的短版本与长版本不同。<p>短版本用于即时输入，长版本用于脚本，它们应该具有相同的输出。</p><p>完整彻底的文档应该在 man 和/或 info 中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please don't ever make the short version of a cli flag be different than the long version.<p>The short version is for typing on the fly, and the long version is for scripts, they should have identical output.</p><p>The full thorough documentation should be in man, and/or info.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">joshka</span>
+        <span class="meta-time">2026/04/14 07:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我对分割短/长帮助的基本原理的看法是，优化读者的时间是合理的事情。通常我只需要回顾一下可用的选项。但有时我需要更深入地了解每个选项控制什么以及如何控制。 （是的，我知道这应该在手册页中）。然而，需要有一种合理的方法来控制命令行帮助输出的详细程度。<p>我同意你的观点，即大多数标志通常应将短版本视为长标志的精确别名，但我只是认为将 -h 和 --help 视为简洁与长的约定是 100% 合理的。区别通常是广度与深度。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My perspective on the rationale for splitting short/long help is that optimizing for the reader's time is a reasonable thing to do. Often I just need a refresher of what options are available. But sometimes I need a deeper understanding of what each option controls and how. (Yes I understand that this should be in man pages). There needs to be a reasonable way to control the verbosity of the help output from the command line however.<p>I agree with your point that most flags should generally treat short versions as exact aliases to long flags, but I just think that a convention that treats -h and --help as concise vs long is 100% reasonable. The distinction is often breadth vs depth.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759449" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">forsalebypwner</span>
+        <span class="meta-time">2026/04/14 06:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">100%同意，不确定这个想法从何而来，但我不是粉丝。<p>您可以只创建一个 `--help-all` （或任何您想使用的单词），在我看来， `--help-all` 命令不需要一个简短的等效项，因为它不是您经常使用的东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">100% agree, not sure where this idea came from but I'm not a fan.<p>You can just make a `--help-all` (or whatever word you want to use), imo the `--help-all` command doesn't need a short equivalent because it's not something you'd frequently use.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758775" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">organsnyder</span>
+        <span class="meta-time">2026/04/14 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我从来没有听说过这个大会。我使用过的每个 getopt 样式 CLI 工具都具有相同的行为，无论选项是以短形式还是长形式指定的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've never heard of this convention. Every getopt-style CLI tool I've used has identical behavior whether an option is specified in its short- or long-form.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757423" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">joshka</span>
+        <span class="meta-time">2026/04/14 07:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">任何使用 clap 构建的 rust cli 或使用 cobra 构建的 go cli 都支持短帮助和长帮助，并使用 `-h` 和 `--help` 来显示这些帮助（我认为 cobra 在帮助命令中而不是在 --help 中显示这些帮助，这可能是构建此框架的合理替代方法）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Any rust cli built with clap or go cli built with cobra supports short and long help and surface these with `-h` and `--help` (I think cobra surfaces this in the help command rather than in the --help, which is probably a reasonable alternative way to frame this)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759499" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">maleldil</span>
+        <span class="meta-time">2026/04/14 04:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">柔术做到了，而且非常好。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Jujutsu does it, and it's quite nice.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757602" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">FabDee</span>
+        <span class="meta-time">2026/04/14 05:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">关于您标记的 cf 域 -h 与 cf dns -h 漂移，就我而言，我看到克劳德学习了一种子命令格式，然后理所当然地在具有不同帮助形状的兄弟姐妹上使用相同的标记。<p>这不是化妆品。统一帮助是不让特工产生幻觉的一个方法。
+否则，您最终会得到无效的命令，或者更糟糕的是，没有执行任何操作的静默命令，或者完全错误。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">About the cf domains -h vs cf dns -h drift you flagged, in my case, I've watched Claude learn one subcommand format, then take for granted the same flags on a sibling with a different help shape.<p>It's not cosmetic. Uniform help is a way to not let agents hallucinate.
+Otherwise you end up with invalid commands, or worse, silent ones that go through without doing anything at all, or go totally wrong.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757811" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">joshka</span>
+        <span class="meta-time">2026/04/14 09:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的 - 绝对。我一直将 codex 与 jj 一起使用，并鼓励它检查帮助以获取有关如何运行命令的详细信息，因为命令/参数/标志在训练截止日期后已经演变。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yeah - absolutely. I use codex all the time with jj and encourage it to check the help for details about how to run commands as the commands / args / flags have evolved post training-cutoff date.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760212" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jFriedensreich</span>
+        <span class="meta-time">2026/04/14 05:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的不喜欢牧马人，尽管我知道需要为主流吸引力做一些事情（代理 cli 工具 + npx 执行）如果 cli 是可直接使用的支持 git ops 的声明层之上的一层，那就太好了。 （terraform 提供商不算在内...）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really dislike wrangler, though i understand the need to make something for mainstream appeal (agent cli tools + npx execution) It would be really nice if the cli was a layer on top of a git ops enabled declarative layer that was usable directly. (The terraform provider does not count...)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757929" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">amirhirsch</span>
+        <span class="meta-time">2026/04/14 08:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">请有一个用于最新计费的端点，带有用于通知和设置限制的挂钩，重要的是让它与显示使用情况分析的端点相关联/成为显示使用情况分析的端点。<p>以前的公司永远无法获得与 argo 分析相匹配的 argo 计费，而且几个月来没有 CF 的支持，我们完全放弃了 CF，因为担心扩大规模会带来新的意外未知/无法追踪的成本</p><p>Previous-previous-co 可能是 Web Worker 的最大用户</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Please have an endpoint for up-to-minute billing with hooks for notifications and setting limits, importantly have it correlate-with/be the endpoint that shows usage analytics.<p>Previous-co could never get argo billing to match argo analytics, and with no support from CF over months we backed away from CF completely in fear that scale-up would present new surprise unknown/untraceable costs</p><p>Previous-previous-co is probably the largest user of web worker</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47759582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">raviatluri</span>
+        <span class="meta-time">2026/04/14 11:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">CLI 是新的编程语言。我认为我们应该像语言一样设计它们</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">CLIs are the new programming language. I think we should design them like a language</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47761069" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">iainmerrick</span>
+        <span class="meta-time">2026/04/14 06:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>告诉我们您对 Cloudflare 范围内的 CLI 的希望和梦想</i><p>这只是部分关于 CLI 的内容，大部分是关于 API 本身的内容，但如果有一种简单且一致的方式来管理环境就好了。</p><p>我有一个使用 CF Workers 和 Astro 的项目，其中有一个丑陋但有效的 wrangler.toml 定义了多个环境。当 Cloudflare 收购 Astro 时，我认为这将是一件好事，但最新版本的 Cloudflare 插件（如果您想使用最新的 Astro 则必须使用）似乎以自己特殊的不兼容方式管理环境。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>Tell us your hopes and dreams for a Cloudflare-wide CLI</i><p>This is only partly about the CLI and mostly about the API itself, but a straightforward and consistent way to manage environments would be nice.</p><p>I have a project using CF workers and Astro, with an ugly but working wrangler.toml defining multiple environments. When Cloudflare acquired Astro, I assumed that would be a good thing, but the latest version of the Cloudflare plugin (mandatory if you want to use the latest Astro) seems to manage environments in its own special incompatible way.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758828" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">oncensher</span>
+        <span class="meta-time">2026/04/14 04:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现只要代理拥有具有正确权限的 API 令牌，他们就已经可以弄清楚如何在 CloudFlare 中执行所有操作。他们足够聪明，知道如何使用 API。但摩擦点是我需要手动制作 API 令牌，并基本上添加权限来完成他们可能需要做的所有事情。如果有一种更流畅的方式来处理权限，那就太好了，这样我就可以让他们经常做所有需要做的事情，而无需请求许可，同时仍然可以轻松批准偶尔需要的操作，而不必提前猜测哪些权限属于哪个类别</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I found that agents can already figure out how to do everything in CloudFlare as long as they have an API token with the right privileges. They are smart enough to figure out how to use the API. But the friction spot is that I need to make the API token by hand and basically add permission to do everything they might ever need to do. It would be nice to have a smoother way to handle the permissions so I can let them do everything they need to do frequently without asking for permission yet still make it easy to approve actions that are only needed occasionally, without having to guess in advance which permissions fall into which category</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757631" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nzoschke</span>
+        <span class="meta-time">2026/04/14 01:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也一直在尝试 Open API spect -&gt; CLI 。我有使用 Huma 或 Fuego 自动生成的 Go 和规范<p><a href="https://github.com/danielgtaylor/huma" target="_blank" rel="noopener noreferrer">https://github.com/danielgtaylor/huma</a>
+<a href="https://github.com/go-fuego/fuego" target="_blank" rel="noopener noreferrer">https://github.com/go-fuego/fuego</a></p><p>Huma 作者的 Restish 工具在功能上是正确的，但我发现模型在推断语法方面表现不佳。诚然，我也很难遵循语法。</p><p><a href="https://github.com/rest-sh/restish" target="_blank" rel="noopener noreferrer">https://github.com/rest-sh/restish</a></p><p>我需要进行适当的评估，但这让我想知道具有更多标准参数/选项解析的 `curl` 或 CLI 是否会工作得更好。</p><p>感谢 Cloudflare 分享他们的笔记，还有其他人解决这个问题吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I have been experimenting with Open API spect -&gt; CLI too. I have Go and specs auto-generated either with Huma or Fuego<p><a href="https://github.com/danielgtaylor/huma" target="_blank" rel="noopener noreferrer">https://github.com/danielgtaylor/huma</a>
+<a href="https://github.com/go-fuego/fuego" target="_blank" rel="noopener noreferrer">https://github.com/go-fuego/fuego</a></p><p>The restish tool by the author of Huma is functionally correct, but I'm finding the models are not doing a great job at inferring the syntax. Admittedly I am having a hard time following the syntax too.</p><p><a href="https://github.com/rest-sh/restish" target="_blank" rel="noopener noreferrer">https://github.com/rest-sh/restish</a></p><p>I need to do proper evals, but it makes me wonder if `curl` or a CLI with more standard args / opts parsing will work better.</p><p>Thanks to Cloudflare for sharing their notes, anyone else figure this out?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755502" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ks2048</span>
+        <span class="meta-time">2026/04/14 03:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有点讽刺的是，当人工智能第一次真正允许像人类一样使用计算机时，人工智能和代理似乎会导致更多 CLI/API 的东西。<p>这是一个非常受欢迎的发展 - 对于机器的 API 来说更好 - 但如果没有人工智能，它总是会受到欢迎。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Kind of ironic that AI and Agents seems to be leading to more CLI/API stuff, when AI actually allows human-like computer use for the first time.<p>A very welcome development - much better for machines to the APIs - but it always would have been welcome without AI.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756695" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">f-serif</span>
+        <span class="meta-time">2026/04/14 01:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望在 Cloudflare 中进行更改时有 CLI 预览命令。<p>我在 Cloudflare 上有几个域，在进行一些更改时，我希望有一种方法可以将相同的更改应用于多个域以保持一致性。</p><p>UI 操作的 CLI 预览将使之成为可能。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wish there were CLI preview command when making changes in Cloudflare.<p>I have few domains on Cloudflare and when making some changes, I wish there were a way to apply the same changes to multiple domains for consistency.</p><p>CLI preview for UI action will make it possible.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755380" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cordwainersmith</span>
+        <span class="meta-time">2026/04/14 00:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最后。在牧马人、仪表板和原始 API 调用之间跳转已经很烦人了一段时间。我最喜欢本地浏览器，在本地调试 Workers 一直很笨拙。有人知道这如何与 Terraform 管理的基础设施一起使用吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Finally. Jumping between wrangler, the dashboard, and raw API calls has been annoying for a while. I'm keen on the local explorer most, debugging Workers locally has always been clunky. Anyone know how this plays with Terraform-managed infra?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754914" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">upcoming-sesame</span>
+        <span class="meta-time">2026/04/14 03:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我最近让 LLM 使用 gcloud cli 在 gcp 中为我部署了一项服务，甚至一次都没有进入 gcp 仪表板。<p>太神奇了</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I recently let LLM deploy a service for me in gcp using gcloud cli without going to gcp dashboard even once.<p>it was magical</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756906" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kodama-lens</span>
+        <span class="meta-time">2026/04/14 00:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很高兴会有更多的工具，但其原因（以及目标受众）不应该是人工智能代理。这对人类来说应该是一次很好的体验！<p>工具应该经过测试并保证质量。对于 cloudflare 无法使用的 v5 terraform 提供程序来说，完全缺少一些东西。 
+质量重于数量，用户体验以人为本！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm happy that there will be more tooling, but the reason for that (and the target audience) should not be ai agents. It should be a good experience for humans!<p>Tools should be tested and quality assured. Something that was utterly missing for cloudflare's unusable v5 terraform provider. 
+Quality over quantity with a ux that has humans in mind!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754317" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dhess</span>
+        <span class="meta-time">2026/04/14 04:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">同意当前的 Terraform 提供者非常糟糕。它极大地改变了我对 Cloudflare 技术能力的估计。 v4 的自动迁移仍然不起作用，v5 发布已经快一年了？ （更不用说我从来没有使用过让我运行外部迁移工具的 Terraform 提供程序。）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Agreed that the current Terraform provider is shockingly bad. It’s changed my estimation of Cloudflare’s technical competence, drastically. The automated migration from v4 still doesn’t work and it’s been, what, nearly a year since v5 was released? (This is not to mention I’ve never used a Terraform provider that made me run external migration tools in the first place.)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757724" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">marcusestes</span>
+        <span class="meta-time">2026/04/14 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为人工智能代理创造良好的体验也为负责管理其代理的人类带来良好的体验。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Making a good experience for AI agents also makes a good experience for the humans that are tasked with the management of their agents.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754342" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">climike</span>
+        <span class="meta-time">2026/04/14 00:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确切地！轮数、使用 CLI 完成任务的平均令牌，以及每个 CLI 命令返回的平均字符数以及其他指标：对于用户和代理来说都很重要！我正在努力在 www.cliwatch.com 上准确捕捉这一点！请随意索取示例评估套件，以获取您希望使用 CLI 实现的任务列表</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly! Number of turns, average tokens to achieve a task using your CLI, as well as average number of characters being returned per CLI command alongside other metrics: all important to both users and agents! I am working on allowing to accurately capture this at www.cliwatch.com! Feel free to request an example eval suite for a list of tasks you want to achieve with your CLI</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754672" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bensmoif</span>
+        <span class="meta-time">2026/04/14 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哦，是的！昨天早上我花了很多时间来解决这个问题，当时它打了我的脸</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Oh yes to this! I spent yesterday morning working this out when it smacked me in the face</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">queuep</span>
+        <span class="meta-time">2026/04/14 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我与 Claude 和他们的 API 使用了很多 cloudflare 功能。效果很好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’ve used a lot of cloudflare functionality with Claude and their API. Worked very good</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754496" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">acedTrex</span>
+        <span class="meta-time">2026/04/14 01:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是如此令人沮丧，以至于广泛传播的法学硕士精神病才最终让公司领导层投资于实际的 CLI 工具。<p>不，客户从来不重要，但神话般的“法学硕士代理人”也非常重要。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Its so depressing that it took widespread LLM psychosis to finally get company leadership to invest in actual CLI tooling.<p>No, the customers never mattered but the mythical "LLM agent" is vitally important to cater too.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755309" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/14 04:23</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47757335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hybirdss</span>
+        <span class="meta-time">2026/04/14 06:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">-h vs --help 是那些小东西之一，当它被破坏时会变得非常响亮</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">-h vs --help is one of those small things that gets very loud when it's broken</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758797" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">K0IN</span>
+        <span class="meta-time">2026/04/14 05:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个想法，但遗憾的是我们需要人工智能来激励公司建立更好的 DX。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i love the idea but sad to see that we needed ai to give companies incentives to build better dx.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758014" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/14 01:30</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755311" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">colesantiago</span>
+        <span class="meta-time">2026/04/14 05:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">构建 CLI 没有任何意义，事实上这是错误的方式。<p>我希望我们停止构建 CLI，而是使用这样的东西：</p><p><a href="https://executor.sh/" target="_blank" rel="noopener noreferrer">https://executor.sh/</a></p><p><a href="https://github.com/RhysSullivan/executor" target="_blank" rel="noopener noreferrer">https://github.com/RhysSullivan/executor</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Building CLIs don't make any sense and in fact it is the wrong way.<p>I wish we would stop building CLIs and instead use something like this:</p><p><a href="https://executor.sh/" target="_blank" rel="noopener noreferrer">https://executor.sh/</a></p><p><a href="https://github.com/RhysSullivan/executor" target="_blank" rel="noopener noreferrer">https://github.com/RhysSullivan/executor</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758422" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">TheTaytay</span>
+        <span class="meta-time">2026/04/14 10:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来是一种非常好的模式，可以在一个地方公开所有允许的功能。你在用它吗？看起来它也可以轻松包裹 CLI...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This looks like a really nice pattern for exposing all allowed capabilities in one place. Are you using it? Looks like it could easily wrap a CLI too…</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760415" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ks2048</span>
+        <span class="meta-time">2026/04/14 03:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; TypeScript 是“软件工程的通用语言”。<p>我觉得很奇怪。我想我们都生活在自己的泡沫中。</p><p>如果有一些奇特的工具，“它是否具有 X 语言的绑定”？ X 似乎比 Typescript 更常见的是 Python。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; TypeScript is "the lingua franca of software engineering."<p>Seems odd to me. I guess we all live in our bubbles.</p><p>If there is some fancy tool out there, "does it have binding for language X"? X seems to be much more commonly Python than Typescript.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756762" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">risyachka</span>
+        <span class="meta-time">2026/04/14 00:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 告诉我们您对 Cloudflare 范围内的 CLI 的希望和梦想<p>请称之为耀斑。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;  Tell us your hopes and dreams for a Cloudflare-wide CLI<p>Please call it flare.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754753" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jamesog</span>
+        <span class="meta-time">2026/04/14 02:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我是 cloudflare-go 库的原始作者（我在 Cloudflare 工作期间利用业余时间开发了该库），并且我在其中包含了一个 `flarectl` 命令，但遗憾的是它没有得到太多关注:-(<p><a href="https://github.com/cloudflare/cloudflare-go/tree/v0/cmd/flarectl" target="_blank" rel="noopener noreferrer">https://github.com/cloudflare/cloudflare-go/tree/v0/cmd/flar...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was the original author of the cloudflare-go library (which I worked on in my spare time while working at Cloudflare), and I included a `flarectl` command with it, but sadly it didn't get much traction :-(<p><a href="https://github.com/cloudflare/cloudflare-go/tree/v0/cmd/flarectl" target="_blank" rel="noopener noreferrer">https://github.com/cloudflare/cloudflare-go/tree/v0/cmd/flar...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756307" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anju-kushwaha</span>
+        <span class="meta-time">2026/04/14 03:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">等待这个功能很久了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">waiting this feature from long time</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756491" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jeffrallen</span>
+        <span class="meta-time">2026/04/14 01:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这个，但是对于 Bunny DNS，这样我就可以更接近 100% 的欧洲云。 :)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This, but for Bunny DNS, so I can get closer to 100% European clouds. :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">j45</span>
+        <span class="meta-time">2026/04/14 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">完整的 CLI 报道真是太棒了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Complete CLI coverage is so great to see.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755193" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">latchkey</span>
+        <span class="meta-time">2026/04/14 00:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只是希望他们能修复账单通知。 ux 使其无法设置。我一直在 X 上抱怨此事，有几个人说他们会调查此事，甚至有一个人给了我他的电子邮件地址。纯粹的沉默。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I just wish they'd fix billing notifications. The ux makes it impossible to set it up. Been complaining about that on X, got a couple people saying they would look into it, even one that gave me his email address. Pure silence.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754363" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nla</span>
+        <span class="meta-time">2026/04/14 01:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">出色的！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Excellente!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755517" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">5701652400</span>
+        <span class="meta-time">2026/04/14 02:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 第一原则<p>我是唯一一个对这种语言感到厌烦的人吗？他们说话就好像他们发明了编译器、汇编或牛顿万有引力定律。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; First Principles<p>am I the only one put off with such language? they talk as if they invented compilers or assembly or Newton's law of gravity.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47756363" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">benatkin</span>
+        <span class="meta-time">2026/04/14 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 目前，cf 仅提供适用于一小部分 Cloudflare 产品的命令。<p>他们为什么不提供更多代码支持？这是紧随 EmDash 的脚步，而且这是一个技术预览，感觉不一致。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Right now, cf provides commands for just a small subset of Cloudflare products.<p>Why didn't they vibe code support for more? With this on the heels of EmDash, and this being a technical preview,  it feels inconsistent.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754403" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mfbx9da4</span>
+        <span class="meta-time">2026/04/14 01:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">BTW Speakeasy 支持根据 OpenAPI 规范生成用 Go 编写的可定制 CLI。 <a href="https://www.speakeasy.com/docs/cli-generation/create-cli" target="_blank" rel="noopener noreferrer">https://www.speakeasy.com/docs/cli-generation/create-cli</a><p>（免责声明：我在 Speakeasy 工作）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">BTW Speakeasy support generating customizable CLIs written in Go from OpenAPI specs. <a href="https://www.speakeasy.com/docs/cli-generation/create-cli" target="_blank" rel="noopener noreferrer">https://www.speakeasy.com/docs/cli-generation/create-cli</a><p>(Disclaimer: I work for Speakeasy)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755606" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">xnacly</span>
+        <span class="meta-time">2026/04/14 00:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我们在 Cloudflare 编写了大量 TypeScript。它是软件工程的通用语言。<p>这让我感到害怕，我无法承认，打字稿很糟糕，在我看来，它比更常用的计算通用语言更糟糕，我将其归因于 C。我猜至少 C 可以用来创建共享对象？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; We write a lot of TypeScript at Cloudflare. It’s the lingua franca of software engineering.<p>This scares me more than Im able to admit, typescript sucks and in my opinion its way worse than the more commonly used lingua franca of computing, which I would attribute to C. At least C can be used to create shared objects i guess?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754190" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">steve_adams_86</span>
+        <span class="meta-time">2026/04/14 01:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么你觉得它很糟糕？<p>在学习了 JavaScript 和 PHP 后，我曾经非常不喜欢 JavaScript，然后使用了 C# 等语言。然后 TypeScript 的出现让 JS 变得更容易使用，而且在某些方面实际上已经变得非常好。</p><p>如果您使用 deno 作为默认运行时，那么当您不需要太多东西时，它的简单性几乎与 Go 类似。简单的脚本、将命令传送到 REPL、内置的 linting、测试等。这还不错！</p><p>当然，欢迎您提出自己的意见，我们可能会同意它的很多问题，但我想我最近对 ​​TS 感到更加乐观了。运行时正在改进，他们对此有很好的计划，它实际上正在发生，而且法学硕士也很擅长使用它。这对我来说是一个不错的默认设置。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do you think it sucks?<p>I used to dislike JavaScript a lot after learning it and PHP, then using languages like C#. Then TypeScript came along making JS much easier to live with, but has actually become quite nice in some ways.</p><p>If you use deno as your default runtime, it's almost Go-like in its simplicity when you don't need much. Simple scripts, piping commands into the REPL, built-in linting, testing, etc. It's not that bad!</p><p>Of course you're welcome to your opinion and we'd likely agree about a lot of what's wrong with it, but I guess I feel a bit more optimistic about TS lately. The runtime is improving, they've got great plans for it, it's actually happening, and LLMs aren't bad at using it either. It's a decent default for me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755190" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">PUSH_AX</span>
+        <span class="meta-time">2026/04/14 01:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是 OP，我使用 TS，但只是因为它是唯一的选择。 TS是一个构建你自己的打字沙箱，足够的绳子来吊死你自己。<p>来自固执己见的打字系统，是他们语言的一流公民，它是站不住脚的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not OP, I use TS but only because it’s the only option. TS is a build your own typing sandbox, more than enough rope to hang yourself.<p>Coming from typing systems that are opinionated, first class citizens of their languages, it doesn’t stand up.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755544" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">steve_adams_86</span>
+        <span class="meta-time">2026/04/14 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这也是我不喜欢的事情之一。<p>你看看像 Effect 这样的库，它确实是令人难以置信的工作，但你情不自禁地感觉……天啊，这么多语言都用一流的原语和控制流工具部分地解决了这些问题。</p><p>我很感谢他们的工作，这是一个很棒的项目，但它清楚地反映了语言和运行时的缺陷。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is one of my dislikes as well.<p>You look at libraries like Effect, and it's genuinely incredible work, but you can't help feeling like... Man, so many languages partially address these problems with first-class primitives and control flow tooling.</p><p>I'm grateful for their work and it's an awesome project, but it's a clear reflection of the deficiencies in the language and runtime.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755736" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">newspaper1</span>
+        <span class="meta-time">2026/04/14 01:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为它很糟糕，因为它会转换为 JavaScript 并且是一种解释性语言。用户必须自己解决依赖关系并拥有正确的运行时。我绝对更喜欢用编译语言和单个二进制文件编写我的 CLI 工具。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it sucks because it transpiles to JavaScript and is an interpreted language. Users have to resolve the dependencies themselves and have the correct runtime. I definitely prefer my CLI tools be written in a compiled language with a single binary.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755526" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">steve_adams_86</span>
+        <span class="meta-time">2026/04/14 02:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我同意，尽管最近出现的一件很酷的事情（尽管有一些主要缺点）是能够使用 deno 或 Bun （以及我认为实验性的 Nodejs）编译二进制文件。<p>使用 Go，您可以编译具有其他二进制文件（例如 duckdb 或 sqlite 等）绑定的二进制文件。如果是 den 或 bun，你就不走运了。真是太累了。不管怎样，能够发送 CLI 实用程序并知道它们会“正常工作”，这对我的工作非常有用。我维护了一些用于科学数据处理和园艺（解析、分析、清理等）的数据，这就是为什么缺少 duckdb 捆绑如此令人烦恼。我确实希望可以使用 Go 来代替，并将所有内容直接打包到二进制文件中。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I agree, though one cool thing arriving lately (albeit with some major shortcomings) is the ability to compile binaries with deno or bun (and nodejs experimentally, I think).<p>With Go you can compile binaries with bindings for other binaries, like duckdb or sqlite or so on. With deno or bun, you're out of luck. It's such a drag. Regardless, it's been quite useful at my work to be able to send CLI utilities around and know they'll 'just work'. I maintain a few for scientific data processing and gardening (parsing, analysis, cleaning, etc) which is why the lack of duckdb bundling is such a thorn. I do wish I could use Go instead and pack everything directly into the binary.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755776" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">r_lee</span>
+        <span class="meta-time">2026/04/14 05:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你已经可以用 deno 来“编译”TS 二进制文件，但它会包含运行时等，所以它会占用一些磁盘空间，但我认为现在这比以前不再那么令人担忧了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">you can already "compile" TS binaries with deno, but it'll include the runtime in it and etc. so it'll take some disk space but I think these days it's less of a concern than before</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758215" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">steve_adams_86</span>
+        <span class="meta-time">2026/04/14 11:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">总的来说，这对于我们的用例来说无关紧要。<p>我认为二进制文件最终大约有 70mb。这太疯狂了，但这些都是一次性工具，在实践中成本可以忽略不计。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Totally, it's inconsequential for our use cases.<p>I think the binaries wind up being somewhere around 70mb. That's insane, but these are disposable tools and the cost is negligible in practice.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47760811" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dewey</span>
+        <span class="meta-time">2026/04/14 00:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“打字稿很糟糕”并不是一个很好的理由。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">“Typescript sucks” is not really a great reason.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754232" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tombert</span>
+        <span class="meta-time">2026/04/14 00:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">就我个人而言，我并不觉得 Typescript 比 JavaScript 给我带来了足够的好处，让我可以在不需要的上下文中使用它。我必须使用 TypeScript 来工作，它“很好”，但我想我还没有发现它有那么大的帮助。<p>我不知道为什么；我想这是因为网络本身已经非常灵活，我发现这些类型并没有真正给我带来很多好处，因为我必须将这种活力编码到其中。</p><p>需要明确的是，在我听关于类型安全的讲座以及你认为类型有多么美妙以及它们在所有事物中应该如何表现之前：我知道。  我喜欢大多数语言中的类型。  我没有完成，但我正在攻读形式方法的博士学位，特别是在将类型安全应用于时序逻辑的技术方面。我向你保证，我以前听过你对类型的所有推理。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Personally I haven't felt like Typescript has bought me enough over JavaScript to use it in contexts that I don't have to. I have to use TypeScript for work, and it's "fine", but I guess I haven't found that it helps all that much.<p>I'm not sure why; I guess it's because the web itself is already really flexible that I find that the types don't really buy me a lot since I have to encode that dynamism into it.</p><p>To be clear, before I get a lecture on type safety and how wonderful you think types are and how they should be in everything: I know.  I like types in most languages.  I didn't finish but I was doing a PhD in formal methods, and specifically in techniques to apply type safety to temporal logic. I assure you that I have heard all your reasoning for types before.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754608" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xnacly</span>
+        <span class="meta-time">2026/04/14 00:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，它确实很糟糕，原因有很多，但具体来说，它被微软控制就失去了成为通用语言的资格</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well it does suck for a huge list of reasons but specifically disqualifying for being the lingua franca would be it being controlled by microsoft</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754269" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">seabrookmx</span>
+        <span class="meta-time">2026/04/14 01:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它是开源的。如果微软做了任何奇怪的事情，它就会立即被分叉。 terraform、ElasticSearch 等<p>仅靠前端社区就有如此大的动力，它不会有任何进展。</p><p>在我看来，由于节点生态系统/npm，使用 Typescript 很糟糕。语言本身还可以。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's open source. If Microsoft did anything weird it would be immediately forked ala. terraform, ElasticSearch etc.<p>There's so much momentum behind it from the front-end community alone it's not going anywhere.</p><p>IMO using Typescript sucks because of the node ecosystem/npm. The language itself is passable.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47755605" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rvz</span>
+        <span class="meta-time">2026/04/14 00:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，它确实很糟糕，而且对于实现高性能的开发工具（例如解析器、格式化程序等）来说并不是很好。<p>由于性能太差，Typescript 开发人员正在用 Go 重写该语言本身。 [0]</p><p>从性能的角度来看，它告诉我所有我需要知道的关于打字稿有多糟糕的信息。</p><p>[0] <a href="https://devblogs.microsoft.com/typescript/typescript-native-port/" target="_blank" rel="noopener noreferrer">https://devblogs.microsoft.com/typescript/typescript-native-...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well it does suck, and it isn't really great for implementing performant developer tools, such as parsers, formatters and so on.<p>The performance is that bad that the typescript developers are rewriting the language itself in Go. [0]</p><p>Tells me everything I need to know about how bad typescript is from a performance stand point.</p><p>[0] <a href="https://devblogs.microsoft.com/typescript/typescript-native-port/" target="_blank" rel="noopener noreferrer">https://devblogs.microsoft.com/typescript/typescript-native-...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754348" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">braebo</span>
+        <span class="meta-time">2026/04/14 00:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">那是 lsp 而不是运行时。  Bun 运行 Typescript 的速度非常快。  这是一种非常棒的语言和生态系统。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That’s the lsp not runtime.  Bun runs Typescript very fast.  It’s a fantastic language and ecosystem.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754435" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skydhash</span>
+        <span class="meta-time">2026/04/14 00:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我刚刚检查了 Bun 中的 FFI，它被标记为实验性的。 C/C++ 世界中有很多很棒的库，FFI 是使用它们的赌注。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’ve just checked FFI in bun and it’s marked as experimental. There are great libraries in C/C++ world and FFI is kinda table stakes to use them.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754734" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rvz</span>
+        <span class="meta-time">2026/04/14 01:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我没有在哪里说“运行时”。<p>即使有了 Bun，也是因为 Zig，而不是 TypeScript，这只能证明我的观点 <i>甚至</i> 更多的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">No where did I say "runtime".<p>Even with Bun it's because of Zig, not TypeScript and that only proves my point <i>even</i> more.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47754939" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">r_lee</span>
+        <span class="meta-time">2026/04/14 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你说得对。我们不应该使用任何解释/脚本语言，因为它们不如编译语言快。<p>为什么仅包装 API 的 CLI 工具需要这种本机性能？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">you're right. we should just not use any interpreted/script languages because they're not as fast as compiled ones.<p>why does a CLI tool that just wraps APIs need this native performance?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758191" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">wiseowise</span>
+        <span class="meta-time">2026/04/14 05:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">性能如此糟糕，以至于世界上最常用的软件都是用它编写的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The performance is so bad that the most used software in the world is written using it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47758380" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
