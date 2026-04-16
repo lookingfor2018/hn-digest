@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>将 JIT 编译器改造为 C 解释器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-16-1404/">返回本批次</a>
+      <h1>将 JIT 编译器改造为 C 解释器</h1>
+      <p class="subtitle">Retrofitting JIT Compilers into C Interpreters</p>
+      <div class="meta-line">
+        <span>tratt.net</span>
+        <span>作者 ltratt</span>
+        <span>分数 65</span>
+        <span>评论 15</span>
+        <span>2026/04/15 20:00</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47777897" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://tratt.net/laurie/blog/2026/retrofitting_jit_compilers_into_c_interpreters.html" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><p class="muted">暂无内容</p></section>
+      <section class="block"><h3>Original Summary</h3><p class="muted">暂无内容</p></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">9fwfj9r</span>
+        <span class="meta-time">2026/04/16 13:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对此类工作感兴趣的人也可以访问 <a href="https://cfallin.org/blog/2024/08/28/weval/" target="_blank" rel="noopener noreferrer">https://cfallin.org/blog/2024/08/28/weval/</a>。不同之处在于他们使用这种技术来派生 AOT 编译器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Those interested in this type of work can also visit <a href="https://cfallin.org/blog/2024/08/28/weval/" target="_blank" rel="noopener noreferrer">https://cfallin.org/blog/2024/08/28/weval/</a>. The difference is that they use this technique to derive an AOT compiler.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47788821" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fuhsnn</span>
+        <span class="meta-time">2026/04/16 07:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我花了一段时间才弄清楚它是否是 C 程序的解释器，或者是否有一类名为“C”的特定解释器。事实证明，这是关于用 C 实现的解释器，他们使用修改后的 LLVM 来进行改造，但是它不能适用于具有 LLVM IR 的其他语言，或者 C 中的其他循环切换模式吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Took me a while to figure out whether it's interpreters for C programs or if there's a particular class of interpreters called "C". Turns out it's about interpreters implemented in C that they use modified LLVM to do the retrofitting, but couldn't it be applicable for other languages with LLVM IR, or other switch-in-a-loop patterns in C?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786781" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">itriednfaild</span>
+        <span class="meta-time">2026/04/16 08:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我担任低级 C 和 C++ 程序员已经 30 年了。即使有了您的解释并阅读了该网页两次，我仍然不知道这项技术的用途或工作原理。那么它需要正常的解释代码并以某种方式对其进行编译？但是你必须以某种方式修改你的程序的源代码吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've been a low level C and C++ programmer for 30 years. Even with your explanation and having read the webpage twice I have no idea what this technology does or how it works. So it takes normal interpreted code and jits it somehow? But you have to modify the source code of your program in some way?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787057" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hencq</span>
+        <span class="meta-time">2026/04/16 08:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为该网站在解释它方面做得非常出色，但它基本上需要一个用 C 编写的解释器，并将其转换为 JIT，对解释器的代码进行最小的更改（即不更改您在解释器中运行的程序的代码）。例如，他们采用了 Lua 解释器，只需进行最小的更改就能够将其转换为 JIT，它运行 Lua 程序的速度大约是原来的 2 倍。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think the website does an amazing job explaining it, but it basically takes an interpreter written in C and turns it into a JIT with minimal changes to the code of the interpreter (i.e. not to the code of the program you're running in the interpreter). For example they took the Lua interpreter and with minimal changes were able to turn it into a JIT, which runs Lua programs about 2x faster.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787268" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">vkazanov</span>
+        <span class="meta-time">2026/04/16 12:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">跟踪 jits 比通常的 jits 稍微难掌握一些。该技术来自真实的 CPU，因此最初想法背后的人们的思维方式与软件世界有很大不同。<p>元追踪是对原始想法的一种有趣的转变。</p><p>&gt; 那么它需要正常的解释代码并以某种方式对其进行编译？</p><p>不管怎样，他们使用修补后的 LLVM 不仅可以 JIT 编译解释后的代码，还可以编译字节码解释器的主循环。就像 C 实现本身一样。</p><p>&gt; 但你必须以某种方式修改你的程序的源代码？</p><p>一般来说，这通常不是目标。所有 JIT 都尝试支持尽可能多的目标语言。某些 JIT 确实限制了支持的功能子集。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">tracing jits are slightly harder to grasp than usual ones. The technique comes from real CPUs so the mindset of people behind the original idea is very different from the software world.<p>Metatracing ones are kind of an interesting twist on the original idea.</p><p>&gt; So it takes normal interpreted code and jits it somehow?</p><p>Anyway, they use a patched LLVM to JIT-compile not just interpreted code but the main loop of the bytecode interpreter. Like, the C implementation itself.</p><p>&gt; But you have to modify the source code of your program in some way?</p><p>Generally speaking, this is not normally the goal. All JIT-s try to support as much of the target language as possible. Some JIT-s do limit the subset of features supported.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47788583" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">fuhsnn</span>
+        <span class="meta-time">2026/04/16 08:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我也没有完全理解它，我能想到的最合适的类比就像OpenMP如何将#pragma注释的循环变成多线程，这项工作将字节码解释循环变成JIT VM。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't fully grasp it either, the most appropriate analogy I can think of is like how OpenMP turns #pragma annotated loops into multi-threading, this work turns bytecode interpreting loops into JIT VM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787189" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">djwatson24</span>
+        <span class="meta-time">2026/04/16 08:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们能够使用几乎任意的 C 语言并做到这一点，真是令人印象深刻！与 pypy 在这里所做的非常相似，但是针对 C，而不是 python 子集。<p>但并非没有缺点。  听起来平均代码只比 Lua 快 2 倍，而 LuaJit 通常快 5-10 倍。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's quite impressive they're able to take nearly arbitrary C and do this! Very similar to what pypy is doing here, but for C, and not a python subset.<p>However not without downsides.  It sounds like average code is only 2x faster than Lua, vs. LuaJit which is often 5-10x faster.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787047" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hypercube33</span>
+        <span class="meta-time">2026/04/16 09:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，我想知道将 90 年代的旧式 Microsoft jvm 重做到现代会有多困难......java &gt; .net 程序集运行时</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hmm I'm wondering how hard it would be to redo the old timey Microsoft jvm from the 90s for modern days....java &gt; .net assembly runtime</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787437" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">linzhangrun</span>
+        <span class="meta-time">2026/04/16 10:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在 Vibe Coding 时代看到这样的项目腾飞确实是一件好事:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's truly a good thing to see a project like this in the era of Vibe Coding taking flight :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787958" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">measurablefunc</span>
+        <span class="meta-time">2026/04/16 12:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么他们需要改变 LLVM？为什么他们不能再进行一次 LLVM IR 通行证？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do they need to change LLVM? Why can't they make this another LLVM IR pass?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47788611" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sgbeal</span>
+        <span class="meta-time">2026/04/15 20:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我倾向于认为自己是一个计算书呆子，但像这样的帖子让我意识到我什至不评价计算书呆子的规模。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i tend to think of myself as a computing nerd, but posts like this one make me realize that i don't even rate on the computing nerd scale.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47778183" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">throwaway1492</span>
+        <span class="meta-time">2026/04/16 08:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你总是为自己做事吗？你写过解析器或解释器吗？你应该这样做，这是一个有趣的练习。这个想法是将元跟踪添加到解释器（c 代码）中，允许将热路径编译为机器代码，然后执行而不是被解释。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Do you always make things about yourself? Have you written a parser or interpreter? You should, it’s an interesting exercise. The idea is to add meta tracing to the interpreter (the c code) that allows hot paths to be compiled to machine code and be then executed instead of being interpreted.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787159" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sgbeal</span>
+        <span class="meta-time">2026/04/16 13:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 你总是做一些关于自己的事情吗？<p>这是一个尖锐的问题，但我敢说我们都这样做。这是我们唯一不变的参考点。</p><p>&gt; 你写过解析器或解释器吗？</p><p>我编写了许多解析器、几个解析器生成器和一些编程语言。然而，这篇文章涵盖了一个完全不同的层面，远远超出了我的能力范围（或者无论如何，远远超出了我的任何抱负）。</p><p>图片或它没有发生：fossil.wanderinghorse.net/r/cwal</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Do you always make things about yourself?<p>That's an abrasive question but i dare say that we all do. It's our only constant point of reference.</p><p>&gt; Have you written a parser or interpreter?</p><p>i have written many parsers, several parser generators, and a handful of programming languages. This article, however, covers a whole other level, way over my head (or well beyond any of my ambitions, in any case).</p><p>Pics or it didn't happen: fossil.wanderinghorse.net/r/cwal</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47789164" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mwkaufma</span>
+        <span class="meta-time">2026/04/16 07:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">TL;DR 使用支持运行时 IR 跟踪的 LLVM 分支进行编译。非常聪明！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">TL;DR compile with a fork of LLVM that enables runtime IR tracing. Very clever!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786772" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">measurablefunc</span>
+        <span class="meta-time">2026/04/16 12:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们不是这么做的。他们直接修改 IR，将其转换为跟踪 JIT。最终的工件是一个没有 IR 的二进制文件。问题当然不是在流程中引入任何微妙的错误，因为他们必须证明他们所做的修改不会改变最终二进制工件的实际运行时语义。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That's not what they're doing. They're directly modifying the IR to convert it into a tracing JIT. The final artifact is a binary w/ no IR. The problem is of course not introducing any subtle bugs in the process b/c they'd have to prove the modification they're making do not change actual runtime semantics for the final binary artifact.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47788617" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
