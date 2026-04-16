@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：剧本 – 使 AI 浏览器自动化具有确定性 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-16-1118/">返回本批次</a>
+      <h1>显示 HN：剧本 – 使 AI 浏览器自动化具有确定性</h1>
+      <p class="subtitle">Show HN: Libretto – Making AI browser automations deterministic</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 muchael</span>
+        <span>分数 88</span>
+        <span>评论 24</span>
+        <span>2026/04/15 23:57</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47780971" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/saffron-health/libretto" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>网站：libretto.sh 存储库：github.com/saffron-health/libretto 文档：libretto.sh/docs 不和谐：discord.gg/NYrG56hVDt</li><li>Libretto 是一个用于构建强大的 Web 集成的工具包。它为您的编码代理提供了一个实时浏览器和一个高效的 CLI 来：</li><li>以最小的上下文开销检查实时页面 捕获网络流量以进行反向工程站点 API 记录用户操作并将其作为自动化脚本重播 针对真实站点以交互方式调试损坏的工作流程</li><li>Saffron Health 构建了 Libretto 来帮助我们维护浏览器与常见医疗保健软件的集成。我们将其开源，以便其他团队可以更轻松地做同样的事情。</li><li>剧本演示.mov</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Website: libretto.sh Repository: github.com/saffron-health/libretto Docs: libretto.sh/docs Discord: discord.gg/NYrG56hVDt</li><li>Libretto is a toolkit for building robust web integrations. It gives your coding agent a live browser and a token-efficient CLI to:</li><li>Inspect live pages with minimal context overhead Capture network traffic to reverse-engineer site APIs Record user actions and replay them as automation scripts Debug broken workflows interactively against the real site</li><li>We at Saffron Health built Libretto to help us maintain our browser integrations to common healthcare software. We&#39;re open-sourcing it so other teams have an easier time doing the same thing.</li><li>libretto-demo.mov</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anthuswilliams</span>
+        <span class="meta-time">2026/04/16 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的_刚刚_在我们内部的 Slack 上发布了一个我花了几周时间试图改正的工具的公告。奇怪的是，发布公告后，实际上在同一天，就看到了一个更好的、公开可用的工具包来实现该工作流程！<p>我还使用 Playwright 来自动化一个具有 iframe、引用链接等迷宫的平台。希望我可以用从该项目获得的脚本替换内部结构。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I literally _just_ put up an announcement on our internal Slack of a tool I had spent a few weeks trying to get right. Strange to post the announcement and, literally the same day, see a better, publicly available toolkit to do enable that very workflow!<p>I'm also using Playwright, to automate a platform that has a maze of iframes, referer links, etc. Hopefully I can replace the internals with a script I get from this project.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785360" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 05:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，这很疯狂，如果您遇到任何问题，请告诉我！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Haha that's wild, let me know if you run into any issues with it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785730" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">boriskurikhin</span>
+        <span class="meta-time">2026/04/16 05:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢前一代的方法！好奇它如何响应改变组件在运行时渲染方式的 JS。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like the pre-gen approach! Curious how it responds to JS that changes how components are rendered at run-time.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785389" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 06:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有几种方法可以处理运行时渲染的 JS 组件：<p>- Libretto 在可能的情况下更喜欢网络请求而不是 DOM 交互，因此这将规避很多复杂的 JS 渲染问题</p><p>- 当您确实需要 DOM 时，playwright 可以处理大量开箱即用的复杂性：playwright 将在操作时重新查询实时 DOM 并自动等待元素填充。 Libretto 还设置为选择选择器，例如 data-testid、aria-label、role、id，而不是类名或可能是动态的位置内容。</p><p>- 在一天结束时，文件仍然以代码形式存在，因此如果没有其他工作，您总是可以向其中添加一个浏览器代理来处理工作流程的一部分</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are a couple ways to handle JS components rendered at runtime:<p>- Libretto prefers network requests over DOM interaction when possible, so this will circumvent a lot of complex JS rendering issues</p><p>- When you do need the DOM, playwright can handle a lot of the complexity out of the box: playwright will re-query the live DOM at action time and automatically wait for elements to populate. Libretto is also set up to pick selectors like data-testid, aria-label, role, id over class names or positional stuff that's likely to be dynamic.</p><p>- At the end of the day the files still live as code so you could always just throw a browser agent at it to handle a part of a workflow if nothing else works</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785911" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">z3ugma</span>
+        <span class="meta-time">2026/04/16 03:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">爱它！你和克劳德有 BAA 吗？否则，您的演示可能会将 PHI 暴露给第三方，并使您面临与 HIPAA 相关的风险</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Love it! Do you have a BAA with Claude though? Otherwise, your demo is likely exposing PHI to 3rd parties and exposing you to risk related to HIPAA</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784105" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 03:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个很好的标注。我们拥有包含 Anthropic 和 OpenAI 的 BAA + ZDR，如果您想将剧本用于医疗保健用例，拥有 BAA 至关重要。在演示中使用 Codex，我们发现 Claude 和 Codex 都工作得很好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's a good callout. We have a BAA + ZDR with Anthropic and OpenAI, and if you want to use libretto for healthcare use cases having a BAA is essential. Was using Codex in the demo, and we've seen that both Claude and Codex work pretty well</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784160" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">heyitsaamir</span>
+        <span class="meta-time">2026/04/16 03:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在公司内部构建了非常相似的东西。这个想法是，代码的维护由代理负责，并且代码纯粹是一种优化。如果它破坏了代理的迭代运行，则修复代码以供下次使用。很高兴用这个替换我的工具，看看它的效果如何！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I built something very similar for my company internally. The idea was that that the maintenance of the code is on the agent and the code is purely an optimization. If it breaks the agent runs it iteratively, fixes the code for next time. Happy to replace my tool with this and see how it does!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784399" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 04:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">超级酷！请让我知道进展如何。由于代理非常擅长编写代码，因此我们认为让代理在失败时重写/测试代码比仅在运行时使用提示要好</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Super cool! Please let me know how it goes. Since agents are so good at writing code, we think letting the agent rewrite/test the code on failure is better than just using a prompt at runtime</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784582" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yehia2amer</span>
+        <span class="meta-time">2026/04/16 08:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它与什么不同 <a href="https://github.com/browserbase/stagehand" target="_blank" rel="noopener noreferrer">https://github.com/browserbase/stagehand</a> ？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how does it differ from <a href="https://github.com/browserbase/stagehand" target="_blank" rel="noopener noreferrer">https://github.com/browserbase/stagehand</a> ?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787128" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">etwigg</span>
+        <span class="meta-time">2026/04/16 02:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢你！对于 100% 和 0% 自动化的事物，我们有明确的答案，但边界始终是 80%-99% 自动化的部分，这是个好主意。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for this! We have clear answers for things that are 100% and 0% automated, but it’s always that 80%-99% automated slice where the frontier is, great idea.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47783042" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">canarias_mate</span>
+        <span class="meta-time">2026/04/16 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">脚本维护正是中间部分所咬的地方——应用程序不断发展，而脚本滞后。我们采取的角度是让智能体在每次运行时都从头开始重新探索自治（<a href="https://github.com/autonoma-ai/autonoma" target="_blank" rel="noopener noreferrer">https://github.com/autonoma-ai/autonoma</a>）对于 e2e qa，无需维护脚本，自然适应 - 与剧本不同的目标，但核心直觉相同</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">script maintenance is exactly where that middle slice bites - the app keeps evolving and the scripts lag behind. we took the angle of having the agent re-explore from scratch each run with autonoma (<a href="https://github.com/autonoma-ai/autonoma" target="_blank" rel="noopener noreferrer">https://github.com/autonoma-ai/autonoma</a>) for e2e qa, no maintained scripts, adapts naturally - different goal than libretto but same core intuition</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784326" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">messh</span>
+        <span class="meta-time">2026/04/16 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它与 playwright-cli 有什么不同？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how does it differ from playwright-cli?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782168" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">libretto 的核心是生成、验证并帮助调试 RPA 脚本。据我了解，像剧作家 CLI 这样的工具更专注于让您的代理使用剧作家来执行一次性自动化。<p>实现也有很大不同：</p><p>- libretto 为您的代理提供了一个执行工具（而不是每个动作的不同工具），因此它可以编写任意剧作家/javascript，并且上下文效率更高</p><p>- 我们还提供了关于避免机器人检测的剧本说明，以便它更喜欢使用网络请求进行自动化（其他工具不支持的东西），但如果它认为网络请求风险太大，则会退回到剧作家</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">At its core, libretto generates, validates, and helps with debugging RPA scripts. As far as I understand tools like playwright CLI are more focused on letting your agent use playwright to perform one-off automations.<p>The implementation is also pretty different:</p><p>- libretto gives your agent a single exec tool (instead of different tools for each action) so it can write arbitrary playwright/javascript and is more context efficient</p><p>- Also we gave libretto instructions on bot detection avoidance so that it will prefer using network requests for automation (something that other tools don’t support), but will fall back to playwright if it identifies network requests as too risky</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782991" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">seagull</span>
+        <span class="meta-time">2026/04/16 01:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我多年来一直想要这样的东西，很高兴尝试一下！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I've wanted something like this for ages, excited to try this out!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782447" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">daveguy</span>
+        <span class="meta-time">2026/04/16 03:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">许可证是什么？<p>编辑：没关系。我从网站上看到是MIT。可能应该将 COPYING.md 或 LICENSE.md 添加到存储库本身。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What is the license?<p>Edit: nevermind. I see from the website it is MIT. Probably should add a COPYING.md or LICENSE.md to the repository itself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gbibas</span>
+        <span class="meta-time">2026/04/16 02:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">凉爽的。  谢谢您的分享。  虽然人工智能工具非常强大，但像这样的软件包有助于为模型尚未解决的连接创建一些良好的标准和垫脚石。  再次感谢。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cool.  Thank you for sharing.  While AI tools are extremely powerful, packages like this help create some good standards and stepping stones for connectivity that the models haven’t gotten around to yet.  Thanks again.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782922" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">arpadav</span>
+        <span class="meta-time">2026/04/16 02:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这看起来棒极了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this looks awesome</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47783002" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">devstatic</span>
+        <span class="meta-time">2026/04/16 01:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">this is interesting</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782136" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">WhoffAgents</span>
+        <span class="meta-time">2026/04/16 10:13</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787852" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kantaro</span>
+        <span class="meta-time">2026/04/16 07:51</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786898" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">KaiShips</span>
+        <span class="meta-time">2026/04/16 03:01</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47783650" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">danelliot</span>
+        <span class="meta-time">2026/04/16 04:43</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784966" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maxbeech</span>
+        <span class="meta-time">2026/04/16 06:32</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786208" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">raffaeleg</span>
+        <span class="meta-time">2026/04/16 04:09</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784548" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">huflungdung</span>
+        <span class="meta-time">2026/04/16 05:37</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785607" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">secureotter</span>
+        <span class="meta-time">2026/04/16 03:42</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784203" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/16 01:50</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782661" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">surgical_fire</span>
+        <span class="meta-time">2026/04/16 02:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47782833" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dang</span>
+        <span class="meta-time">2026/04/16 04:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好的，但请不要向 HN 发表非实质性评论。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ok, but please don't post unsubstantive comments to HN.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785140" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 03:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，抱歉点击误导了。受剧作家的启发，我们以戏剧术语将其命名为剧本。这里没有复古游戏，只有浏览器自动化！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Lol sorry for the misleading click. We named it libretto after the term in theater, inspired by Playwright. No retro gaming here, just browser automation!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784181" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alexbike</span>
+        <span class="meta-time">2026/04/16 03:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47783687" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dang</span>
+        <span class="meta-time">2026/04/16 04:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><a href="https://news.ycombinator.com/newsguidelines.html#generated" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/newsguidelines.html#generated</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><a href="https://news.ycombinator.com/newsguidelines.html#generated" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/newsguidelines.html#generated</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47785131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">muchael</span>
+        <span class="meta-time">2026/04/16 04:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">目前，libretto 仅捕获 HTTP 请求，编码代理可以使用这些请求来确定如何执行自动化。<p>对于更复杂的情况，剧本无法验证网络方法是否会生成正确的数据（例如依赖 WebSocket 或大量客户端逻辑的网站），它会回退到使用 DOM 和剧作家</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Right now libretto only captures HTTP requests, which the coding agent can use to determine how to perform the automation.<p>For more complex cases where libretto can't validate that the network approach would produce the right data (like sites that rely on WebSockets or heavy client-side logic) it falls back to using the DOM with playwright</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47784539" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

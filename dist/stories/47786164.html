@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我做了一个终端寻呼机 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-16-1118/">返回本批次</a>
+      <h1>我做了一个终端寻呼机</h1>
+      <p class="subtitle">I made a terminal pager</p>
+      <div class="meta-line">
+        <span>theleo.zone</span>
+        <span>作者 speckx</span>
+        <span>分数 74</span>
+        <span>评论 18</span>
+        <span>2026/04/16 06:27</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47786164" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://theleo.zone/posts/pager/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>TL;DR：我为 k8s 日志构建终端应用程序 (TUI)，例如 kl，并为 Nomad 构建漫游。 TUI 的核心功能包括与大文本块（例如应用程序清单和日志）进行交互。我在 Go 中创建了一个可重用的视口组件，用于项目中的文本导航。终端寻呼机是允许您交互式导航多页文本的程序。我使用我的视口组件来制作传说，现在我每天都将其用作终端寻呼机。在这篇文章中，我详细介绍了我想在视口中支持的功能，以及使它们成为现实的一些学习和设计决策。终端分页简介#除了运行命令之外，终端通常是查看和导航文本的地方。❯ cat file.txt 我喜欢终端！终端具有类似网格的等宽字体。它们的大小按行和列定义，文本相应地填充此网格。❯ cat ~/chessboard.txt a b c d e f g h 8 R N B Q K B N R 7 P P P P P P P P 6 5 4 3 2 P P P P P P P P P 1 R N B Q K B N R a b c d e f g h 旁白：在终端中设置文本样式您可以使用 ANSI 转义码在终端中设置文本样式。❯ echo &quot;default, \x1b[31mred text\x1b[0m, default&quot; default, red text, default\x1b[31m: begin red foreground text stylered text: content to be styled\x1b[0m: Reset style这种类型的样式是我们如何从上面的 chessboard.txt 中获取终端中的灰色棋盘图案：chessboard.txt 包含带有 ANSI 转义码的文本，为终端设置样式。开发人员经常扫描大量文本在他们的终端中：来自脚本和 CLI 的详细输出 git diffs 应用程序日志 手册页 自述文件 数据库查询结果，例如 psql/sqlite 结果行 代理 AI 工具的输出 当文本输出小于一个终端视图的高度时，输出通常直接打印到您的终端，而不需要特殊的寻呼机。然后，您可以使用鼠标滚动并使用终端仿真器的内置功能（例如 iTerm2 中的 cmd+f）进行搜索。或者，您可能在终端模拟器中使用像 tmux 这样的终端多路复用器，它有自己的一组用于搜索和回滚的键盘绑定。但最常见的是，对于跨越多个终端页面的文本，程序使用寻呼机进行交互式文本导航。程序检查 PAGER 环境变量，如果设置了，则使用该程序显示文本，而不是将其转储到标准输出。 PAGER 环境变量指向需要管道输入 &lt;command&gt; | 的程序。 mypager 或文件参数 mypager myfile.txt.Aside：程序如何使用 $PAGER 程序（如 git、man 等）有一些内部逻辑来检查 PAGER 是否已设置并有条件地使用它。他们通常会将内容直接通过管道传输到 PAGER 中，如果 stdout 不是 TTY（交互式终端会话）则跳过它。因此 PAGER 与非 TTY 标准输出（如 git diff |）无关。 grep ...如果 stdout 是 TTY，程序可能会选择使用 PAGER。他们将生成设置为 PAGER 的程序作为子进程，然后使用管道将分页程序进程的标准输入与程序的标准输出连接起来。我很喜欢 Andrew Healey 最近撰写的有关构建 Shell 的文章，了解有关管道和 Shell 用来使这一切顺利运行的系统调用的更多信息。如果未设置 PAGER，开发计算机上的大多数程序都会使用 less 作为后备分页程序。如果您希望将所有内容直接转储到终端，请将 PAGER 环境变量设置为 cat。其他选项包括 bat、most 和 delta。还有一些特殊的分页环境变量，例如，专门为 git 输出设置 GIT_PAGER，或者为 bat 执行语法高亮后的分页设置 BAT_PAGER。最常见的 PAGER，less，通过有效使用选项和配置，功能相当强大。例如，一旦退出次数较少，默认情况下文本就会丢失，这通常是合理的，但您可以使用 --no-init/-X 让您在退出时分页的文本保留在终端输出中。并使用 --ignore-case/-i 使搜索不区分大小写。我推荐这些关于更少选项和更少配置的文章来了解更多信息。终端应用程序/TUI#终端应用程序或 TUI 有点像本机桌面应用程序或网站，只不过您在终端中运行它们。TUI 通常使用 alt 屏幕暂时接管整个终端屏幕，在其中显示应用程序组件，如标题、侧边栏、帮助文本和文本视口。文本视口组件与终端寻呼机类似，但仅占据屏幕的一部分。 TUI 中的其他常见用户工作流程包括： 在屏幕上的组件之间移动焦点 从屏幕上的项目列表中进行选择 获取用户输入 在 TUI 中，最小的可编辑单位是终端网格单元而不是像素。这提供了一个很好的约束，推动终端应用程序删除除必要信息之外的所有信息，并提供键盘驱动的数据视图层次结构，而不是一个大型可滚动组件屏幕和充满按钮的工具栏（如网站或桌面应用程序可能会提供。以 kl 为例，它是我为跨多个集群和命名空间与 Kubernetes 日志进行交互而构建的 TUI。启动时，您会看到 2 个文本视口：左侧的 Kubernetes 实体层次结构显示您配置的集群、命名空间、pod 和容器，右侧是最初为空的日志视图。启动时，您开始将注意力集中在选择视口中，您可以在其中选择一个或多个容器来跟踪日志。选择一些容器，查看它们的日志按 L 全屏显示这些日志，隐藏选择树。从那里，您可以使用 / 搜索精确匹配。在日志中搜索“错误”您可以查看与周围（不匹配）上下文的匹配，或者按 x 仅查看匹配项。按 p 可通过间距和缩进美化 JSON 日志。按 Enter 键放大单个日志视图。 ？显示所有潜在命令，按 ctrl+c 退出。这让您了解 TUI 是如何由组件组成的键盘驱动应用程序，而 TUI 最重要的组件通常只是迷你终端寻呼机。在 kl，选择树和日志视图都是迷你终端寻呼机。我将这个共享功能提取到视口组件中。视口组件#视口是一个大小灵活的框，其中包含任意数量的文本。此文本框可调整大小，可滚动，为文本中的当前位置提供百分比指示器，使文本在展开时可通过水平平移（展开）展开，启用匹配导航搜索，允许项目选择，支持用于样式文本的 ANSI 转义码，处理 Unicode，并且即使在处理大量文本时通常也具有高性能。此视口是用 Go 编写的，可以使用 Bubble Tea TUI 框架轻松集成到应用程序中。为了促进此功能集，由三个模块组成实现：item：包装一个字符串，并根据字符串宽度、终端宽度和包装状态在终端中占用一行或多行viewport：显示项目并允许导航filterableviewport：将搜索添加到视口功能filterable viewport 正在运行如果你安装了Go，尝试filterableviewport的最快方法，这些元素的组成，你自己就是运行：go run github.com/robinovitch61/viewport/examples/filterableviewport@latest 或者如果你没有安装有 Go，在 Docker 中：docker run -ti golang:1.26-alpine \ go run github.com/robinovitch61/viewport/examples/filterableviewport@latest Unicode Handling#大多数 Unicode 字符在终端中占用 1 个单元格宽度，但特殊字符则不然。这里有一个 shell 函数，它使用 wcwidth 库来检查字符串终端列的宽度：termwidth() { uv run --with wcwidth python -c \ &quot;import wcwidth; print(wcwidth.wcswidth(&#39;$1&#39;))&quot; } 简单字符串是您期望的单元格宽度：❯ termwidth &#39;a&#39; 1</li><li>❯ termwidth &#39;123&#39; 3但是这些是怎么回事？❯ echo &#39;\u2728&#39; ✨</li><li>❯ termwidth &#39;✨&#39; 2闪闪发光的表情符号，由其 Unicode 代码点 ✨ U+2728 SPARKLES 表示，占据两个终端单元的宽度。在终端上下文中的 Unicode 文本中，有： 代码点：在 Unicode 标准中分配给字符的数字，例如U+2728grapheme：人类对单个字符（一个或多个代码点）的感知，例如✨字节编码：代码点的字节表示，依赖于UTF-8/16/32，例如✨ 为 3 个字节，0xE2 0x9C 0xA8，在 UTF-8 中码点宽度：码点占用的终端单元数（0、1 或 2），例如2 for ✨ 一个字素的终端宽度是由它的组合代码点决定的 仅通过视觉观察很难猜测给定字符将占用多少个终端单元：❯ termwidth &#39;全&#39; 2</li><li>❯ 术语宽度 &#39;⁠&#39; 1</li><li>❯ termwidth &#39;﷽&#39; 1您可以在 Unicode 中以多种不同的方式表示像 é 这样的单宽字符：作为单个 é 代码点，或作为其后带有组合重音代码点的 e 代码点。é U+00E9 拉丁小写字母 E 与 ACUTEe U+0065 拉丁小写字母 É U+0301 组合急性重音❯ echo &#39;\u00E9&#39;é</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>TL;DR: I build terminal applications (TUIs) like kl for k8s logs and wander for Nomad. Core functionality of TUIs includes interacting with large blocks of text, like application manifests and logs. I created a reusable viewport component in Go for text navigation in my projects.Terminal pagers are programs that allow you to interactively navigate multi-page text. I used my viewport component to make lore, which I’m now daily driving as my terminal pager.In this post, I detail the features I wanted to support in my viewport as well as some learnings and design decisions on the way to making them a reality.Introduction to Terminal Paging#Along with running commands, the terminal is often a place for viewing and navigating text.❯ cat file.txt I love terminals!Terminals have a grid-like nature with a monospace font. Their size is defined in rows and columns, with text filling this grid accordingly.❯ cat ~/chessboard.txt a b c d e f g h 8 R N B Q K B N R 7 P P P P P P P P 6 5 4 3 2 P P P P P P P P 1 R N B Q K B N R a b c d e f g h Aside: styling text in terminalsYou can style text in terminals with ANSI escape codes.❯ echo &quot;default, \x1b[31mred text\x1b[0m, default&quot; default, red text, default\x1b[31m: begin red foreground text stylingred text: content to be styled\x1b[0m: reset stylingThis type of styling is how we get the grey checkerboard pattern in the terminal out of chessboard.txt above: chessboard.txt contains text with ANSI escape codes styling it for the terminal.Developers often scan through high volumes of text in their terminal:verbose output from scripts and CLIsgit diffsapplication logsman pagesREADMEsdatabase query results, e.g., psql/sqlite result rowsoutput of agentic AI toolsWhen the text output is less than one terminal view’s height, output is usually printed directly to your terminal without a special pager. You can then scroll with the mouse and search using your terminal emulator’s built in functionality (e.g. cmd+f in iTerm2). Or maybe you use a terminal multiplexer like tmux within your terminal emulator that has its own set of keyboard bindings for search and scrollback.But most often for text spanning multiple terminal pages, programs use a pager for interactive text navigation. Programs check the PAGER environment variable and, if set, use that program to display the text instead of dumping it to stdout. The PAGER environment variable points to a program that expects either piped input &lt;command&gt; | mypager or a file argument mypager myfile.txt.Aside: how programs use $PAGERPrograms like git, man, etc. have some internal logic to check if PAGER is set and conditionally use it. They’ll usually pipe content directly into the PAGER, skipping it if stdout isn’t a TTY (an interactive terminal session). So the PAGER isn’t relevant in a non-TTY stdout like git diff | grep ...If stdout is a TTY, programs may opt to use the PAGER. They’ll spawn the program set as PAGER as a child process, then use a pipe to connect the pager process’s stdin with the program’s stdout.I enjoyed Andrew Healey’s recent write-up on Building a Shell for more on pipes and the syscalls that shells use to make this all work nicely.Most programs on developer machines use less as a fallback pager if PAGER isn’t set. If you want everything to be dumped to your terminal directly, set your PAGER environment variable to cat. Other options include bat, most, and delta. There are special paging environment variables as well, for example, setting GIT_PAGER specifically for git output, or BAT_PAGER for paging within bat after it performs syntax highlighting.The most common PAGER, less, is quite powerful with effective use of the options and configuration. For example, text by default is lost once you quit less, which is generally reasonable, but you can use --no-init/-X to have the text you’ve paged through up to the point of quitting persist in your terminal output. And use --ignore-case/-i to make searching case-insensitive. I recommend these articles on less options and less configuration to learn more.Terminal Applications/TUIs#Terminal applications, or TUIs, are a bit like native desktop applications or websites, except that you run them within your terminal.TUIs usually use the alt screen to temporarily take over the full terminal screen, displaying application components like titles, side bars, help text, and text viewports within them. Text viewport components are similar to terminal pagers, but only take up part of the screen. Other common user workflows in TUIs are:moving focus between components on the screenselecting from a list of items on the screentaking in user inputIn a TUI, the smallest editable unit is the terminal grid cell rather than the pixel. This provides a nice constraint, pushing terminal applications to remove all but essential information and provide a hierarchy of keyboard-driven views into the data, rather than one large scrollable screen of components and button-laden toolbars like a website or desktop app might provide.Take kl, a TUI I built for interacting with Kubernetes logs across many clusters and namespaces, for example. On startup, you’re presented with 2 text viewports: a Kubernetes entity hierarchy on the left showing your configured clusters, namespaces, pods, and containers, and an initially-empty view of logs on the right.kl on startupYou start focused in the selection viewport, where you select one or more containers to tail the logs for.select some containers, see their logsPressing L shows you those logs in full screen, hiding the selection tree. From there, you can search for exact matches with /.search the logs for &quot;ERROR&quot;You can see matches with surrounding (non-matching) context, or only the matching items by pressing x. Pressing p prettifies the JSON logs with spacing and indentation. Press enter to zoom into the single log view. ? to show all the potential commands, and ctrl+c to quit.This gives you an idea how a TUI is a keyboard-driven application consisting of components, and the most important components of TUIs are often just mini terminal pagers. In kl, both the selection tree and the logs view are mini terminal pagers. I extracted out this shared functionality into a viewport component.The Viewport Component#The viewport is a flexibly-sized box with an arbitrary amount of text. This box of text is resizable, scrollable, provides a percentage indicator for your current position in the text, makes text (un)wrappable with horizontal panning when unwrapped, enables search with match navigation, allows for item selection, supports ANSI escape codes for styling text, handles Unicode, and is generally performant even with lots of text.This viewport is written in Go and can be easily integrated into applications using the Bubble Tea TUI framework.To facilitate this feature set, there are three modules that make up the implementation:item: wraps a string and takes up one or more rows in the terminal depending on the string width, terminal width, and wrap stateviewport: displays items and allows navigationfilterableviewport: adds search to viewport functionalityfilterable viewport in actionIf you have Go installed, the fastest way to try out the filterableviewport, the composition of these elements, yourself is to run:go run github.com/robinovitch61/viewport/examples/filterableviewport@latest Or if you don’t have Go, in Docker:docker run -ti golang:1.26-alpine \ go run github.com/robinovitch61/viewport/examples/filterableviewport@latest Unicode handling#Most Unicode characters take up 1 cell width in the terminal, but special ones don’t.Here’s a shell function that uses the wcwidth library for checking the width in terminal columns of a string:termwidth() { uv run --with wcwidth python -c \ &quot;import wcwidth; print(wcwidth.wcswidth(&#39;$1&#39;))&quot; } Simple strings are the cell width that you’d expect:❯ termwidth &#39;a&#39; 1</li><li>❯ termwidth &#39;123&#39; 3But what’s with these ones?❯ echo &#39;\u2728&#39; ✨</li><li>❯ termwidth &#39;✨&#39; 2The sparkles emoji, represented by its Unicode code point ✨ U+2728 SPARKLES, takes up two terminal cells in width.In Unicode text in the context of terminals, there are:code points: a number assigned to a character in the Unicode standard e.g. U+2728grapheme: a human’s perception of a single character (one or more code points), e.g. ✨byte encoding: byte representation of code points, dependent on UTF-8/16/32, e.g. ✨ is 3 bytes, 0xE2 0x9C 0xA8, in UTF-8code point width: the number of terminal cells a code point occupies (0, 1, or 2), e.g. 2 for ✨a grapheme’s terminal width is determined by its combined code pointsIt’s hard to guess how many terminal cells a given character will take up by only looking at it visually:❯ termwidth &#39;全&#39; 2</li><li>❯ termwidth &#39;￭&#39; 1</li><li>❯ termwidth &#39;﷽&#39; 1You can represent single-width characters like é multiple different ways in Unicode: either as a single é code point, or an e code point with a combining accent code point following it.é U+00E9 LATIN SMALL LETTER E WITH ACUTEe U+0065 LATIN SMALL LETTER É U+0301 COMBINING ACUTE ACCENT❯ echo &#39;\u00E9&#39; é</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">CGamesPlay</span>
+        <span class="meta-time">2026/04/16 10:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我绝对在等待一个“现代较少的替代品”，就像 fd、sd、fzf 和其他 20 岁以下的 cli 团队一样。我认为“更少”仍然是合理的。<p>我认为对我来说杀手级功能是刷新。我知道这不适用于管道输入，但我希望 `git diff` 显示在寻呼机中，并带有一个刷新按钮来保留我的位置。 fzf 支持刷新和管道输入，因此也许有一些可以利用的想法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am definitely waiting for a "modern less replacement" in the same vein as fd, sd, fzf, and the rest of the under-20yo cli crew. I get that "less" is reasonably maintained still.<p>I think the killer feature for me would be refresh. I get that this can't work for piped input, but I want `git diff` to show in a pager with a refresh button that holds my place. fzf supports both refresh and piped input, so perhaps there's some ideas there that could be leveraged.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787901" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zeech</span>
+        <span class="meta-time">2026/04/16 10:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">几年前，我去寻找一个“新”寻呼机，并最终选定了这个 [0]。  我后来又回到了`less`，因为它在系统之间跳转并且有不同的寻呼机很烦人，但是当我使用它时，它非常好。<p>[0] <a href="https://github.com/walles/moor" target="_blank" rel="noopener noreferrer">https://github.com/walles/moor</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I went looking for a 'new' pager a couple years back and settled on this [0].  I've since gone back to `less` since it got annoying jumping between systems and having different pagers, but when I used it it was quite nice.<p>[0] <a href="https://github.com/walles/moor" target="_blank" rel="noopener noreferrer">https://github.com/walles/moor</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787994" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ancientcatz</span>
+        <span class="meta-time">2026/04/16 10:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果我没记错的话，`gum` 还提供了寻呼机功能： <a href="https://github.com/charmbracelet/gum" target="_blank" rel="noopener noreferrer">https://github.com/charmbracelet/gum</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If I remember correctly, `gum` also provides a pager feature: <a href="https://github.com/charmbracelet/gum" target="_blank" rel="noopener noreferrer">https://github.com/charmbracelet/gum</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787806" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">netghost</span>
+        <span class="meta-time">2026/04/16 11:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大约 `gum` 为止。  我喜欢这个，并努力在某个时候将其融入到某些东西中。  谢谢你提到它！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">TIL about `gum`.  I love this and endeavor to integrate it into something sometime.  Thank you for mentioning it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47788221" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vomayank</span>
+        <span class="meta-time">2026/04/16 08:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的项目。<p>现有寻呼机（例如 less）的主要限制是什么促使您开发一款新寻呼机？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Interesting project.<p>What was the main limitation in existing pagers like less that pushed you to build a new one?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787022" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">lrobinovitch</span>
+        <span class="meta-time">2026/04/16 08:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者在此！<p>如果我要给这篇文章起一个更长的标题，那就是“我制作了一个终端寻呼机，因为我需要为我的 Go TUI 提供一个非常好的视口组件，然后意识到 TUI 视口只是一个迷你终端寻呼机，我希望在终端中遇到长文本块的任何地方都有相同的文本导航和操作体验”。</p><p>我对 `less` 没有任何问题，正如我在帖子中所说的那样，它非常强大且可配置。我获取了所需的功能，将其作为 Go TUI 的可重用组件，然后用它以 Go TUI 的形式制作了一个终端寻呼机。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Author here!<p>If I were to give this post a longer title, it would be "I made a terminal pager because I needed a really good viewport component for my Go TUIs, then realized that a TUI viewport is just a mini terminal pager and I want the same text navigation and manipulation experience everywhere that I encounter long text blocks in my terminal".</p><p>I take no issue at all with `less`, it's super powerful and configurable as I call out in the post. I took the functionality I needed, made it a reusable component for Go TUIs, then made a terminal pager in the form of a Go TUI with it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787183" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ghthor</span>
+        <span class="meta-time">2026/04/16 10:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">依然每天使用Wander &lt;3</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Still use Wander everyday &lt;3</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787786" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mnkyprskbd</span>
+        <span class="meta-time">2026/04/16 09:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">蝙蝠是寻呼机之王。 <a href="https://github.com/sharkdp/bat" target="_blank" rel="noopener noreferrer">https://github.com/sharkdp/bat</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">bat is the king of pagers. <a href="https://github.com/sharkdp/bat" target="_blank" rel="noopener noreferrer">https://github.com/sharkdp/bat</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787513" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">saghm</span>
+        <span class="meta-time">2026/04/16 10:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我比 `less` 更喜欢它，但不幸的是，第一次打开非常大的文件时它总是慢很多。我不确定它是否急切地加载整个内容（也许是因为在语法突出显示的情况下需要进行 AST 解析，尽管即使在没有突出显示的文件上也会发生这种情况），但有时我仍然必须交换到 `less` 。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like it a lot more than `less`, but unfortunately it's always a lot slower when first opening really large files. I'm not sure if it's eagerly loading the whole thing (maybe because that's needed for AST parsing in the case of syntax highlighting, although it happens even on files without highlighting), but there are times I have to swap to `less` still.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787918" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">asibahi</span>
+        <span class="meta-time">2026/04/16 09:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是直接调用`less`吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Doesn’t it just call `less`?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787680" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">teki_one</span>
+        <span class="meta-time">2026/04/16 09:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">bat 看起来不像寻呼机： <a href="https://github.com/sharkdp/bat?tab=readme-ov-file#automatic-paging" target="_blank" rel="noopener noreferrer">https://github.com/sharkdp/bat?tab=readme-ov-file#automatic-...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">bat does not look like a pager: <a href="https://github.com/sharkdp/bat?tab=readme-ov-file#automatic-paging" target="_blank" rel="noopener noreferrer">https://github.com/sharkdp/bat?tab=readme-ov-file#automatic-...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787636" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gandreani</span>
+        <span class="meta-time">2026/04/16 07:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真的很喜欢这篇文章！我认为这是我见过的关于 utf-8 字符串不同特征的最清晰的解释</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really like this post! I think it's the clearest explanation I've seen of the different characteristics of utf-8 strings</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786758" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pimlottc</span>
+        <span class="meta-time">2026/04/16 06:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">TL;DR 并没有真正说明这款新寻呼机与其他寻呼机相比提供了什么；这似乎主要是一个学习项目：<p>&gt; lore 仅支持 less 功能的一部分，但对我的日常活动来说以更直观和有用的方式。我还发现从头开始理解它（从字节到终端视图）的价值，并随着我更多地了解终端寻呼机中我真正想要和需要的内容而继续完善它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The TL;DR doesn’t really say what this new pager offers compared to less; it seems to mostly be a learning project:<p>&gt; lore supports only a subset of what less does, but in a more intuitive and useful manner for my daily activity. I also find value in understanding it from the ground up, bytes to terminal views, and continuing to refine it as I learn more about what I actually want and need in a terminal pager.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786365" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sourcegrift</span>
+        <span class="meta-time">2026/04/16 10:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也称为 `vi -`</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also called `vi -`</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jauntywundrkind</span>
+        <span class="meta-time">2026/04/16 10:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是很好，但我最近做了一个打字稿库来包装选择器，例如skim，fuzzel，fzf，dmenu，rofi等。一些非常相似的问题。<p>如果有人有想法或建议，我会很高兴。它又快又脏，而且对我的使用效果很好，但我不确定我还能把它带到哪里，我还能如何解决问题，还有什么适合它。 <a href="https://tangled.org/jauntywk.bsky.social/picker-power" target="_blank" rel="noopener noreferrer">https://tangled.org/jauntywk.bsky.social/picker-power</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's not great but I made a typescript library to wrap pickers recently, such as skim, fuzzel, fzf, dmenu, rofi, etc. Some very similar problems.<p>Would love if anyone has thoughts or suggestions. It was quick and dirty, and works fine for my use, but I'm not sure where else I could take this, how else I might splice apart the problem, what else would suit it. <a href="https://tangled.org/jauntywk.bsky.social/picker-power" target="_blank" rel="noopener noreferrer">https://tangled.org/jauntywk.bsky.social/picker-power</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787858" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dostick</span>
+        <span class="meta-time">2026/04/16 08:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从标题来看我以为这是关于死人的转变。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">From the title I thought it’s about a dead man’s switch.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787062" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">fragmede</span>
+        <span class="meta-time">2026/04/16 08:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">斯普朗克，斯普朗克！我的 Splunk 王国！<p>（太糟糕了，思科买了它们并且让它变得太贵了）。</p><p>还有“少胜于多，多数胜于少”的笑话吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A Splunk, a Splunk! My kingdom for a Splunk!<p>(too bad Cisco bought them and made it too expensive).</p><p>Also, no "less does more than more and most does more than less" joke?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47787245" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">cocodill</span>
+        <span class="meta-time">2026/04/16 07:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于珍珠奶茶应用，我希望那里有更多的泡沫和茶。但仍然是一个不错的项目。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For a bubbletea application I'd expect more bubbles and tea there. But still, nice project.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47786771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
