@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tendril – 一个自我扩展的代理，可以构建和注册自己的工具 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-28-1726/">返回本批次</a>
+      <h1>Tendril – 一个自我扩展的代理，可以构建和注册自己的工具</h1>
+      <p class="subtitle">Tendril – a self-extending agent that builds and registers its own tools</p>
+      <div class="meta-line">
+        <span>github.com</span>
+        <span>作者 walmsles</span>
+        <span>分数 77</span>
+        <span>评论 32</span>
+        <span>2026/04/27 21:34</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47921377" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://github.com/serverless-dna/tendril" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>一个自我扩展的代理沙箱，演示代理能力模式 - 模型在会话中自主发现、构建和重用工具。使用 AWS Strands Agent SDK 和 Tauri 构建。它的作用 你要求卷须做某事。它检查其能力注册表。如果存在工具，它就会使用它。如果没有，它会写入一个、注册它并执行它——这一切都无需询问。下次您需要同样的东西时，该工具已经存在。你：“从黑客新闻中获取头条新闻”</li><li>Tendril: → searchCapability(&quot;fetch url hacker news&quot;) # 没有找到 → registerCapability(fetch_url, code) # 构建一个工具 →execute(&quot;fetch_url&quot;, {u​​rl: &quot;https://...&quot;}) # 按名称运行它 → &quot;Here are the top Stories: ...&quot;</li><li>你：“现在去拿龙虾来比较一下”</li><li>Tendril: → listCapability() # 找到: fetch_url ✓ → execute(&quot;fetch_url&quot;, {u​​rl: &quot;https://lobste.rs&quot;})# 运行它 — 无需重建</li><li>注册表随着使用而增长。每一次会议都比上一次更聪明。代理循环 Tendril 的核心是一个带有三个引导工具的 Strands 代理。就是这样——三个工具来统治它们。所在位置 tentril-agent/src/ ├── agent.ts ← 代理配置（Strands 模型 + 工具） ├── index.ts ← Orchestrator — 传输循环的线路 ├──loop/ ← 代理循环 │ ├── tools.ts ← 4 个按循环顺序的引导工具 │ ├── Prompt.ts ← 系统提示（自主行为规则） │ ├── registry.ts ← 功能注册表 (index.json CRUD) │ └── sandbox.ts ← 使用沙箱执行 Deno 子进程 └── Transport/ ← 对话框架 + 流观察 ├── protocol.ts ← ACP JSON-stdio 上的 RPC ├── stream.ts ← SDK events → 循环阶段 (think/act/observe) └── error.ts ← 提供者错误分类</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>A self-extending agentic sandbox that demonstrates the Agent Capability pattern — where the model discovers, builds, and reuses tools autonomously across sessions. Built with AWS Strands Agents SDK and Tauri. What it does You ask Tendril to do something. It checks its capability registry. If a tool exists, it uses it. If not, it writes one, registers it, and executes it — all without asking. Next time you need the same thing, the tool is already there. You: &quot;fetch the top stories from Hacker News&quot;</li><li>Tendril: → searchCapabilities(&quot;fetch url hacker news&quot;) # nothing found → registerCapability(fetch_url, code) # builds a tool → execute(&quot;fetch_url&quot;, {url: &quot;https://...&quot;}) # runs it by name → &quot;Here are the top stories: ...&quot;</li><li>You: &quot;now fetch Lobsters and compare&quot;</li><li>Tendril: → listCapabilities() # found: fetch_url ✓ → execute(&quot;fetch_url&quot;, {url: &quot;https://lobste.rs&quot;})# runs it — no rebuild</li><li>The registry grows with use. Every session is smarter than the last. The Agent Loop The core of Tendril is a Strands agent with three bootstrap tools. That&#39;s it — three tools to rule them all. Where it lives tendril-agent/src/ ├── agent.ts ← Agent configuration (Strands model + tools) ├── index.ts ← Orchestrator — wires loop to transport ├── loop/ ← The agentic loop │ ├── tools.ts ← 4 bootstrap tools in cycle order │ ├── prompt.ts ← System prompt (autonomous behaviour rules) │ ├── registry.ts ← Capability registry (index.json CRUD) │ └── sandbox.ts ← Deno subprocess execution with sandboxing └── transport/ ← Conversation framing + stream observation ├── protocol.ts ← ACP JSON-RPC over stdio ├── stream.ts ← SDK events → loop phases (think/act/observe) └── errors.ts ← Provider error classification</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">namuol</span>
+        <span class="meta-time">2026/04/28 01:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 注册表随着使用而增长。每一次会议都比上一次更聪明。<p>这感觉有点像“现在你有两个问题”的解决方案之一。经过几十次会话后，我预计工具注册表中的大多数提示都会充满“噪音”。我还希望大多数工具都非常具体地针对手头的任务，从而导致冗余，并最终由于工具 API 之间的不一致而导致可编程性较差。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; The registry grows with use. Every session is smarter than the last.<p>This feels a bit like one of those “now you have two problems” solutions. After a few dozen sessions I would expect the tool registry to be full of “noise” for most prompts. I would also expect most tools to be extremely specific to the task at hand, leading to redundancy and ultimately poor programmability due to inconsistencies between tool APIs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924320" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 05:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个开放的实验，卷须的效用就是这个概念。  我更好奇工具制作能有多好。  前沿模型往往对其构建的内容非常具体，因此（目前还）不会出现具体的膨胀。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's an open experiment, the utility of tendril is the concept.  I am more curious about how good can the tool making get.  Frontier models tend to be very specific about what they build so don't get specific bloat (yet).</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927528" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">gavinray</span>
+        <span class="meta-time">2026/04/27 23:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">看到其他人遇到同样的问题并得出相同的结论/解决方案真是太酷了。<p>在 $DAYJOB，我们有一个基于 LLM 的工具，“我们如何避免燃烧代币，再次解决相同的问题”这个问题是一个早期的障碍</p><p>我们最终构建了一个与您所谓的“工具”非常相似的东西（我们将它们命名为“保存的程序”）。</p><p>法学硕士在解决问题之前会搜索一个维基，它将过去操作的已保存程序链接到其内容条目。</p><p>如果它找到一个，它会重新使用它，否则它会生成一个程序并提供保存它，如果你认为它足够常见的话。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's really cool to see that other people run into the same issues and arrive at the same conclusions/solution.<p>At $DAYJOB, we have an LLM-based tool and this issue of "how do we avoid burning tokens solving the same problems over again" was an early obstacle</p><p>We wound up building a very similar thing to what you call "tools" (we named them "Saved Programs").</p><p>There's a wiki the LLM searches before solving a problem, that links saved programs for past actions to their content entry.</p><p>If it finds one, it'll re-use it, otherwise it'll generate a program and offer to save it, if you think it'll be common enough.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47922787" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">afshinmeh</span>
+        <span class="meta-time">2026/04/27 23:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我们如何避免烧毁代币再次解决同样的问题<p>让 LLM 编写半成品工具是燃烧更多代币的秘诀。</p><p>&gt; 法学硕士在解决问题之前会搜索一个 wiki，它将过去操作的已保存程序链接到其内容条目。</p><p>在发布之前将 LLM 书面工具标记为有用/正确的标准是什么？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; how do we avoid burning tokens solving the same problems over again<p>Letting the LLM write half baked tools is the recipe for burning more tokens.</p><p>&gt; There's a wiki the LLM searches before solving a problem, that links saved programs for past actions to their content entry.</p><p>What's the criteria for marking an LLM written tool as useful/correct before publishing it?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47922888" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gavinray</span>
+        <span class="meta-time">2026/04/27 23:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p></p><pre><code>  &gt; Letting the LLM write half baked tools is the recipe for burning more tokens.
+</code></pre>
+确实如此，如果工具不成熟并且您的用户规模是 N=1 而不是 N=100 或 N=1,000<p></p><pre><code>  &gt; What's the criteria for marking an LLM written tool as useful/correct before publishing it?
+</code></pre>
+它解决了原始用户要求的问题</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p></p><pre><code>  &gt; Letting the LLM write half baked tools is the recipe for burning more tokens.
+</code></pre>
+It sure is, if the tools are half-baked and your user scale is N=1 rather than N=100 or N=1,000<p></p><pre><code>  &gt; What's the criteria for marking an LLM written tool as useful/correct before publishing it?
+</code></pre>
+It solves the problem the originating user asked it to</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923109" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">afshinmeh</span>
+        <span class="meta-time">2026/04/27 23:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 它解决了原始用户要求的问题<p>有趣的。是否有一种机制可以在工具发布后返回并“修复”这些工具？如果该工具决定使用“id”属性来单击按钮，而现在您有一个新网站，该网站遵循不同的模式来查找正确的目标，会发生什么情况？</p><p>我同意工具的“正确性”可能有不同的含义，具体取决于问题的上下文（例如，即使 OOM 解决了用户的问题，您是否会认为 OOM 是正确性错误？）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; It solves the problem the originating user asked it to<p>Interesting. And is there a mechanism to go back and "fix" the tools after they are published? What happens if the tool decided to use the "id" attribute to click on buttons and now you have a new website that follows a different pattern to find the right target?</p><p>I agree that "correctness" of a tool could have different meaning depending on the context of the problem though (e.g. would you consider OOM a correctness bug even if it addresses the user's ask?)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923203" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sifar</span>
+        <span class="meta-time">2026/04/28 03:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这里的问题是，N 个不同的用户会要求同一工具的 N 个不同变体，因此您最终会得到一个相似但不完全相同的工具。工具是否已更新以支持新功能，或者创建了新工具，最终您得到了工具的 N 个变体。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The problem here is that N different users will ask for N different variants of the same tool, so you'll end up with a tool which is similar but not quite. Is the tool updated to support new functionality, or a new tool is created and you end up with N variants of a tool.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925923" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Edmond</span>
+        <span class="meta-time">2026/04/27 23:52</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这称为工作流程自动化：
+<a href="https://blog.codesolvent.com/2025/12/workflow-automation-letting-ai-write.html" target="_blank" rel="noopener noreferrer">https://blog.codesolvent.com/2025/12/workflow-automation-let...</a><p>每个人都只是绕了一圈才到达那里。将工作流程/程序作为“工具”方法是正确的。特工的技能或多或少是朝着同一方向发展的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it's called workflow automation:
+<a href="https://blog.codesolvent.com/2025/12/workflow-automation-letting-ai-write.html" target="_blank" rel="noopener noreferrer">https://blog.codesolvent.com/2025/12/workflow-automation-let...</a><p>Everyone is just taking a round about way to get there. The workflow/program as "tools" approach is the right one. Agents skills are more or less in that same direction.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923225" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dominotw</span>
+        <span class="meta-time">2026/04/28 03:04</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">人们已经发明了数百或数千种“记忆”物品。我还没有看到任何证据表明这些实际上有用或保存了任何代币。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">there are hundreds or thousands of 'memory' things ppl have been inventing. i am yet to see any proof that these are actually useful or have saved any tokens.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925816" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">weitendorf</span>
+        <span class="meta-time">2026/04/27 23:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">滚出我的沼泽！开玩笑，看到其他人在做这个事情真是太酷了。<p>我认为现在这对克劳德代码来说仍然有点太新鲜了，除了开发它的人之外，任何人都无法使用。我第一次尝试构建工具注册表时也遇到了同样的问题（<a href="https://github.com/accretional/collector" target="_blank" rel="noopener noreferrer">https://github.com/accretional/collector</a>）然后意识到我基本上需要重新开始在支持基础设施方面投入更多投资来构建我真正想要的东西。</p><p>我可以像任何人都想听的那样深入讨论，但为了简洁起见，我只想说：网络上的反射和类型系统几乎是让这些东西正常工作的唯一方法（我的意思是你可以使用完整的 MCP/技能，但你真正拥有的只是巨大的 markdown 和不受约束的 json，这使得集成/发现/可用性成为一场噩梦，并且需要循环中的代理来驱动/集成工具（当您实际上只需要为他们提供实际的 API 和文档时）。这最终变得相当棘手，我们最终实际上构建了一个声明性元词法分析器/解析器/转译器（元基本上只是意味着它可以跨语言和自托管/引导）最近（<a href="https://github.com/accretional/gluon" target="_blank" rel="noopener noreferrer">https://github.com/accretional/gluon</a>）因为事实证明构建跨语言分布式类型系统相当困难。但光是反思就可以让你获得一半的好处。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Get outta my swamp! Just kidding, it’s cool to see other people working on this stuff.<p>I think right now this is still a bit too fresh out of Claude Code to be usable by anybody but the people developing it. I got to around the same point with my first tempt at building a tool registry (<a href="https://github.com/accretional/collector" target="_blank" rel="noopener noreferrer">https://github.com/accretional/collector</a>) and then realized I basically needed to start over with much more investment in supporting infrastructure to build the thing I really wanted.</p><p>I can go as far into the weeds as anybody would ever care to hear about this, but for the sake of brevity I’ll just say this: reflection and type systems over the network are pretty much the only way to get this stuff to work properly (I mean you could just go full MCP/Skills but then all you really have are giant blobs of markdown and unconstrained json that make integration/discovery/usability a nightmare, and require an agent in the loop to drive/integrate the tools when you really just need to give them the actual APIs and documentation). That ends up getting rather hairy, we ended up actually building a declarative meta-lexer/parser/transpiler (meta basically just meaning it’s generalized across languages and self-hosting/bootstrapped) recently (<a href="https://github.com/accretional/gluon" target="_blank" rel="noopener noreferrer">https://github.com/accretional/gluon</a>) because it turns out building a cross-language distributed type system is rather difficult. But reflection alone gets you halfway there as far as benefits.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923211" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mtrifonov</span>
+        <span class="meta-time">2026/04/27 23:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢您处理有关工具调用的“何时”问题。我感到沮丧的是，大多数代理框架在其设计理念中都没有承认这一点。<p>WHEN 是 WHAT 和 HOW 的上游。您可以拥有完美的工具描述和完美的调用签名，但如果模型无法读取情况以了解当前是否需要任何工具，那么您要么过度触发（代理燃烧代币试图“提供帮助”），要么触发不足（代理等待被寻址并充当聊天机器人，而不是自主参与者）。</p><p>当我不将 WHEN 编为规则时，我取得了很大的成功。 “如果 X 则启动工具 Y”是一个带有额外步骤的愚蠢启发式。描述一下当时的情况。尝试过什么，收敛了什么，工作处于什么状态。然后让模型决定是否采取行动以及适合哪种工具。</p><p>规则变得陈旧。情境阅读概括。</p><p>阅读 Tendril 自述文件，看起来注册机制正在通过为代理提供三个引导工具和不断增长的注册表来解决一个稍微不同的问题（“工具太多”/上下文膨胀问题）。 WHEN 本身似乎仍然被编入系统提示中的规则（“在执行之前，调用 searchCapability；如果找到，则加载并执行；如果没有找到，则自行构建”）。这正是你的框架似乎想要超越的 IF-X-THEN-Y 模式。</p><p>很好奇您是否将注册表本身视为结构化的 WHEN，或者基于规则的系统提示是否是您打算向更加情境化的方向发展的起点。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I like that you approach the question of "when" in regards to tool calls. I've become frustrated that most agent frameworks don't acknowledge it in their design philosophy.<p>WHEN is upstream of WHAT and HOW. You can have perfect tool descriptions and perfect call signatures, but if the model can't read the situation to know whether the moment calls for any tool at all, you get either over-firing (agent burns tokens trying to "help") or under-firing (agent waits to be addressed and acts like a chatbot, not an autonomous participant).</p><p>I have had a lot of success when I refrain from codifying WHEN as rules. "If X then fire tool Y" is a dumb heuristic with extra steps. Describe the conditions of the moment. What's been tried, what's converged, what state the work is in. Then let the model decide whether to act and which tool fits.</p><p>Rules get stale. Situation-reads generalize.</p><p>Reading the Tendril README, looks like the registration mechanic is solving a slightly different problem (the "too many tools" / context-bloat problem) by giving the agent three bootstrap tools and a growing registry. The WHEN itself still seems to be codified as rules in the system prompt ("BEFORE acting, call searchCapabilities; IF found, load and execute; IF NOT found, build yourself"). That's exactly the IF-X-THEN-Y pattern your framing seems to want to move past.</p><p>Curious whether you see the registry itself as the structured WHEN, or whether the rule-based system prompt is a starting point you intend to evolve toward something more situational.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923284" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 05:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">注册表本身是可搜索的。  系统提示引导座席搜索查找工具。  现在它是一个幼稚的实现，因为它是一个本地工具。  我正在探索更加结构化的政策的想法。  这对于技能或 MCP 来说并不是全新的或不同的，它外部化了调用策略，我认为在大型组织中寻求正式化或扩展代理工具时，这一点非常重要。<p>这更多是我决定分享的一个想法，因为我认为我们在这个领域需要更多的思考，因为我们都在走向网络的代理网络。</p><p>将查看 README.md。我写的这篇文章着眼于“何时”的方面，我在我写的原始案例中发现它很有趣。</p><p>Tendril 和查找工具更多的是对“我们如何大规模发现工具”以及智能体如何知道选择什么的实验性观察。</p><p>更重要的是，管理员如何推理这些工具以及何时使用它们以及是否正确使用它们（代理验证）。</p><p>我觉得“何时”的重点在我看来更以人为本。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The registry itself is searchable.  The system prompts guides the agent to search it to find tools.  Right now its a naive implementation as it's a local tool.  I am exploring the idea of more structured policy here.  It's not net new or different to skills or MCP it externalities the invocation policy which I feel is really important when looking to formalise or scale agent tools in larger organisations.<p>It's more an idea I decided to share because I think we need more thinking in this space as we all run towards agent networks of networks.</p><p>Will review the README.md. the article I wrote looks at the aspect of "when" which I found interesting in the original case I wrote about.</p><p>Tendril and find tools is more an experimental look at "how do we discover tools at scale" and how do agents know what to choose.</p><p>More importantly how do administrators reason about the tools and when are they used and are they being used correctly (agent validation).</p><p>I feel the focus of "when" is more human oriented IMO.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927699" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/27 21:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在开发一个编码代理时构建了这个，该代理每次会话都保持冷启动。更深层次的问题是，代理框架为您提供了工具的功能以及如何调用它，但没有结构化回答何时——工具何时应该自主启动，何时应该保持沉默。这种判断总是隐含的，分散在系统提示和工具描述中。<p>Tendril 是我所说的代理能力模式的参考实现。它从三个引导工具开始，然后自行构建其他所有内容。关键限制：没有直接的代码执行。代理只能运行注册的功能，因此每个任务都迫使它编写一个工具，定义其调用条件，并为将来的会话注册它。注册表会跨会话累积。</p><p>我还针对五个本地模型运行了自扩展循环：Qwen3-8B、Gemma 4、Mistral Small 3.1、Devstral Small 2、Salesforce xLAM-2。没有一个通过。</p><p>故障模式非常明显，值得单独撰写： <a href="https://serverlessdna.com/strands/ai-agents/agents-know-what-and-how-nobody-taught-them-when" target="_blank" rel="noopener noreferrer">https://serverlessdna.com/strands/ai-agents/agents-know-what...</a></p><p>堆栈：AWS Strands TypeScript SDK、Bedrock (Claude Sonnet)、Deno 沙箱、Tauri + React 桌面 shell。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I built this while working on a coding agent that kept starting cold every session. The deeper problem was that agent frameworks give you what a tool does and how to call it, but no structured answer to when — when should a tool fire autonomously, and when should it stay silent. That judgement is always implicit, scattered across system prompts and tool descriptions.<p>Tendril is a reference implementation of what I'm calling the Agent Capability pattern. It starts with three bootstrap tools and builds everything else itself. The key constraint: there's no direct code execution. The agent can only run registered capabilities, so every task forces it to write a tool, define its invocation conditions, and register it for future sessions. The registry accumulates across sessions.</p><p>I also ran the self-extending loop against five local models — Qwen3-8B, Gemma 4, Mistral Small 3.1, Devstral Small 2, Salesforce xLAM-2. None passed.</p><p>The failure modes were distinct enough to be worth writing up separately: <a href="https://serverlessdna.com/strands/ai-agents/agents-know-what-and-how-nobody-taught-them-when" target="_blank" rel="noopener noreferrer">https://serverlessdna.com/strands/ai-agents/agents-know-what...</a></p><p>Stack: AWS Strands TypeScript SDK, Bedrock (Claude Sonnet), Deno sandbox, Tauri + React desktop shell.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47921383" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">dd8601fn</span>
+        <span class="meta-time">2026/04/27 23:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我为我的家庭助理做了一些听起来类似的事情。<p>代理从不执行任何操作。它有四个工具......搜索、请求执行、请求构建、请求更新。</p><p>工具服务针对工具目录运行矢量搜索。</p><p>该构建概括了所请求的功能，并通过审查步骤运行创作，声明所需的凭据和网络访问权限。</p><p>敌对审稿人可以拒绝作者 3 次。</p><p>通过后，将注册该工具并完成嵌入以进行搜索。它已上线供将来使用。</p><p>凭证以加密方式存储，并且仅在工具执行期间由工具目录服务注入。声明网络资源是为了更好地沙箱化工具函数的执行（目前还没有）。</p><p>代理永远无法访问凭据，并且在不经过工具服务中经过审查的功能的情况下无法执行任何操作。</p><p>代理、作者流程、审阅者、嵌入……都可以是本地或远程运行的不同模型。</p><p>事件总线、代理、工具服务……所有独立的容器。</p><p>如果你想了解一下我所做的事情，我有一个网址： 
+<a href="https://dcd.fyi/agent" target="_blank" rel="noopener noreferrer">https://dcd.fyi/agent</a></p><p>这确实只适合我，但如果您对任何事情的更多细节感兴趣，请告诉我。里面没有什么特别的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did something that sounds similar for my home assistant.<p>The agent never executes anything. It has like four tools… search, request execute, request build, request update.</p><p>The tool service runs vector search against the tools catalog.</p><p>The build generalizes the requested function and runs authoring with review steps, declaring needed credentials and network access.</p><p>The adversarial reviewer can reject back to the authoring three times.</p><p>After passing, the tool is registered and embeddings are done for search. It’s live for future use.</p><p>Credentials are stored encrypted, and only get injected by the tools catalog service during tool execution. The network resources are declared so tool function execution can be better sandboxed (it’s not, yet).</p><p>The agent never has access to credentials and cannot do anything without going through vetted functions in the tool service.</p><p>Agent, author process, reviewer, embedding… all can be different models running local or remote.</p><p>Event bus, agent, tool service… all separate containers.</p><p>I have an url if you want to read a bit about what I did: 
+<a href="https://dcd.fyi/agent" target="_blank" rel="noopener noreferrer">https://dcd.fyi/agent</a></p><p>It’s really just meant for me, but if you’re interested in more details on anything let me know. There’s nothing super special in it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923079" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/27 22:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以在代理中列出可用工具的用途。我严格控制我的特工，而自我延伸则与此背道而驰。例如，我不希望我的代理人自发地开发出窃听我的银行账户的能力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can list the uses of the available tools in the AGENTS. I keep my agents on a tight leash, and self-extension runs counter to this. I would not my agent to spontaneously develop the ability to tap my bank account, for example.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47922194" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 06:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Deno 沙箱就是答案——网络访问仅限于白名单，并且执行环境具有范围权限。代理在这些限制内构建工具，它无法达到您未明确允许的任何内容</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The Deno sandbox is the answer here — network access is restricted to an allowlist, and the execution environment has scoped permissions. The agent builds tools within those constraints, it can't reach anything you haven't explicitly allowed</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928351" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andai</span>
+        <span class="meta-time">2026/04/28 00:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不久前，我意识到 OpenClaw 就是穿着风衣的 Claude Code，只不过 Claude Code 非常擅长在不破坏自身的情况下扩展自身。 （注：自二月份以来就没有使用过 OC，也许现在它已经稳定可靠了。）<p>当然，可靠和可靠的可扩展性才是重点，这意味着 Claude Code 创造了比 OC 更好的 OC！  出于某种原因，我发现这非常有趣。</p><p>您还可以将它（或您选择的代理，例如 codex 也可以）放入 Telegram 机器人中，大约 50 行代码，这非常有趣。</p><p><a href="https://github.com/a-n-d-a-i/ULTRON/blob/main/src/index.ts" target="_blank" rel="noopener noreferrer">https://github.com/a-n-d-a-i/ULTRON/blob/main/src/index.ts</a></p><p>虽然这可能会让你被禁止加入 Anthropic，但他们还没有完全澄清这一点。 （表面上它现在默认为额外使用，但谁知道呢。）</p><p><a href="https://news.ycombinator.com/item?id=47852834" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47852834</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A while back I realized OpenClaw was Claude Code in a trenchcoat, except that Claude Code is pretty good at extending itself without breaking itself. (Note: haven't used OC since February, maybe it's solid and reliable now.)<p>Of course, being reliable and reliably extensible is the whole point, which means Claude Code made a better OC than OC did!  I found this very amusing for some reason.</p><p>Also you can put it (or your agent of choice, e.g. codex works too) in a Telegram bot in like 50 lines of code which is a lot of fun.</p><p><a href="https://github.com/a-n-d-a-i/ULTRON/blob/main/src/index.ts" target="_blank" rel="noopener noreferrer">https://github.com/a-n-d-a-i/ULTRON/blob/main/src/index.ts</a></p><p>Though this might get you banned from Anthropic, they haven't quite clarified that yet. (Ostensibly it defaults to extra usage now, but who knows.)</p><p><a href="https://news.ycombinator.com/item?id=47852834" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47852834</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924130" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tekacs</span>
+        <span class="meta-time">2026/04/28 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">...这（Telegram 等集成）就是 CC 的频道功能的用途：<p><a href="https://code.claude.com/docs/en/channels" target="_blank" rel="noopener noreferrer">https://code.claude.com/docs/en/channels</a></p><p>这……好吧。就像现在的许多 CC 功能一样，有点半生不熟。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">... this (Telegram, etc. integration) is what CC's Channels feature is for:<p><a href="https://code.claude.com/docs/en/channels" target="_blank" rel="noopener noreferrer">https://code.claude.com/docs/en/channels</a></p><p>It's... fine. A bit half-baked like a lot of CC features right now.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924506" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Lucasoato</span>
+        <span class="meta-time">2026/04/28 07:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，我遵循与 Claude 类似的模式：每当我解决经常发生的问题时，我都会创建一项技能或子代理定义，并在全局 .md 文件中用一行代码提及它。<p>我认为这是一个简单而有效的解决方案，如果你有十两个工具，也许它不会扩展到数百或数千，但这对明天的我来说将是一个问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well, I follow a similar pattern with Claude: whenever I solve a problem that happens frequently, I create a skill or a subagent definition, mentioning it with a one liner within the global .md file.<p>I think this is a simple and effective solutions if you have a dozen or two of tools, maybe it won’t scale to hundreds or thousands, but that will be a problem for tomorrow’s me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928788" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">tmzt</span>
+        <span class="meta-time">2026/04/28 03:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也在研究类似的东西，并使用双 LLM 架构（小型路由器，更大的深度思考者）和离线模型，以及编码为 TSX 的确定性技能。<p>它已经演变成一个基于网格的操作系统，获得了自己的基于 GPU 的 AI 库/运行时，甚至蜕变并扩展到 ESP 节点。</p><p>距离五月某个时候的完整发布越来越近了。目前，作品已发布在我的 github 上。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also working on something similar and using a dual LLM architecture (small router, larger deep thinker) with offline models, as well as determinisitic skills encoded as TSX.<p>It's evolved into a mesh-based operating system, gained it's own GPU-based AI library/runtime, and even molted and extended itself to ESP nodes.</p><p>Getting closer to a full release sometime in May. For now, pieces are released on my github.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926127" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">sockaddr</span>
+        <span class="meta-time">2026/04/27 23:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">基本上，您已经为模型构建了一种自行解压缩的机制。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So basically you've built a mechanism for a model to de-compress itself.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47922755" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 06:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不是因为缺乏尝试！  必须通过代码强制构建工具，因为模型往往在允许的情况下执行任意代码。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not for a lack of trying!  Had to enforce tool building through code as models tend to just execute arbitrary code when allowed.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dakiol</span>
+        <span class="meta-time">2026/04/28 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么我们仍然在 TS/npm 中构建东西？鉴于法学硕士可以用任何语言进行编码，我希望人们此时会使用“更好”的语言。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why are we still building stuff in TS/npm? Given that LLMs can code in any language, I'd expect people would use "better" languages at this point.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924471" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">mikmoila</span>
+        <span class="meta-time">2026/04/28 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不使用 Java 来编写小型脚本/工具。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't I use Java for small scripts/tools.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926901" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nickstinemates</span>
+        <span class="meta-time">2026/04/27 23:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们构建了类似的东西[1]，包括用于调试的集成内存。每次使用代理完成任务时留下可重复的工件是非常有用的。<p>我们做出的主要设计决定是与现有代理集成，而不是构建新代理。你的安全带，沼泽，然后你就出发了。</p><p>顺便说一句，为代理构建软件非常有趣。</p><p>1： <a href="https://swamp.club" target="_blank" rel="noopener noreferrer">https://swamp.club</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We built something similar[1], including integrated memory for debugging. It is very useful to have repeatable artifacts left behind every time you use an agent to accomplish a task.<p>The main design decision we took was to integrate with your existing agent instead of building a new one. Your harness, swamp, and you're off.</p><p>As an aside, building software for agents is incredibly fun.</p><p>1: <a href="https://swamp.club" target="_blank" rel="noopener noreferrer">https://swamp.club</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923175" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/28 02:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925646" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">htrp</span>
+        <span class="meta-time">2026/04/28 02:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你用一个较小的LLM烧掉代币，你不关心它专门做工具选择（或路由？）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You burn tokens with an smaller LLM you don't care about that exclusively does tool selection (or routing?)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925373" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">aleksiy123</span>
+        <span class="meta-time">2026/04/28 03:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想有趣的部分是力量工具的编写部分。<p>哪种方式通过总是说来解决我们何时应该编写工具部分。</p><p>但我认为问题是这种规模将如何扩大。我觉得我遇到的真正核心问题是扩展复杂性。</p><p>减少工具数量而不损失效率或能力。</p><p>减少重复、抽象、清理以及维护知识和记忆。</p><p>我认为对我来说问题有三个。</p><p>1. 随着存储库的增长，如何让智能体在不过度上下文污染的情况下持续理解它。</p><p>2. 如何长期保持记忆和知识。</p><p>3. 您如何知道代理随着时间的推移表现得更好，并且不会随着您的发展而退化。</p><p>对我来说有点作用的是</p><p>A) 树或层次结构。</p><p>树木的规模很好。文件夹结构也只是简单索引的形式。</p><p>逻辑结构和局部性使它们更加有效。</p><p>B) 缓存。</p><p>让代理以摘要、技能、工具的形式“缓存”他们的想法。</p><p>递归总结对我来说确实对单一仓库导航很有帮助。</p><p>但现在我仍然觉得我需要不断地提示他们，而且我无法完全关闭反馈循环。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I guess the interesting part is the forces tool writing part.<p>Which kind of solves the when should we write a tool part by just saying always.</p><p>But I think the question is how will this scale. The real core issue I feel like I’ve been encountering is scaling complexity.</p><p>Reducing the number of tools without losing efficiency or capability.</p><p>Reducing duplication, abstracting, cleaning up, and maintaining knowledge and memory.</p><p>I think the issue for me has been threefold.</p><p>1. As the repo grows how does you make the agent keep understanding of it without excessive context pollution.</p><p>2. How do you maintain memory and knowledge over time.</p><p>3. How do you know the agent is performing better over time and not regressing as you evolve.</p><p>And what has somewhat been working for me is</p><p>A) trees or hierarchies.</p><p>Trees scale well. Folder structure but also in the form of just simple indices.</p><p>Logical structure and locality makes them even more effective.</p><p>B) caching.</p><p>Having the agents “cache” their thinking in the form of summaries, skills, tools.</p><p>Recursive summarization really helped with mono repo navigation for me.</p><p>But right now I still feel like I need to be constantly prompting them and I can’t quite close the feedback loop.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926239" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 06:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这三个引导工具是对（1）的部分回答——工具表面永远不会增长，只有注册表会增长，因此上下文污染受搜索界面而不是完整工具列表的限制。注册表搜索是否随着其增长而保持有用是一个悬而未决的问题，对功能定义的语义搜索可能是下一步。<p>(2) 是结构化能力格式胜过自由文本内存的地方。触发器和抑制条件为您提供可检查的、版本化的调用策略，而不是随着时间的推移而退化的散文。不过还早。</p><p>(3) 我还没有一个好的答案。你关于反馈循环的观点是正确的框架——了解代理是否真的变得更好，而不仅仅是积累更多的工具，这一点尚未解决。我认为审计角度（管理员推理哪些工具启动、何时启动以及是否应该启动）是需要解决的问题，但我还没有构建该层。</p><p>有一件事可能会直接解决你的缓存点——ADR（架构决策记录）。催生 Tendril 的文章首先为代理提供了将 ADR 写入文件系统的 record_decision 功能。作为代理缓存的 ADR 是一个有趣的框架：结构化的、持久的、可搜索的记录，记录了为什么在做出决定时做出的决定。这可以说是比摘要更好的缓存原语——决策不会像摘要那样降低性能，而且它们也为您提供了一些回归检测的理由。</p><p>您对树/层次结构的观察产生了共鸣——注册表现在是一个平面索引，如果没有某种分组结构，它可能无法扩展超过几十个功能。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The three bootstrap tools are a partial answer to (1) — the tool surface never grows, only the registry does, so context pollution is bounded by the search interface rather than the full tool list. Whether the registry search stays useful as it grows is an open question, semantic search over capability definitions is probably the next step.<p>(2) is where the structured capability format earns its keep over free-text memory. Triggers and suppression conditions give you inspectable, versioned invocation policy rather than prose that degrades over time. Still early though.</p><p>(3) I don't have a good answer to yet. Your point about feedback loops is the right framing — knowing whether the agent is actually getting better rather than just accumulating more tools is unsolved. The audit angle (administrators reasoning about which tools fire, when, and whether they should) is where I think this needs to go, but I haven't built that layer.</p><p>One thing that might directly address your caching point though — ADRs (Architecture Decision Records). The article that spawned Tendril started with giving an agent a record_decision capability that wrote ADRs to the filesystem. ADRs as agent cache is an interesting framing: structured, persistent, searchable records of why decisions were made at the moment they were made. That's arguably a better cache primitive than summarisation — decisions don't degrade the way summaries do, and they give you something to reason about for regression detection too.</p><p>Your tree/hierarchy observation resonates — the registry is a flat index right now which probably doesn't scale past a few dozen capabilities without some grouping structure.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928274" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jedisct1</span>
+        <span class="meta-time">2026/04/28 00:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在会话结束时使用 Swival 的 /learn 命令，让它记下出错的地方、如何解决问题以及下次应该记住什么。效果很好。<p>它可以自动更新这些注释，但我发现即使有定期的推动，模型仍然有些不愿意这样做。</p><p>因此，时不时地手动运行 /learn 会有所帮助，尤其是当我知道它没有采取最直接的路径时。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I use Swival’s /learn command at the end of a session to make it write down what it got wrong, how it fixed the issue, and what it should remember next time. Works pretty well.<p>It can update those notes automatically, but I’ve found that even with regular nudges, models are still somewhat reluctant to do it.</p><p>So manually running /learn every now and then, especially when I can tell it didn’t take the most direct path, helps.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924074" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这本质上是 ADR——捕获代理学到了什么以及为什么。不过，手动触发是一个有趣的限制；困难的部分是教代理在没有被询问的情况下识别出值得记录的决定的时刻。这就是触发/抑制定义试图形式化的内容——捕获的时间，而不仅仅是捕获的内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is essentially ADRs — capturing what the agent learned and why. The manual trigger is the interesting constraint though; the hard part is teaching the agent to recognise the moment a decision worth recording has been made, without being asked. That's what the triggers/suppression definitions are trying to formalise — the when of capture, not just the what.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928297" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">whattheheckheck</span>
+        <span class="meta-time">2026/04/28 00:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">制作一个修复asci图对齐的工具</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Make a tool to fix asci diagram alignment</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923720" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">walmsles</span>
+        <span class="meta-time">2026/04/28 05:43</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">伊克尔！！！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">IKR!!!!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927749" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jeff_antseed</span>
+        <span class="meta-time">2026/04/28 14:07</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930920" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">KaiShips</span>
+        <span class="meta-time">2026/04/28 03:02</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925791" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

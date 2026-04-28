@@ -1,0 +1,1942 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>清理 SVG 的麻烦 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-28-1726/">返回本批次</a>
+      <h1>清理 SVG 的麻烦</h1>
+      <p class="subtitle">The woes of sanitizing SVGs</p>
+      <div class="meta-line">
+        <span>muffin.ink</span>
+        <span>作者 varun_ch</span>
+        <span>分数 218</span>
+        <span>评论 89</span>
+        <span>2026/04/27 23:31</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47922957" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://muffin.ink/blog/scratch-svg-sanitization/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>Scratch 与 SVG 相关的漏洞由来已久。这些的来源是 Scratch 将用户生成的（即攻击者控制的）内容解析为 &lt;svg&gt; 元素，并将其附加到主文档中以进行各种操作（例如，以比 viewbox 或宽度/高度更可靠的方式测量 SVG 边界框）。无论 SVG 在主文档中保留的时间有多短，这本质上都是不安全的操作。 Scratch 确保安全的方法是围绕解析 SVG 和其中的标记构建日益复杂的基础设施，以删除危险部分。我认为 Scratch 的 SVG 清理方法注定要失败。为了解释这一点，我们必须回顾一下 Scratch 中 SVG 清理的历史，看看到目前为止它的效果如何。 2019 年：通过 &lt;script&gt; 标签进行 XSS 2019 年，Scratch 3 首次发布几个月后，Scratch 发现 SVG 可以包含 &lt;script&gt; 标签，当 SVG 加载时，Scratch 会导致执行这些标签。这称为 XSS。用 Scratch 术语来说，XSS 允许攻击者代表加载其项目的任何人采取行动。例如，攻击者可以发表评论、删除项目或以其他方式尝试接管受害者的帐户。在 Scratch Desktop 中，XSS 被提升为任意代码执行，因为 Scratch Desktop 启用了 Electron 危险的 Node.js 集成功能。 （自 2021 年 3 月 v0.2.0 版起，TurboWarp Desktop 尚未启用该功能）从头开始的测试套件示例： &lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt; &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;circle cx=&quot;250&quot; cy=&quot;250&quot; r=&quot;50&quot; fill=&quot;red&quot; /&gt; &lt;script type=&quot;text/javascript&quot;&gt;&lt;![CDATA[alert(&#39;from the svg!&#39;) ]]&gt;&lt;/script&gt; &lt;/svg&gt; 这是通过使用正则表达式删除脚本标签来修复的。当然，通过这一更改，SVG 现在完全安全，不需要进一步的安全修复。 2020 年：由于之前修复中的疏忽而导致 XSS (CVE-2020-7750) 2020 年，apple502j 发现 XSS 仍然是可能的。事实证明，之前的修复完全有缺陷，可以通过大写 &lt;SCRIPT&gt; 来绕过，因为正则表达式区分大小写，还有其他几种绕过它的方法。即使正则表达式正确实现，它仍然无法工作，因为还有其他方法可以将 JavaScript 嵌入到 SVG 中。例如，可以使用内联事件处理程序： &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;&gt; &lt;foreignObject x=&quot;1&quot; y=&quot;1&quot; width=&quot;1&quot; height=&quot;1&quot;&gt; &lt;img xmlns=&quot;http://www.w3.org/1999/xhtml&quot; src=&quot;data:any invalid URL&quot; onerror=&quot;alert(1)&quot; /&gt; &lt;/foreignObject&gt; &lt;/svg&gt; 通过在 scrap-svg-renderer 将脚本附加到文档之前使用 DOMPurify 从 SVG 中删除脚本来修复此问题。当然，通过这一更改，SVG 现在完全安全，不需要进一步的安全修复。 2022 年：HTTP 通过 &lt;image&gt; href 泄漏 2022 年，人们发现，使用 &lt;image&gt; 元素上的 href 属性，攻击者可以创建一个 SVG，该 SVG 在加载时将调用外部请求。事实证明，虽然 DOMPurify 删除了可执行代码，但它并不能防止 HTTP 泄漏，因为“有太多方法可以做到这一点，而我们的测试表明它无法可靠地完成”。用 Scratch 术语来说，HTTP 泄漏意味着 Scratch 用户可以记录加载其项目的任何人的 IP，可能会泄露位置或学区等信息。受害者不需要点击任何链接； IP 日志只需加载项目即可发生。 Scratch 似乎认为这是一个安全漏洞，我同意。示例： &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;&gt; &lt;image xlink:href=&quot;https://example.com/ping&quot;/&gt; &lt;/svg&gt; 如果 URL 引用远程网站，则通过添加 DOMPurify 挂钩以从所有元素中删除 href 属性来修复此问题。当然，通过这一更改，SVG 现在完全安全，不需要进一步的安全修复。 2023 年：通过 CSS @import 泄漏 HTTP 2023 年，人们发现，攻击者可以在 &lt;style&gt; 元素内使用 CSS @import 语句，创建一个项目，在项目加载时调用外部请求。示例： &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;style&gt; @import url(&quot;https://example.com/ping&quot;); &lt;/style&gt; &lt;/svg&gt; 通过集成用 JavaScript 编写的 CSS 解析器来删除 CSS 的危险部分，已修复此问题。他们会解析 SVG 中包含的所有样式表，删除任何 @import 语句，并在进行任何更改时将 CSS 转换回字符串，以便删除危险的内容。当然，通过这一更改，SVG 现在完全安全，不需要进一步的安全修复。 2024 年：Paper.js 中的 XSS 2024 年，我在 Paper.js（Scratch 在服装编辑器中使用的一个库）中发现了 XSS。事实证明，虽然 Scratch 在在 scrap-svg-renderer 中处理 SVG 之前对其进行了清理，但未经清理的 SVG 仍被传递到 Paper.js。这与 2020 scrap-svg-renderer XSS 的影响大致相同，但发生在使用服装编辑器而不是最初打开项目时。示例： &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;data-paper-data=&quot;any invalid JSON&quot;&gt; &lt;foreignObject x=&quot;1&quot; y=&quot;1&quot; width=&quot;1&quot; height=&quot;1&quot;&gt; &lt;img xmlns=&quot;http://www.w3.org/1999/xhtml&quot; src=&quot;data:any invalid URL&quot; onerror=&quot;alert(1)&quot; /&gt; &lt;/foreignObject&gt; &lt;/svg&gt; 通过扩展现有的 SVG 清理代码以在加载 SVG 时运行，这在一定程度上修复了极其延迟的时间线，不仅仅是在 scrap-svg-renderer 中处理它时。这意味着 Paper.js 将只接收已经清理过的 SVG。我说“有点固定”是因为我不确定这种清理是否适用于服务器下载的 SVG。 Scratch 支持告诉我，他们“有针对这种情况的保护措施，这些保护措施是在我们的服务器端处理的”，这可能会使这种情况变得多余。在开发概念验证时，我从未见过任何此类保护的证据，但也许它们是真实的。当然，通过这一更改，SVG 现在完全安全，不需要进一步的安全修复。 2025 年：HTTP 通过 CSS url() 泄漏 2025 年，人们发现，在某些 CSS 规则内使用 url()，攻击者可以创建一个 SVG，该 SVG 在加载时会调用外部请求。示例： &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;!-- 内联样式 --&gt; &lt;rect style=&quot;background-image: url(https://example.com/ping)&quot; /&gt;</li><li>&lt;!-- 也可以使用 &lt;style&gt; 元素 --&gt; &lt;style&gt; .img { background-image: url(&quot;https://example.com/ping&quot;); } &lt;/style&gt; &lt;rect class=&quot;img&quot; /&gt; &lt;/svg&gt; 通过大幅扩展 SVG 清理代码以搜索 url() 的任何用法并删除引用外部 URL 的任何样式或属性，已修复此问题。当然，通过这一更改，SVG 现在完全安全，不需要进一步的安全修复。 2026 年：HTTP 通过先前代码中的几个错误而泄漏 2026 年，人们发现，在某些 CSS 规则内使用 url()，攻击者仍然有可能创建一个 SVG，该 SVG 在加载时会调用外部请求。事实证明，至少存在三个独特的错误，每个错误都导致 HTTP 泄漏：</li><li>没有考虑到 CSS 允许使用转义码写出 url(...) 没有处理内部有多个 url(...) 的样式属性，其中第一个是安全的，但第二个不是 没有处理在 CSS 变量中定义并通过 var(--name) 引用的 url()</li><li>示例： &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;circle fill=&quot;\75\72\6c(https://example.com/ping)&quot; /&gt; &lt;rect style=&quot;/* url(#safe_url) */ background-image: url(https://example.com/ping)&quot; /&gt; &lt;style&gt; :root { --example: url(https://example.com/ping); } .img { background-image: var(--example); } &lt;/style&gt; &lt;rect class=&quot;img&quot; /&gt; &lt;/svg&gt; 通过在已经过于复杂的代码中添加大量额外的复杂性，SVG 现在完全安全，不需要进一步的安全修复。 2026 年：通过长过渡重新设计整个页面 2026 年，人们发现，通过巧妙地使用很长的过渡并强制浏览器重新设计所有元素的样式，攻击者可以将任意样式应用于持续到刷新的完整 Scratch 页面。大多数用途都是“有趣”的事情，但这里有一些关于你可能会做的更邪恶的事情的想法：</li><li>隐藏报告按钮。让喜欢/收藏按钮覆盖整个页面，从而诱骗用户点击它们。显示文本，告诉用户他们需要在新选项卡中打开网站来“验证”他们的帐户（某些网络钓鱼页面）。用户可能会信任这些说明，因为该消息来自真实的 scrap.mit.edu。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Scratch has a long history of SVG-related vulnerabilities. The source of these is that Scratch parses user-generated (ie. attacker-controlled) content into an &lt;svg&gt; element and appends it into the main document for various operations (eg. measuring SVG bounding box in a more reliable way than viewbox or width/height). No matter how briefly the SVG remains in the main document, this is an inherently unsafe operation. Scratch&#39;s approach to making this safe has been to build increasingly complex infrastructure around parsing the SVG and the markup within to remove dangerous parts. I think Scratch&#39;s approach to SVG sanitization is doomed. To explain, we have to take a trip through the history of SVG sanitization in Scratch to see how well it has worked so far. 2019: XSS via &lt;script&gt; tag In 2019, a few months after the initial release of Scratch 3, Scratch discovered that SVGs can contain &lt;script&gt; tags that Scratch would cause to be executed when the SVG loads. This is known as an XSS. In Scratch terms, an XSS allows an attacker to take actions on behalf of anyone that loads their project. For example, the attacker can post comments, delete projects, or otherwise try to take over the victim&#39;s account. In Scratch Desktop, XSS is elevated to arbitrary code execution because Scratch Desktop enables Electron&#39;s dangerous Node.js integration feature. (TurboWarp Desktop has not enabled that feature since v0.2.0 from March 2021) Example from Scratch&#39;s test suite: &lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt; &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;circle cx=&quot;250&quot; cy=&quot;250&quot; r=&quot;50&quot; fill=&quot;red&quot; /&gt; &lt;script type=&quot;text/javascript&quot;&gt;&lt;![CDATA[ alert(&#39;from the svg!&#39;) ]]&gt;&lt;/script&gt; &lt;/svg&gt; This was fixed by using a regular expression to remove script tags. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2020: XSS via oversights in previous fix (CVE-2020-7750) In 2020, apple502j discovered that XSS is still possible. It turns out that the previous fix is utterly defective and can be bypassed by capitalizing &lt;SCRIPT&gt; because the regex is case-sensitive, among several other ways to bypass it. Even if the regex were implemented correctly, it would still not work because there are other ways to embed JavaScript in an SVG. For example, one can use an inline event handler: &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;&gt; &lt;foreignObject x=&quot;1&quot; y=&quot;1&quot; width=&quot;1&quot; height=&quot;1&quot;&gt; &lt;img xmlns=&quot;http://www.w3.org/1999/xhtml&quot; src=&quot;data:any invalid URL&quot; onerror=&quot;alert(1)&quot; /&gt; &lt;/foreignObject&gt; &lt;/svg&gt; This was fixed by using DOMPurify to remove scripts from the SVG before scratch-svg-renderer appends it into the document. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2022: HTTP leak via &lt;image&gt; href In 2022, it was discovered that using the href property on an &lt;image&gt; element, an attacker can create an SVG that will invoke an external request when it is loaded. It turns out that while DOMPurify removes executable code, it does not protect against HTTP leaks because &quot;there are too many ways of doing that and our tests showed that it cannot be done reliably&quot;. In Scratch terms, an HTTP leak means that a Scratch user can log the IP of anyone that loads their project, possibly revealing information such as location or school district. The victim would not need to click on any links; the IP log happens just by loading the project. Scratch seems to consider this a security bug, and I agree. Example: &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;&gt; &lt;image xlink:href=&quot;https://example.com/ping&quot;/&gt; &lt;/svg&gt; This was fixed by adding DOMPurify hooks to remove href properties from all elements if the URL refers to a remote website. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2023: HTTP leak via CSS @import In 2023, it was discovered that using a CSS @import statement inside of a &lt;style&gt; element, an attacker could create a project that invokes external requests when the project loads. Example: &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;style&gt; @import url(&quot;https://example.com/ping&quot;); &lt;/style&gt; &lt;/svg&gt; This was fixed by integrating a CSS parser written in JavaScript to remove dangerous parts of the CSS. They would parse all stylesheets contained in SVGs, remove any @import statements, and convert the CSS back to a string if any changes were made so that the dangerous stuff is removed. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2024: XSS via Paper.js In 2024, I discovered an XSS in Paper.js, a library Scratch uses in the costume editor. It turns out that while Scratch sanitized SVGs before working on them in scratch-svg-renderer, unsanitized SVGs were still being passed to Paper.js. This has largely the same impact as the 2020 scratch-svg-renderer XSS, but occurs when using the costume editor instead of when initially opening a project. Example: &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot; data-paper-data=&quot;any invalid JSON&quot;&gt; &lt;foreignObject x=&quot;1&quot; y=&quot;1&quot; width=&quot;1&quot; height=&quot;1&quot;&gt; &lt;img xmlns=&quot;http://www.w3.org/1999/xhtml&quot; src=&quot;data:any invalid URL&quot; onerror=&quot;alert(1)&quot; /&gt; &lt;/foreignObject&gt; &lt;/svg&gt; This was somewhat fixed on an extremely delayed timeline by extending the existing SVG sanitization code to run when loading an SVG, not just when processing it in scratch-svg-renderer. This means that Paper.js will only receive SVGs that have already been sanitized. I say &quot;somewhat fixed&quot; because I&#39;m not sure if that sanitization ever runs for server-downloaded SVGs. Scratch support told me they &quot;have protections against this that are handled on our server side&quot; which may make that redundant. I have never seen any evidence of such protections while developing proof-of-concepts, but maybe they are real. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2025: HTTP leak via CSS url() In 2025, it was discovered that using url() inside of certain CSS rules, an attacker can create an SVG that will invoke an external request when it is loaded. Examples: &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;!-- inline style --&gt; &lt;rect style=&quot;background-image: url(https://example.com/ping)&quot; /&gt;</li><li>&lt;!-- can also use a &lt;style&gt; element --&gt; &lt;style&gt; .img { background-image: url(&quot;https://example.com/ping&quot;); } &lt;/style&gt; &lt;rect class=&quot;img&quot; /&gt; &lt;/svg&gt; This was fixed by substantially expanding the SVG sanitization code to also search for any usage of url() and remove any styles or attributes referencing external URLs. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2026: HTTP leak via several bugs in the previous code In 2026, it was discovered that using url() inside of certain CSS rules, it is still possible for an attacker to create an SVG that will invoke an external request when it is loaded. It turns out there were at least three unique bugs that each allowed an HTTP leak:</li><li>Did not account for CSS allowing one to write out url(...) using escape codes Did not handle a style attribute having more than one url(...) inside it, where the first one is safe but the second one is not Did not handle url() defined in a CSS variable and referenced via var(--name)</li><li>Examples: &lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt; &lt;circle fill=&quot;\75\72\6c(https://example.com/ping)&quot; /&gt; &lt;rect style=&quot;/* url(#safe_url) */ background-image: url(https://example.com/ping)&quot; /&gt; &lt;style&gt; :root { --example: url(https://example.com/ping); } .img { background-image: var(--example); } &lt;/style&gt; &lt;rect class=&quot;img&quot; /&gt; &lt;/svg&gt; This was fixed by adding a substantial amount of additional complexity around code that was already way too complex. Surely, with this change, SVGs are now fully safe and will require no further security fixes. 2026: Full page restyling via long transitions In 2026, it was discovered that through clever use of very long transitions and forcing the browser to restyle all elements, an attacker can apply arbitrary styles to the full Scratch page that last until refresh. Most uses of this have been &quot;fun&quot; things, but here&#39;s a few ideas about more evil things you might be able to do:</li><li>Hiding the report button. Making the like/favorite buttons cover the entire page, so that users are tricked into clicking them. Display text telling the user that they need to open a website in a new tab to &quot;verify&quot; their account (some phishing page). Users are likely to trust the instructions because the message is coming from the real scratch.mit.edu.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/04/28 00:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很高兴本文包含针对 HTTP 泄漏问题的唯一可靠修复：CSP。<p>我最近学到的一件有用的事情是，虽然 CSP 标头通常使用 HTTP 标头设置，但您也可以直接在 HTML 中可靠地设置它们 - 例如，对于直接在 HTTP 标头不起作用的页面上生成的 HTML：</p><p></p><pre><code>  &lt;iframe sandbox="allow-scripts" srcdoc="
+    &lt;meta http-equiv='Content-Security-Policy'
+        content='default-src none; script-src unsafe-inline; style-src unsafe-inline;'&gt;
+    &lt;!-- untrusted content here --&gt;
+  "&gt;&lt;/iframe&gt;
+</code></pre>
+感觉这不应该起作用，因为不受信任的内容中的 JavaScript 可以使用 DOM 来删除或更改该元标记...但事实证明，所有现代浏览器都专门锁定了它，一旦元标记加载，在任何恶意代码有机会颠覆它们之前，就会将这些 CSP 规则视为永久规则。<p>几周前，我让 Claude Code 运行了一些实验来帮助证明这一点： <a href="https://github.com/simonw/research/tree/main/test-csp-iframe-escape#can-javascript-escape-a-csp-meta-tag-inside-an-iframe" target="_blank" rel="noopener noreferrer">https://github.com/simonw/research/tree/main/test-csp-iframe...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm glad this article includes the only credible fix for the HTTP leak problems: CSP.<p>A useful thing I learned recently is that, while CSP headers are usually set using HTTP headers, you can also reliably set them directly in HTML - for example for HTML generated directly on a page where HTTP headers don't come into play:</p><p></p><pre><code>  &lt;iframe sandbox="allow-scripts" srcdoc="
+    &lt;meta http-equiv='Content-Security-Policy'
+        content='default-src none; script-src unsafe-inline; style-src unsafe-inline;'&gt;
+    &lt;!-- untrusted content here --&gt;
+  "&gt;&lt;/iframe&gt;
+</code></pre>
+It feels like this shouldn't work, because JavaScript in the untrusted content could use the DOM to delete or alter that meta tag... but it turns out all modern browsers specifically lock that down, treating those CSP rules as permanent as soon as that meta tag has loaded before any malicious code has the chance to subvert them.<p>I had Claude Code run some experiments to help demonstrate this a few weeks ago: <a href="https://github.com/simonw/research/tree/main/test-csp-iframe-escape#can-javascript-escape-a-csp-meta-tag-inside-an-iframe" target="_blank" rel="noopener noreferrer">https://github.com/simonw/research/tree/main/test-csp-iframe...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923915" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rafram</span>
+        <span class="meta-time">2026/04/28 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">并且任何附加的 CSP 指令只能 <i>狭窄的</i> 什么是允许的。也适用于标头加上 &lt;meta&gt; - &lt;meta&gt; 可以限制 CSP 甚至超过标头指定的内容，但它们不能扩大它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">And any additional CSP directives can only <i>narrow</i> what's allowed. Also works with headers plus &lt;meta&gt; - &lt;meta&gt;s can restrict the CSP even more than what the headers specified, but they can't widen it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924328" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">amluto</span>
+        <span class="meta-time">2026/04/28 03:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我一直在思考的一个想法（我认为这不太适用于这个用例）是积极限制用户内容上的 Sec-Fetch- 标头。如果服务器愿意提供不可信的 SVG，它可能会拒绝提供服务，除非 Sec-Fetch-Dest 具有正确的值，并且“document”和“iframe”不是正确的值。这将使欺骗用户或其浏览器变得更加困难，例如通过链接到 SVG 文件或使用嵌入等不太安全的机制来加载它。<p>这应该是对用户内容严格限制 CSP 的补充。 （嗯，当然所有图像都应该带有 CSP 标头集。）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">An idea I’ve been kicking around (which isn’t quite applicable to this use case, I think) is to aggressively restrict the Sec-Fetch- headers on user content. If a server is willing to serve up an untrustworthy SVG, it could refuse to serve it at all unless Sec-Fetch-Dest has the correct value, and ‘document’  and ‘iframe’ would not be correct values. This would make it more difficult to fool a user or their browser by, for example, linking to an SVG file, or using a less-secure mechanism like embed to load it.<p>This should be in addition to heavily restricting CSP on user content. (Hmm, surely all images should be served with the CSP header set.)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925870" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 03:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为您可以通过服务人员绕过 sec-fetch 标头。<p>这里更好的方法是仅使用 Content-security-policy: script-src 'none'; 来提供 svg沙箱</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can bypass the sec-fetch headers via service workers i think.<p>A better approach here would be to just serve svg with Content-security-policy: script-src 'none'; sandbox</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925964" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">amluto</span>
+        <span class="meta-time">2026/04/28 03:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但你无法建立链接 <a href="https://your.domain/my_phishing_page.svg" target="_blank" rel="noopener noreferrer">https://your.domain/my_phishing_page.svg</a> 使用服务工作线程作为网络钓鱼页面，除非您已经彻底破解了该网站。  （并且您可以使用 Sec-Fetch-Dest 限制作为 Service Worker 运行的内容！）<p>我想一个实际的例外是内容处置。  据我所知，如果您希望用户保存文件，则需要使用 dest == document 来提供它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But you can't make a link to <a href="https://your.domain/my_phishing_page.svg" target="_blank" rel="noopener noreferrer">https://your.domain/my_phishing_page.svg</a> work as a phishing page using service workers unless you've pretty thoroughly pwned the site already.  (And you can constrain what gets to run as a service worker using Sec-Fetch-Dest!)<p>I suppose an actual exception is Content-Disposition.  If you want the user to save a file, you need to serve it with dest == document as far as I know.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926028" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">recursive</span>
+        <span class="meta-time">2026/04/28 01:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不知道 `srcdoc`，但看起来它仍然容易通过使用双引号和 &lt;/iframe&gt; 来逃避沙箱而受到注入。  如果这是使用 DOM 操作以卫生的方式构建的，看起来它可以工作，但绝对有可能搞砸。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did not know about `srcdoc`, but it looks like that's still vulnerable to injection by using a double quote and &lt;/iframe&gt; to escape the sandbox.  If this is constructed in a hygienic way using DOM manipulation, it seems like it could work, but it definitely seems possible to screw up.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924312" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rafram</span>
+        <span class="meta-time">2026/04/28 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您使用字符串连接构建未沙盒的父文档 HTML，那么您可能根本不使用沙盒 iframe。但想必那些对不受信任的内容进行沙箱处理的人也知道 setAttribute() 或 srcdoc JS 属性。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you're constructing your unsandboxed parent document HTML using string concatenation, you might as well not use the sandboxed iframe at all. But presumably someone who bothers to sandbox untrusted content also knows about setAttribute(), or the srcdoc JS property.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924351" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/04/28 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以对 srcdoc= 属性中的内容进行实体编码以稳健地解决该问题，或通过 DOM 填充它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You can entity-encode the content in the srcdoc= attribute to robustly solve that problem, or populate it via the DOM.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924718" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">tracker1</span>
+        <span class="meta-time">2026/04/28 01:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">s/"/"/g</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">s/"/&amp;quot;/g</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924326" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">tracker1</span>
+        <span class="meta-time">2026/04/28 01:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不错，收藏了...认为这对于电子邮件阅读器支持 CSS 很有用，但不支持脚本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nice, favorited... thinking this could be useful for an email reader to support css, but not scripts.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924317" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">arcfour</span>
+        <span class="meta-time">2026/04/28 07:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">大多数现有的电子邮件阅读器都支持如此有限的 CSS 子集，以至于没有人可能会发送包含非常基本的 CSS 之外的任何内容的电子邮件，除非您的读者获得了很大的吸引力（我想）。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most extant email readers support such a limited subset of CSS that nobody is likely to send emails with anything beyond very basic CSS though, unless your reader gains a ton of traction I suppose.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928690" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">andybak</span>
+        <span class="meta-time">2026/04/27 23:55</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我的第一个想法是“支持 svg 的一小部分，它可能仍然覆盖 90% 的实际用例”。<p>我确实觉得 svg 有两种不同的类型——“一堆带有填充的路径”和“聪明的危险东西”，其中大多数真正的 SVG 都是前一种类型。</p><p>完全可以预料到这个问题会被一个思考这个问题的时间超过我刚刚花费的 120 秒的人击落。 :)</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My first thought is "support a tiny subset of svg that probably still covers 90% of real-world use cases".<p>I do feel that's there's two distinct types of svg - "bunch of paths with fills" and "clever dangerous stuff" where most real SVGs are of the former type.</p><p>Fully expect this to be shot down by someone that's thought about this problem for longer than the 120 seconds I just spent. :)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pupppet</span>
+        <span class="meta-time">2026/04/28 04:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当房间里没有成年人来控制事情时，就会发生这种情况，你就会出现项目过度扩张的情况。  SVG 永远不应该支持脚本。  如果您想要在 SVG 中编写脚本，可以将其设置为不同的文件格式。<p>我无法想象当绝大多数用户只是在寻找一种使他们的徽标看起来清晰的方法时，在这个问题上浪费了累计多少工时。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is what happens when there isn't an adult in the room to reign things in, you get project overreach.  SVGs should never have supported scripting.  You want scripting in SVGs, fine, make it a different file format.<p>I can't imagine the cumulative number of man hours wasted on this problem when the vast majority of users were just looking for a way to make their logos look sharp.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926604" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">NL807</span>
+        <span class="meta-time">2026/04/28 10:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; SVG 永远不应该支持脚本。<p>我什至会更进一步：HTML 永远不应该支持脚本。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; SVGs should never have supported scripting.<p>I would even go further: HTML should never have supported scripting.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929808" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">throwawayqqq11</span>
+        <span class="meta-time">2026/04/28 12:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">...或第三方请求。只要把 HTML 中的 H 去掉，互联网跟踪就永远不会发生。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">... or third party requests. Scratch the H in HTML and internet tracking would have never happened.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930557" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">thrance</span>
+        <span class="meta-time">2026/04/28 04:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者，您实际上可以通过外部 JS 脚本中的 DOM 操作您的 SVG...我仍然不知道 SVG 中脚本背后的原始动机是什么。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Or you can literally just manipulate your SVG through the DOM in an external JS script... I still have no idea what the original motivation behind scripts in SVGs was.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927044" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zarzavat</span>
+        <span class="meta-time">2026/04/28 08:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">虽然 SVG 是一种 Web 技术，但在很长一段时间里，您必须将 SVG 支持安装为浏览器插件。我记得在 2000 年左右安装了 Adob​​e SVG 查看器。它用于交互式可视化。<p>我记不太清楚了，但我不认为你可以从 DOM 编写脚本，我不知道如果它是一个插件，它是如何工作的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">While SVG is a web technology, for the longest time you had to install SVG support as a browser plug-in. I remember installing Adobe SVG viewer around 2000. It was used for interactive visualizations.<p>I'm don't remember precisely but I don't think you could script it from the DOM, I don't see how that could work if it's a plugin.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928941" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bobthepanda</span>
+        <span class="meta-time">2026/04/28 05:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想它可能对那些喜欢 Flash 的人很有吸引力。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I imagine it may have been attractive to those who liked Flash.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927280" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pbhjpbhj</span>
+        <span class="meta-time">2026/04/28 15:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为可能是另一种方式（即对那些不喜欢闪存的人有吸引力）- SVG 被视为潜在的闪存替代品？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think it may have been the other way (ie attractive to those who didn't like flash) - SVG was seen as a potential flash replacement?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931600" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">oldsecondhand</span>
+        <span class="meta-time">2026/04/28 09:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">OG actionscript 与 Javascript 非常相似。当引入类型提示时，它才开始出现分歧。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">OG actionscript was very similar to Javascript. It only started to  diverge when type hints were introduced.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929534" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">gsnedders</span>
+        <span class="meta-time">2026/04/28 11:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AS2 基本上遵循 ES4 的方向——所以如果它没有被放弃，它就不会出现分歧。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AS2 was mostly following the direction of ES4 — so it wouldn’t have diverged if it hadn’t been abandoned.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930183" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">gardaani</span>
+        <span class="meta-time">2026/04/28 15:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">W3C 一直在定义 SVG Native，但最近进展不大——主要是因为人们对它没有任何兴趣。 SVG Native 是 SVG 2.0 的一个小子集，不支持脚本、动画或任何外部引用。 <a href="https://svgwg.org/specs/svg-native/" target="_blank" rel="noopener noreferrer">https://svgwg.org/specs/svg-native/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">W3C has been defining SVG Native, but it hasn't progressed much lately — mostly because there hasn't been any interest in it. SVG Native is a small subset of SVG 2.0 which doesn't support scripting, animations or any external references. <a href="https://svgwg.org/specs/svg-native/" target="_blank" rel="noopener noreferrer">https://svgwg.org/specs/svg-native/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931508" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">afavour</span>
+        <span class="meta-time">2026/04/28 00:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我认为你是对的，但这种事情缺乏行业标准会扼杀它。人们希望能够获取他们使用的导出 SVG 的任何工具的输出并将其放入浏览器中。这并不是一个不公平的要求。但您无法保证它不会使用一些晦涩的 SVG 功能过滤掉该工具。<p>我很乐意看到一个商定的标准，例如 SVG 的 OpenGL 与 OpenGL ES。 SVG-ES。每个人都同意应该有效的静态、非脚本元素。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I think you're right but the lack of industry standard for this kind of thing kills it. People want to be able to take the output of whatever tool they use that exports SVG and put it in a browser. Which isn't an unfair request. But you wouldn't have a guarantee it wouldn't filter out the tool using some obscure SVG functionality.<p>I'd love to see an agreed standard like OpenGL vs OpenGL ES for SVG. SVG-ES. Everyone agrees on the static, non-scripted elements that should work.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923659" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">varun_ch</span>
+        <span class="meta-time">2026/04/28 00:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">从 img 标签内渲染链接的 SVG 的方式对于 SVG 图像来说基本上是完美的（据我所知，这不是标准化的，但在浏览器中基本上是相同的）。外部资源和脚本被阻止，但仍然正确渲染几乎所有 SVG。当然，任何 CSS 都适用于 SVG。<p>如果有人将其正式化为新格式，请给它一个新名称！ tvg 微小矢量图形？ savg 安全矢量图形？</p><p>并使范围尽可能简单，以便真正发货！不要尝试实现二进制格式或其他格式。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The way linked SVGs render from within img tags is basically perfect for SVG images (which as I understand is not standardized but is largely the same across browsers). External resources and scripting are blocked while still rendering nearly all SVGs correctly. And of course, any CSS is scoped to the SVG.<p>If someone formalizes this as a new format, please give it a new name! tvg tiny vector graphics? savg safe vector graphics?</p><p>And keep the scope as simple as possible so it actually ships! Don’t try implementing a binary format or something.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923710" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hackeman300</span>
+        <span class="meta-time">2026/04/28 00:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">已经有人这样做了，并称之为tinyVG！ <a href="https://tinyvg.tech/" target="_blank" rel="noopener noreferrer">https://tinyvg.tech/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Someone did this already and did call it tinyVG! <a href="https://tinyvg.tech/" target="_blank" rel="noopener noreferrer">https://tinyvg.tech/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923832" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/28 15:41</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931504" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">sbrother</span>
+        <span class="meta-time">2026/04/28 02:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许我错过了一些东西，因为我不是前端开发人员，但是当您将 SVG 作为 Phoenix LiveView 的一部分甚至只是静态组件嵌入到 img 标签中时，您不再能够通过来自服务器的事件动态更改路径/填充/颜色。即使它就像想要用品牌/突出显示颜色填充形状一样简单，这至少对我来说是一个常见的用例。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe I'm missing something as I am not a frontend developer, but when you embed SVGs in an img tag as part of a Phoenix LiveView or even just a static component, you no longer get the ability to dynamically change paths/fills/colors with events coming from the server. Even if it's as simple as having a shape that you want to fill with a brand/highlight color, which at least for me is a common use case.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925117" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ambicapter</span>
+        <span class="meta-time">2026/04/28 00:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">.rvg，受限矢量图形？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">.rvg, Restricted Vector Graphics?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923786" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/28 01:04</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924277" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 03:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我的第一个想法是“支持 svg 的一小部分，它可能仍然覆盖 90% 的实际用例”。<p>听起来链接的帖子是关于某人使用黑名单而不是白名单的。如果你允许你不认识的东西通过，那么你的子集有多小并不重要。</p><p>大多数情况下 svg 是安全的。危险的部分非常明显——脚本标签、图像标签、feImage 标签、以 on 开头的属性、在 &lt;foreignObject&gt; 中嵌入 html、DTD 技巧、命名空间技巧、加载外部内容的 CSS（还要记住表示属性。它不仅仅是样式属性/标签）。</p><p>剩下的部分还是比较安全的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; My first thought is "support a tiny subset of svg that probably still covers 90% of real-world use cases".<p>It sounds like the linked post was about someone using a blacklist instead of a whitelist. It doesnt matter how tiny your subset is if you allow through stuff you don't recognize.</p><p>For the most part svg is safe. The dangerous parts are pretty obvious - script tag, image tag, feImage tag, attributes starting with on, embedding html in &lt;foreignObject&gt;, DTD tricks, namespace tricks, CSS that loads external stuff (keep in mind also presentational attributes. Its not just style attribute/tag).</p><p>The rest of it is pretty safe.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925925" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hackeman300</span>
+        <span class="meta-time">2026/04/28 00:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎有人已经实现了你的想法。 <a href="https://tinyvg.tech/" target="_blank" rel="noopener noreferrer">https://tinyvg.tech/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Seems like someone already implemented your idea. <a href="https://tinyvg.tech/" target="_blank" rel="noopener noreferrer">https://tinyvg.tech/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923816" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">codedokode</span>
+        <span class="meta-time">2026/04/28 12:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许我们可以使用 SVG 或 PDF 的子集？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe we could use a subset of SVG or PDF?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930470" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Avamander</span>
+        <span class="meta-time">2026/04/28 03:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">某些实现使用 SVG Tiny 配置文件，例如 BIMI/VMC。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's the SVG Tiny profile that some implementations use, like BIMI/VMCs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926208" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">harperlee</span>
+        <span class="meta-time">2026/04/27 23:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Fwiw我只是这么想，解析（不验证）你喜欢的位并重新创建/拒绝输入。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Fwiw I just thought the same, parse (don’t validate) the bits you like and recreate / reject the input.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923300" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nine_k</span>
+        <span class="meta-time">2026/04/28 09:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想说，适当的消毒剂应该删除其中包含 /https?:/ 的任何属性。也许它应该允许访问您控制的受祝福域的子树，其中存储了纹理等内容。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I would say that a proper sanitizer should remove any attribute that has /https?:/ in it. Maybe it should allow access to a subtree of a blessed domain you control, where stuff like textures is stored.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929671" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">0x1ceb00da</span>
+        <span class="meta-time">2026/04/28 12:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是安卓所做的。它有自己的矢量资源格式，并且 android studio 有导入 svgs 的操作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is what android does. It has its own vector asset format and android studio has an action for importing svgs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">varun_ch</span>
+        <span class="meta-time">2026/04/28 00:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道如果这是在浏览器级别作为某种新格式是否最好。否则在“用户空间”中处理这些肯定会很慢/很麻烦</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder if it would be best if this was at the browser level as some sort of new format. Otherwise surely it would be really slow/cumbersome to deal with these in ‘user space’</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923355" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">whycome</span>
+        <span class="meta-time">2026/04/28 00:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">似乎任何动画 svg 在清理后都会丢失所有动画</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It always seems like any animated svg loses all of the animation after sanitizing</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923632" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">RobotToaster</span>
+        <span class="meta-time">2026/04/28 14:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">由于某种原因，很多 SVG 动画都使用 JS。  看看消毒剂是否会剥离 CSS 和 SMIL 动画会很有趣，我没有看到任何这样做的安全原因。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A lot of SVG animation uses JS for some reason.  It would be interesting to see if sanitisers strip CSS and SMIL animation, I don't see any security reasons to do so.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931060" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 03:24</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有 3 种不同的 svgs 动画方法，所以这可能取决于情况。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There are 3 different methods of animating svgs so it probably depends.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926113" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">LorenPechtel</span>
+        <span class="meta-time">2026/04/28 00:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我认为这才是真正的答案。<p>看看微软对 Excel 所做的事情——危险的东西就藏在开关后面。</p><p>因此，解决方案：</p><p>向标签添加两位。</p><p>SVG1 不执行任何类型的脚本。</p><p>SVG2 不跟踪链接。</p><p>SVG3 实际上是 SVG1 + SVG2，因为它们是位标志，而不是数字。</p><p>如果发现任何其他问题，则保留其他位以供将来使用。</p><p>唯一真正的安全在于发动机，而不是任何消毒剂。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, I think that's the real answer.<p>Look at what Microsoft did with Excel--the dangerous stuff is behind a switch.</p><p>Thus, solution:</p><p>Add two bits to the tag.</p><p>SVG1 does not execute any sort of script.</p><p>SVG2 does not follow links.</p><p>SVG3 is actually SVG1 + SVG2 as these are bit flags, not numbers.</p><p>Additional bits are reserved for future use if any other issues are found.</p><p>The only real safety is in the engine, not by any sanitizer.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923765" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这基本上已经是它的工作原理了。看 <a href="https://svgwg.org/specs/integration/#secure-animated-mode" target="_blank" rel="noopener noreferrer">https://svgwg.org/specs/integration/#secure-animated-mode</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Which is essentially already how it works. See <a href="https://svgwg.org/specs/integration/#secure-animated-mode" target="_blank" rel="noopener noreferrer">https://svgwg.org/specs/integration/#secure-animated-mode</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926137" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cachius</span>
+        <span class="meta-time">2026/04/28 02:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">什么开关？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">What switch?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925520" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">RobotToaster</span>
+        <span class="meta-time">2026/04/28 01:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你会失去很多有用的功能，比如 SMIL 动画。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You'd lose a lot of useful features, like SMIL animation.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924968" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">andybak</span>
+        <span class="meta-time">2026/04/28 02:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">但你会获得采用。公平贸易。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">But you'd gain adoption. A fair trade.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925019" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Nursie</span>
+        <span class="meta-time">2026/04/28 10:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">SVG Tiny PS（便携式安全）就是对此的尝试 - <a href="https://www.ietf.org/archive/id/draft-svg-tiny-ps-abrotman-04.html" target="_blank" rel="noopener noreferrer">https://www.ietf.org/archive/id/draft-svg-tiny-ps-abrotman-0...</a><p>虽然我认为这仍然是一个草案，但它似乎确实是 BIMI 的要求 - <a href="https://en.wikipedia.org/wiki/Brand_Indicators_for_Message_Identification" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Brand_Indicators_for_Message_I...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SVG Tiny PS (Portable Secure) is an attempt at this - <a href="https://www.ietf.org/archive/id/draft-svg-tiny-ps-abrotman-04.html" target="_blank" rel="noopener noreferrer">https://www.ietf.org/archive/id/draft-svg-tiny-ps-abrotman-0...</a><p>Though I think it's still a draft, it does appear to be a requirement for BIMI - <a href="https://en.wikipedia.org/wiki/Brand_Indicators_for_Message_Identification" target="_blank" rel="noopener noreferrer">https://en.wikipedia.org/wiki/Brand_Indicators_for_Message_I...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">duped</span>
+        <span class="meta-time">2026/04/28 00:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">因此，如果您正在构建可以控制生成和渲染的每个 SVG 的东西，那么这是完全合理的。<p>如果您需要与其他生成 SVG 的工具进行交互，您现在需要一种将 SVG 从野外转换为您驯服的 SVG 的方法。通常，这是由软件开发人员和设计人员（有时是同一个人）手工完成的。</p><p>这是设计人员期望的基本功能，并且在矢量编辑器中具有简单的控件，例如“添加阴影”。</p><p>这篇文章讨论了清理本身的一些问题，除了 &lt;script&gt; 之外，这些都是一些人可能期望工作或没有问题的合理事情。如果您不是自己编写解析器和渲染器，那么沙箱渲染并不是一种不合理的方法。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">So if you are building something where you control every SVG ever produced and rendered then this is totally reasonable.<p>If you ever need to interface with other tools that generate SVG you now need to have a way of essentially transpiling SVG from the wild into your tamed SVGs. Oftentimes this is done by hand, by a software developer and designer (sometimes the same person).</p><p>And this is for basic functionality that your designers expect and have trivial controls for in their vector editors, like "add a drop shadow."</p><p>The article goes into some issues with sanitization itself, and except for &lt;script&gt; these are a bunch of reasonable things that someone might expect to work or not have issues with. Sandboxing rendering isn't an unreasonable approach if you're not writing the parser and renderer yourself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923593" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nmilo</span>
+        <span class="meta-time">2026/04/28 06:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很抱歉，因为我喜欢这个临时项目，但必须说的是：他们在攻击者控制的 Node 访问表面的 SVG 中发现了 XSS，他们的修复方法是使用 <i>正则表达式</i>???这是用户从头开始发现的？<p>更糟糕的是，OP 的最新帖子“Scratch 的每个版本都容易受到任意代码执行的攻击”只是告诉您如何在当前版本中准确地利用类似的东西，而没有提及负责任的披露，除了一个插件说，“嘿，看看我的项目，这个没有 RCE！”这是非常不负责任的行为，甚至近乎恶意。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm sorry because I love the scratch project but this has to be said: they found XSS in SVGs in a surface with attacker-controlled access to Node and their fix was sanitizing it using <i>regex</i>??? And this was discovered by a user on scratch?<p>Even worse, OP's latest post "Every version of Scratch is vulnerable to arbitrary code execution" just tells you how exactly to exploit something similar today in the current version with no mention of responsible disclosure except a plug to say, "hey, check out my project, this one doesn't have RCE!" This is so irresponsible it borders on malicious.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928331" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">inkmuffin</span>
+        <span class="meta-time">2026/04/28 07:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">该帖子提到我在 2024 年 2 月向 Scratch 披露了这一点。该帖子中的 POC 在功能上与我当时以及在各种后续通信中向他们提供的 POC 相同。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">That post mentions that I disclosed this to Scratch in February 2024. The POC in that post is functionally identical to a POC I provided them back then and in various subsequent communications.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928762" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">evilpie</span>
+        <span class="meta-time">2026/04/28 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">HTML Sanitizer API 具有默认配置允许的 SVG 子集。它根本无法帮助您清理 CSS，但是默认情况下根本不允许使用样式。<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration#svg_elements" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/HTML_Saniti...</a></p><p><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration#svg_attributes" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/HTML_Saniti...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The HTML Sanitizer API has a subset of SVG that is allowed by the default configuration. It won't help you with sanitizing CSS at all however, style is simply not allowed by default.<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration#svg_elements" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/HTML_Saniti...</a></p><p><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration#svg_attributes" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/HTML_Saniti...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924513" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Grokify</span>
+        <span class="meta-time">2026/04/28 10:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很好的参考，和文章一起。我用 Go 构建了一个 SVG 清理器，并将研究这些以使其更加严格。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Good reference, along with the article. I built a SVG sanitizer in Go and will look to these to make it more strict.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929766" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">philo23</span>
+        <span class="meta-time">2026/04/28 00:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果有一个沙箱属性可以添加到内联 &lt;svg&gt; 标签中，那就太好了，例如 &lt;iframe sandbox&gt; 属性，它可以让您选择退出 SVG 内所有潜在的“动态”内容，例如脚本和事件处理程序，甚至可以像 iframe 一样将访问“父”HTML 页面的上下文/cookies/等的整个内容沙箱化。<p>我确信它只会引发一大堆蠕虫……更不用说必须等待浏览器真正支持它了。</p><p>不过，真正的解决方案肯定是 CSP + 基本消毒。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It'd be nice if there was a sandbox attribute you could add to inline &lt;svg&gt; tags, like the &lt;iframe sandbox&gt; attribute that'd let you opt out of all the potentially "dynamic" stuff inside of an SVG like scripts and event handlers, or even just literally sandbox the entire thing from accessing the "parent" HTML page's context/cookies/etc just like an iframe.<p>I'm sure it'd just open up a whole other can of worms though... not to mention having to wait for browsers to actually support it.</p><p>The real solution here is definitely CSP + basic sanitisation though.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">chocmake</span>
+        <span class="meta-time">2026/04/28 01:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">作者批评的大多数方面实际上只是常规的 CSS 功能，他们只是不想要任何外部请求。实际上，他们希望像浏览器处理 IMG 嵌入的 SVG 一样对待内联 SVG（不加载脚本或外部请求）。<p>在清理方面，已经可以从 SVG 和任何您想要的其他内容中删除脚本，只是像 DOMPurify 这样的库可以避免大小膨胀，但不包含用于处理使它们像浏览器处理 IMG 嵌入所需的额外解析的预设，因此开发人员需要添加自己的预设。</p><p>但是，是的，一个简单的属性可以实现与 IMG 嵌入相同的效果，但对于内联 SVG 来说会很好。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Most of the aspects the author was critiquing are actually just regular CSS features, they simply don't want any external requests. Effectively they want inlined SVGs to be treated like how the browsers treat IMG-embedded SVGs (no scripting or external requests loaded).<p>Sanitization-wise it's already possible to strip scripting from SVGs and anything else you want, it's just that a library like DOMPurify to avoid ballooning in size doesn't include say a preset to handle the extra parsing necessary to make them behave like browsers treat IMG embeds, so it's up to devs to add their own.</p><p>But yeah, a world where a simple attribute to achieve the same effect as an IMG embed but for inlined SVGs would be nice.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924409" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">rslashuser</span>
+        <span class="meta-time">2026/04/28 05:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">确切地。这不是一个好的解决方案，您必须阅读一堆步骤才能确保 SVG 安全，而且您还担心自己忘记了其中一个。相反，应该有一个简单的 &lt;svg exec="false"&gt; 或任何简单而全面地禁用不安全功能的内容。<p>想想以前的技术，如显示 postscript 和 .doc，其中的数据格式最终因嵌入的“exec”类型功能而出现大问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Exactly. It's not a good solution where you have to read a bunch of steps to do to make SVG safe, where you're worried you forgot one. Instead there should be a straightforward &lt;svg exec="false"&gt; or whatever that simply and comprehensively disables the unsafe features.<p>Think of prior technologies like display postscript and .doc, where a data format ended up a with big problems from its embedded "exec" type features.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927498" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xigoi</span>
+        <span class="meta-time">2026/04/28 13:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么不直接使用 &lt;img&gt; 标签呢？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why not just use an &lt;img&gt; tag?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930622" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/04/28 01:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">值得庆幸的是，如果您有 CSP，您甚至不需要基本的清理，这很有用，因为本文中的大多数问题都证明了简单的清理根本不简单。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thankfully if you have CSP you don't need even basic sanitization, which is useful because most of the problems in this article are demonstrations of how simple sanitization isn't simple at all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924773" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 03:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白这是如何工作的，因为 html 中的 &lt;svg&gt; 标签不是文档边界。当它不是单独的文档时，如何阻止它访问父文档。<p>如果你想这样做，可以使用 iframe srcdoc。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I dont see how that could work, as an &lt;svg&gt; tag in html is not a document boundry. How can you prevent it from accessing a parent doc when its not a separate document.<p>There is iframe srcdoc if you want to do this.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926011" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">philo23</span>
+        <span class="meta-time">2026/04/28 03:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 当它不是单独的文档时，如何阻止它访问父文档。<p>当您使用 sandbox 属性时，将其转换为文档边界，有点类似于在 &lt;img&gt; 标记内加载 svg 文件。</p><p>是的，你可以使用 iframe srcdoc 完成 90% 的工作，但我想象的是沙箱中的 &lt;iframe&gt; 和它仍然具有自己的固有大小的 &lt;img&gt; 之间的某种交叉。</p><p>但这主要只是一个一次性的想法，我并没有真正思考过比这更深入的问题。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; How can you prevent it from accessing a parent doc when its not a separate document.<p>By turning it into a document boundary when you use the sandbox attribute, kinda similar to loading an svg file inside of an &lt;img&gt; tag.</p><p>and yeah you could get 90% of the way there with an iframe srcdoc, but I was imagining some kind of cross between an &lt;iframe&gt; sandboxed into its own origin, and an &lt;img&gt; where it still has its own intrinsic size.</p><p>but it was mainly just a throw away thought, I've not really thought it through much deeper than that.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926277" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不是和 &lt;img&gt; 标签完全相同吗？ Img 标签禁用所有脚本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wouldn't that be the exact same as an &lt;img&gt; tag? Img tag disables all scripting.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928364" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">somat</span>
+        <span class="meta-time">2026/04/28 04:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">img src="文件.svg"<p>这对你有用吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">img src="file.svg"<p>does that work for you?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926870" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">philo23</span>
+        <span class="meta-time">2026/04/28 06:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想到的主要用例是能够使用内联 SVG，但其中包含外部资源（例如使用 url(...) 的 CSS 背景图像），最终会以跨源匿名方式加载嵌入内容并阻止所有嵌入脚本。这样，某人就无法通过将嵌入图像设置为 example.com/my-submission/favourite 之类的内容来向 CSRF 可利用 URL 发出请求<p>但同时，设置 CSS 变换：scale(10000) 也无法接管整个视口，它会被限制在类似 iframe 的边界（与 &lt;img&gt; 完全相同），但仍保留为内联 SVG，有点像 &lt;iframe srcdoc&gt;。因此，父/主机 HTML 文档上的脚本仍然可以像 DOM 的其余部分一样操作它，但内部 &lt;svg&gt; 元素都是“惰性”的，因为需要更好的词。</p><p>实际上，我根本不知道 &lt;img&gt; 内的 SVG 文件引用外部图像（无论是否跨域）时会发生什么。我知道脚本和动画被禁用，所以我猜测并说一些 CSS 也被阻止了。</p><p>再说一次，我并没有真正认真地考虑过它，或者它是否真的有用，而且我敢打赌它会装满比现在更多的脚枪。我只是大声思考。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The main use case I was thinking of is being able to use an inline SVG, but with external resources inside of it (like say a CSS background image using url(...)) in such a way that it ends up loading that embedded content in a cross-origin anonymous way and blocking all embedded scripts. That way someone can't make requests to CSRF exploitable URLs by setting an embedded images to something like example.com/my-submission/favourite<p>But also so that setting up a CSS transform: scale(10000) can't take over the entire viewport, it'd be constrained to an iframe-like boundary (exactly like an &lt;img&gt;) but still remain as an inline SVG, sort of like an &lt;iframe srcdoc&gt;. So scripts on the parent/host HTML document can still manipulate it like the rest of the DOM, but the inner &lt;svg&gt; elements are all "inert" for want of a better word.</p><p>Actually I don't know off the top of my head what happens with an SVG file inside of a &lt;img&gt; when it references external images (either cross-domain or not.) I know scripts and animations get disabled, so I'd take a guess and say some CSS gets blocked too.</p><p>Again I've not really thought terribly hard about it, or if it's actually useful at all, and I'm betting it'd be filled with even more foot-guns than there are right now. I'm just thinking out loud.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928039" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/28 07:40</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928729" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pornel</span>
+        <span class="meta-time">2026/04/28 11:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这不足以阻止 XSS，因为攻击者可以将用户重定向到 file.svg URL 作为顶级文档，从而绕过 &lt;img&gt; 的限制。<p>如果您要走这条路线，请在 HTTP 级别添加 CSP 标头以禁用脚本，和/或将 SVG 托管在没有任何价值的单独域上，或使用 data: URL。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is not sufficient to stop XSS, because an attacker can redirect users to file.svg URL as the top-level document, bypassing restrictions of &lt;img&gt;.<p>If you're going that route, add CSP headers on HTTP level to disable scripting, and/or host the SVG on a separate domain that has nothing valuable, or use data: URLs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ikkun</span>
+        <span class="meta-time">2026/04/28 00:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我确实希望tinyVG 或类似的产品能够成功，但我认为这并没有真正发生。我认为它唯一缺少的是动画支持，这是相当小众的，但不像 &lt;script&gt; 标签那么小众。<p><a href="https://tinyvg.tech/" target="_blank" rel="noopener noreferrer">https://tinyvg.tech/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I do wish tinyVG or similar would take off, but I don't see that ever actually happening. the only thing I think it's missing is animation support, which is pretty niche but not as niche as &lt;script&gt; tags.<p><a href="https://tinyvg.tech/" target="_blank" rel="noopener noreferrer">https://tinyvg.tech/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923702" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">spankalee</span>
+        <span class="meta-time">2026/04/27 23:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">顺便说一句，这就是为什么 Google Slides 不支持 SVG，尽管有近 15 年前的请求请求该功能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is, by the way, why Google Slides doesn't have SVG support even though there's a nearly 15 year old ticket requesting the feature.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923143" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">esprehn</span>
+        <span class="meta-time">2026/04/28 09:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们完全可以清理它，就像他们对小工具代理所做的那样，他们只是选择不修复这个古老的请求。<p>这就像我向工作表添加数据 url 支持的门票。它只是年复一年地被踢。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They totally could sanitize it, just like they did with the gadget proxy, they just choose not to fix this ancient request.<p>It's like my ticket to add data url support to sheets. It just gets punted year after year.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929693" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ssocolow</span>
+        <span class="meta-time">2026/04/28 00:19</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">解决方法：
+<a href="https://simonsocolow.com/tech/uploading-svg-to-google-slides/" target="_blank" rel="noopener noreferrer">https://simonsocolow.com/tech/uploading-svg-to-google-slides...</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Workaround:
+<a href="https://simonsocolow.com/tech/uploading-svg-to-google-slides/" target="_blank" rel="noopener noreferrer">https://simonsocolow.com/tech/uploading-svg-to-google-slides...</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923589" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">djoldman</span>
+        <span class="meta-time">2026/04/28 08:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Cloudflare 沿着这条路走了一点：<p><a href="https://github.com/cloudflare/svg-hush" target="_blank" rel="noopener noreferrer">https://github.com/cloudflare/svg-hush</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Cloudflare went down this road a bit:<p><a href="https://github.com/cloudflare/svg-hush" target="_blank" rel="noopener noreferrer">https://github.com/cloudflare/svg-hush</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928874" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">codedokode</span>
+        <span class="meta-time">2026/04/28 12:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不喜欢 SVG 使用 CSS 和 JS 之类的东西，并且需要拉入整个浏览器才能显示。它不再是一种简单的矢量图像格式，而是成为 HTML 的扩展。也许我们需要一种新的格式，如果有人决定这样做，请添加嵌入字体、换行文本和像样的动画的功能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't like that SVG uses things like CSS and JS and requires pulling in the whole browser to display. Instead of being a simple vector image format, it became just an extension of HTML. Maybe we need a new format, and if someone decides to do it, please add ability to embed fonts, wrap text and decent animations.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930439" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Springtime</span>
+        <span class="meta-time">2026/04/28 00:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它们内联在页面中的原因似乎是在随后删除之前简单地测量诸如边界框之类的东西（不确定完整范围，因为它没有涵盖这一点）。我不熟悉 Scratch 及其对用户提交的 SVG 的使用，但我很想了解更多关于他们正在做的需要专门内联的内容。<p>（这并不是对适当消毒所面临的挑战的评论，因为我自己需要做各种相同的事情）</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It seems the reason they're inlined in the page at all is to measure things briefly like bounding boxes (not sure the full extent as it didn't cover that), before subsequent removal. I'm not familiar with Scratch and its use of user-submitted SVGs but I'd be curious to read more about what they're doing that required it be inlined specifically.<p>(This isn't a comment on the challenges in proper sanitization fwiw, as I've needed to do various of the same things myself)</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923516" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">inkmuffin</span>
+        <span class="meta-time">2026/04/28 07:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们想要运行 getBBox [1]，这要求 SVG 位于 DOM 中的某个位置 - 否则会引发错误。他们需要这样做，因为 SVG 的视图框往往非常不准确，尤其是在使用旧版本的 Scratch 制作的 SVG 时。 getBBox 是更准确地了解 SVG 中的内容有多大的最简单方法。<p>[1]： <a href="https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getBBox" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphics...</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">They want to run getBBox [1] which requires the SVG to be in the DOM somewhere - otherwise it throws an error. They need to do this because SVGs tend to have very inaccurate viewboxes, especially when working with SVGs made in old versions of Scratch. getBBox is the easiest way to get a more accurate understanding of how big the stuff in the SVG is.<p>[1]: <a href="https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getBBox" target="_blank" rel="noopener noreferrer">https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphics...</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928699" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bawolff</span>
+        <span class="meta-time">2026/04/28 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这些并不是真正的 SVG 特定问题。它们都是非常标准的 XSS，适用于 html，并且是众所周知的向量。<p>就像这篇文章甚至没有提到展示属性，比如光标属性如何包含加载的 url。或者 svg 清理的任何其他棘手部分，例如使用 dtd 来绕过某些东西。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">These aren't really SVG specific issues. They are all pretty standard XSS that apply to html and are very well known vectors.<p>Like this post didn't even mention presentational attributes, like how cursor attribute can contain a url that gets loaded. Or any of the other tricky parts of svg sanitization, like using dtd to bypass things.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925832" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Liftyee</span>
+        <span class="meta-time">2026/04/28 05:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不熟悉实际软件开发的细节，所以我不知道为什么不能“不提供代码的 SVG 部分互联网访问权限”或“对解码后（url、十六进制等）数据进行清理”。<p>是否因为所使用的 SVG 解析器/渲染器是一个完整的库，并且禁止编写自己的 SVG 解析器/渲染器或将自己的代码插入到现有的库中？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I'm not familiar with the details of real software development, so I don't know why it's not possible to just "not give the SVG part of the code internet access" or "perform sanitization on post-decoding (url, hex, etc) data".<p>Is it because the SVG parser/renderer being used is an entire library, and it would be prohibitive to write your own SVG parser/renderer or insert your own code into the existing one?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">drfloyd51</span>
+        <span class="meta-time">2026/04/28 06:34</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有些建议确实是这样。但它们指定的不是对默认行为的更改，而是基于新属性的存在的新行为。<p>您可以将默认行为更改为“更安全”的行为。然后添加某种“危险模式”属性。但是……开发人员通常会犹豫是否要做一些会破坏合法代码的事情，例如更改默认行为。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Some of the suggestions are kind-of exactly that. But they specify not a change to the default behavior, but a new behavior based on the presence of a new attribute.<p>You could change the default behavior to the “safer” behavior. And then add some sort of “danger mode” attribute. But… devs are usually hesitant to do something that would break legitimate code, such as changing the default behavior would do.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928294" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kevinmgranger</span>
+        <span class="meta-time">2026/04/28 01:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 通过使用正则表达式删除脚本标签已修复此问题。<p>臭名昭著的“you can't parse (X)HTML with regex1 meme”是从 2009 年开始的，但这个修复是在 2019 年完成的。我想 SO 答案从未提到过 SVG。</p><p>1： <a href="https://stackoverflow.com/revisions/1732454/1" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/revisions/1732454/1</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; This was fixed by using a regular expression to remove script tags.<p>The infamous you can't parse (X)HTML with regex¹ meme is from 2009, yet this fix was done in 2019. I guess the SO answer never mentioned SVG.</p><p>1: <a href="https://stackoverflow.com/revisions/1732454/1" target="_blank" rel="noopener noreferrer">https://stackoverflow.com/revisions/1732454/1</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924502" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jancsika</span>
+        <span class="meta-time">2026/04/28 01:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">对于“&lt;script&gt;”内容：无论该内容如何拼写或以其他方式模糊，HTML5 解析器最终都知道它何时获得脚本标记。 <i>糟糕，我们在 NOSCRIPTTAG 上下文中得到了一个。我们去拉屎吧。</i><p>标签名称、属性、属性值、事件回调默认取消器……有很多方法可以声明此节点及其子节点不应解析/评估脚本。</p><p>正如 Jay-Z 所说：“我有 99 种解决方案，解决问题不是一个”</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">For the "&lt;script&gt;" stuff: regardless of how the thing is spelled or otherwise obscured, the HTML5 parser eventually knows when it's gotten hold of a script tag. <i>Oops, we got one in a NOSCRIPTTAG context. Let's poop out.</i><p>Tag names, attributes, attribute values, event callback default-cancelers... so many ways to declare that this node and its children shouldn't parse/evaluate scripts.</p><p>As Jay-Z said: "I've got 99 solutions, fixing a problem ain't one"</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924361" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">etchalon</span>
+        <span class="meta-time">2026/04/28 00:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不明白为什么人们没有立即意识到 SVG 和 HTML 一样危险。<p>它现在不是、也从来不是一种图像格式。它是一种标记语言。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I don't understand why it wasn't immediately understood that SVG is as dangerous as HTML.<p>It is not, and never was, an image format. It's a markup language.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923930" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nulltrace</span>
+        <span class="meta-time">2026/04/28 07:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">浏览器已经根据嵌入方式对相同的 SVG 进行了不同的处理。 &lt;img&gt; 剥离脚本和外部资源加载。 &lt;object&gt; 和内联则不然。人们使用 img 标签进行测试，看起来不错，然后有人切换嵌入方法，一切都打开了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Browsers already treat the same SVG differently depending on how you embed it. &lt;img&gt; strips scripts and external resource loads. &lt;object&gt; and inline don't. People test with img tags, looks fine, then someone switches the embed method and everything opens up.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928498" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">OneDeuxTriSeiGo</span>
+        <span class="meta-time">2026/04/28 09:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果有一种方法可以在 URL 中声明给定的 SVG 只能被视为图像，这样您就可以安全地打开 SVG url 等，而不会让自己面临嵌入/内联的危险，那就太好了。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it'd be nice if there was a way to declare in the URL that a given SVG could only be treated as an image so that you could safely open SVG urls, etc without exposing yourself to the dangers of embed/inline.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xigoi</span>
+        <span class="meta-time">2026/04/28 13:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您不能使用内容安全策略来做到这一点吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Couldn’t you do that using Content-Security-Policy?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930652" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">OneDeuxTriSeiGo</span>
+        <span class="meta-time">2026/04/28 14:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您控制该域，那么是的，您可以。但是，如果我想在我的网站上放置一个指向其他地方托管的某些 SVG 的链接，并且希望您能够安全地在新选项卡中打开该链接，那么 CSP 就没有办法真正保护您（用户）免受部署恶意 SVG 的主机的影响。<p>就像在新选项卡中打开 PNG 是无害的，但在新选项卡中打开 SVG 却会带来相当多的蠕虫。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you control the domain then yes you could. But if I want to put a link on my website to some SVG hosted elsewhere and I want it to be safe for you to open that link in a new tab then there's not really a way for CSP to protect you the user from the host deploying a malicious SVG.<p>Like opening a PNG in a new tab is harmless but opening an SVG in a new tab is opening a pretty substantial can of worms.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930985" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xigoi</span>
+        <span class="meta-time">2026/04/28 14:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您的威胁模型是“我不希望在新选项卡中打开时我正在热链接的图像被其他内容替换”，那么没有图像格式是安全的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If your threat model is “I don’t want the image I’m hotlinking to be replaced with something else when opened in a new tab”, then no image format is safe.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931069" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">recursive</span>
+        <span class="meta-time">2026/04/28 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一种标记语言 <i>可以是</i> 一种图像格式。  毕竟“G”代表“图形”。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">A markup language <i>can be</i> an image format.  The "G" is for "Graphics" after all.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926912" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">NooneAtAll3</span>
+        <span class="meta-time">2026/04/28 01:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">等等...scratch只是一个浏览器？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">wait... scratch is just a browser?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924902" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">inkmuffin</span>
+        <span class="meta-time">2026/04/28 08:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">自 2019 年以来，Scratch 被编写为在标准 Web 浏览器中运行，取代了旧的 Flash 运行时/编辑器。桌面应用程序使用 Electron。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Since 2019, Scratch is written to run in a standard web browser, replacing the older Flash runtime/editor. The desktop app uses Electron.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929048" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Theodores</span>
+        <span class="meta-time">2026/04/28 02:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">也许我们需要 SVG 的简化版本 3，其中浏览器知道它不会执行任何需要获取 URL 的操作，以使图像像 JPG 一样无害。<p>这个版本 3 可以将版本号更改为 2，以便执行很酷的 SVG 操作，因此现在的版本 2 就是全格式 SVG。但您可以在上传时将 2 翻转为 3，因此任何嵌入的 URL 都是无害的。</p><p>这对于创建者也很有用，因为使用位图格式的源图像层很有帮助，并且您可以轻松地意外导出此类内容。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Maybe we need a dumbed down version 3 of SVG where the browser knows it is not to do anything that requires fetching a URL, to make the image as harmless as a JPG.<p>This version 3 could have the version number changed to 2 in order to do cool SVG things, so full-fat SVG as version 2 is now. But you could just flip to 2 to a 3 on upload, so any embedded URLs are harmless.</p><p>This could be useful for the creator too, as it is helpful to have layers of source images in bitmap format to work with, and you can easily export such things accidentally.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925280" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Devasta</span>
+        <span class="meta-time">2026/04/28 02:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 2019 年，Scratch 3 首次发布几个月后，Scratch 发现 SVG 可以包含 &lt;script&gt; 标签，Scratch 会在 SVG 加载时导致执行这些标签。这称为 XSS。<p>&gt; 从头开始​​的测试套件示例：</p><p></p><pre><code>  &lt;!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"&gt;
+  &lt;svg version="1.1" xmlns="http://www.w3.org/2000/svg"&gt;
+    &lt;circle cx="250" cy="250" r="50" fill="red" /&gt;
+    &lt;script type="text/javascript"&gt;&lt;![CDATA[
+        alert('from the svg!')
+    ]]&gt;&lt;/script&gt;
+  &lt;/svg&gt;
+
+
+</code></pre>
+这真的是一个问题吗？这是 chrome 团队用 polyfill 来替换 XSLT 建议您采用的方法。 <a href="https://github.com/mfreed7/xslt_polyfill/tree/main#usage" target="_blank" rel="noopener noreferrer">https://github.com/mfreed7/xslt_polyfill/tree/main#usage</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; In 2019, a few months after the initial release of Scratch 3, Scratch discovered that SVGs can contain &lt;script&gt; tags that Scratch would cause to be executed when the SVG loads. This is known as an XSS.<p>&gt; Example from Scratch's test suite:</p><p></p><pre><code>  &lt;!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"&gt;
+  &lt;svg version="1.1" xmlns="http://www.w3.org/2000/svg"&gt;
+    &lt;circle cx="250" cy="250" r="50" fill="red" /&gt;
+    &lt;script type="text/javascript"&gt;&lt;![CDATA[
+        alert('from the svg!')
+    ]]&gt;&lt;/script&gt;
+  &lt;/svg&gt;
+
+
+</code></pre>
+Is this really an issue? This is the method that the chrome teams polyfill to replace XSLT suggests you do. <a href="https://github.com/mfreed7/xslt_polyfill/tree/main#usage" target="_blank" rel="noopener noreferrer">https://github.com/mfreed7/xslt_polyfill/tree/main#usage</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925176" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">inkmuffin</span>
+        <span class="meta-time">2026/04/28 07:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是他们测试套件中的示例。我不想克隆并构建 Scratch 的 2019 年副本来对其进行端到端测试，因为具体细节无论如何都不是非常重要。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This was the example from their test suite. I didn't want to clone and build a 2019 copy of Scratch to test it end-to-end since the specifics weren't super important anyway.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928686" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">esafak</span>
+        <span class="meta-time">2026/04/28 00:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是否有浏览器友好的矢量替代方案？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is there a browser-friendly vector alternative?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923573" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">simonw</span>
+        <span class="meta-time">2026/04/28 01:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&lt;img&gt; 标签中的 SVG 无法执行脚本。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">SVG in an &lt;img&gt; tag can't execute scripts.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924792" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">esprehn</span>
+        <span class="meta-time">2026/04/28 10:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它也不能继承 css 变量，这很不幸，因为这意味着图像不尊重主题。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It also can't inherit css variables which is unfortunate since it means the image doesn't respect the theme.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929715" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">marlburrow</span>
+        <span class="meta-time">2026/04/28 10:06</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929734" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nengil</span>
+        <span class="meta-time">2026/04/27 23:55</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923262" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">shaguoer</span>
+        <span class="meta-time">2026/04/28 00:59</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[已标记]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[flagged]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924206" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SpyCoder77</span>
+        <span class="meta-time">2026/04/28 00:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我没想到会看到嘉宝松饼。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I did not expect to see GarboMuffin.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924103" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

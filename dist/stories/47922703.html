@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我分析了 5.71 亿条亚马逊评论，找到了最脏话的顾客吐槽 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-28-1726/">返回本批次</a>
+      <h1>我分析了 5.71 亿条亚马逊评论，找到了最脏话的顾客吐槽</h1>
+      <p class="subtitle">I analyzed 571M Amazon reviews to find the most profanity-filled customer rants</p>
+      <div class="meta-line">
+        <span>burla-cloud.github.io</span>
+        <span>作者 jmp1062</span>
+        <span>分数 56</span>
+        <span>评论 13</span>
+        <span>2026/04/27 23:12</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47922703" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://burla-cloud.github.io/amazon-review-distiller/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>amazon.review-distiller 扫描... 切换精神错乱模式 The Wall 按类别浏览 调查结果 使用 Burla 构建的方法论</li><li>Burla 演示 · 1,000 个 CPU · … 评论解析 每条亚马逊评论都是对帮助的呼声。我们提取了最响亮的评论。我们通过一个拥有 1,000 名工作人员的 Burla 集群，对 34 个类别的 275 GB 原始亚​​马逊评论进行流式传输，并按照七种精神错乱的风格对它们进行排名：脏话、尖叫、标点符号炸弹、简短而残酷的俏皮话、全面的咆哮、五星级淫秽和五星级沉默。翻转精神错乱模式，将墙壁换成我们发现的最原始的内容。每一个脏话、经过审查的诽谤和全大写崩溃的三个地图缩减通道都可能浮出水面。没有任何消毒。强烈建议读者自行斟酌。 …解析的评论 …带有脏话的评论 …类别 …全球脏话率 1,000 名 Burla 工作人员 275 GB 数据流</li><li>按类别浏览 34 个类别，按包含脏话的评论数量排名。点击其中一条即可查看该类别中前 30 条最糟糕的评论。</li><li>我们的发现 亚马逊评论偏离轨道的九种方式。</li><li>方法论 蒸馏是如何进行的。可在任何 Burla 集群上重现。数据 McAuley-Lab / Amazon-Reviews-2023，原始 JSONL 评论文件（跨 34 个类别的 275 GB，2023 年快照）。通过 HTTP 范围请求直接从 Hugging Face 流式传输，无需本地下载。管道计划。将每个审阅文件拆分为约 500 MB 字节范围的块（总共约 550 个块）。分散。将块分派到 Burla 集群（最多 1,000 个并行工作线程）。地图。每个工作人员流式传输其字节范围、行对齐、解析 JSONL、对七个信号的每个评论进行评分，将每个信号的前 K 个保留在堆中。每个块写入一个 JSON。减少。每个类别一名 Burla 工作人员将所有分片输出合并为每个类别 JSON （堆合并，评级直方图求和）。分析。客户构建调查结果+墙+每个类别的页面。基于评分规则，无法学硕士：强/中/轻度脏话的单词列表，尖叫的大写比例，标点符号炸弹的连续感叹号，咆哮的长度×愤怒，单行残暴的短×脏话，五星级淫秽的评级×脏话，五星级沉默的评级×长度零。 Unhinged 模式（三遍管道） 第一遍出现了太多软性“垃圾”评论，因此我们在 1,000 个 CPU 上并行重新运行完整的 275 GB / 571 M 评论语料库，两次以上。第二遍针对的是难懂的脏话词典（~14 个强词根），产生了 496,668 次点击。第三遍添加了一个审查感知词典（星号、符号和零宽度变体）以及一个分类的诽谤分类法（种族、恐同、体能歧视、仇外、性别），并将每个命中分类为部署/引用批评/回收/模糊。结果在当地进行了重新评分，以减少专有名词和习语误报（电视节目、宠物品种、品牌名称）并引发愤怒的实物产品咆哮。两个硬通道被合并并重复数据删除到您在打开切换时看到的单个 Unhinged 语料库中。源代码 GitHub 上的开源代码。通过一次 burla 运行 scale.py，大约 15 分钟即可在您自己的集群上重现这一过程。警告这些是亚马逊上真实的人写的真实评论。精神错乱模式解锁的内容包括亵渎、种族诽谤、恐同诽谤、体能歧视诽谤和遗憾描述。 Slur 标记会使用类别徽章自动编辑。原始字符串永远不会显示。如果这不是你的事，请关闭开关，或关闭此选项卡。学分数据集：麦考利实验室，加州大学圣地亚哥分校。管道：布尔拉。 UI：纯 HTML + CSS + JS，零框架。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>amazon.review-distiller scanned … Toggle Unhinged Mode The Wall Browse by category Findings Methodology Built with Burla</li><li>A Burla demo · 1,000 CPUs · … reviews parsed Every Amazon review is a cry for help.We distilled the loudest ones. We streamed 275 GB of raw Amazon reviews across 34 categories through a Burla cluster with 1,000 workers in parallel, and ranked them by seven flavors of unhinged: profanity, screaming, punctuation bombs, short-brutal one-liners, full-blown rants, five-star obscene, and five-star silent. Flip Unhinged Mode to swap the wall for the rawest content we found. Every f-bomb, censored slur, and full-caps meltdown three map-reduce passes could surface. Nothing sanitized. Reader discretion strongly advised. …reviews parsed …reviews w/ profanity …categories …global profanity rate 1,000Burla workers 275 GBdata streamed</li><li>Browse by category 34 categories, ranked by how many reviews contain profanity. Click one to see the top 30 most fucked-up reviews in that category.</li><li>What we found Nine ways Amazon reviews go off the rails.</li><li>Methodology How the distillation works. Reproducible on any Burla cluster. Data McAuley-Lab / Amazon-Reviews-2023, the raw JSONL review files (275 GB across 34 categories, 2023 snapshot). Streamed directly from Hugging Face via HTTP Range requests, no local download. Pipeline Plan. Split each review file into ~500 MB byte-range chunks (~550 chunks total). Scatter. Dispatch chunks to Burla cluster (up to 1,000 parallel workers). Map. Each worker streams its byte range, line-aligns, parses JSONL, scores each review on seven signals, keeps top-K per signal in heaps. Writes one JSON per chunk. Reduce. One Burla worker per category merges all shard outputs into one per-category JSON (heaps merged, rating histograms summed). Analyze. Client builds findings + Wall + per-category pages. Scoring Rule-based, no LLM: word lists for strong/medium/mild profanity, caps-ratio for screaming, consecutive-exclamation-run for punctuation bombs, length × rage for rants, short × profanity for one-liner brutality, rating × profanity for five-star obscene, rating × length-zero for five-star silent. Unhinged Mode (three-pass pipeline) The first pass surfaced too many soft &quot;crap&quot; reviews, so we re-ran the full 275 GB / 571 M review corpus on 1,000 CPUs in parallel, twice more. Pass two targeted a hard-profanity lexicon (~14 strong roots) and produced 496,668 hits. Pass three added a censor-aware lexicon (asterisk, symbol, and zero-width variants) plus a categorized slur taxonomy (racial, homophobic, ableist, xenophobic, gendered), and classified each hit as deploy / quote_crit / reclaim / ambiguous. Results were rescored locally to drop proper-noun and idiom false positives (TV shows, pet breeds, brand names) and boost angry physical-product rants. The two hard passes were merged and deduped into the single Unhinged corpus you see when the toggle is on. Source Open source on GitHub. Reproduce this on your own cluster in ~15 minutes with one burla run scale.py. Warning These are real reviews written by real people on Amazon. Unhinged Mode unlocks content that includes profanity, racial slurs, homophobic slurs, ableist slurs, and descriptions of regret. Slur tokens are auto-redacted with category badges. The raw strings are never displayed. If that&#39;s not your thing, leave the toggle off, or close this tab. Credits Dataset: McAuley Lab, UCSD. Pipeline: Burla. UI: plain HTML + CSS + JS, zero frameworks.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vivzkestrel</span>
+        <span class="meta-time">2026/04/28 11:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">- 我看到你的其他评论谈到使用开源数据集，但我不得不问<p>- 如果您真的想的话，您实际上会如何加载评论</p><p>- 你需要什么样的系统来解决验证码之类的问题</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">- i saw your other comment that talks about using an open source dataset but i had to ask<p>- how would you actually go about loading reviews if you really wanted to</p><p>- what kind of system would you need to work around the captcha and stuff</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930057" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jmp1062</span>
+        <span class="meta-time">2026/04/28 11:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我可能会使用带有自定义代码的 Playwright，基于类似产品创建块，然后在大型集群上并行运行它（<a href="https://github.com/Burla-Cloud/burla" target="_blank" rel="noopener noreferrer">https://github.com/Burla-Cloud/burla</a>）。<p>如果你有一个工人试图连续抓取大量产品，你就会受到速率限制，或者他们的机器人检测会抓住你。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i would probably use Playwright with custom code, create chunks based on similar products, then run it on a large cluster in parallel (<a href="https://github.com/Burla-Cloud/burla" target="_blank" rel="noopener noreferrer">https://github.com/Burla-Cloud/burla</a>).<p>if you have a single worker trying to scrape a shit ton of products back to back to back you're going to get rate limited or their bot detection will catch you.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930199" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rendaw</span>
+        <span class="meta-time">2026/04/28 16:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如今，亚马逊甚至不允许您在评论中使用稍强（非亵渎）的措辞。这些是旧评论吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Amazon doesn't even allow you to use slightly strong (non-profanity) wording in reviews these days. Are these old reviews?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931733" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">skyberrys</span>
+        <span class="meta-time">2026/04/28 03:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">嗯，这个网站有点没用，但它确实吸引了我。我喜欢阅读疯狂的评论。唯一能让事情变得更好的是如果他们也包括 Airbnb 的评论。<p>我读到的第二条评论是一位顾客抱怨电影中的脏话，然后写出了所有的例子。谁有时间做这个？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Well the website is kind of useless, but it does suck me in. I love reading crazy reviews. The only thing that would make it better is if they also included Airbnb reviews.<p>The second review I read was a customer complaining about profanity in a movie and then writing out all the examples. Who has time for that?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926131" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jperryjperry</span>
+        <span class="meta-time">2026/04/28 03:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧好吧...看看我刚刚构建的东西 <a href="https://burla-cloud.github.io/airbnb-burla/" target="_blank" rel="noopener noreferrer">https://burla-cloud.github.io/airbnb-burla/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">well well well... take a look at what I just built <a href="https://burla-cloud.github.io/airbnb-burla/" target="_blank" rel="noopener noreferrer">https://burla-cloud.github.io/airbnb-burla/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926535" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skyberrys</span>
+        <span class="meta-time">2026/04/28 09:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我必须说，你的评论更多的是恐怖的，而不是非常有趣的情况。我最喜欢的有趣（和坏）评论是一位主人指责他的客人翻转了房子里的所有家具，而客人则问“我为什么以及如何这样做”。我还是想知道那天发生了什么。怎么所有的家具都倒过来了？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I must say the reviews you have are more in the horrifying and less in the pretty funny situation. My favorite funny (and bad) review was a host that accused his guest of flipping over all the furniture in the house and the guest was like "why and how would I do this". I still want to know what happened that day. How did all the furniture end up upside down?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929315" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skyberrys</span>
+        <span class="meta-time">2026/04/28 08:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢它！无尽的娱乐和 0 次尝试让我留在爱彼迎。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love it! Endless entertainment and 0 attempts to get me to stay at the Airbnb.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928871" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jperryjperry</span>
+        <span class="meta-time">2026/04/28 09:07</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，现在我有了图像，我想用它做一些愚蠢的事情。也许会找到所有带有撒旦装饰或红色房间的爱彼迎，哈哈</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">yeah now that I have the images I want to do some silly shit with it. maybe find the all Airbnbs with satanic decor or like red rooms haha</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929324" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">rawgabbit</span>
+        <span class="meta-time">2026/04/28 04:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我喜欢这个。  在我的书中，评论中的文字游戏超过了《麦克白》。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I love this.  The reviews' word play tops MacBeth in my book.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926750" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jmp1062</span>
+        <span class="meta-time">2026/04/28 11:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很高兴他们没有审查评论部分哈哈，内容很有趣。<p>我也喜欢人们会通过撰写包含粗俗语言引用的评论来抱怨书籍或电影中的粗俗语言</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">i'm just happy they don't censor the comment section haha, makes for funny content.<p>i also love that people will complain about the vulgar language in a book or movie by writing a review that contains a quote with the vulgar language</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930210" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">mind_heist</span>
+        <span class="meta-time">2026/04/28 06:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你是如何抓取所有评论的？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">how did you scrape all the reviews?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928313" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jperryjperry</span>
+        <span class="meta-time">2026/04/28 09:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">加州大学圣地亚哥分校麦考利实验室的开源数据集  <a href="https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023" target="_blank" rel="noopener noreferrer">https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2...</a>。<p>明天我将发布一个 Airbnb 示例，其中我从公开列表页面中抓取了 1,406,718 个照片 URL。为此我用了 <a href="https://docs.burla.dev/" target="_blank" rel="noopener noreferrer">https://docs.burla.dev/</a> 这是一个高性能并行处理 python 库，我已经研究了几年了。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">open source dataset from McAuley Lab at UCSD  <a href="https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023" target="_blank" rel="noopener noreferrer">https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2...</a>.<p>I'm going to publish an Airbnb example tomorrow where I scraped 1,406,718 photo URLs from public listing pages. For that I used <a href="https://docs.burla.dev/" target="_blank" rel="noopener noreferrer">https://docs.burla.dev/</a> which is a high-performance parallel processing python library I've been working on for a few years now.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929286" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">add-sub-mul-div</span>
+        <span class="meta-time">2026/04/28 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">像这样的狗屎就是为什么亚马逊评论现在对每个人来说都是登录墙后面的原因。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Shit like this is why Amazon reviews are now behind a login wall for everyone.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927480" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

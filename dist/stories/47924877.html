@@ -1,0 +1,1780 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Super ZSNES – GPU 驱动的 SNES 模拟器 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-28-1726/">返回本批次</a>
+      <h1>Super ZSNES – GPU 驱动的 SNES 模拟器</h1>
+      <p class="subtitle">Super ZSNES – GPU Powered SNES Emulator</p>
+      <div class="meta-line">
+        <span>zsnes.com</span>
+        <span>作者 haunter</span>
+        <span>分数 290</span>
+        <span>评论 88</span>
+        <span>2026/04/28 01:50</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47924877" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://zsnes.com/" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>欢迎来到超级ZSNES</li><li>ZSNES 的两位原创开发者终于又聚在一起了！隆重推出超级 ZSNES！这款由 GPU 驱动的 SNES 模拟器完全从头开始重写，为您带来以下内容：一些熟悉的内容，一些新的内容，以及一些超越的内容。</li><li>主要特点</li><li>比原始 ZSNES GPU 驱动的 PPU 核心更精确的 CPU 和音频核心，可实现高分辨率模式 7 和特殊的每场游戏增强功能 带有落雪的经典 UI，通过更高的清晰度和改进的 UX 进行现代化改造 快进、倒带、保存状态、自动保存历史记录、保存书签、作弊码、快速加载等 无 Vibe 编码。经典的开发风格。超级增强引擎，ZSNES 开发人员一次增强一款游戏</li><li>超级强化引擎</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>Welcome to SUPER ZSNES</li><li>The two original developers of ZSNES are finally back together! Introducing SUPER ZSNES! Re-written completely from scratch, this GPU-powered SNES emulator is here to bring you the following: some of what is familiar, some of what&#39;s new, and then some of what goes beyond.</li><li>Key Features</li><li>Far more accurate CPU and Audio cores than the original ZSNES GPU-powered PPU core to allow for hi-res Mode 7 and special per-game enhancement features Classic UI with falling snow, modernized with higher definition and improved UX Fast forward, rewind, save states, auto save history, save bookmarks, cheat codes, quick load, and more No Vibe Coding. Classic development style. Super Enhancement Engine, where the ZSNES developers are enhancing the games one at a time</li><li>Super Enhancement Engine</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bityard</span>
+        <span class="meta-time">2026/04/28 02:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“未压缩的音频替代品”将会非常好，看看它们会带来什么将会很有趣。<p>有一个人，Mathew Valente（又名 TSSF），他付出了惊人的努力来追踪 SNES 和 PSX 最终幻想游戏的作曲家 Nobuo Uematsu 使用的原始样本。几乎所有样本都来自各种当代硬件和软件合成器。 Mathew 找到了其中的大部分（可能是通过社区合作，无论怎样都是一个不小的壮举！）并采集了这些原始样本并重新制作了 Nobuo 的曲目。如果你观看他的视频，这不是一个简单的拖放操作，有相当多的技术、音乐和主观工作和决定需要做出。结果很漂亮。</p><p>如果您喜欢经典的《最终幻想》音乐，您一定会喜欢他的频道。这是我最喜欢的之一： <a href="https://www.youtube.com/watch?v=XQhxNkZH-DE" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=XQhxNkZH-DE</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The "uncompressed audio replacements" will be pretty nice, it will be interesting to see what comes of those.<p>There is a guy, Mathew Valente (a.k.a. TSSF), who put in a surprising amount of effort tracking down the original samples used by the composer of the SNES and PSX Final Fantasy games, Nobuo Uematsu. Nearly all of the samples came from various contemporary hardware and software synthesizers. Mathew found most of them (possibly with community collaboration, no small feat either way!) and took those original samples and remastered Nobuo's tracks. If you watch his videos, this was not a simple drag-and-drop operation, there is quite a lot of technical, musical, and subjective work and decisions to be made. The results are just beautiful.</p><p>If you liked classic Final Fantasy music, you'll love his channel. Here's one of my favorites: <a href="https://www.youtube.com/watch?v=XQhxNkZH-DE" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=XQhxNkZH-DE</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925700" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hung</span>
+        <span class="meta-time">2026/04/28 06:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">超级奇怪的是，他们费尽心思找到所有样本，而且输出音频有明显的滞后。与原来的相比，你可以听到它在第三小节中滞后。 <a href="https://www.youtube.com/watch?v=JLrsUOA4Vb4" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=JLrsUOA4Vb4</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Super weird that they went to the trouble of finding all the samples and the output audio has noticeable lag in it. Compare to the original and you can hear it lagging in the 3rd measure. <a href="https://www.youtube.com/watch?v=JLrsUOA4Vb4" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=JLrsUOA4Vb4</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928108" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">CTDOCodebases</span>
+        <span class="meta-time">2026/04/28 06:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Modern Vintage Gamer YouTube 频道上有一个该功能的示例。请参阅下面带时间戳的链接。他有一个涵盖 Super ZSNES 的完整视频。<p><a href="https://youtu.be/r5twUkvYFpA?t=617" target="_blank" rel="noopener noreferrer">https://youtu.be/r5twUkvYFpA?t=617</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There is an example of that feature on the Modern Vintage Gamer youtube channel. See the timestamped link below. He has a whole video covering Super ZSNES.<p><a href="https://youtu.be/r5twUkvYFpA?t=617" target="_blank" rel="noopener noreferrer">https://youtu.be/r5twUkvYFpA?t=617</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928257" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ranger_danger</span>
+        <span class="meta-time">2026/04/28 03:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Jammin' Sam 在《Donkey Kong》游戏和其他一些游戏中做了同样的事情： <a href="https://www.youtube.com/@JamminSamMiller/videos" target="_blank" rel="noopener noreferrer">https://www.youtube.com/@JamminSamMiller/videos</a><p>您还可以找到包含他的曲目的 MSU-1 包，以便您可以使用增强的音频玩游戏。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Jammin' Sam does the same thing with Donkey Kong games and some others: <a href="https://www.youtube.com/@JamminSamMiller/videos" target="_blank" rel="noopener noreferrer">https://www.youtube.com/@JamminSamMiller/videos</a><p>You can also find MSU-1 packs that include his tracks so you can play the games with the enhanced audio.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925783" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">philistine</span>
+        <span class="meta-time">2026/04/28 03:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我希望你们知道近藤教会吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I hope you guys are aware of the Church of Kondo?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926191" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">christophilus</span>
+        <span class="meta-time">2026/04/28 06:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">可惜不再更新了。 :/</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unfortunately not being updated anymore. :/</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928315" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bityard</span>
+        <span class="meta-time">2026/04/28 05:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我现在就是了！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I am now!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927266" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ranger_danger</span>
+        <span class="meta-time">2026/04/28 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我不是，谢谢！用户名查不出来。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I was not, thanks! Username does not check out.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927343" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">rowanG077</span>
+        <span class="meta-time">2026/04/28 07:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">天哪，我经常听《最终幻想》音乐，包括 SNES 时代的音乐，但我不知道这一点。谢谢你度过了我的一周！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">holy shit, I regularly listen to Final Fantasy music, including the SNES era and I did not know about this. Thanks for making my week!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928754" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">carrja99</span>
+        <span class="meta-time">2026/04/28 02:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ZSNES 是我童年的核心部分。我在九十年代末/二十世纪初期下载了它，当时它还很新鲜，并用来模拟《星之海洋》和《幻想故事》的所有最喜欢的游戏和自制翻译项目。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">ZSNES was a core part of my childhood. I downloaded it back when it was still fresh back in the late nineties / early aughts and used to emulate all matter of favorite games and homebrew translation projects for Star Ocean and Tales of Phantasia.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925335" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pdntspa</span>
+        <span class="meta-time">2026/04/28 03:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在禁用声音和透明胶片的情况下在 486 上击败了《Chrono Trigger》。有些部分我必须手动关闭顶层，因为透明的东西（例如云）会完全挡住我的视线<p>当我父母不在家时，我会转移到他们的 pentium 166mhz，并将我的保存状态复制到软盘上，然后偷偷地玩一些有声音和透明胶片的游戏。</p><p>我想我也通关了大部分《超级马里奥世界》和一些《最终幻想》游戏</p><p>欢乐时光！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I beat Chrono Trigger on a 486 with sound and transparencies disabled. There were parts where I had to manually switch off the top layer because transparent stuff (such as clouds) would completely block my view<p>When my parents weren't home I'd move to their pentium 166mhz with my savestates copied to a floppy and sneak some time playing the game with sound and transparencies.</p><p>I think I also got through most of super mario world and some of the final fantasy games as well</p><p>Fun times!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925839" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">isk517</span>
+        <span class="meta-time">2026/04/28 06:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我放弃了第一次玩《时空之轮》，因为我不知道如何在未来的世界中前进。没有意识到圆顶中的云应该是透明的，而不是我需要触发不同事件来清除的东西。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I gave up on my first play through of Chrono Trigger because I couldn't figure out how to progress in the future world. Didn't realize that the clouds in the dome were supposed to be transparent and not something that I need to trigger a different event to clear up.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928407" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">_jackdk_</span>
+        <span class="meta-time">2026/04/28 08:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我第一次玩《时空之轮》就被冷落了，因为我的电脑无法发送足够多的同时按键来解锁门。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">My first playthrough of Chrono Trigger was stopped cold because my PC couldn't send enough simultaneous keypresses to unlock a door.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929034" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pcthrowaway</span>
+        <span class="meta-time">2026/04/28 14:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">解决这个问题的方法是在追老鼠之前将所有按钮分配给同一个键（我在 zsnes 上遇到了这个问题，尽管我的前几次游戏都是在原始卡带上进行的）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The workaround for this was to assign all the buttons to the same key before chasing the rat (I had this exact problem with zsnes, though my first few playthroughs were on the original cartridge)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931111" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">skhr0680</span>
+        <span class="meta-time">2026/04/28 13:15</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">LRA</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">L R A</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930658" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pdntspa</span>
+        <span class="meta-time">2026/04/28 07:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我不确定我是如何想出这个技巧的，可能只是在某个时候猴子捣乱按钮，然后我发现 SNES 图形是图层，打开和关闭各个图层非常有趣。嘿，结果很有用！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah I'm not sure how I figured that trick out, probably just monkey mashing buttons at some point, then I figured out SNES graphics were layers and it was a lot of fun switching the various layers on+off. And hey that turned out to be useful!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928638" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zerocrates</span>
+        <span class="meta-time">2026/04/28 04:50</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，我想说你可以按数字键或 F 键或类似的东西来打开和关闭图层，这在一些迷雾森林/丛林/瀑布类型的区域是绝对必要的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yeah, I want to say you could press the number keys or F keys or something like that to toggle layers on and off, and it was absolutely necessary in some misty forest/jungle/waterfall type areas.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927137" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">nextaccountic</span>
+        <span class="meta-time">2026/04/28 14:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 我在禁用声音和透明胶片的情况下在 486 上击败了 Chrono Trigger。有些部分我必须手动关闭顶层，因为透明的东西（例如云）会完全挡住我的视线<p>此外，在 DOS 上运行比在 Windows 上运行可以获得更好的性能</p><p>Gameboy 模拟器也是如此</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; I beat Chrono Trigger on a 486 with sound and transparencies disabled. There were parts where I had to manually switch off the top layer because transparent stuff (such as clouds) would completely block my view<p>Also, you could get better performance running on DOS rather than on Windows</p><p>The same was true for gameboy emulators too</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930895" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">shifto</span>
+        <span class="meta-time">2026/04/28 17:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哇，我记得专门为我的 486 买了声卡和 CD-ROM 驱动器，这样我就可以运行 GB 模拟器了。如果没有声卡，它就无法启动，我真的很想玩 Pokemon Gold 的非翻译版本。当我告诉他们我有一款比红/蓝/黄更新的口袋妖怪游戏时，人们不会相信我。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Wow, I remember specifically buying a sound card and CD-rom drive for my 486 so I could run the GB emulator. It wouldn't boot without a sound card and I really wanted to play the non-translated version of Pokemon Gold. People wouldn't believe me when I told them I had a newer Pokemon game than Red/Blue/Yellow.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47932033" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">butz</span>
+        <span class="meta-time">2026/04/28 04:01</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢您提醒我们缺乏透明度。我认为在支持透明度的模拟器中看到这些游戏与第一次使用 3dfx 卡运行《极品飞车 III》的印象几乎相同:)</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thanks for reminding about missing transparency. I think seeing those games in emulator with transparency support had almost same impression as running Need for Speed III with 3dfx card for the first time :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926571" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">aidenn0</span>
+        <span class="meta-time">2026/04/28 13:58</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">类似，但 IIRC 我使用 esnes，而不是 zsnes。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Similar, but IIRC I used esnes, not zsnes.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930873" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">cholantesh</span>
+        <span class="meta-time">2026/04/28 08:12</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt;有些部分我必须手动关闭顶层，因为透明的东西（例如云）会完全挡住我的视线<p>是的，这也是我的经历； Dome 16 实在是太烦人了。我也确实用它来“作弊”一些游戏中视野有限的部分，否则眼睛疲劳和头痛并不是很理想。</p><p>我不认为如果没有保存状态，我就无法完成很多我最喜欢的角色扮演游戏，保存点总是如此可笑地分散，而随机遭遇却是无休止的。不过，这仍然是我在媒介中获得的一些最好的体验。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt;There were parts where I had to manually switch off the top layer because transparent stuff (such as clouds) would completely block my view<p>Yeah, that was my experience too; Dome 16 was a total annoyance. I did also use it to 'cheat' in sections of games where you had limited FOV, the alternative of having eyestrain and headaches wasn't really desirable.</p><p>I don't think I'd have gotten through a lot of my favourite RPGs without savestates, save points were always so ridiculously spread out while the random encounters were interminable. Still some of the best experiences I've had in the medium though.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928911" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">LarsDu88</span>
+        <span class="meta-time">2026/04/28 05:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在现代 PC 硬件上模拟 SNES。耻辱！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Emulating the SNES on contemporary PC hardware. For shame!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927797" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pdntspa</span>
+        <span class="meta-time">2026/04/28 07:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">老兄，我们破产了，我的 486 是教堂的旧货。我拥有的第一台游戏机是 Nintendo 64，那是它生命周期的后期。我可以向你保证 486 是 <i>不是</i> 当代，它远远落后于我拥有它的时代。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Dude we were broke and my 486 was a hand-me-down from church. The first console I ever got was a Nintendo 64, and that was very late into its lifecycle. I can assure you that 486 was <i>not</i> contemporary, it was very much behind the times when I had it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928619" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">hsbauauvhabzb</span>
+        <span class="meta-time">2026/04/28 07:26</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我很好奇您是否可以使用更新的模拟器获得更好的性能。不管怎样，468 上的 SNES 游戏并不可耻，它是黑客精神的顶峰！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’d be curious if you could squeeze out better performance with a newer emulator. Either way, SNES games on a 468 is not shameful, it’s the pinnacle of hacker ethos!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928650" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">jamiejquinn</span>
+        <span class="meta-time">2026/04/28 16:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">较新的模拟器，甚至是旧模拟器的重新编译。我敢打赌，有一些现代编译器技巧即使在几十年前的 CPU 上也能有所帮助。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Newer emulator or even a recompilation of an old one. I'd bet there are a few modern compiler tricks that would help even on decades old CPUs.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931774" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">BiteCode_dev</span>
+        <span class="meta-time">2026/04/28 02:44</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">感谢 zsnes，还发现了令人惊奇的《幻想故事》。翻译社区从日本带来了一个疯狂的工作，甚至在没有源代码的情况下修补游戏，就像疯子一样。如果没有它们，我永远不会知道有这样的宝石存在，而且从未在我们的市场上出售过。<p>翻译确实有些自由，但说实话，仅仅为了船的场景，我觉得这是值得的。</p><p>得益于 zsnes，能够随意减慢或加快游戏速度，或者随时快速保存/重新加载，这就是厨师之吻。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Also discovered the amazing Tales of Phantasia thanks to zsnes. The translation community did a bonker job bringing that from Japan, patching the game without even having the source code, like mad men. Without them, I would have never known such gems existed that were never sold on our market.<p>The translation does take some liberties, but honestly, just for the boat scene, I feel like it's worth it.</p><p>And being able to slow down or speed up the game at will, or quick save/reload at any second, thanks to zsnes, is just chef kiss.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925546" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bitwize</span>
+        <span class="meta-time">2026/04/28 02:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最喜欢的 ZSNES 时刻：有一年，我在配备笔记本电脑的报告厅上了一堂数学课，当时我的大学正在试验笔记本电脑作为教学工具，但尚未开始要求或出售笔记本电脑（与标准宿舍台式机相比）。讲座进行时，我们应该打开笔记本电脑并放上讲座材料。当然，这个孩子已经在他身上安装了 ZSNES 并且正在玩《杀手本能》……</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Favorite ZSNES moment: I took a math class in a lecture hall equipped with laptops in a year when my university was experimenting with laptops as a pedagogical tool, but hadn't yet pulled the trigger on requiring them or offering them for sale (as compared to the standard dorm room desktop). While the lecture was being given, we were supposed to have our laptops open with the lecture material up. But of course this one kid had installed ZSNES on his and was playing Killer Instinct...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925633" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">carrja99</span>
+        <span class="meta-time">2026/04/28 06:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">哈哈，我在高中电脑课上玩《最终幻想V》。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">haha, I was playing Final Fantasy V during computer class in HS.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928165" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">maxglute</span>
+        <span class="meta-time">2026/04/28 15:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到 SNES 模拟器已经存在了多久，我有时想知道在模拟器上玩任天堂游戏的人是否比在实际任天堂游戏机上玩的人还要多。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">With how long SNES emulators been around, I sometimes wonder if more people played Nintendo games on emulators than actual Nintendo consoles.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931338" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jmarcher</span>
+        <span class="meta-time">2026/04/28 02:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们的主页低估了这有多酷：<p>MVG 对此做了一个很好的概述： <a href="https://www.youtube.com/watch?v=r5twUkvYFpA" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=r5twUkvYFpA</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Their home page is underselling how cool this is:<p>MVG did a great overview of it: <a href="https://www.youtube.com/watch?v=r5twUkvYFpA" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=r5twUkvYFpA</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925339" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">AdmiralAsshat</span>
+        <span class="meta-time">2026/04/28 02:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">他们朝这个方向发展是可以理解的。  Higan/bsnes 已经在 SNES 模拟器方面占领了“准确性”市场，因此它更多地是在做自己的事情，而不是重新踏上熟悉的道路。<p>我想我唯一关心的是它会对硬件要求产生什么影响，因为 ZSNES 最初的成名之处在于它能够在有限的硬件上运行得有多好，即使它必须做一些聪明的黑客才能达到这一目标。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's understandable that they went in this direction.  Higan/bsnes has already captured the market for "accuracy" on the SNES emulator front, so this is more going off and doing its own thing rather than re-treading familiar ground.<p>I suppose my only concern is what it will do to the hardware requirements, since ZSNES' original claim to fame was how well it was able to run on limited hardware, even if it had to do a bunch of clever hacks to get there.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925458" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">snvzz</span>
+        <span class="meta-time">2026/04/28 07:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">或者，由于 bsnes/higan/ares[0]，SFC 精度得到了解决，因此任何新的仿真器都应该更容易保持准确。<p>即准确性应该是基线；据我所知，Super ZSNES 还没有出现。</p><p>0。 <a href="https://ares-emu.net/" target="_blank" rel="noopener noreferrer">https://ares-emu.net/</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Or, thanks to bsnes/higan/ares[0], SFC accuracy is solved, thus it should be much easier for any new emulator to be accurate.<p>i.e. accuracy should be the baseline; I understand Super ZSNES is not there yet.</p><p>0. <a href="https://ares-emu.net/" target="_blank" rel="noopener noreferrer">https://ares-emu.net/</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928802" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">pezezin</span>
+        <span class="meta-time">2026/04/28 11:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Ares 是一款被严重低估的模拟器。现在我有了 MiSTer，所以不再经常使用它，但它是迄今为止我最喜欢的桌面模拟器。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ares is a seriously underrated emulator. I don't use it much now that I have a MiSTer, but it is by far my favourite emulator on desktop.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930037" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">micheljansen</span>
+        <span class="meta-time">2026/04/28 04:03</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">令人印象深刻，但是天哪，从我童年时期最初的 ZSNES 用户界面到 Super ZSNES 用户界面的转变至少可以说是不和谐的。怀旧的力量是强大的：<p><a href="https://imgur.com/a/R63BKTe" target="_blank" rel="noopener noreferrer">https://imgur.com/a/R63BKTe</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Impressive, but oh man, the transition from the original ZSNES User Interface from my childhood to the UI of Super ZSNES was jarring to say the least. Nostalgia is powerful:<p><a href="https://imgur.com/a/R63BKTe" target="_blank" rel="noopener noreferrer">https://imgur.com/a/R63BKTe</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926606" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">poolnoodle</span>
+        <span class="meta-time">2026/04/28 04:22</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">在我看来，原作是永恒的，而且更美丽。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The original is timeless and way more beautiful in my opinion.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926833" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zerocrates</span>
+        <span class="meta-time">2026/04/28 05:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">考虑到有目的的怀旧目标，至少在上面加上像素字体是一个奇怪的选择。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Not at least slapping a pixel font on there is an odd choice given the purposeful nostalgia goal.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927473" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">NuclearPM</span>
+        <span class="meta-time">2026/04/28 07:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">雀巢对我来说是一颗怀旧炸弹。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Nesticle is a nostalgia bomb for me.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928676" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xantronix</span>
+        <span class="meta-time">2026/04/28 12:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得自己是这个街区最酷的孩子，因为我的桌面上有这个图标。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I felt like the coolest fucking kid on the block for having that icon on my desktop.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930430" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">adzm</span>
+        <span class="meta-time">2026/04/28 03:23</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">宽屏模式功能出奇的好，哇</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The widescreen mode is surprisingly functional, wow</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926086" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pryncevv</span>
+        <span class="meta-time">2026/04/28 16:37</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">当我 12 岁（比如 2015 年左右）并且能够在我的笔记本电脑上安装模拟器时，我想在模拟器上玩计时触发器（在已经击败了其他几个模拟游戏之后；但全部在我的手机上）..我选择了 ZSNES，因为我比 Snes9x 更喜欢这个名字。.我永远不会忘记 ZSNES 的雪白菜单，它对我来说太漂亮了</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">When I was 12 (like around 2015) &amp; able to install emulators on my laptop I wanted to play chrono trigger on an emulator (after already beating several other emulated games; but all on my phone) .. I picked ZSNES because I fancied the name more than Snes9x.. I'll never forget the snowy menu of ZSNES, it was so beautiful for me</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931880" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jsd1982</span>
+        <span class="meta-time">2026/04/28 03:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">应该可以让 PPU 仿真捕获每个像素（或扫描线，如果精度不是最重要的）的所有最终寄存器状态，并让 GPU 仅使用该状态渲染每个像素，根据需要进行图层混合、颜色数学和模式 7 计算。根据 MVG 分解所执行的绘制命令的视频，Super ZSNES 看起来并不是这样实现其 PPU 的 - 它似乎为 BG（和 OBJ？）逐块渲染，为模式 7 逐行渲染。这可能有点不准确，但可能有必要实现一些视觉增强技巧。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It should be possible to have the PPU emulation capture all of the final register state per pixel (or scanline if accuracy isn't paramount) and have the GPU render each pixel using only that state, doing the layer blending, color math, and mode 7 calculations as necessary. Based on MVG's video breaking down the draw commands performed it doesn't look like that's how Super ZSNES have implemented their PPU - it seems to render tile by tile for BGs (and OBJ?) and line by line for mode 7. That'll be a bit inaccurate but it's likely necessary to implement some of their visual enhancement tricks.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925897" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">bredren</span>
+        <span class="meta-time">2026/04/28 04:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其特点之一是“无氛围编码，经典开发风格”。<p>我认为这很有趣，尤其是在构建复古支持时。</p><p>但我想知道这是否意味着根本没有使用人工智能？即使是代码审查？</p><p>无论哪种方式都没有判断力，只是想澄清一下。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One of the features is “no vibe coding, classic development style.”<p>I think that’s kind of interesting, especially when building a retro enablement.</p><p>But I wonder does this mean no AI was used at all? Even for say, code review?</p><p>No judgment either way just curious for clarification.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926666" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">unleaded</span>
+        <span class="meta-time">2026/04/28 08:25</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是来自 ZSNES 的原作者。我想他们知道自己在做什么。<p>撇开聪明不谈，法学硕士对这类深奥的东西很不擅长。尤其是复古的东西，根据我的经验，他们主要倾向于对它是多么的棒和复古感到超级兴奋，并重申关于它的误解事实，它知道这并不那么重要/你可能已经知道了。就像把它展示给 Reddit 评论部分一样。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is from the original authors of ZSNES. I think they know what they're doing.<p>smartassery aside LLMs are pretty shit at esoteric stuff like this. Especially retro stuff in my experience they mainly tend to get super excited about how awesome and retro it is &amp; reiterate misunderstood factoids about it that it knows that aren't that important/that you probably know already. Like showing it to a Reddit comment section.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928983" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">jamesu</span>
+        <span class="meta-time">2026/04/28 14:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我发现从不同的原因中挑选出来的氛围编码很有趣；回想上个月，我记得 DLSS5 强烈反对背后的原因之一是它破坏了艺术家最初的愿景。一个月后，我们对一个模拟器感到惊讶，它实际上可以让任何休闲玩家通过时髦的点击界面来做到这一点！<p>我猜如果他们添加 MCP 服务器，可能会引发骚乱。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I find the specific singling out of vibe coding interesting for a different reason; thinking back to just last month, I recall one of the rationales behind the huge DLSS5 backlash was it ruined the artists original vision. And here we are a month later being amazed at an emulator that literally lets any casual player do just that through a funky point and click interface!<p>I guess if they added in an MCP server there would probably be a riot.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930984" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">xtracto</span>
+        <span class="meta-time">2026/04/28 05:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">有趣的是，我们现在进入了“用手工代码制造”或“手工制作”的时代。与现在制作家具、地毯和任何其他“手工艺品”的方式相同......或兰博基尼</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Funny, we now enter the era of "Made with Handcrafted Code"  or "Handmade" . Same way as furniture, carpets and any other "handcrafts" are made now... or Lamborghinis</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927737" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">zokier</span>
+        <span class="meta-time">2026/04/28 05:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这很有趣，因为一旦这些工具向公众发布，我敢打赌大多数高分辨率模组将由人工智能生成。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">it's doubly funny because once the tools are released to public i bet majority of those high-res mods will be ai generated.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927926" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">prmoustache</span>
+        <span class="meta-time">2026/04/28 15:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它只对业余爱好项目有意义，因为结果只是旅程的借口。我的意思是，如果重点是享受编码乐趣，那么您想自己动手。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It only makes sense for hobby projects where the outcome is just an excuse for the journey. I mean if the point is to have fun coding, you want to do it yourself.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931270" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">bowsamic</span>
+        <span class="meta-time">2026/04/28 04:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 但我想知道这是否意味着根本没有使用人工智能？即使是代码审查？<p>这会让你感到惊讶吗？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; But I wonder does this mean no AI was used at all? Even for say, code review?<p>Would that be surprising to you?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926914" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bredren</span>
+        <span class="meta-time">2026/04/28 06:08</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">你为什么问？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why do you ask?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928054" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">bowsamic</span>
+        <span class="meta-time">2026/04/28 13:05</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我只是好奇你是否如此依赖法学硕士，以至于根本不使用它们的想法对你来说似乎很极端</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I’m just curious if you are so dependent on LLMs that the idea of not using them at all seems extreme to you</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930621" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">llmssuck</span>
+        <span class="meta-time">2026/04/28 05:16</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“无振动编码”与“无人工智能”不同。我不确定作者的意图是什么。没有自动完成功能？自动完成的级别是什么？没有“深度学习”？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"no vibe coding" is different from "no ai". I'm not sure where the authors are going with this. No autocomplete? What level of autocomplete? No "deep learning"?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927415" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">kayson</span>
+        <span class="meta-time">2026/04/28 02:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">非常酷，尤其是准确性的提高。但 GPU 真的有必要吗？ SNES 已经太老了，我想知道为什么你不能只使用 CPU。即使 GPU 更高效，是否值得为支持更多硬件组合而头痛？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool, especially the accuracy improvements. But is GPU really necessary? SNES is so old I wonder why you couldn't get away with CPU-only. Even if GPU is more efficient, is it worth the headache of supporting way more hardware combinations?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925356" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ndiddy</span>
+        <span class="meta-time">2026/04/28 02:42</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">模拟器能够实现的视觉增强功能（高分辨率模式 7、纹理替换、着色器等）无法与软件渲染一起良好运行。模拟器使用 Unity，因此他们不必自己完成所有低级 GPU 支持工作。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The visual enhancements the emulator is capable of doing (high-res Mode 7, texture replacements, shaders, that sort of thing) wouldn't run well with software rendering. The emulator uses Unity so they don't have to do all the low-level GPU support work themselves.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925529" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">masklinn</span>
+        <span class="meta-time">2026/04/28 03:51</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; SNES 太老了，我想知道为什么你不能只使用 CPU。<p>取决于您想要什么级别的准确度。 higan (bsnes) 在 CPU 上进行周期精确的 SNES 仿真（十多年来一直如此），因此这绝对是可行的。</p><p>如果你想要的准确性超出了这个范围，事情就会变得冒险。 AFAIK，当你进行晶体管级仿真时，你可以进行 pong，但 MetalNES 的运行速度远非实时，因此其限制介于这两个系统之间。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; SNES is so old I wonder why you couldn't get away with CPU-only.<p>Depends what level of accuracy you want. higan (bsnes) does cycle-accurate SNES emulation on the CPU (and has for more than a decade) so that's definitely feasible.</p><p>If you want accuracy beyond that things get dicey. AFAIK when you get down to transistor level emulation, you can do pong but MetalNES runs nowhere near real time, so the limit for that is somewhere between those two systems.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926454" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">aruametello</span>
+        <span class="meta-time">2026/04/28 02:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 支持更多硬件组合值得头痛吗？<p>不。</p><p>可能是“因为它有趣”类型的项目之一。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; is it worth the headache of supporting way more hardware combinations?<p>no.</p><p>Probably is one of those of "because its fun" type of projects.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925405" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">LoulouMonkey</span>
+        <span class="meta-time">2026/04/28 07:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">ZSNES 的创建者在几个月内对来自 Zophar 领域的 Zophar 进行了一次非常有趣的采访：<p><a href="https://www.youtube.com/watch?v=iG-oqvj4Tqk" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=iG-oqvj4Tqk</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The creator of ZSNES did a very interesting interview a couple of months with Zophar from Zophar's Domain:<p><a href="https://www.youtube.com/watch?v=iG-oqvj4Tqk" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=iG-oqvj4Tqk</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928588" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">arkensaw</span>
+        <span class="meta-time">2026/04/28 04:39</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 无振动编码。经典的开发风格。<p>这正迅速成为人们想要的功能。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; No Vibe Coding. Classic development style.<p>This is fast becoming a feature people want.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927028" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">elpocko</span>
+        <span class="meta-time">2026/04/28 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">它很快成为最重要的问题：他们在开发这个极其小众的软件时是否使用了任何矩阵乘法？或者他们是否使用了我不认可的其他算法？当我想到老式硬件模拟器时，这些棘手的问题让我彻夜难眠。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">It's quickly becoming the most important question: have they used any matrix multiplications in the development of this incredibly niche software? Or did they use any other algorithms that I do not approve of? It's burning questions like these that keep me awake at night when I think about vintage hardware emulators.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927254" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xantronix</span>
+        <span class="meta-time">2026/04/28 12:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您非常清楚，法学硕士并不是凭空产生的。  无论是在技术上还是在政治上，这些东西都不存在于真空中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You know full well that LLMs don't simply spawn from nothingness.  These things don't exist in a vacuum, technically nor politically.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930463" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">elpocko</span>
+        <span class="meta-time">2026/04/28 15:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我知道，我知道。他们会毁掉我们心爱的知识产权，他们会杀了我们。等不及了。让我们结束吧。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I know, I know. They terk err jerbs and our beloved intellectual property and they gonna kill us. Can't wait. Let's get it over with.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931452" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">dueltmp_yufsy</span>
+        <span class="meta-time">2026/04/28 05:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">啊，伙计，当我年轻的时候，这些家伙很早就摇滚了。还记得第一次启动 ZSNES 来玩一款由粉丝翻译的日语 RPG 游戏。它打开了一个全新的世界。谢谢，伙计们。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Ah man, these guys rocked early on when I was younger. Still recall first booting up ZSNES to play a fan-translated Japanese-only RPG. It opened up a whole new world. Thanks, guys.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927825" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">HerbManic</span>
+        <span class="meta-time">2026/04/28 10:13</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">其中由 GPU 供电的事情一开始看起来很奇怪，但实际上很有意义。意味着您不仅可以处理最终输出，还可以在整个管道上进行更深入的链接。非常酷。<p>可能会是众多模拟器中的第一个。</p><p>他们使用 Unity 有点奇怪，但我想这可以轻松地让他们跨平台。如果他们能像戈多那样更加开放一点就好了，但有时你必须务实而不是理想。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One of those things where GPU powered seems odd at first but actually makes a lot of sense. Means you can work with more than just the final outputs but can link in a lot deeper on the overall pipeline. Very cool.<p>Will probably be the first of many emulators to come.</p><p>A bit odd they are using Unity but I guess that gets them multi platform easily. Would be nice if they went something a bit more open like Godot but sometime you have to be pragmatic not ideal.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929771" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">honkcity</span>
+        <span class="meta-time">2026/04/28 04:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我记得我爸爸解释说我们的计算机足够快，我们甚至不需要再担心实际的 SNES 硬件，因为它可以直接在计算机上运行，​​我认为这非常神奇。我认为它一定是通过 ZSNES 发布的，所以很高兴看到它的进一步发展！</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I remember my dad explaining that our computer was fast enough that we didnt even need to bother with the actual hardware SNES anymore because it could be run directly on the computer which I thought was pretty amazing. I think it must have been via ZSNES, so its exciting to see further development of it!</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926896" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">llmssuck</span>
+        <span class="meta-time">2026/04/28 05:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">为什么要使用 Unity？这太疯狂了？我们怎么知道这不是恶意软件？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Why is this using Unity? That's insane? How do we know this is not malware?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927426" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">pixelatedindex</span>
+        <span class="meta-time">2026/04/28 05:47</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">不能谈论 Unity 部分，但为什么它会是恶意软件呢？如果您是一位具有街头信誉的开发人员，我想您不会因为发布恶意软件而对其造成伤害。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Can’t speak about the Unity part, but why would it be malware? If you’re a dev with street cred, I’d imagine you won’t hurt it by putting out malware.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927800" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">arecsu</span>
+        <span class="meta-time">2026/04/28 05:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">关于未压缩的音频替换，这让我想知道训练一个具有巨大（但简单）音效库和高质量样本的模型，并为其提供与 SNES 接近或相同的等效“低质量”声音签名会有多困难。有关 SNES 限制的技术数据应该能够了解如何尽可能精确地处理这些影响，对吧？我不是一个真正健全的人，所以我可能是错的。<p>也许这会带来一种更加自动化的方式，从 SNES 中大规模地重新采样更多的声音效果！只是一个想法</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">About the uncompressed audio replacements, it makes me wonder how difficult would it be to train a model with a huge (but simple) library of sound effects and samples of high quality, and also feed them their equivalents"low quality" sound signature close or identical to what SNES have. The technical data about the SNES limitations should be there to know how to process these effects as precisely as possible, right? I'm not really a sound guy, so I might be wrong.<p>Maybe this could result in a much more automated way to re-sample many more sound effects from the SNES massively! Just a thought</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927574" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ranger_danger</span>
+        <span class="meta-time">2026/04/28 02:49</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没想到竟然用的是Unity。目前看来也是闭源的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Was not expecting it to be using Unity. Also looks to be closed source for now.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925611" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">miladyincontrol</span>
+        <span class="meta-time">2026/04/28 05:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这就是我有点担心的部分，相反我很好奇是什么导致他们做出了所有东西的模拟器的决定。或者只是一点可移植性和着色器技术债务？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thats the part I'm a bit apprehensive for, rather I'd be curious what led them down that decision for an emulator of all things. Or is it just a bit of portability and shader technical debt?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927393" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">ndiddy</span>
+        <span class="meta-time">2026/04/28 07:28</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一般来说，人们通过仿真赚钱的方式是将其出售给 iOS/Android 用户。在本例中，PC 版免费，Android 版售价 3 美元。模拟器需要闭源才能使这种商业模式可行。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">In general the way people make money off emulation is by selling it to iOS/Android users. In this case, it's free on PC and the Android version is $3. The emulator needs to be closed source for this business model to be feasible.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928660" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">Dwedit</span>
+        <span class="meta-time">2026/04/28 04:36</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Unity = 可反编译（IL2CPP 或混淆的二进制文件除外）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Unity = Decompilable (except for IL2CPP or obfuscated binaries)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926993" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">butz</span>
+        <span class="meta-time">2026/04/28 03:59</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我在存档中看到 libsteam 插件。他们打算在 Steam 上发布它吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I see libsteam plugin in archive. Are they planning to release it on Steam?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926546" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">ohkaiby</span>
+        <span class="meta-time">2026/04/28 13:41</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><i>叹息</i> 解压 ROM 文件...</div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><i>sighs</i> unzips ROM files...</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930773" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">alanwreath</span>
+        <span class="meta-time">2026/04/28 08:54</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我想知道有什么方法可以使用这个或者让游戏合法地在模拟器上玩？？？<p>这确实是唯一让我远离他们的事情。  我愿意花钱玩高质量的复古游戏。哎呀，这对我的孩子来说几乎是有教育意义的。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I wonder is there any way to use this or rather get games to play on the emulator legally????<p>It really is the only thing that keeps me from them.  I’d pay to play quality retro games. Heck it would almost be educational for my kids.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929216" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">opan</span>
+        <span class="meta-time">2026/04/28 13:14</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">最合法的方法是购买物理盒式磁带并使用盒式磁带转储器将其转储。您可能需要用异丙醇清洁插针，有时还需要使用玻璃纤维笔，以使它们能够可靠地读取。<p>根据经验，我没有具体的购物车转储器可供推荐，我已经转储过 GB/GBC/GBA 游戏，但没有转储过 SNES。不过，快速搜索发现了一些选择。</p><p><a href="https://github.com/X-death25/SNES_Dumper" target="_blank" rel="noopener noreferrer">https://github.com/X-death25/SNES_Dumper</a></p><p><a href="https://stoneagegamer.com/retrode-2.html" target="_blank" rel="noopener noreferrer">https://stoneagegamer.com/retrode-2.html</a></p><p>还发现这里有一些讨论推荐 Sanni Cart Reader，但这是一个 5 年前的帖子，所以可能有更便宜或更好的选择。</p><p><a href="https://www.reddit.com/r/Roms/comments/obrxg3/best_nessnesn64_cartridge_dumpers/" target="_blank" rel="noopener noreferrer">https://www.reddit.com/r/Roms/comments/obrxg3/best_nessnesn6...</a></p><p>话虽这么说，我不认为抢别人的购物车垃圾场真的存在道德问题，无论你是否有自己的购物车，从法律上讲，如果你至少在美国遇到任何问题，我会感到非常惊讶。对我来说，推车翻车器最酷的部分是带有保存文件的推车，您可以从硬件中“拯救”它们并保留您的进度。在某些情况下，保存依赖于随时可能耗尽的电池。</p><p>如果您最终确实收集了物理卡带，我还鼓励您购买实际的控制台，并探索它的模组，从中获得最佳的视频信号（RGB 或分量而不是复合）。在真实的硬件上玩很酷。即使您确实收集了原始卡带，我也建议您购买烧录卡，这样您就可以尝试自制软件、romhacks、粉丝翻译和端口。有一个人一直在将 NES 游戏移植到 SNES 上。</p><p><a href="https://archive.org/details/@infidelity" target="_blank" rel="noopener noreferrer">https://archive.org/details/@infidelity</a></p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">The most legitimate method would be to buy a physical cartridge and dump it with a cartridge dumper. You'll probably need to clean the pins with isopropyl alcohol and sometimes also a fiberglass pen to get them to read reliably.<p>I don't have a specific cart dumper to recommend from experience, I have dumped GB/GBC/GBA games but not SNES. A quick search found some options, though.</p><p><a href="https://github.com/X-death25/SNES_Dumper" target="_blank" rel="noopener noreferrer">https://github.com/X-death25/SNES_Dumper</a></p><p><a href="https://stoneagegamer.com/retrode-2.html" target="_blank" rel="noopener noreferrer">https://stoneagegamer.com/retrode-2.html</a></p><p>Also found some discussion here recommending the Sanni Cart Reader, but it's a 5 year old thread so there are likely cheaper or better options.</p><p><a href="https://www.reddit.com/r/Roms/comments/obrxg3/best_nessnesn64_cartridge_dumpers/" target="_blank" rel="noopener noreferrer">https://www.reddit.com/r/Roms/comments/obrxg3/best_nessnesn6...</a></p><p>That being said, I do not think there is really an ethical problem with grabbing someone else's cart dumps, whether you have a cart of your own or not, and legally I would be very surprised if you had any issues in the US at least. The coolest part about cart dumpers to me is for carts with save files, you can "rescue" them from the hardware and preserve your progress. In some cases the save relies on a battery that could go dead at any time.</p><p>If you do end up collecting physical cartridges, I would also encourage you to get the actual console, and explore mods for it, get the best video signal out of it you can (RGB or component rather than composite). Playing on real hardware is cool. I'd also recommend getting a flashcart even if you do collect original cartridges, so you can try out homebrew, romhacks, fan translations, and ports. There's a guy who has been porting NES games to SNES.</p><p><a href="https://archive.org/details/@infidelity" target="_blank" rel="noopener noreferrer">https://archive.org/details/@infidelity</a></p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930655" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">nout</span>
+        <span class="meta-time">2026/04/28 09:35</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">搜索 archive.org。所有旧游戏均已存档。由于游戏不再销售，我认为这是公平的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Search archive.org. All old games are archived. Since the games are no longer selling, imo this is fair.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929520" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">flohofwoe</span>
+        <span class="meta-time">2026/04/28 14:48</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“不要复制那张软盘！”<p>当你玩从阴暗的 ROM 转储网站下载的 20 世纪 80 年代和 90 年代的废弃游戏时，没有人在乎。最坏的情况下，任天堂将追究模拟器项目本身。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Don't copy that floppy!"<p>Nobody cares when you play abandondend games from the 1980s and 1990s downloaded from a shady ROM dump site. At the worst Nintendo will go after the emulator project itself.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931163" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">yesman_x</span>
+        <span class="meta-time">2026/04/28 02:40</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴看到 ZSNES 回来。每个游戏的增强方法听起来比通用高清过滤器更有趣，尤其是带有可选的切换功能。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Very cool to see ZSNES back. The per-game enhancement approach sounds way more interesting than generic HD filters, especially with optional toggles.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925494" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">itintheory</span>
+        <span class="meta-time">2026/04/28 03:17</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">&gt; 目前已实现支持 7 款热门游戏。<p>增强引擎听起来很棒，但很高兴知道它适用于哪些游戏......</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">&gt; Currently implemented with support for 7 popular games.<p>The enhancement engine sounds great, but it'd be nice to know which games it's for...</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926003" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jbethune</span>
+        <span class="meta-time">2026/04/28 12:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">生病的。一直想重播《链接到过去》。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sick. Been meaning to replay Link to the Past.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930571" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">the-golden-one</span>
+        <span class="meta-time">2026/04/28 03:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是类似 ParaLLEl 的实现吗？我无法从视频中看出这一点。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Is this a ParaLLEl-like implementation? I couldn’t work it out from the video.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925762" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">pelasaco</span>
+        <span class="meta-time">2026/04/28 15:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">没有可用的源代码吗？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">no source code available?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931244" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">anthk</span>
+        <span class="meta-time">2026/04/28 06:33</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">旧的 ZSNES 是 GPL。  它看起来是维护和分叉的。  <a href="https://github.com/xyproto/zsnes/" target="_blank" rel="noopener noreferrer">https://github.com/xyproto/zsnes/</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Old ZSNES was GPL.  And it looks maintained and forked over.  <a href="https://github.com/xyproto/zsnes/" target="_blank" rel="noopener noreferrer">https://github.com/xyproto/zsnes/</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928282" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">throwatdem12311</span>
+        <span class="meta-time">2026/04/28 07:31</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">好吧，我想我会像过去的美好时光一样再次进行《超级银河战士》的速通。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Welp, guess I’m gonna do another speedrun of Super Metroid just like the good old days.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928677" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">joemazerino</span>
+        <span class="meta-time">2026/04/28 08:57</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我看到 ZNES 并投了赞成票。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I see ZNES and I upvote.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929241" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">add2</span>
+        <span class="meta-time">2026/04/28 08:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">“宽屏（如果可用）- 只要游戏内部编码为支持部分或全宽屏，我们就会启用宽屏。”</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">"Wide Screen (where available) - We enable widescreen whenever the game is internally coded to support partial or full widescreen."</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929097" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">firebot</span>
+        <span class="meta-time">2026/04/28 02:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这一直是我最喜欢的鸸鹋。在 Pentium 60 MHz 上没有问题。<p>另外，您还可以制作自己的作弊代码！</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This was always my favorite emu. No problems on a Pentium 60 MHz.<p>Plus you can make your own cheat codes!</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925408" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">zapzupnz</span>
+        <span class="meta-time">2026/04/28 09:21</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">Super ZSNES 和原版 ZSNES 不是同一个模拟器。相同的开发人员，完全不同的代码库。链接的网站是关于较新的 Super ZSNES 的。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Super ZSNES and the original ZSNES are not the same emulator. Same developers, different codebases entirely. The linked website is about the newer Super ZSNES.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47929421" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示 HN：Utilyze – 比 nvtop 更准确的开源 GPU 监控工具 | HN 精选</title>
+  <style>
+  :root {
+    --bg: radial-gradient(1200px 600px at 0% 0%, #f7f1e3 0%, #f8f6f0 45%, #f4efe6 100%);
+    --paper: #fffaf2;
+    --ink: #2a2117;
+    --muted: #6f6355;
+    --accent: #ff6600;
+    --accent-soft: #ffe2cc;
+    --line: #eadfce;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+    line-height: 1.6;
+  }
+  .page {
+    width: min(860px, 100%);
+    margin: 0 auto;
+    padding: 16px 14px 72px;
+  }
+  .hero, .block, .story-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(63, 41, 18, 0.08);
+  }
+  .hero, .block { padding: 16px; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 1.24rem; letter-spacing: 0.01em; }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.96rem; }
+  .meta-line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 0.84rem; color: var(--muted); }
+  .story-list { display: grid; gap: 12px; }
+  .story-card { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 14px; }
+  .rank {
+    align-self: start;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 3px 0;
+  }
+  .story-card h2 { margin: 0; font-size: 1.02rem; }
+  .story-card h2 a { color: inherit; text-decoration: none; }
+  .story-card h2 a:hover { text-decoration: underline; }
+  .story-actions, .hero-actions, .comment-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .btn.ghost {
+    background: #fff6ee;
+    color: #8a430c;
+    border-color: #efc8ad;
+  }
+  .block h3 { margin: 0 0 10px; font-size: 1rem; }
+  .summary-list { margin: 0; padding-left: 20px; }
+  .summary-list li + li { margin-top: 8px; }
+  .post-body { font-size: 1rem; }
+  .post-body code, .comment-text code { background: #f4eadf; padding: 1px 4px; border-radius: 5px; }
+  .post-body pre, .comment-text pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a2117;
+    color: #f8eee2;
+  }
+  .comment-tree { display: grid; gap: 8px; }
+  .comment-node {
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+    margin-left: 0;
+  }
+  .comment-node.depth-2 { border-left-color: #e6cdb7; }
+  .comment-node.depth-3 { border-left-color: #d9b79a; background: rgba(255, 232, 214, 0.3); border-radius: 8px; }
+  .comment-node > summary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .comment-node > summary::-webkit-details-marker { display: none; }
+  .comment-card { padding-bottom: 8px; }
+  .comment-text { font-size: 0.95rem; }
+  .comment-text.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .is-hidden { display: none; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .badge { background: #eee1d6; border-radius: 6px; padding: 1px 6px; font-size: 0.75rem; }
+  .back-link { display: inline-block; margin-bottom: 8px; color: #8a430c; text-decoration: none; font-size: 0.9rem; }
+  .redirect-page { min-height: 65vh; display: grid; place-content: center; text-align: center; gap: 8px; }
+  @media (min-width: 900px) {
+    .page { padding-top: 26px; }
+  }
+  </style>
+</head>
+<body data-page="story">
+  <main class="page story-page">
+    <header class="hero">
+      <a class="back-link" href="https://lookingfor2018.github.io/hn-digest/batches/2026-04-28-1726/">返回本批次</a>
+      <h1>显示 HN：Utilyze – 比 nvtop 更准确的开源 GPU 监控工具</h1>
+      <p class="subtitle">Show HN: Utilyze – an open source GPU monitoring tool more accurate than nvtop</p>
+      <div class="meta-line">
+        <span>www.systalyze.com</span>
+        <span>作者 ManyaGhobadi</span>
+        <span>分数 97</span>
+        <span>评论 23</span>
+        <span>2026/04/27 21:55</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="https://news.ycombinator.com/item?id=47921626" target="_blank" rel="noopener noreferrer">打开 HN 原帖</a>
+        <a class="btn" href="https://www.systalyze.com/utilyze" target="_blank" rel="noopener noreferrer">打开原始文章</a>
+      </div>
+    </header>
+    
+      <section class="block"><h3>中文摘要</h3><ol class="summary-list"><li>“差距不是意识——编写 CUDA 内核的工程师知道准确的利用率是什么样的。差距是工具。从来没有一种方法可以在生产中连续看到真正的 GPU 效率，而不减慢工作负载。”——Manya Ghobadi，麻省理工学院教授兼首席执行官，Systalyzenvtop（顶行）在所有三个工作负载上读取 100%，无论矩阵乘法的大小如何。 Utilyze（底行）跟踪实际计算吞吐量，显示不同矩阵大小的利用率差异。如上图所示，nvtop 对于工作负载强度是不变的：所有三个矩阵乘法大小在 nvtop 中显示为 100%（顶行：固定在天花板上的青色线）。 Utilyze（底行）显示计算吞吐量随矩阵大小的变化，从 N=256 时的 2.6%、N=1024 时的 32% 到 N=4096 时的 88%。为了验证 Utilyze 的正确性，让我们直接计算真实的计算利用率：TF32 精度的两个 N×N 矩阵的矩阵乘法执行 2·N3 浮点运算。我们通过 GPU 的时钟速度缩放 H200 峰值 TF32 速率 494.5 TFLOPS 并计算利用率。当 N=256 时，2·256³ ≈ 0.034 GFLOPs × 155,349 次迭代/秒 = 5.2 TFLOPS，或 1% 利用率。同样的计算得出 N=1024 时利用率为 32%，N=4096 时利用率为 86%。相比之下，理论上的真实数字与 Utilyze 报告的数字相差不到 2%。虽然这种直接计算对于直接矩阵乘法等简单计算操作来说很容易处理，但对于现实世界的人工智能工作负载来说却变得棘手。现代训练、微调和推理管道由异构算子（注意力、标准化、通信、稀疏性、控制流）、动态形状和跨 GPU 的复杂调度效果组成。在这种情况下，从第一原理分析得出真正的利用是不切实际的。相反，我们需要一种直接在硬件级别测量利用率的方法。Utilyze 正是提供了这种功能：通过 GPU 硬件性能计数器直接测量真实的计算利用率。 Utilyze 从另一个方向得到几乎相同的值（2% 以内）。它不是从 FLOP 计数中获取利用率，而是直接对 GPU 上的硬件计数器进行采样。这两种方法是一致的，因为它们从不同的角度测量相同的物理事物：根据可用的算术能力完成算术工作。这种交叉验证证实了 Utilyze 的硬件计数器方法是准确的。如今，没有其他工具可以在不产生有意义的开销的情况下实时提供这种级别的准确性。“云提供商和硬件供应商在他们的仪表板上显示了同样的误导性指标。当该数字显示为 100% 时，自然得出的结论是您需要更多硬件。纠正这种错误印象的动机很复杂。”——Manya Ghobadi，麻省理工学院教授兼首席执行官，基于 SystalyzeDCGM 的计数器 之前的文章已经指出了这一差距并提出了替代方案通过 NVIDIA 的数据中心 GPU 管理器 (DCGM) 来测量指标，该工具包公开了比 nvidia-smi 更丰富的 GPU 计数器（请参阅此处和此处）。最常见的 GPU 利用率指标是 DCGM 的“SM Active”。它衡量至少安排了 1 个扭曲的 SM 与 SM 总数的比率。该指标是对 nvdia-smi 的改进，因为至少它考虑了 GPU 内部的一些计算活动，而不是将整个芯片视为单个开关。但 SM 活跃度和其他 DCGM 指标在下一级具有相同的问题形式：SM 上驻留的扭曲并不意味着 SM 正在执行算术运算。扭曲可能正在移动数据、等待数据从内存到达或始终运行簿记指令，并且 SM Active 仍将读取 100%。 Utilyze 专为回答真正的 GPU 利用率问题而构建：GPU 实际提供的峰值算术吞吐量的比例是多少？没有现成的工具（包括 DCGM）能够在生产中持续提供此功能。为了在实践中看到这一点，我们在 H200 上运行了内存受限的工作负载，其形状类似于解码密集型 LLM 推理步骤，并使用 nvtop、DCGM 和 Utilyze。在此工作负载下，实际算术吞吐量约为上限的 6% nvtop：100%groundtruth：6%SM Active (DCGM)：99%groundtruth：6%Utilyze：6%groundtruth：6% 只有 Utilyze 正确。由于我们已经介绍过的原因，nvtop 是错误的。 SM Active 报告利用率高达 99%。 SM 确实始终驻留有扭曲，但这些扭曲正在等待内存而不是进行数学计算，并且 SM Active 无法区分正在计算的扭曲和闲置等待数据的扭曲。依靠 SM 活动来监控 GPU 利用率会产生 GPU 完全饱和的错觉，而实际上它只是闲置。DCGM 报告其他指标，例如 SM 问题（发出指令的频率），SM 占用率（warp 的 SM 有多满）和张量核心吞吐量。这些指标，无论是独立的还是组合的，都无法显示 Utilyze 提供的完整情况。 引入由 Systalyze 开源的 Utilyze 我们将 Utilyze 构建为开源的 GPU 监控工具，以报告真实的 GPU 计算和 GPU 内存带宽利用率（以硬件理论限制的百分比）。除了原始利用率之外，Utilyze 还估计了在当前硬件、软件堆栈和人工智能工作负载下实际可达到的理论极限部分。 Utilyze 以接近零的开销实时运行，使其适合需要连续观察而不影响性能的生产环境。在 Systalyze，我们使用它来监控、基准测试和验证我们的性能优化技术，我们认为每个人都应该使用它。今天就尝试一下 Utilyze 在描述 Utilyze 的工作原理之前，让我们先解释一下为什么准确的 GPU 利用率是一个技术上困难的测量问题。 GPU 具有两种根本不同类型的计算资源：用于一般浮点数学的 CUDA 核心和执行矩阵乘法的张量核心。它们还具有多级内存：位于片外的 HBM（高带宽内存）、L2 缓存、每个 SM 内的共享内存以及每个线程的本地寄存器。这些资源中的每一个都可以独立地成为瓶颈。工作负载可以满负荷使用其 Tensor Core，而内存带宽几乎空闲，反之亦然。单一的百分比无法代表这个二维现实。因此，GPU 上的每个 AI 操作都受到两个物理限制：数学单元执行算术的速度（计算吞吐量），以及数据在内存和数学单元之间移动的速度（内存带宽）。每个内核首先达到这些限制之一，这决定了其最大可能的性能。这给我们带来了真正准确捕获 GPU 利用率的框架：光速 (SOL) 模型。该模型是一个性能框架，用于衡量内核与 GPU 理论硬件上限的接近程度，报告两个关键数字：计算 SOL %（= 实现的 FLOP ÷ 峰值 FLOP）和内存 SOL %（= 实现的带宽 ÷ 峰值带宽）。它源自屋顶线模型，其中每个内核都受到计算或内存的限制，两个 SOL 百分比中的较高者确定绑定约束。 Utilyze 正是提供了这一点，有两个标题数字：计算 SOL % 和内存 SOL %。两者均现场直播。分子来自对每个计算引擎（例如，Tensor Core、FP32/FP64/INT32 管道）和每个内存子系统（例如，HBM 带宽、L2、L1）的直接测量，其中 NVIDIA 将每个引擎公开为该硬件单元理论最大值的百分比。分母是 SOL 本身，即硬件峰值。这些共同为您提供了其他工具无法提供的准确、实时的 GPU 利用率情况。如果计算数量占主导地位，则您的工作负载受计算限制。如果内存数量占主导地位，则说明您受到内存限制，优化应首先针对数据移动。但事情并没有就此结束。有一点很重要，原始 SOL % 本身无法告诉您：100% 并不是一个现实的目标。理论硬件峰值计算量为 2,000 TFLOPS，H100 上的内存带宽为 3.4 TB/s，这是任何真正的 AI 工作负载都无法达到的物理极限。内核启动有开销。数据在内存层次结构的各个级别之间移动。线程同步需要周期。在多 GPU 设置中，GPU 之间的通信会消耗原本可用于计算的时间。对于混合专家模型，将令牌路由到不同的专家会创建不规则的内存访问模式，从而降低有效吞吐量。这些都不是优化不佳的迹象，它们是真实部署的结构属性。每个部署都有一个低于 100% 的自然上限，反映了模型架构、硬件、并行策略和批量大小的特定组合。我们将此上限称为 Attainable Compute SOL %，以下简称为 Attainable SOL %。当前 SOL % 与可达到的 SOL % 之间的差距就是您的优化预算。 Attainable SOL % 和 100% 之间的差距是部署的物理原理；您无法通过调整来关闭它。例如，如果您以 30% 的计算 SOL % 运行 120B 参数推理设置，并且该硬件上该模型的可达到 SOL % 为 35%，则您已接近极限。如果 Attainable SOL % 为 65%，而您为 30%，则您有 35 个百分点的可恢复性能，正确的做法是优化，而不是采购。为什么 Utilyze 不同？性能工程师通常依靠两个主要工具来调试 AI 工作负载的性能问题。首先是 Nsight Compute (ncu)，它是一个内核级分析器，可报告详细的计算和内存吞吐量指标，例如实际达到了 Tensor Core 理论吞吐量的多少部分、内存总线的哪一部分已饱和以及瓶颈所在。第二个工具是 Nsight Systems (nsys)，它是一个时间线工具，用于记录内核何时运行以及它们如何交互。这两种工具都是为离线分析而不是实时仪表板而构建的。 ncu 通过“重放”每个内核、选择不同的计数器运行多次、然后将结果拼接在一起来获取其详细信息。结果很有价值，但其开销导致工作负载的运行速度比正常情况慢 10 倍到 100 倍，这在实时流量中排除了这种情况。 nsys 避免了速度下降，但根本不报告吞吐量指标，它回答“发生了什么”而不是“效率如何”。实际结果是：经常接触 ncu（或其 AMD 同等产品 Omniperf）的经验丰富的工程师正在使用它们进行离线、每内核调试，而不是观察实时流量。为了应对这一挑战，Utilyze 使用 NVIDIA 的 Nsight Perf SDK 跨时间窗口循环遍历 GPU 性能计数器。 Utilyze 不是重放内核，而是跨多个窗口滚动采样并聚合结果。因此，开销可以忽略不计并且测量是连续的。您可以将 Utilyze 与任何生产 AI 工作负载一起运行，并实时获取有意义的数据。Utilyze 基准测试 以下是一些示例，演示如何利用 Utilyze 识别实际 AI 工作负载中的性能瓶颈。案例 1：预填充密集型 LLM 推理让我们从推理工作负载开始：Llama-3.1-8B，在 2xH200 GPU 上使用 vLLM 0.19 运行的模型。我们首先使用预填充密集型工作负载，输入序列长度 (ISL) 为 8192，输出序列长度 (OSL) 为 64，并发度为 20。下图显示了此工作负载运行时 Utilyze 的输出。根据此工作负载的计算 SOL % 指标，Utilyze 显示这些 GPU 的运行速度约为其理论最大值的 45%。请注意，内存 SOL % 指标低于计算 SOL，表明此工作负载和模型不受内存带宽限制；相反，它是受计算限制的。与通常受内存限制的解码繁重的推理工作负载相比，这非常有用。 Utilyze 估计计算利用率上限（即 Attainable SOL %）为 89%。该数字是特定于模型、GPU 和工作负载的 - 某些模型和工作负载的固有属性会导致其 Attainable SOL % 发生变化。可达到的 SOL % 和计算 SOL % 之间的差异表明 GPU 目前未得到充分利用。现在让我们将其与 nvtop 进行比较：nvtop 的利用率始终为 100%。将此指标解读为 GPU 利用率的衡量标准会提供误导性信息，即 GPU 已充分利用且无法进行优化。 Utilyze 告诉我们事实并非如此。现在让我们将 Systalyze 的优化应用于该模型并运行相同的基准测试：上图显示新的 Compute SOL % 线达到了 Attainable SOL %，这意味着我们已将该模型的 GPU 推得尽可能远。吞吐量数字与利用率的增加相匹配。 Systalyze 优化前的总令牌吞吐量为 52,298 个令牌/秒，优化后达到 73,903 个令牌/秒，增加了 40%。 案例 2：解码 LLM 推理 解释 Utilyze 在解码密集型推理中的 GPU 利用率数字需要对底层机制有更深入的了解。我们将介绍许多不同的场景，并解释 Utilyze 如何帮助理解 GPU 内部实际发生的情况。让我们从未优化的同一模型开始，具有大量解码工作负载（ISL = 1024，OSL = 4096，并发 = 2）：上图显示内存 SOL % 显着高于计算 SOL %，这表明此工作负载受内存带宽限制。解码繁重的 LLM 工作负载通常受内存带宽限制，而不是计算限制（请参阅此处）。这是因为对于每一批解码的令牌，每个用户查询的整个模型权重和 KV 缓存都需要从 HBM 移动到 GPU 的计算单元。让我们运行相同的工作负载，但具有更高的并发性（ISL = 1024，OSL = 4096，并发性 = 32）：在更高的并发性下，内存 SOL % 和计算 SOL % 都会报告更高的值。由于批量大小较大，计算 SOL % 较高：对于每批令牌，我们只需从内存中读取一次模型权重，这会导致每批需要更多的计算工作。内存 SOL % 报告更高的值，因为 GPU 总共从 KV 缓存中读取更多信息。内存 SOL % 在基准测试过程中不断增加，因为后来的令牌在执行解码步骤时有更大的 KV 缓存可从内存中读取。当我们尝试尽可能多地进行批处理，将并发设置为 1024 时，我们的计算 SOL % 值接近 46%，我们几乎达到可达到的 SOL %：案例 3：LLM 微调现在让我们使用默认框架设置，在两个 NVIDIA H200 GPU 上使用 LoRA 微调我们的 Llama-3.1-8B 模型。 LoRA（低阶适应）是一种广泛使用的参数高效微调技术：它不是更新所有模型权重，而是在每个变压器层插入小型可训练适配器矩阵，同时保持基本模型冻结。训练循环在前向传递冻结模型、向后传递计算适配器层的梯度以及仅更新适配器参数的优化器步骤之间交替。 Utilyze 报告的计算 SOL % 为 1-7%，远低于硬件的理论最大值，而 nvidia-smi 在每种情况下都高估了 80-100%。低计算 SOL % 是 LoRA 在默认设置下进行微调的特征，要了解其原因，需要查看所涉及操作的算术强度。前向和后向传递期间的主要成本是在每个训练步骤中通过 HBM 流式传输冻结的基本模型权重。这些读取量很大并且是连续的，这对于内存带宽来说是有效的，但它们产生的每个字节移动的算术工作相对较少，从而使该工作负载牢固地处于内存限制状态。同时，LoRA 适配器层本身很小：典型的秩为 8 到 64，它们引入的矩阵乘法的问题规模太小，无法使 Tensor Core 饱和。结果是 GPU 在整个训练过程中不断调度内核，但张量核心在大部分时间里都没有得到充分利用，等待数据而不是执行算术。这与内存密集型解码密集型推理情况中看到的基本模式相同：GPU 从外部看起来已饱和，而计算单元在内部基本上处于闲置状态。下图显示了应用 Systalyze 优化之前和之后该工作负载的 Utilyze 输出。在基线运行中，计算 SOL % 稳定在 1% 到 7% 之间。应用 Systalyze 的优化使计算 SOL % 达到 40-55%。这代表实际 GPU 计算吞吐量提高了 6–8 倍，直接反映在训练步骤时间上。底层的计算能力始终存在。缺少的是使其可见的测量以及对其进行操作的工具。对于更困难的情况，请考虑在 4 个 NVIDIA H200 GPU 上对 gpt-oss-20b 进行全面微调。 gpt-oss-20b 是一个混合专家模型，在 20B 个总参数中，每个代币仅激活 36 亿个参数。该模型不适用于一台 H200，因此训练框架将参数、梯度和优化器状态分片到所有四个 GPU 上，并每一步都进行通信。 Utilyze 报告基线运行期间计算 SOL % 为 3–15%。 nvidia-smi读取100%（如下图所示）。计算 SOL % 值是 MoE 模型的特征：Tensor Core 需要大的均匀 matmul，而 MoE 为它们提供小的不均匀块，每个活跃专家一个，并且具有未充分利用 GPU 的路由和令牌洗牌。通过 Systalyze 的优化，利用率提高到 30-60%，反映出更好的 MoE 培训设计。工作负载从完全受内存带宽限制转变为受计算限制。 MoE 稀疏性以 GPU 利用率为代价，换取更小的每个令牌激活和更低的每个令牌训练 FLOP，因此较低的 SOL % 部分是架构固有的，而不仅仅是一个调整问题。从测量到性能：SystalyzeUtilyze 向您展示您所处的位置。 Systalyze 缩小了差距。我们的平台使用相同的 SOL 测量基础设施来自动识别哪种优化技术（例如 CUDA 图形编译、重写高效内核、并行策略选择、超参数调整、内核融合、零拷贝、内核旁路、高效作业编排等）将使您的部署朝着可达到的 SOL % 方向发展。每个优化都通过其测量的 SOL 影响进行验证。从数十亿参数的推理模型到数万亿参数的前沿模型，无论是在云端还是本地部署：默认配置始终会带来 2-10 倍的性能提升。在准确测量的指导下，正确的优化组合可以恢复大部分数据。我们向社区提出的要求Utilyze 是一个免费的开源项目，拥有 Apache 2.0 许可证。在您的工作负载上运行 Utilyze。分享你的号码。告诉我们您发现了什么，特别是其他仪表板报告的内容与 Utilyze 测量的内容之间令人惊讶的差距。社区贡献的数据点越多，我们就越能跨不同模型架构、硬件代和部署配置校准可达到的 SOL %。要分享发现，请在 Utilyze 存储库中打开 GitHub 讨论，其中包含您的模型、硬件、基线 SOL % 以及您尝试过的任何优化。我们将积极监控并做出回应。为了更深入的合作或企业部署，请联系 utilyze@systalyze.com。初始版本针对 NVIDIA 硬件。 AMD 支持已在我们的路线图中，如果您正在运行 MI300X 或 MI325X 并希望进行协作，请通过以下渠道进行联系。 在 GitHub 上获取 Utilyze 了解 Systalyze 关于 SystalyzeSystalyze 是 MIT 的衍生产品，构建 AI 部署和优化软件，使企业能够运行训练、微调、推理和代理 AI 工作流程，并显着提高效率和可预测性。该平台可显着提高性能和成本效率，同时在本地、混合和多云环境中保持完整的数据隐私。 Systalyze 旨在使生产人工智能系统可扩展且经济高效。 Utilyze 是本文中介绍的开源 GPU 监控工具，它是该平台的测量基础，并且可以免费使用。</li></ol></section>
+      <section class="block"><h3>Original Summary</h3><ol class="summary-list"><li>&quot;The gap isn&#39;t awareness — engineers who write CUDA kernels know what accurate utilization looks like. The gap is tooling. There has never been a way to see true GPU efficiency continuously, in production, without slowing down the workload.&quot;— Manya Ghobadi, MIT Professor &amp; CEO, Systalyzenvtop (top row) reads 100% on all three workloads regardless of the size of the matrix multiplications. Utilyze (bottom row) tracks actual compute throughput, showing dramatic utilization variation for different matrix sizes.As shown in the above figure, nvtop is invariant to workload intensity: all three matrix multiplication sizes show 100% in nvtop (top row: cyan line pinned at the ceiling). Utilyze (bottom row) shows compute throughput scaling with matrix size, from 2.6% at N=256, 32% at N=1024 and 88% at N=4096.To validate the correctness of Utilyze, let’s calculate the true compute utilization directly: a matrix multiplication of two N×N matrices at TF32 precision performs 2·N³ floating-point operations. We scale the H200 peak TF32 rate of 494.5 TFLOPS by the GPU&#39;s clock speed and calculate utilization. At N=256, 2·256³ ≈ 0.034 GFLOPs × 155,349 iterations/sec = 5.2 TFLOPS, or 1% utilization. The same calculation yields 32% utilization at N=1024 and 86% at N=4096. In comparison, the theoretical ground truth numbers are within 2% of the numbers Utilyze reported.While this direct calculation is tractable for a simple compute operation like direct matrix multiplication, it becomes intractable for real-world AI workloads. Modern training, fine-tuning, and inference pipelines consist of heterogeneous operators (attention, normalization, communication, sparsity, control flow), dynamic shapes, and complex scheduling effects across the GPU. In such settings, deriving true utilization analytically from first principles is not practical. What is needed instead is a method that measures utilization directly at the hardware level.Utilyze provides exactly this capability: direct measurement of true compute utilization via GPU hardware performance counters. Utilyze arrives at nearly identical values (within 2%) from the other direction. Instead of deriving utilization from FLOP counts, it samples hardware counters on the GPU directly. The two methods agree because they measure the same physical thing from different angles: arithmetic work done against arithmetic capacity available. This cross-validation confirms Utilyze’s hardware-counter approach is accurate. No other tool today delivers this level of accuracy in real time without incurring meaningful overhead.“Cloud providers and hardware vendors surface this same misleading metric on their dashboards. When that number reads 100%, the natural conclusion is that you need more hardware. The incentives to correct this misimpression are, to put it diplomatically, complicated.”— Manya Ghobadi, MIT Professor &amp; CEO, SystalyzeDCGM-based Counters Aren’t Much Better Prior articles have pointed out this gap and suggested alternative metrics through NVIDIA&#39;s Data Center GPU Manager (DCGM), a toolkit that exposes richer GPU counters than nvidia-smi (see here and here). The most common proxy to GPU utilization is DCGM’s “SM Active.” It measures the ratio of SMs with at least one warp scheduled over the total number of SMs. This metric is an improvement over nvdia-smi, because at least it considers some compute activity inside the GPU rather than treating the whole chip as a single on/off switch. But SM active, and other DCGM metrics, have the same shape of problem one level down: a warp being resident on an SM does not mean that SM is doing arithmetic. The warp could be moving data, waiting for data to arrive from memory, or running bookkeeping instructions the entire time, and SM Active would still read 100%. Utilyze is specifically built to answer the true GPU utilization question: what fraction of peak arithmetic throughput is the GPU actually delivering? No off-the-shelf tool, including DCGM, provides this continuously in production.To see this in practice, we ran a memory-bound workload on an H200, similar in shape to a decode-heavy LLM inference step, with nvtop, DCGM, and Utilyze. Under this workload the actual arithmetic throughput is around 6% of the ceilingnvtop: 100%ground truth: 6%SM Active (DCGM):99%ground truth: 6%Utilyze: 6%ground truth: 6%Only Utilyze gets it right. nvtop is wrong for the reason we already covered. SM Active reports a whopping 99% utilization. The SMs really do have warps resident the whole time, but those warps are waiting on memory rather than doing math, and SM Active cannot distinguish between a warp that is computing and a warp that is sitting idle waiting for data. Relying on SM active to monitor the GPU utilization gives the illusion that the GPU is fully saturated while it is actually just sitting idle.DCGM reports other metrics, such as SM issue (how often are instructions being issued), SM occupancy (how full are the SMs of warps), and tensor core throughput. None of these metrics, independently or combined, show the full picture that Utilyze provides.Introducing Utilyze, Open-Sourced by SystalyzeWe built Utilyze as an open-source, GPU monitoring tool to report true GPU compute and GPU memory bandwidth utilization as a percentage of the hardware’s theoretical limit. Beyond raw utilization, Utilyze estimates the portion of the theoretical limit that is practically attainable under the current hardware, software stack, and AI workload as well. Utilyze operates in real time with near-zero overhead, making it suitable for production environments where continuous observability is required without perturbing performance. At Systalyze, we use it to monitor, benchmark, and validate our performance optimization techniques and we think everyone should use it.Give Utilyze a try todayBefore describing how Utilyze works, let’s unpack why accurate GPU utilization is a technically difficult measurement problem. GPUs have two fundamentally different types of compute resources: CUDA cores for general floating-point math, and Tensor Cores that perform matrix multiplications. They also have multiple levels of memory: HBM (high bandwidth memory) sitting off-chip, L2 cache, shared memory inside each SM, and registers local to each thread. Each of these resources can be a bottleneck independently. A workload can be using its Tensor Cores at full capacity while memory bandwidth sits nearly idle, or vice versa. A single percentage cannot represent this two-dimensional reality. As a result, every AI operation on a GPU is constrained by two physical limits: how fast the math units can execute arithmetic (compute throughput), and how fast data can move between memory and the math units (memory bandwidth). Every kernel hits one of these limits first, and that determines its maximum possible performance. This brings us to the framework that actually captures GPU utilization accurately: the Speed-of-Light (SOL) model. This model is a performance framework that measures how close a kernel gets to the GPU&#39;s theoretical hardware ceiling, reporting two key numbers: Compute SOL % (= achieved FLOPs ÷ peak FLOPs) and Memory SOL % (= achieved bandwidth ÷ peak bandwidth). It derives from the roofline model, where every kernel is bounded by either compute or memory, and the higher of the two SOL percentages identifies the binding constraint. Utilyze provides exactly that, with two headline numbers: Compute SOL % and Memory SOL %. Both are shown live. The numerator comes from direct measurement of each compute engine (e.g., Tensor Cores, FP32/FP64/INT32 pipelines) and each memory subsystem (e.g., HBM bandwidth, L2, L1) where NVIDIA exposes each as a percentage of that hardware unit&#39;s theoretical maximum. The denominator is the SOL itself, the hardware peak. Together, these give you an accurate, live picture of GPU utilization that no other tool provides. If the compute number is dominant, your workload is compute-bound. If the memory number is dominant, you&#39;re memory-bound, and optimizations should target data movement first.But it doesn’t end here. Here&#39;s something important that raw SOL % doesn&#39;t tell you on its own: 100% is not a realistic target.The theoretical hardware peak of 2,000 TFLOPS of compute, 3.4 TB/s of memory bandwidth on an H100, is a physical limit that no real AI workload can reach. Kernel launches have overhead. Data moves between levels of the memory hierarchy. Thread synchronization takes cycles. In multi-GPU setups, communication between GPUs consumes time that could otherwise be spent on computation. For Mixture-of-Experts models, routing tokens to different experts creates irregular memory access patterns that reduce effective throughput. None of these are signs of poor optimization, they&#39;re structural properties of real deployments.Every deployment has a natural ceiling below 100% that reflects the specific combination of model architecture, hardware, parallelism strategy, and batch size. We call this ceiling the Attainable Compute SOL %, hereafter referred to as Attainable SOL %. The gap between your current SOL % and the Attainable SOL % is your optimization budget. The gap between the Attainable SOL % and 100% is the physics of your deployment; you can&#39;t close it by tuning.For instance, if you&#39;re running a 120B-parameter inference setup at 30% Compute SOL % and the Attainable SOL % for that model on that hardware is 35%, you&#39;re close to the limit. If the Attainable SOL % is 65% and you&#39;re at 30%, you have 35 percentage points of recoverable performance, and the right move is optimization, not procurement.Why Is Utilyze Different?Performance engineers often rely on two main tools to debug performance problems of AI workloads. First is Nsight Compute (ncu), a kernel-level profiler that reports detailed compute and memory throughput metrics, such as what fraction of the Tensor Core&#39;s theoretical throughput was actually achieved, what fraction of the memory bus was saturated, and where the bottleneck lies. The second tool is Nsight Systems (nsys), a timeline tool that records when kernels ran and how they interacted. Both tools are built for offline analysis rather than a real-time dashboard. ncu gets its detail by &quot;replaying&quot; each kernel, running it many times with different counters selected, then stitching the results together. The result is valuable, but its overhead causes the workloads to run 10× to 100× slower than normal, which rules it out for live traffic. nsys avoids the slowdown but doesn&#39;t report throughput metrics at all, it answers &quot;what happened&quot; rather than &quot;how efficiently.&quot; The practical consequence: seasoned engineers who regularly reach for ncu (or its AMD equivalent, Omniperf) are using them for offline, per-kernel debugging and not to watch live traffic. To address this challenge, Utilyze cycles through GPU performance counters across time windows using NVIDIA&#39;s Nsight Perf SDK. Rather than replaying kernels, Utilyze takes a rolling sample across multiple windows and aggregates the result. As a result, the overhead is negligible and the measurement is continuous. You can run Utilyze alongside any production AI workload and get meaningful data in real time.Benchmarking Utilyze The following are a few examples demonstrating how to leverage Utilyze to identify performance bottlenecks in real AI workloads.Case 1: Prefill-heavy LLM inferenceLet’s start with an inference workload: a Llama-3.1-8B, model running with vLLM 0.19 on 2xH200 GPUs. We first use a prefill-heavy workload with Input Sequence Length (ISL) of 8192, Output Sequence Length (OSL) of 64, and concurrency of 20. The following figure shows the output of Utilyze as this workload runs.Utilyze shows that these GPUs are running at around 45% of their theoretical maximum, according to the Compute SOL % metric for this workload. Note that the Memory SOL % metric is lower than the Compute SOL, indicating that this workload and model is not memory-bandwidth bound; rather it is compute-bound. This is useful when comparing to decode-heavy inference workloads, which are often memory-bound. Utilyze has estimated that the upper bound compute utilization, or Attainable SOL %, is 89%. This number is model, GPU, and workload specific – there are inherent properties of certain models and workloads that cause their Attainable SOL % to vary. The difference between Attainable SOL % and Compute SOL % indicates that the GPU is currently underutilized. Let’s now compare this to nvtop: nvtop&#39;s utilization sits at 100% the entire time. Reading this metric as a measure of GPU utilization would provide misleading information that the GPU is fully utilized and no optimization can be done. Utilyze tells us this isn’t the case. Now let’s apply Systalyze’s optimizations to this model and run the same benchmark:The figure above shows that the new Compute SOL % line reaches the Attainable SOL %, meaning we have pushed the GPU nearly as far as possible for this model. The throughput numbers match this increase in utilization. The total token throughput before Systalyze’s optimization is 52,298 tokens/s, with the optimizations reaching 73,903 tokens/s, a 40% increase.Case 2: Decode LLM inferenceInterpreting Utilyze’s GPU utilization numbers in decode-heavy inference requires a greater understanding of the underlying mechanics. We’ll walk through a number of different scenarios and explain how Utilyze helps understand what’s actually happening inside the GPU.Let’s start with the same model, unoptimized, with a decode-heavy workload (ISL = 1024, OSL = 4096, concurrency = 2): The above figure shows that the Memory SOL % is significantly higher than the Compute SOL %, which indicates that this workload is memory-bandwidth bound. Decode-heavy LLM workloads are often memory-bandwidth bound, not compute bound (see here) . This is because for each batch of tokens decoded, the entire model weights and the KV cache of each user’s queries need to be moved from HBM to the compute units of the GPU. Let’s run the same workload, but with a higher concurrency (ISL = 1024, OSL = 4096, concurrency = 32): At higher concurrency, both the Memory SOL % and Compute SOL % report higher values. The Compute SOL % is higher due to the larger batch size: for each batch of tokens, we only have to read the model weights from memory once, which results in more compute work per batch. The Memory SOL % reports higher values because the GPUs are reading more information from the KV cache in total. The Memory SOL % increases over the course of the benchmark since later tokens have a larger KV cache to read from memory when performing a decode step.When we try to batch as much as possible, setting the concurrency to 1024, our Compute SOL % value approaches 46% and we nearly reach Attainable SOL %:Case 3: LLM Fine-TuningLet us now fine-tune our Llama-3.1-8B model with LoRA on two NVIDIA H200 GPUs, using default framework settings. LoRA (Low-Rank Adaptation) is a widely used parameter-efficient fine-tuning technique: rather than updating all model weights, it inserts small trainable adapter matrices at each transformer layer while keeping the base model frozen. The training loop alternates between a forward pass through the frozen model, a backward pass to compute gradients for the adapter layers, and an optimizer step to update only the adapter parameters. Utilyze reports a Compute SOL % of 1–7% throughout substantially below the hardware’s theoretical maximum, while nvidia-smi, as in every case gives an overestimation of 80-100%.The low Compute SOL % is characteristic of LoRA fine-tuning under default settings, and understanding why requires looking at the arithmetic intensity of the operations involved. The dominant cost during the forward and backward passes is streaming the frozen base model weights through HBM on every training step. Those reads are large and sequential, which is efficient for memory bandwidth, but they produce relatively little arithmetic work per byte moved, placing this workload firmly in the memory-bound regime. Meanwhile, the LoRA adapter layers themselves are small: with a typical rank of 8 to 64, the matrix multiplications they introduce have problem sizes far too small to saturate the Tensor Cores. The result is that the GPU is dispatching kernels continuously throughout training, but the Tensor Cores are underutilized for much of that time, waiting on data rather than performing arithmetic. This is the same fundamental pattern seen in the memory-bound decode-heavy inference case: the GPU appears saturated from the outside, while the compute units sit largely idle inside. The figure below shows the Utilyze output for this workload before and after applying Systalyze’s optimizations. In the baseline run, Compute SOL % sits steadily between 1% and 7%. Applying Systalyze’s optimizations brings the Compute SOL % to 40–55%. This represents a 6–8× improvement in actual GPU compute throughput, reflected directly in training step time. The underlying compute capacity was always there. What was missing was the measurement to make it visible, and the tooling to act on it.For a harder case, consider a full finetune of gpt-oss-20b on 4 NVIDIA H200 GPUs. gpt-oss-20b is a Mixture-of-Experts model, of the 20B total parameters, only 3.6 billion parameters activate per token. The model doesn&#39;t fit on one H200, so the training framework shards parameters, gradients, and optimizer states across all four GPUs with communication every step. Utilyze reports 3–15% Compute SOL % throughout for the baseline run. nvidia-smi reads 100% (shown in the figure below). The Compute SOL % values are characteristic of MoE models: Tensor Cores want large uniform matmuls, and MoE gives them the small uneven chunks, one per active expert, with routing and token-shuffling that doesn&#39;t fully utilize the GPU. With Systalyze’s optimizations, utilization is pushed to 30-60%, reflecting a better design for MoE training. The workload shifts from being fully memory-bandwidth bound to compute-bound. The MoE sparsity trades off GPU utilization for smaller per-token activations and lower training FLOPs per token, so the lower SOL % is partly inherent to the architecture, not just a tuning problem.From Measurement to Performance: SystalyzeUtilyze shows you where you are. Systalyze closes the gap. Our platform uses the same SOL measurement infrastructure to automatically identify which optimization technique (e.g., CUDA graph compilation, rewriting efficient kernels, parallelism strategy selection, hyper-parameter tuning, kernel fusion, zero-copy, kernel-bypass, efficient job orchestration, and more) will move your deployment toward its Attainable SOL %. Each optimization is validated by its measured SOL impact.Across deployments ranging from sub-billion-parameter inference models to trillion-parameter frontier models, on Cloud or on-premises: default configurations consistently leave 2–10× performance on the table. The right combination of optimizations, guided by accurate measurement, recovers most of it.What We&#39;re Asking From the CommunityUtilyze is a free, open-source project with an Apache 2.0 license.Run Utilyze on your workloads. Share your numbers. Tell us what you find, especially surprising gaps between what other dashboards report and what Utilyze measures. The more data points the community contributes, the better we can calibrate the Attainable SOL % across different model architectures, hardware generations, and deployment configurations.To share findings, open a GitHub Discussion in the Utilyze repository with your model, hardware, baseline SOL %, and any optimizations you&#39;ve tried. We&#39;ll be actively monitoring and responding. For deeper collaboration or enterprise deployments, reach out at utilyze@systalyze.com.The initial release targets NVIDIA hardware. AMD support is on our roadmap, if you&#39;re running MI300X or MI325X and want to collaborate, reach out through the channels below.Get Utilyze on GitHub Learn about SystalyzeAbout SystalyzeSystalyze is an MIT spinout building AI deployment and optimization software that enables enterprises to run training, fine-tuning, inference, and agentic AI workflows with significantly improved efficiency and predictability. The platform delivers substantial gains in performance and cost efficiency while maintaining full data privacy across on-premises, hybrid, and multi-cloud environments. Systalyze is designed to make production AI systems scalable and economically efficient. Utilyze, the open-source GPU monitoring tool described in this article, serves as the measurement foundation of the platform and is freely available.</li></ol></section>
+    
+    <section class="block comments">
+      <h3>评论（默认中文）</h3>
+      <div class="comment-tree">
+        
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">whatever1</span>
+        <span class="meta-time">2026/04/28 13:02</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我真不明白英特尔怎么没有完全统治计算GPU市场。<p>Nvidia 的工具集和 API 记录不足，而且商业级硬件本身非常不可靠。</p><p>开发商和运营商只能忍受整个情况，因为别无选择。他们已经准备好转向 TPU 或其他定制芯片等产品。</p><p>不管你对英特尔有什么看法，但他们的文档和商业级硬件都是一流的。我希望他们能站稳脚跟，并且这次保持谦虚。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I really don’t understand how Intel has not completely dominated the computational GPU market.<p>Nvidia’s toolsets and APIs are under-documented, and the commercial-grade hardware itself is super unreliable.</p><p>Developers and operators just bear with the whole situation because there is no alternative. To the point that they are ready to jump to things like TPUs or other custom silicon.</p><p>Say what you will about Intel, but their documentation and the commercial-grade hardware were top-notch. I wish they find their footing and this time stay humble.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47930610" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">xrd</span>
+        <span class="meta-time">2026/04/28 05:32</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我觉得这与这次谈话无关。<p>有谁知道跨本地 GPU 进行“负载平衡”使用的好工具吗？</p><p>原因：我有两个 RTX3090 (24GB)。我一直在使用 nvidia-smi 来检查 RTX3090 的使用情况。大多数情况下，我使用 unsloth/Qwen3.6-27B-GGUF:Q4_K_M 运行 llama.cpp，并为自托管的 LLM（通过开放代码编排）获得了一些相当不错的结果。我对它对于本地模型的效果感到惊讶。 nvidia-smi 非常适合确定 VRAM 的总使用情况，而 nvtop 可以提供更多的见解。</p><p>但是，我也在使用其他一些非 LLM 模型（视频生成等）进行一些实验，并且希望找到一种在这些 GPU 上进行时间切片的方法，例如，当我的编码暂停时。</p><p>这个“Utilyze”工具似乎可以让我更好地了解它的用法。是否可以编写脚本以在不同的负载下更好地利用我的 GPU？</p><p>关于现有项目有什么建议吗？我考虑过氛围编码，但想知道是否存在现有的艺术。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I feel like this is tangential to this conversation.<p>Does anyone know of a good tool for "load balancing" usage across local GPUs?</p><p>Why: I have two RTX3090s (24GB). I've been using nvidia-smi to check usage of my RTX3090. Mostly I'm running llama.cpp with unsloth/Qwen3.6-27B-GGUF:Q4_K_M and getting some pretty decent results for a self hosted LLMs (orchestrated via opencode). I'm surprised at how well it is working for a local model. nvidia-smi is great for determining total VRAM usage and nvtop gives a little more insight.</p><p>But, I also am doing some experiments with some other non-LLM models (video generation, etc), and want to find a way to timeslice across these GPUs, for example, when my coding is paused.</p><p>This "Utilyze" tool appears it would get me better insight into usage of one. Can it be scripted to better utilize my GPUs across a diverse load?</p><p>Any suggestions on whether there are existing projects out there? I thought about vibe coding, but wonder if there is existing art.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927592" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">hmokiguess</span>
+        <span class="meta-time">2026/04/28 06:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">相关排序 <a href="https://github.com/Mesh-LLM/mesh-llm" target="_blank" rel="noopener noreferrer">https://github.com/Mesh-LLM/mesh-llm</a></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Sort of relevant <a href="https://github.com/Mesh-LLM/mesh-llm" target="_blank" rel="noopener noreferrer">https://github.com/Mesh-LLM/mesh-llm</a></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928266" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">xrd</span>
+        <span class="meta-time">2026/04/28 06:46</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">是的，谢谢。有趣的项目。不完全是我需要的，但也许我可以破解它。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Yes, thanks. Interesting project. Not exactly what I need but maybe I can hack on it.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928369" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">jhgg</span>
+        <span class="meta-time">2026/04/28 01:20</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们只跟踪电力利用率。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We just track power utilization.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924485" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">moconnor</span>
+        <span class="meta-time">2026/04/28 06:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这是一个非常好的初步近似值，并且通常就是您所需要的。<p>资料来源：花了几年时间与各个政府实验室一起开发 CPU 和 GPU 的能源和性能分析器。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This is an incredibly good first approximation and is often all you need.<p>Source: spent a couple of years developing an energy and performance profiler for cpus and gpus with various government labs.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47928259" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">uberduper</span>
+        <span class="meta-time">2026/04/28 01:27</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您可以查看 GPU 负载的几个维度。观察 GPU 负载的最简单的间接指标可能是功耗。<p>但如果您真的关心这一点，您应该实际分析您的应用程序。 nsight 系统使这一切变得非常简单。不知道有多少人真正关心拥有 TUI。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's a few dimensions you can look at for gpu load. Probably the easiest indirect metric to watch for gpu load is power usage.<p>But if you really care about this, you should actually profile your application. nsight systems makes this pretty simple to do. Dunno how many actually care about having a TUI.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924566" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ManyaGhobadi</span>
+        <span class="meta-time">2026/04/28 02:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">功率作为二阶指标很有用，可以帮助捕获严重的利用率不足的情况，但它与 SM Active (DCGM) 存在类似的问题——它往往会高估利用率，并且不区分有用的计算和内存流量。即使未充分利用计算利用率，也很可能处于高功率的内存密集型工作负载中。我们的目标是分离出这些瓶颈，以便更清楚地了解需要优化的地方。<p>在 nsys 上，我们同意它很棒，但我们想要一些可以连续运行的东西，而不是离线分析工具。我们认为两者都有发挥作用的空间。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Power is useful as a second-order metric and can help catch drastic underutilization, but it has similar problems to SM Active (DCGM) -- it tends to overestimate utilization and doesn't distinguish between useful compute and memory traffic. It's very possible to be in a memory-bound workload with high power even though underutilizing compute utilization. Our goal was to separate these bottlenecks out so there's more visibility into where to optimize.<p>On nsys, agreed it's great, but we wanted something that could run continuously instead of an offline analysis tool. We think there's room for both to be useful.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925149" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Cynddl</span>
+        <span class="meta-time">2026/04/28 03:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">这听起来非常有趣且相关。我用 H100 运行一个小型集群（通常是用 vLLM 进行研究项目），如果能够看到使用情况和效率就太好了。<p>我没有完全了解 100% 利用率与 1-10% 实际计算的情况。鉴于您依靠用户的遥测来添加新模型，您是否试图预测模型在 vLLM 上的速度与实际运行速度相比？如果用户调整一些超参数怎么办？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">This sounds super interesting and relevant. I run a small cluster with H100s (often research projects with vLLM) and being able to see not just usage but efficiency would be great.<p>I don't fully get the 100% utilisation vs. 1-10% real compute. Given you rely on telemetry from users to add new models, are you trying to predict how fast a model should be on vLLM, compared to how it runs in practice? What if users tweak some hyperparameters?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926303" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">taupi</span>
+        <span class="meta-time">2026/04/28 05:11</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很高兴你发现它很有趣！<p>您所描述的是 Attainable SOL 的目标，但使用 GPU 利用率作为指标而不是吞吐量。我们正在回答“对于给定的模型和工作负载，您是否对其进行了足够好的优化？”，其中“优化”包括超参数调整。因此，如果有人没有针对其工作负载很好地调整批量大小、并行性或其他旋钮，那么他们当前的利用率与可达到的 SOL 之间的差距就会告诉他们仍有改进的空间。</p><p>我们的动机是，达到 100% 的计算 SOL 是不可能的——没有模型可以在硬件的理论最大值下运行——但我们希望提供一个现实的优化目标。我们注意到不同的模型架构有不同的现实上限。例如，由于稀疏性，MoE 模型的利用率要差得多。我们不希望您重新训练 MoE 模型以获得更高的利用率，并且任何超参数调整都不能让您接近 100%，因此该模型可达到的最大 SOL 应该较低。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Glad you found it interesting!<p>What you described is the goal of Attainable SOL, but using GPU utilization as the metric rather than throughput. We're answering "for a given model and workload, have you optimized this well enough?", where "optimized" includes hyperparameter tuning. So if someone hasn't tuned batch size, parallelism, or other knobs well for their workload, the gap between their current utilization and the Attainable SOL is what tells them there's still room to improve.</p><p>We're motivated by the fact that reaching 100% Compute SOL is impossible -- no model can run at the hardware's theoretical maximum -- but we want to provide a realistic target for optimization. And we've noticed that different model architectures have different realistic ceilings. For example, MoE models run at much worse utilization due to their sparsity. We don't expect you to retrain an MoE model in order to get a higher utilization, and no hyperparameter tuning can bring you close to 100%, so the maximum attainable SOL should be lower for that model.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927359" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">xtimecrystal</span>
+        <span class="meta-time">2026/04/28 00:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">一个小建议：向您的工具添加更多 GPU 统计信息。<p>目前（v0.1.3）它 <i>是</i> 对于计算可视化更有帮助，但可以跟踪内存使用情况/进程/温度/风扇速度/等。防止它成为我的 `nvidia-smi` 的全面替代品。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">One small suggestion: add more GPU stats to your tool.<p>At the moment (v0.1.3) it <i>is</i> more helpful for compute visualization but keeping track of memory usage/processes/temperature/fan speed/etc. prevent this from becoming a full-on drop-in replacement for `nvidia-smi` for me.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47923754" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ManyaGhobadi</span>
+        <span class="meta-time">2026/04/28 01:38</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们同意！我们正在计划一个“进程”或“高级”视图，其中包含温度/电源使用情况和每个进程的故障。单独的整页视图或将所有内容都放在一个视图上对您的工作流程更有用吗？只是考虑把所有东西都放进去，因为 <i>这是很多</i></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">We agree! We are planning a "process" or "advanced" view with temp/power usage and per-process breakdowns. Would a separate full page view or fitting everything onto one view be more useful for your workflows? Just thinking about fitting everything in because <i>it is a lot</i></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924721" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/28 01:20</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924477" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">nawi</span>
+        <span class="meta-time">2026/04/28 01:10</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您好，非常感谢，该操作系统可以在 nvidia jetson 和 orin 上运行吗？还是只用于服务器GPU？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Hi, many thx, does the os can run on nvidia jetson and orin? Or just for server gpu?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924345" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ManyaGhobadi</span>
+        <span class="meta-time">2026/04/28 01:45</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">目前只有服务器 GPU，但理论上应该很容易链接到 Jetson/Orin 的 ARM64 CUDA 库。唯一的挑战是检查它是否支持我们正在采样的所有指标，尽管任何 Ampere 或更新版本都应该有合理的支持。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Currently just server GPU, but theoretically it should be easy to link against the ARM64 CUDA libraries for Jetson/Orin. The only challenge would be to check if it supports all the metrics we're sampling, though anything Ampere or newer should have reasonable support.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924824" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">apitman</span>
+        <span class="meta-time">2026/04/28 04:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我相信最新版本的 nvtop 显示出效率，对吧？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">I believe recent versions of nvtop show efficiency, right?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926640" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">taupi</span>
+        <span class="meta-time">2026/04/28 04:53</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">我们研究了一个新的“有效负载”指标——它源自功率，它具有我们在这里提到的相同问题： <a href="https://news.ycombinator.com/item?id=47925149" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47925149</a><p>它作为一种粗略的启发式方法很有用，但往往会高估利用率。我们还注意到，源自功率的指标比真实利用率有滞后时间，调节它的控制器有延迟的响应时间。这对于实时推理等尖峰工作负载尤其重要。</p><p>任何仅查询 NVIDIA NVML 库的工具（如 nvtop）无法访问我们所利用的详细指标，因此必须使用代理来提高效率。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">There's a new "Effective Load" metric that we've looked at -- it's derived from Power, which has the same problems we mentioned here: <a href="https://news.ycombinator.com/item?id=47925149" target="_blank" rel="noopener noreferrer">https://news.ycombinator.com/item?id=47925149</a><p>It's useful as a rough heuristic, but tends to overestimate utilization. We've also noticed that power-derived metrics have a lag time behind true utilization, the controller that regulates it has a delayed response time. This especially becomes important for spiky workloads like real-time inference.</p><p>Any tool (like nvtop) that only queries NVIDIA's NVML library does not have access to the detailed metrics that we draw upon, and therefore has to use proxies for efficiency.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927167" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">vogje01</span>
+        <span class="meta-time">2026/04/28 05:18</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">目前看起来不错。<p>将进一步测试它。</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Looks good for now.<p>Will further test it.</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927450" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">latchkey</span>
+        <span class="meta-time">2026/04/28 02:06</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">您在博文中提到了 rocm-smi，但实际上并不支持 AMD gpus？</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">You mention rocm-smi in your blog post, but you don't actually support AMD gpus?</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925089" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">taupi</span>
+        <span class="meta-time">2026/04/28 04:56</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">AMD 支持已在路线图上，但我们现在提到它是为了强调 AMD 以相同的方式计算其利用率指标 - 不仅仅是 NVIDIA。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">AMD support is on the roadmap, but we mentioned it for now to highlight that AMD calculates their utilization metric the same way -- it's not just NVIDIA.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927202" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">SilentM68</span>
+        <span class="meta-time">2026/04/28 03:29</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">很棒的工具。<p>现在只是测试。</p><p>除了从 ~/.local/bin 和 /usr/local/bin 以及 ~/.profile 的 PATH 清理中手动删除 utilyze 和 utlz 二进制文件之外，还有任何关于 utilyze 的删除说明或功能，特别是 CAP_SYS_ADMIN 功能以及对所做的任何其他更改的逆转？</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Great tool.<p>Just testing for now.</p><p>Any removal instructions or function for utilyze beyond the manual removal of utilyze &amp; utlz binaries from ~/.local/bin &amp; /usr/local/bin &amp; PATH cleanup for ~/.profile, in particular CAP_SYS_ADMIN capability and reversal for any other changes made?</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926173" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-2">
+      <summary>
+        <span class="meta-author">ManyaGhobadi</span>
+        <span class="meta-time">2026/04/28 05:00</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">如果您在初始启动时通过 utlz 安装了 CUPTI，您也可以在 ~/.cache/utlz 中删除它。如果您想完全清理所有内容，~/.systalyze 中还有一个配置。除了这些之外，你提到的步骤应该足够了。我们会将此信息添加到自述文件中。</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">If you installed CUPTI via utlz on initial startup, you can also remove that in ~/.cache/utlz. There is also a config in ~/.systalyze if you'd like to fully clean up everything. Besides those things, the steps you mentioned should be enough. We'll add this info to the README.</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927243" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        <div class="comment-children">
+    <details class="comment-node depth-3">
+      <summary>
+        <span class="meta-author">SilentM68</span>
+        <span class="meta-time">2026/04/28 05:09</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">谢谢 ：）</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">Thank you :)</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927344" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  </div>
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">[deleted]</span>
+        <span class="meta-time">2026/04/28 02:36</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh"><p>[已删除]</p></div>
+        <div class="comment-text is-hidden" data-role="comment-raw"><p>[deleted]</p></div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925450" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">324</span>
+        <span class="meta-time">2026/04/28 04:30</span>
+        
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">gdp是国内生产总值的意思</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">gdp means gross domestic product</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47926922" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">hiayygo</span>
+        <span class="meta-time">2026/04/28 14:23</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47931006" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">marlburrow</span>
+        <span class="meta-time">2026/04/28 06:03</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47927995" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">johnwhitman</span>
+        <span class="meta-time">2026/04/28 02:00</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47925001" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">throwawaycbb7</span>
+        <span class="meta-time">2026/04/28 00:52</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924099" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+    <details class="comment-node depth-1" open>
+      <summary>
+        <span class="meta-author">Rekindle8090</span>
+        <span class="meta-time">2026/04/28 01:41</span>
+        <span class="badge">deleted</span>
+      </summary>
+      <article class="comment-card">
+        <div class="comment-text is-clamped" data-role="comment-zh">[死的]</div>
+        <div class="comment-text is-hidden" data-role="comment-raw">[dead]</div>
+        <div class="comment-actions">
+          <button type="button" class="btn ghost" data-action="toggle-raw">查看原文</button>
+          <button type="button" class="btn ghost" data-action="toggle-expand">展开全文</button>
+          <a class="btn ghost" href="https://news.ycombinator.com/item?id=47924767" target="_blank" rel="noopener noreferrer">在 HN 中查看</a>
+        </div>
+        
+      </article>
+    </details>
+  
+      </div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    function bindToggleRaw(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const zh = card.querySelector('[data-role="comment-zh"]');
+        const raw = card.querySelector('[data-role="comment-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+    function bindToggleExpand(button) {
+      button.addEventListener("click", () => {
+        const card = button.closest(".comment-card");
+        if (!card) return;
+        const block = card.querySelector(".comment-text:not(.is-hidden)");
+        if (!block) return;
+        const isClamped = block.classList.contains("is-clamped");
+        block.classList.toggle("is-clamped", !isClamped);
+        button.textContent = isClamped ? "收起" : "展开全文";
+      });
+    }
+    function bindStoryRaw(button) {
+      button.addEventListener("click", () => {
+        const root = document.querySelector(".story-page");
+        if (!root) return;
+        const zh = root.querySelector('[data-role="story-zh"]');
+        const raw = root.querySelector('[data-role="story-raw"]');
+        if (!zh || !raw) return;
+        const showRaw = raw.classList.contains("is-hidden");
+        zh.classList.toggle("is-hidden", showRaw);
+        raw.classList.toggle("is-hidden", !showRaw);
+        button.textContent = showRaw ? "查看译文" : "查看原文";
+      });
+    }
+
+    document.querySelectorAll('[data-action="toggle-raw"]').forEach((el) => bindToggleRaw(el));
+    document.querySelectorAll('[data-action="toggle-expand"]').forEach((el) => bindToggleExpand(el));
+    document.querySelectorAll('[data-action="toggle-story-raw"]').forEach((el) => bindStoryRaw(el));
+  })();
+  </script>
+</body>
+</html>
